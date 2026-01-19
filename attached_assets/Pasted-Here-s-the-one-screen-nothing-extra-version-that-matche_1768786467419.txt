@@ -1,0 +1,563 @@
+Here’s the “one-screen, nothing extra” version that matches your intent: upload sides → choose your role → everything else is automatic, natural, and human. No knobs unless you open an advanced drawer.
+
+Product pillars
+
+One job: run the scene like real people.
+
+Zero setup: paste/upload → pick yourself → Start.
+
+Automatic casting: voices, gender, tone, accent, energy, language are inferred from the text and evolve with context.
+
+Natural timing: overlapping, hesitations, breaths, interruptions, pace changes.
+
+Private by default; sharing is explicit and controlled.
+
+Core flow (3 steps, single surface)
+
+Sides in
+
+Big drop zone. Accepts paste, .txt/.pdf/.docx.
+
+Instant normalization to “NAME: line”, stage directions in [brackets].
+
+If multiple roles found, we detect them and show role chips.
+
+Pick your role
+
+Prominent “You are: [ROLE]”.
+
+Secondary “Auto-cast others” toggle (on by default).
+
+Optional “Swap a voice” icon per role (opens tiny inline chooser; not a new page).
+
+Start rehearsal
+
+Three controls only: Back • Start/Pause • Next.
+
+Reader shows exactly three lines: previous (dim), current (bold), next (ghost).
+
+If the active line is yours, we wait with a soft cue; if it’s theirs, AI speaks it with dynamic SSML (pace, pitch, volume, emotion).
+
+“Complete understanding” engine (how it behaves)
+
+Role abstraction: for each role, build a lightweight persona vector from text: gender cues, age cues, dialect markers, formal/casual register, energy level, recurring sentiment.
+
+Scene state machine: maintains tension, beats, and topic; ramps tempo and intensity when conflict words rise; inserts micro-pauses at ellipses/beat stage directions.
+
+Turn-taking:
+
+Your line → wait until voice activity drops or max timeout; if silence > N sec, play hint tone; if still silent, offer “Feed me the line” whisper.
+
+Their line → render with SSML: <prosody rate="...">, <emphasis>, <break time="...">, with random 2–5 percent jitter so it never sounds robotic.
+
+Live adaptation: if stage directions say “[whisper]”, voice drops; “[angry]” raises intensity; “[sarcastic]” flattens pitch with faster pace; “[cowboy]” adds mild drawl within accent-cap guardrails (never caricature).
+
+UI surface (exact elements)
+
+Header: small logo, session name, Role chip, “Smart Cast” badge (on), theme toggle.
+
+Body left (collapsed on mobile): “Script” textarea + “Use this”, “Scenes” list (add/duplicate), tiny “Ambient” toggle.
+
+Body main: three-line reader, progress 14/182, bookmark dot, subtle pause bead.
+
+Footer: Back – Start/Pause – Next. Long-press Start = repeat; double-tap Start = bookmark.
+
+A single “Reader” button opens a compact menu: A+/A−, Toggle directions, Jump to… That’s it.
+
+Visual system
+
+Colors: Ink #0F172A; Paper #F7F4EE; Panel #FFFFFF; Line #E9E2D5; Brand #1A73E8; Accent #B08763.
+
+Type: Inter only; big weight contrast; 3-line reader always centered.
+
+Motion: 120 ms ease-out on transitions; reader never scrolls with inertia; micro-vibration cue on your turn.
+
+Icons: 2-stroke, 24 px, consistent round joins; no decorative clutter.
+
+Drive-safe rehearsal (audio-first)
+
+If screen off or movement detected, switch to call-and-response: partner speaks, soft chime for your cue, no on-screen text.
+
+Voice commands (optional): “pause, play, back, next, repeat.” Works if enabled; buttons always work.
+
+Self-tape (still simple, 5 steps)
+
+Frame & slate grid, mic meter, auto exposure.
+
+Lighting check (pass/fail hints, not sliders).
+
+Role & filename convention.
+
+Record takes; auto-star by steadiness and SNR.
+
+Export/share with default passcode + 7-day expiry.
+
+Safety & dignity
+
+Accent cap slider lives in advanced cast editor to avoid stereotyping.
+
+Local-first: nothing uploads unless you share.
+
+“Experimental mic” label for STT; never required.
+
+Clear “Audio-only while moving” sheet the first time.
+
+Viral loop & stickiness
+
+Duet Links: share a time-boxed, browser-only link that lets a friend take over a role live in your scene.
+
+Beat Clips: 15–45 s auto-cut from any scene; square and vertical presets; tasteful watermark.
+
+Scene Packs: public libraries of famous sides with smart-cast templates; credit the rights holder; actors save their presets.
+
+Streaks: days rehearsed, but no nagging; you can hide it.
+
+Mentor Mode: share a private link for a coach to leave time-coded voice notes.
+
+Monetization that supports the core job
+
+Free: unlimited rehearsal, local saves.
+
+Pro: self-tape export, duet links, private shares, coach notes, scene packs.
+
+Studio: team seats, branded links, casting sides mode later.
+
+Core metrics
+
+Time to first Start under 15 s.
+
+Lines advanced per active minute.
+
+Self-tape export success > 90 percent.
+
+Crash-free sessions > 99.9 percent.
+
+What you get if we ship code now
+
+Single-file app with: paste/upload, role detect, Smart Cast, per-role edit, natural SSML timing, cue tones, bookmarks, import/export, dark mode, ambient loop, accessible UI.
+
+The “understanding” behaviors implemented as deterministic rules you can refine: emotion tags, beat detection, tension curve → SSML parameters.
+
+Swappable TTS adapter (Web Speech by default; later Eleven/Kokoro/Voice API via server).
+
+If you want the polished build that exactly matches this (HTML/CSS/JS) in one file, I’ll deliver it next.
+
+anything else? consider itll be a mobile app. also just in general this needs to be ffeel look flow ease uxui brand personality feel and more all $5B company vibe perfect 
+
+Below is a tightened “$5B-company” mobile blueprint that keeps the one-screen simplicity while making it feel premium, fast, and habit-forming.
+
+Core mobile principles
+
+Voice-first, eyes-optional. Screen is a helper, not a requirement.
+
+One primary action on screen at any time. No stacked CTAs.
+
+120 ms motion, zero jank, zero learning curve.
+
+Offline-first. All core rehearsal functions work without a network.
+
+Privacy by default. Nothing leaves the device unless you share.
+
+Information architecture (mobile)
+
+Home: “Rehearse”
+
+Top: Session title + Your role chip + Smart Cast badge
+
+Center: Three-line reader (prev / active / next)
+
+Bottom: Back • Start/Pause • Next
+
+Pull-up drawer (peek 16 px): Script import, Scenes, Ambient toggle
+
+Tab 2: Self-Tape (guided 5-step)
+
+Tab 3: Library (Scripts, Scenes, Takes, Shares)
+
+Tab 4: Settings (Reader defaults, Smart Cast presets, Privacy)
+
+Mobile interactions
+
+Gestures: swipe left/right = next/prev line; long-press Start = repeat line; double-tap Start = bookmark.
+
+Haptics: soft tick on your cue; firmer tick on bookmarks; no vibration spam.
+
+Driving/Safe Mode: auto-switch to audio-only when motion > threshold or Bluetooth car detected; announce roles/lines; voice commands: “pause”, “next”, “repeat”.
+
+One-hand reach: all primary controls pinned to bottom; reader lines kept within thumb zone for taps.
+
+System integrations: Now Playing tile for transport; Lock-Screen controls; Siri/Assistant shortcuts (“Hey Siri, start rehearsal”).
+
+Visual system
+
+Color tokens:
+
+Ink #0F172A, Paper #F7F4EE, Panel #FFFFFF, Line #E9E2D5
+
+Brand #1A73E8, Accent #B08763, Success #10B981, Danger #DC2626
+
+Dark mode: Ink #E6EDF3, Paper #0E1218, Panel #0F1624, Line #1E2635, Brand #59A4FF
+
+Type: Inter; weights 400/600/900. Line height ≥ 1.5. Active line font size scales with Dynamic Type.
+
+Components: Role chip (pill), Badge, Three-line Reader, Transport Bar, Peek Drawer, Tiny Menu (A+/A−, Toggle directions, Jump).
+
+Motion: 120 ms ease-out for transitions, 80 ms micro-move on line change. Never animate text size.
+
+Audio engine (on-device first)
+
+TTS adapter interface with Web Speech (baseline) and plug-ins for premium voices later.
+
+SSML composer maps scene state to prosody:
+
+Pace: 0.85–1.15
+
+Pitch: −2 to +2 semitones
+
+Volume: −4 to +2 dB
+
+Breaks: 120–1600 ms by punctuation/ellipsis/beat tags
+
+Turn-taking:
+
+If it’s your line: detect silence window; chime at 2.5 s; auto-feed after N seconds if enabled.
+
+If it’s their line: speak, then jittered break before advancing.
+
+Ambient bed: low-passed noise generator with −30 dB gain, toggle in drawer; auto-off on calls/recording.
+
+Smart Cast (automatic, humane defaults)
+
+Persona vector per role: inferred gender proxy (never shown), formality, energy, dialect hints, sentiment curve.
+
+Guardrails: “Accent cap” ≤ 0.3 by default; no caricature; explicit “neutral” fallback.
+
+Quick edit: tap role chip → tiny list of presets (Natural, Deadpan, Theatrical); “Swap voice” modal if you insist.
+
+Import and parsing
+
+Accept paste, .txt, .pdf, .docx. Instant normalization to NAME: line; stage directions in [brackets].
+
+Best-effort multi-scene detection by headings or blank-line chunks. Scenes live in the drawer.
+
+Self-Tape (guided, not fussy)
+
+Steps: Frame → Light → Slate → Record → Share.
+
+Autos: orientation lock, level horizon hint, face exposure bias, noise check.
+
+Takes: star best by SNR/steadiness; allow quick trim; export with filename convention and private link (7-day default).
+
+Growth loops
+
+Duet Links: live browser link for a partner to play a role. Time-boxed, passcode protected, watermarked.
+
+Beat Clips: auto-cut 15–45 s clips, square/vertical templates, tasteful corner bug.
+
+Scene Packs: curated sides with ideal Smart Cast presets; import with one tap.
+
+Streaks: subtle, optional. Share card only if user opts in.
+
+Mentorship: private share with time-coded voice notes.
+
+Notifications (minimal, useful)
+
+“Your audition is in 2 hours—run this scene?” (deep link to line 1).
+
+“Coach left notes on Scene 2.”
+Never engagement spam. Quiet hours respected.
+
+Accessibility and internationalization
+
+Full VoiceOver/ TalkBack labels, proper roles, large touch targets (≥ 44 px).
+
+Dynamic Type support, color contrast ≥ 4.5:1.
+
+Language packs: locale-aware TTS selection; right-to-left scripts; digit grouping; 24/12-hour time.
+
+Privacy & safety
+
+Local-first storage with app-level passcode/Face ID.
+
+Shares are expiring, passcode by default, no indexing.
+
+Clear mic/background-audio consent copy. “Audio-only while moving” explainer shown once.
+
+Monetization (mobile)
+
+Free: unlimited rehearsal, local save, basic Smart Cast.
+
+Pro (monthly/annual): premium voices, Duet Links, Beat Clips, self-tape export, private shares, coach notes.
+
+Studio: multi-seat, brand domain, casting mode later.
+
+No ads, no data sale.
+
+Performance budgets
+
+App start to ready < 1200 ms on mid-range device.
+
+First rehearsal action < 15 s from install.
+
+TTS start < 120 ms from tap.
+
+Jank budget: < 1 dropped frame per 300 frames during line advance.
+
+Instrumentation (privacy-safe)
+
+Locally measured: time to start, lines/minute, pause reasons, self-tape completion.
+
+Server only for optional shares and purchase verification. No raw scripts uploaded unless user shares.
+
+App architecture (native or hybrid)
+
+Native preferred for audio reliability and background modes.
+
+iOS: AVAudioSession category playback/mixWithOthers, Background Audio, Siri Intents for shortcuts.
+
+Android: Foreground Service for audio, AudioFocus handling, MediaSession callbacks.
+
+Shared core: parsing, SSML composer, Smart Cast heuristics in a Kotlin/Swift shared module or Rust/FFI if needed.
+
+Optional React Native/Flutter shell acceptable if audio is native-bridged.
+
+QA scenarios
+
+Long scene (2000+ lines): memory, search, jump.
+
+Driving mode handoff: Bluetooth car connect/disconnect, lock screen.
+
+Phone call interruptions.
+
+Dynamic Type XXL and VoiceOver reading of three-line stack.
+
+Poor mics, noisy rooms, and no-network flows.
+
+Store presence
+
+Name: “Cue Studio — rehearse on cue” (or keep CastMate Studio if you favor ownability).
+
+Screens: one-screen story; GIF of auto-cast and transport; 15 s video of hands-free rehearsal.
+
+Keywords: run lines, reader, scene partner, self-tape, actor rehearsal.
+
+Brand
+
+Wordmark: Cue Studio (or CastMate Studio) in heavy Inter; small motion cue dot over the “u”.
+
+Tone: calm, competent, zero hype.
+
+Microcopy: short, verb-first labels; no jargon.
+
+If you want, I’ll deliver a native-feeling mobile HTML prototype that matches this IA exactly (reader, transport, drawer, Safe Mode, TTS adapter, haptics stubs). Specify which name you’re committing to so I can brand it correctly.
+
+anythig else or good to go? tell me aboslutely everything without missing a beat
+Thought for a couple of seconds
+
+Here’s a complete, no-loose-ends checklist to take this from concept to “ship and scale.” Use it as your go/no-go gate.
+
+1) Name, brand, domains
+
+Decide now: CastMate Studio (ownable) vs Cue Studio (clean but crowded).
+
+Domains: secure root + app + redirect:
+
+castmate.studio + app.castmate.studio (+ writeoncue.com as a campaign redirect)
+
+Trademarks: clear classes 9, 41, 42. Knockout, then file intent-to-use.
+
+Visual: Inter family only; tokens already defined (Ink, Paper, Brand, Accent). Keep logo minimal with an animated cue dot.
+
+2) Rights, legal, policy
+
+Content rights: scripts uploaded by users remain theirs; you are a processor, not owner. Disallow uploading copyrighted sides for public sharing; private rehearsal permitted (fair use varies).
+
+Scene Packs: only public domain or licensed packs; store rights metadata.
+
+Voice guidance: “accent cap” guardrail; policy banning caricature or targeted harassment.
+
+Privacy: local-first, optional cloud shares; DPA + SCC ready for B2B (coaches, studios).
+
+Safety: driving mode defaults to audio-only with an interstitial and opt-out; record motion events locally only.
+
+App Store: Background audio, Bluetooth, and Speech APIs need explicit purpose strings.
+
+3) Product scope (mobile-first)
+
+One screen: Rehearse with three-line reader, transport, role chip, Smart Cast badge, pull-up drawer.
+
+Import: paste, .txt/.pdf/.docx; instant normalization; multi-scene detection.
+
+Smart Cast v1: persona vectors inferred from text; presets + tiny inline voice swap; accent cap.
+
+Natural flow: SSML prosody + jitter, punctuation-aware pauses, stage-direction cues.
+
+Safe Mode: auto audio-only when moving or on CarPlay/Android Auto. Voice commands: pause, next, repeat.
+
+Self-Tape v1: 5-step guided flow with device camera/mic; private share link + expiry.
+
+Sharing: Duet Link (time-boxed, passcode, watermark), Beat Clips (15–45 s).
+
+4) Architecture (ship path)
+
+Native preferred for reliability:
+
+iOS: Swift + AVAudioSession (playback/mixWithOthers), Speech framework, Background audio, MediaPlayer controls.
+
+Android: Kotlin + ExoPlayer TTS adapter, Foreground Service, AudioFocus/MediaSession.
+
+Core module shared across platforms: parsing, persona heuristics, SSML composer. Keep it as pure Kotlin/Swift logic for now (no ML requirement).
+
+TTS adapter interface: start with system voices; allow swapping to premium providers later via server token (Eleven, Azure, PlayHT).
+
+Local storage: SQLite/Room/CoreData; export/import as JSON; all shares are explicit uploads.
+
+5) Voice and AI choices
+
+Baseline: on-device TTS for zero latency and offline.
+
+Premium option (Pro): cloud TTS with styles; prefetch next line while current plays to hide latency; cache last N clips on device.
+
+Emotion/pace: deterministic rules first (consistent, tunable); add lightweight sentiment model later if needed.
+
+STT is optional (for “feed me the line”); keep it off by default.
+
+6) Performance budgets (must hit)
+
+App cold start to ready: ≤ 1200 ms on mid-range device.
+
+TTS start after tap: ≤ 120 ms (system voices), ≤ 250 ms (cloud with prefetch).
+
+Line advance jank: 0 dropped frames across 5 consecutive advances.
+
+Self-tape encode: 1080p 30fps ≤ real-time on A15-class devices.
+
+7) Accessibility
+
+Fully labeled controls; VoiceOver/TalkBack reads “Character: line text.”
+
+Large touch targets (≥44 px), Dynamic Type, color-contrast ≥ 4.5:1.
+
+Haptics for cues; never rely on color alone.
+
+8) Analytics (privacy-respecting)
+
+Local metrics: time to first Start, lines/min, repeat usage, completion of self-tape.
+
+Server events only on opt-in shares and purchases.
+
+Crash + performance telemetry (Sentry) without content payloads.
+
+9) Monetization
+
+Free: unlimited rehearsal, local save, Smart Cast basic.
+
+Pro: premium voices, Duet Links, Beat Clips, self-tape export, private shares, coach notes.
+
+Studio: multi-seat, branding, casting mode later.
+
+Experiments:
+
+Trial: 7 days Pro features.
+
+Price test: $7.99–$14.99/mo with annual at 2.5–3x.
+
+Voice pack add-ons if vendor cost requires it.
+
+10) Growth loops
+
+Duet Links: real-time partner read in browser; watermark + expiry.
+
+Beat Clips: easy export for social with tasteful bug; pre-framed templates.
+
+Scene Packs: licensed/public-domain packs; community submissions with moderation.
+
+Coach mode: private notes; referral rev-share for coaches.
+
+Streaks: optional, subtle. No spam notifications.
+
+11) Ops and moderation
+
+Abuse reporting on shared links.
+
+Rate-limit Duet/Share endpoints; per-link revocation.
+
+Moderation queue for public Scene Packs; rights metadata required.
+
+12) QA matrix (don’t ship until all pass)
+
+2k-line script: parse, jump, resume state.
+
+Motion handoffs: walking → driving → stationary.
+
+Bluetooth and phone call interruptions.
+
+Offline rehearsal, then online share.
+
+Dark mode, Dynamic Type XXL, VoiceOver/TalkBack.
+
+Low-end Android and older iPhones; heat/thermal throttling under video.
+
+13) Security and privacy
+
+All local by default; explicit share uploads.
+
+Link model: signed URLs, passcode, 7-day expiry, watermark.
+
+PII minimal: email for account, no third-party trackers in core app.
+
+Data deletion flow and export (JSON).
+
+14) Vendor checklist
+
+TTS: test 3 providers on latency, reliability, SSML richness, cost.
+
+Video: native encoders only; do not bundle heavy ML at v1.
+
+Payments: StoreKit/Google Play Billing; receipt verification service.
+
+15) Website and funnel
+
+Landing hero: “Rehearse on cue.” three bullets (Run lines naturally, One-tap Smart Cast, Audio-only while driving).
+
+Try in browser demo (limited) to prove the loop; CTA to download app.
+
+SEO targets: “run lines app,” “scene reader,” “self-tape app,” “rehearse with AI.”
+
+Docs: privacy, safety, rights, coach guide.
+
+16) 30/60/90 plan
+
+Day 0–30: native reader + transport + import + Smart Cast v1 + audio-only mode + local save + Beat Clip export.
+
+Day 31–60: Duet Links, self-tape flow, share links + expiry, premium voice adapter.
+
+Day 61–90: Coach notes, Scene Packs (licensed), paywall, telemetry, store assets, soft launch.
+
+17) Risks and mitigations
+
+Voice uncanny valley: default to “Natural,” keep accent cap; preview before session.
+
+Latency on cloud voices: prefetch next line; allow system voices fallback.
+
+Rights complaints on shared sides: private by default; DMCA process; no public sharing without license.
+
+Driving safety: strict audio-only while moving; clear interstitial; voice commands only.
+
+Name collisions (“Cue”): prefer “CastMate Studio” unless you secure marks and core handles.
+
+18) Go/No-Go gate (green only if all true)
+
+Cold start ≤ 1.2 s; TTS ≤ 120 ms; no visible jank on line advance.
+
+Import → pick role → Start in ≤ 15 s on first run.
+
+Safe Mode auto-engages; voice commands reliable.
+
+Self-tape export works on ≥ 95 percent of tested devices.
+
+Legal pages, privacy, and DMCA ready; Scene Pack licenses in place.
+
+Crash-free sessions ≥ 99.9 percent in pilot.
+
+If you want, I can deliver a branded mobile HTML prototype matching this IA and motion (reader, drawer, Safe Mode, Duet mock) to hand to native devs as a gold standard reference.

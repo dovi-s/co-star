@@ -1,0 +1,186 @@
+the voices and narration and personality and sounds accents udnerstanding of the scene eg rollercoaster in office at a party idfk all of it should be so accuarete this is all and more extremely important 
+Thought for a couple of seconds
+
+Understood. To make voices, narration, and “scene IQ” feel uncannily right every time, treat it as an end-to-end rendering system—text → intent → persona → prosody → acoustics—under strict latency and safety budgets. Here is the concrete spec.
+
+1) What “accurate” means (measurable)
+
+Turn accuracy: correct speaker chosen for ≥ 99.5% of lines (gold: script labels).
+
+Prosody fit: human rater score ≥ 4.3/5 for emotion/tone match on 20-sec clips.
+
+Scene fit: human rater score ≥ 4.2/5 for ambient/foley appropriateness at −28 to −32 LUFS.
+
+Latency: next line audio ready ≤ 120 ms (on-device) or ≤ 250 ms (cloud with prefetch).
+
+Dignity guardrails: 0 flagged outputs violating accent/identity policy in pilot.
+
+2) Inference pipeline (fast, deterministic core with optional ML assists)
+
+Input: normalized sides (NAME: line, directions in [brackets]), current line index, recent context window.
+
+Role & turn engine
+
+Regex + dictionary mapping for names.
+
+Cursor controls turn; never guess speaker from content.
+
+Scene classifier (lightweight)
+
+Multi-label tags from directions and nouns: {location: office/party/vehicle/outdoor, energy: calm/tense, formality: casual/formal, time: day/night}.
+
+Heuristics first; optional tiny text classifier (e.g., Distil-size, on-device) for ambiguous cues.
+
+Emotion & style decoder (line level)
+
+From punctuation, adverbs/adjectives, direction verbs: map to one of ~9 styles: neutral, happy, sad, angry, sarcastic, fearful, excited, whisper, urgent.
+
+Compute tension curve (0–1) with hysteresis to avoid whiplash.
+
+Persona vector (role level)
+
+Persistent per-role features: age-ish, warmth, formality, tempo bias, “accent cap” (0–0.8), dialect hints if explicitly signaled (never infer identity).
+
+Start from preset (Natural/Deadpan/Theatrical) and update slowly with EMA from emotion decoder.
+
+Prosody planner
+
+Output SSML (or API-specific prosody params): rate, pitch, volume, breaks, emphasis.
+
+Insert micro-hesitations and breaths stochastically 2–5% with scene-dependent caps.
+
+Acoustic scene bed (subtle)
+
+Select one loop from a tiny, tasteful palette per location/time (office air, light street, room tone, car cabin). Low-passed, −32 LUFS target, duck under voices.
+
+Foley “on beats” only when explicitly directed (e.g., “[door opens]”).
+
+Safety layer
+
+“Accent cap” clamp; block disallowed caricatures; fallback to “neutral” when uncertain.
+
+Content policy check for harassment/ slurs; reduce emphasis or require user edit.
+
+3) Voice selection and rendering
+
+Default voices: system TTS for zero-latency baseline.
+
+Premium voices (Pro): vendor plug-ins behind an adapter (Eleven/Azure/PlayHT). Cache the next line while current plays.
+
+Role→voice mapping:
+
+If direction contains explicit style/gender/dialect → pick matching preset within guardrails.
+
+Else use persona vector: style → voice family, energy → rate ±, warmth → pitch ±, formality → articulation emphasis.
+
+Keep voice constant per role for the session unless user swaps.
+
+Turn-taking:
+
+Partner lines: render immediately; add jittered post-utterance break 120–600 ms.
+
+Your lines: never speak; play a soft cue; if silence > 2.5 s, chime; if “auto feed” enabled, whisper prompt after 5–7 s.
+
+4) Timing engine (natural flow)
+
+Base pause from punctuation and word count.
+
+Apply scene tension multiplier (urgent scenes compress pauses; reflective expand).
+
+Insert overlap in heated dialogue (last 90–220 ms of partner line while your cue starts).
+
+Long stage directions insert proportional break with a low-volume bed swell, never SFX spam.
+
+5) Mobile audio architecture (reliable)
+
+iOS: AVAudioSession playback + mixWithOthers; AVSpeechSynthesizer for baseline; Background Audio; MediaPlayer remote commands; haptics on cue.
+
+Android: Foreground Service + TextToSpeech (or vendor SDK), AudioFocus/MediaSession; lock-screen transport.
+
+Prefetcher: prepare next line’s audio while speaking current; cap cache to last/next two lines.
+
+6) User controls (kept minimal)
+
+On the main screen: none beyond Back / Start / Next.
+
+Tap role chip → quick preset (Natural/Deadpan/Theatrical).
+
+Long-press role chip → mini voice chooser (name + short preview).
+
+“Reader” menu: A+/A−, Toggle directions, Jump.
+
+“Ambient” toggle in drawer; default off.
+
+7) Data, privacy, ethics
+
+Local-first. No scripts or takes leave device unless the user shares.
+
+When using cloud TTS: send only the partner line text; never PII; obfuscate names by default (e.g., “CHAR_2”).
+
+No accent inference from user identity; accents only when explicit in text (“[Scottish accent]”) and capped.
+
+Policy: no protected-class mockery; fast user-side report → per-session block list for a vendor voice.
+
+8) Evaluation & tuning loop
+
+Golden set of 150 scenes spanning locations, energies, and directions; 10 per scene speaker variations.
+
+AB test prosody planners: deterministic vs. light model-assisted.
+
+Raters: actors + coaches. 5-point MOS on prosody fit and scene fit; collect free-text notes.
+
+Telemetry (local, opt-in): where users hit “Repeat,” “Bookmark,” “Auto feed,” “Swap voice” → guide rule weights.
+
+9) Vendor matrix (choose two)
+
+System TTS: Zero cost, lowest latency, variable quality.
+
+Azure Neural: Rich SSML, stable, good styles.
+
+ElevenLabs: Natural timbre, good emotion; manage latency via prefetch.
+
+PlayHT: Fast, strong expressiveness.
+
+Adapter exposes: synthesize(text, voiceId, prosody) with a timeout + fallback to system TTS.
+
+10) Build order (6 milestones)
+
+Deterministic pipeline (roles, scene tags, emotion, prosody) + system TTS + ambient.
+
+Prefetcher + overlap + tension curve.
+
+Mini voice chooser + quick presets + guardrails.
+
+Safe Mode (audio-only while moving/locked) + voice commands.
+
+Cloud TTS adapter + caching + obfuscation.
+
+Rater loop + tuning pack + shipping defaults.
+
+11) Edge cases and defaults
+
+Monologues: expand pauses, more breathing; optional “pacing coach” tone each sentence.
+
+Fast banter: overlap on last 150–200 ms; reduce breaths; shorten breaks.
+
+Whisper/shout: drop/raise volume but never clip; apply soft limiter.
+
+Language switches: detect [Spanish] tags; pick locale voice; never auto-translate.
+
+12) Sound design rules (subtlety)
+
+Room tone always on a single low-pass loop; −32 LUFS target; −12 dB side-chain duck under speech.
+
+Foley only when directed, one-shot, natural decay; never repeat in < 12 s.
+
+No canned laughter, sirens, or intrusive effects.
+
+13) UX copy (keeps confidence high)
+
+“Auto-cast on. You’re ‘ELENA’. Press Start.”
+
+“Audio-only while moving. Voice commands: pause, next, repeat.”
+
+“This role uses a neutral voice. Change it any time.”
+
+If you want, I will fold these rules into your current build: add the prosody planner, ambient bed, overlap/jitter, quick preset picker, and a vendor adapter behind a single toggle, keeping the UI exactly as minimal as we set.
