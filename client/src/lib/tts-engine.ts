@@ -76,6 +76,7 @@ class TTSEngine {
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private voices: SpeechSynthesisVoice[] = [];
   private onEndCallback: (() => void) | null = null;
+  private isReady = false;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -83,8 +84,16 @@ class TTSEngine {
       this.loadVoices();
       
       if (this.synth.onvoiceschanged !== undefined) {
-        this.synth.onvoiceschanged = () => this.loadVoices();
+        this.synth.onvoiceschanged = () => {
+          this.loadVoices();
+          this.isReady = true;
+        };
       }
+      
+      setTimeout(() => {
+        this.loadVoices();
+        this.isReady = true;
+      }, 100);
     }
   }
 
@@ -95,31 +104,58 @@ class TTSEngine {
   }
 
   getVoices(): SpeechSynthesisVoice[] {
+    this.loadVoices();
     return this.voices;
   }
 
+  get available(): boolean {
+    return this.synth !== null;
+  }
+
+  get ready(): boolean {
+    return this.isReady && this.voices.length > 0;
+  }
+
   speak(text: string, prosody: ProsodyParams, onEnd?: () => void): boolean {
-    if (!this.synth) return false;
+    if (!this.synth) {
+      console.warn("Speech synthesis not available");
+      onEnd?.();
+      return false;
+    }
 
     this.stop();
+    
+    this.loadVoices();
+
+    if (this.synth.paused) {
+      this.synth.resume();
+    }
 
     const utterance = new SpeechSynthesisUtterance(text);
     
-    const englishVoice = this.voices.find(
-      v => v.lang.startsWith("en") && v.name.toLowerCase().includes("natural")
-    ) || this.voices.find(v => v.lang.startsWith("en")) || this.voices[0];
+    const englishVoices = this.voices.filter(v => v.lang.startsWith("en"));
+    const preferredVoice = englishVoices.find(v => 
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("google") ||
+      v.name.toLowerCase().includes("natural")
+    ) || englishVoices[0] || this.voices[0];
     
-    if (englishVoice) {
-      utterance.voice = englishVoice;
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
     }
 
     utterance.rate = Math.max(0.5, Math.min(2, prosody.rate));
     utterance.pitch = Math.max(0, Math.min(2, 1 + prosody.pitch * 0.5));
-    utterance.volume = Math.max(0, Math.min(1, prosody.volume));
+    utterance.volume = Math.max(0.1, Math.min(1, prosody.volume));
 
     this.onEndCallback = onEnd ?? null;
     
+    utterance.onstart = () => {
+      console.log("TTS started speaking:", text.substring(0, 30) + "...");
+    };
+    
     utterance.onend = () => {
+      console.log("TTS finished speaking");
       if (prosody.breakMs > 0) {
         setTimeout(() => {
           this.onEndCallback?.();
@@ -129,13 +165,30 @@ class TTSEngine {
       }
     };
 
-    utterance.onerror = () => {
+    utterance.onerror = (event) => {
+      console.error("TTS error:", event.error);
       this.onEndCallback?.();
     };
 
     this.currentUtterance = utterance;
-    this.synth.speak(utterance);
-    return true;
+    
+    try {
+      this.synth.speak(utterance);
+      
+      setTimeout(() => {
+        if (this.synth && !this.synth.speaking && this.currentUtterance === utterance) {
+          console.log("TTS workaround: re-triggering speech");
+          this.synth.cancel();
+          this.synth.speak(utterance);
+        }
+      }, 100);
+      
+      return true;
+    } catch (e) {
+      console.error("TTS speak failed:", e);
+      onEnd?.();
+      return false;
+    }
   }
 
   stop() {

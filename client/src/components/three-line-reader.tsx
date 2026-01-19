@@ -121,6 +121,12 @@ export function ThreeLineReader({
         {isCurrent && isUser && isPlaying && (
           <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full cue-pulse" />
         )}
+        
+        {isCurrent && isUser && isPlaying && (
+          <div className="mt-3 text-center text-sm text-primary font-medium animate-pulse">
+            Your turn - speak your line, then tap Next
+          </div>
+        )}
       </div>
     );
   };
