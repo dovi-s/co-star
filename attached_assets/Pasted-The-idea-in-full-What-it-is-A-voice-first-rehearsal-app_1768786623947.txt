@@ -1,0 +1,138 @@
+The idea in full
+What it is
+
+A voice-first rehearsal app that runs any scene like real people: paste/upload sides, pick your role, hit Start. The app auto-casts all other roles with natural, context-aware voices that speak on cue with human timing, emotion, and subtle ambience. It’s built mobile-first, offline-capable, and private by default, with optional sharing and self-tape.
+
+Who it’s for
+
+Individual actors rehearsing lines anywhere (including hands-free while commuting).
+
+Coaches working with actors via private notes and shared sessions.
+
+Later: casting teams distributing sides and collecting takes in a controlled way.
+
+Core promise
+
+Zero setup: paste → choose yourself → rehearse.
+
+Sounds human: tone, pace, emotion, and light ambience match the scene.
+
+On cue: the app knows whose turn it is and pauses for you naturally.
+
+Private: nothing leaves your device unless you share.
+
+One-screen UX (mobile)
+
+Top: Session title, Role chip, Smart Cast badge.
+
+Center: Three-line reader (previous dim, active bold, next ghost).
+
+Bottom: Back • Start/Pause • Next.
+
+Pull-up drawer: Script import, Scenes, Ambient toggle.
+
+Tiny “Reader” menu: A+/A−, Toggle directions, Jump to….
+
+Safe Mode: auto audio-only when driving or phone locked; voice commands.
+
+How the voices feel so natural
+
+Scene IQ: quick classifiers infer location/time/energy (office, night, party, vehicle; calm/tense, etc.) from directions and text.
+
+Persona per role: formality, warmth, tempo bias, emotion curve; optional accent hints with strict guardrails.
+
+Prosody planner: maps punctuation, sentiment, and tension to SSML (rate, pitch, breaks, emphasis), adds light stochastic breaths and overlap in heated dialogue.
+
+Acoustic bed: subtle room tone (−28 to −32 LUFS), ducked under speech; tasteful foley only when directed.
+
+Latency budget: prefetch next lines; system TTS for instant start; premium voices when available without delay.
+
+Key features
+
+Paste/upload (.txt/.pdf/.docx), instant normalization to NAME: line.
+
+Role detection; Your role selection; auto-cast others.
+
+Natural timing (pauses, ellipses, overlap), cue tones, repeat line, bookmarks.
+
+Ambient toggle, dark mode, Dynamic Type, full accessibility.
+
+Local-first storage; import/export session JSON.
+
+Self-Tape (guided 5-step): frame, light, slate, record, share with expiry.
+
+Sharing loops: Duet Links (live partner read), Beat Clips (15–45 s snippets), Scene Packs (licensed/public domain presets).
+
+Coach mode: private time-coded voice notes.
+
+Safety, dignity, privacy
+
+Local-first; explicit opt-in for any upload/share.
+
+“Accent cap” and anti-caricature guardrails; neutral fallback when uncertain.
+
+Driving mode defaults to audio-only; clear first-run interstitial.
+
+DMCA and rights policy; Scene Packs must be licensed or public domain.
+
+Brand options
+
+CastMate Studio (ownable; castmate.studio, app.castmate.studio).
+
+Or “Cue Studio” with a distinctive secondary word and a performance-oriented domain; keep writeoncue.com as a campaign/redirect.
+
+Tone: calm, competent, minimal; Inter type, clean tokens, quick 120 ms motion.
+
+Monetization
+
+Free: unlimited rehearsal, local save, Smart Cast basic.
+
+Pro: premium voices, Duet Links, Beat Clips, self-tape export, private shares, coach notes.
+
+Studio: multi-seat, branding, casting mode later.
+
+Trials and annual pricing; optional voice pack add-ons if vendor costs require.
+
+Tech approach (mobile-first)
+
+Native preferred for audio reliability:
+
+iOS: Swift, AVAudioSession, AVSpeechSynthesizer, Background Audio, Media controls.
+
+Android: Kotlin, TextToSpeech/vendor SDK, Foreground Service, MediaSession.
+
+Shared core module for parsing, persona heuristics, prosody planner.
+
+TTS adapter pattern: system voices baseline, plug in Eleven/Azure/PlayHT with prefetch/cache and strict timeouts.
+
+Performance targets: cold start ≤ 1.2 s; tap→audio ≤ 120 ms (system) / ≤ 250 ms (cloud); zero jank on line advance.
+
+Growth & retention
+
+Duet Links and Beat Clips create shareable moments without exposing full scripts.
+
+Scene Packs reduce friction for common sides; presets make first run delightful.
+
+Streaks (optional), coach ecosystem, and reliable self-tape flow build habit.
+
+Risks and mitigations
+
+Name crowding (“Cue”) → prefer CastMate Studio or pair Cue with a distinctive second word; secure marks early.
+
+Voice uncanny valley → conservative defaults, tension curve tuning, weekly rater loops.
+
+Cloud latency → prefetch, dual-path fallback to system voices.
+
+Rights complaints → private by default, licensed packs, fast takedown process.
+
+Go/No-Go readiness (ship gate)
+
+Paste → pick role → Start in ≤ 15 seconds.
+
+TTS within budget; human raters ≥ 4.3/5 prosody fit on gold scenes.
+
+Self-tape export works reliably; Safe Mode robust; full a11y pass.
+
+Legal, privacy, DMCA in place; telemetry non-intrusive.
+
+That’s the complete idea: a one-tap, human-sounding scene partner that actors actually use every day, with the brand, UX, audio system, sharing loops, and business model aligned to feel like a top-tier, long-lived product.
