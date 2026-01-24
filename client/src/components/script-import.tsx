@@ -172,7 +172,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
     onImport(sessionName, script);
   };
 
-  const canSubmit = script.trim().length > 0 && !isLoading;
+  const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning;
   
   const detectCharacters = (text: string): string[] => {
     const lines = text.split('\n');
