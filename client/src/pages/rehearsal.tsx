@@ -906,10 +906,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 )}
               </div>
               
-              <h3 className="text-xl font-semibold mb-1">Scene Complete</h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Run {session.runsCompleted + 1} finished
-              </p>
+              <h3 className="text-xl font-semibold mb-3">Scene Complete</h3>
               
               {/* Performance feedback */}
               {feedback && (
@@ -945,26 +942,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               )}
               
               {/* Stats */}
-              <div className="flex items-center justify-center gap-4 text-sm mb-6">
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl font-bold text-foreground">{session.linesRehearsed}</span>
-                  <span className="text-xs text-muted-foreground">lines</span>
+              {completedRunStats && completedRunStats.totalUserLines > 0 && (
+                <div className="flex items-center justify-center gap-4 text-sm mb-6">
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
+                    <span className="text-xs text-muted-foreground">accuracy</span>
+                  </div>
+                  <div className="w-px h-8 bg-border" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-foreground">{completedRunStats.perfectLines}</span>
+                    <span className="text-xs text-muted-foreground">perfect</span>
+                  </div>
+                  <div className="w-px h-8 bg-border" />
+                  <div className="flex flex-col items-center">
+                    <span className="text-2xl font-bold text-foreground">{completedRunStats.totalUserLines}</span>
+                    <span className="text-xs text-muted-foreground">your lines</span>
+                  </div>
                 </div>
-                <div className="w-px h-8 bg-border" />
-                <div className="flex flex-col items-center">
-                  <span className="text-2xl font-bold text-foreground">{session.runsCompleted + 1}</span>
-                  <span className="text-xs text-muted-foreground">runs</span>
-                </div>
-                {completedRunStats && (
-                  <>
-                    <div className="w-px h-8 bg-border" />
-                    <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
-                      <span className="text-xs text-muted-foreground">accuracy</span>
-                    </div>
-                  </>
-                )}
-              </div>
+              )}
               
               {/* Actions */}
               <div className="flex gap-3">
