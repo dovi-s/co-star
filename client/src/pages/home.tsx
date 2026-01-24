@@ -3,8 +3,9 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { useSession } from "@/hooks/use-session";
-import { Logo, LogoIcon } from "@/components/logo";
-import { Lock, Sparkles, Heart, Zap, AudioLines, Brain } from "lucide-react";
+import { BrandLogo } from "@/components/brand-logo";
+import { SpotMascot } from "@/components/spot-mascot";
+import { Lock, Sparkles, Heart, Zap, AudioLines, Mic } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -76,49 +77,43 @@ export function HomePage({ onSessionReady }: HomePageProps) {
       data-testid="home-page"
     >
       <header className="flex items-center justify-between px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
-        <Logo size="md" showWordmark />
+        <BrandLogo size="md" showWordmark />
         <ThemeToggle />
       </header>
 
       <main className="flex-1 flex flex-col">
-        <div className="px-6 py-10 text-center space-y-6 bg-gradient-to-b from-slate-900/5 via-primary/5 to-transparent dark:from-slate-800/20 dark:via-primary/10 relative overflow-hidden">
+        <div className="px-6 py-10 text-center space-y-6 bg-gradient-to-b from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-500/15 dark:via-orange-500/8 relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-6 left-10 w-0.5 h-8 bg-primary/20 rounded-full" />
-            <div className="absolute top-10 left-14 w-0.5 h-12 bg-primary/30 rounded-full" />
-            <div className="absolute top-8 left-18 w-0.5 h-6 bg-primary/15 rounded-full" />
-            <div className="absolute top-6 right-10 w-0.5 h-10 bg-primary/25 rounded-full" />
-            <div className="absolute top-12 right-14 w-0.5 h-8 bg-primary/20 rounded-full" />
-            <div className="absolute top-8 right-18 w-0.5 h-5 bg-primary/15 rounded-full" />
+            <div className="absolute top-8 left-8 w-2 h-2 rounded-full bg-amber-400/30 animate-float" style={{ animationDelay: '0s' }} />
+            <div className="absolute top-16 right-12 w-1.5 h-1.5 rounded-full bg-orange-400/40 animate-float" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-12 left-16 w-1 h-1 rounded-full bg-yellow-400/25 animate-float" style={{ animationDelay: '1s' }} />
           </div>
           
           <div className="relative animate-fade-in-up">
-            <div className="w-24 h-24 mx-auto rounded-2xl bg-slate-800 dark:bg-slate-900 shadow-2xl shadow-slate-900/30 p-4">
-              <LogoIcon className="text-white" />
-            </div>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-green-500/90 text-[9px] font-bold text-white uppercase tracking-wider">
-              Ready
-            </div>
+            <SpotMascot 
+              mood={showWelcome ? "waving" : "happy"} 
+              size="xl"
+            />
           </div>
           
           <div className="space-y-4 animate-fade-in-up stagger-1">
             <div className="space-y-2">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
-                <Brain className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Scene IQ Technology</span>
-              </div>
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
+                Spot says: "Ready to rehearse?"
+              </p>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-                Your Intelligent Scene Partner
+                Your Scene Partner Awaits
               </h2>
             </div>
             <p className="text-muted-foreground text-base max-w-[340px] mx-auto leading-relaxed">
-              Paste your script. We analyze every line, detect emotion, and deliver your cues with <em>natural timing and prosody</em>.
+              Paste your script and I'll bring every character to life with <em>emotion and perfect timing</em>.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1 animate-fade-in-up stagger-2">
-            <FeaturePill icon={<Zap className="h-3 w-3" />} label="Zero Setup" />
-            <FeaturePill icon={<AudioLines className="h-3 w-3" />} label="Voice-First" />
-            <FeaturePill icon={<Lock className="h-3 w-3" />} label="Private by Default" />
+            <FeaturePill icon={<Zap className="h-3 w-3" />} label="Instant Setup" />
+            <FeaturePill icon={<Mic className="h-3 w-3" />} label="Smart Voices" />
+            <FeaturePill icon={<Lock className="h-3 w-3" />} label="100% Private" />
           </div>
         </div>
 
@@ -136,7 +131,7 @@ export function HomePage({ onSessionReady }: HomePageProps) {
           <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
             <span>Made with</span>
             <Heart className="h-2.5 w-2.5 text-red-500/60" />
-            <span>for actors</span>
+            <span>for actors by Spot</span>
           </div>
         </div>
       </footer>

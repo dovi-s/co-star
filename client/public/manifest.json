@@ -1,11 +1,11 @@
 {
   "name": "CastMate Studio",
   "short_name": "CastMate",
-  "description": "Your Intelligent Scene Partner - Voice-first rehearsal for actors",
+  "description": "Your Scene Partner Awaits - Voice-first rehearsal with Spot",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1e293b",
-  "theme_color": "#1e293b",
+  "background_color": "#F59E0B",
+  "theme_color": "#F59E0B",
   "orientation": "portrait-primary",
   "icons": [
     {

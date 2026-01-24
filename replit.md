@@ -112,22 +112,22 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
-### January 2026 - Professional Brand Identity (Phase 3)
-- **Digital Cue Monogram**: Professional CM logo representing script + sound
-  - Left side: Three stacked horizontal lines (script/text abstraction)
-  - Right side: Vertical sound bars at varying heights (audio modulation)
-  - Play triangle in negative space (action readiness)
-  - Deep slate blue background with white elements
-- **Scene IQ Technology Branding**: Technical, competent positioning
-  - "Your Intelligent Scene Partner" tagline
-  - "Scene IQ Ready" status indicators
-  - Premium, engineered studio feel
+### January 2026 - Spot Mascot & Brand Identity (Phase 3)
+- **Spot the Mascot**: Lovable golden theatrical spotlight character (Duolingo-style)
+  - A warm, friendly spotlight with expressive eyes and smile
+  - Multiple moods: happy, excited, encouraging, thinking, celebrating, waving, listening, proud
+  - Appears throughout app: home page, role selector, rehearsal header, celebration modal
+  - Distinctive amber/orange/gold color palette
+- **Brand Logo**: Amber gradient icon featuring Spot's face
+  - Warm, approachable, memorable identity
+  - "Your Scene Partner Awaits" tagline
+  - "Spot says:" personalized messaging
 - **Gamification System**: Progress tracking features
   - Daily streak tracking with flame icon
   - Daily goal progress bar (default 50 lines)
   - Line and run count tracking
   - Stats persistence in localStorage
-- **Mobile-First Polish**: Touch-friendly controls, responsive layout, safe area padding
+- **PWA Ready**: Service worker, manifest, offline support, home screen installation
 
 ### January 2026 - Major UX/UI Overhaul (Phase 2)
 - **Actor-Focused Copy**: Warm, encouraging language throughout ("Your Private Stage", "Step Into Character")

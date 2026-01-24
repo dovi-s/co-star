@@ -2,7 +2,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
 import { StreakDisplay } from "@/components/streak-display";
-import { Logo } from "@/components/logo";
+import { BrandLogo } from "@/components/brand-logo";
+import { SpotMascot } from "@/components/spot-mascot";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import type { Role, Scene } from "@shared/schema";
@@ -54,8 +55,9 @@ export function Header({
             <ChevronLeft className="h-5 w-5" />
           </Button>
         ) : (
-          <Logo size="sm" />
+          <BrandLogo size="sm" />
         )}
+        <SpotMascot mood="listening" size="xs" animate={false} />
         <div className="hidden sm:block">
           <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
             {sessionName}
