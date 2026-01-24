@@ -252,10 +252,55 @@ export function ThreeLineReader({
   };
 
   return (
-    <div className="flex flex-col gap-2" data-testid="three-line-reader">
-      {renderLine(previousLine, "previous", false)}
-      {renderLine(currentLine, "current", isUserLine)}
-      {renderLine(nextLine, "next", false)}
+    <div className="flex gap-3" data-testid="three-line-reader">
+      {/* Timeline indicator */}
+      <div className="flex flex-col items-center py-6 flex-shrink-0">
+        {/* Previous dot */}
+        <div className={cn(
+          "w-2 h-2 rounded-full transition-all duration-300",
+          previousLine ? "bg-muted-foreground/30" : "bg-transparent"
+        )} />
+        
+        {/* Line connecting to current */}
+        <div className={cn(
+          "w-0.5 flex-1 transition-all duration-300",
+          previousLine ? "bg-muted-foreground/20" : "bg-transparent"
+        )} />
+        
+        {/* Current dot - larger and highlighted */}
+        <div className={cn(
+          "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300",
+          isUserLine 
+            ? "bg-foreground ring-2 ring-foreground/20" 
+            : "bg-primary ring-2 ring-primary/20"
+        )}>
+          {isPlaying && (
+            <div className={cn(
+              "w-1.5 h-1.5 rounded-full animate-pulse",
+              isUserLine ? "bg-background" : "bg-primary-foreground"
+            )} />
+          )}
+        </div>
+        
+        {/* Line connecting to next */}
+        <div className={cn(
+          "w-0.5 flex-1 transition-all duration-300",
+          nextLine ? "bg-muted-foreground/20" : "bg-transparent"
+        )} />
+        
+        {/* Next dot */}
+        <div className={cn(
+          "w-2 h-2 rounded-full transition-all duration-300",
+          nextLine ? "bg-muted-foreground/30" : "bg-transparent"
+        )} />
+      </div>
+      
+      {/* Lines */}
+      <div className="flex-1 flex flex-col gap-2 min-w-0">
+        {renderLine(previousLine, "previous", false)}
+        {renderLine(currentLine, "current", isUserLine)}
+        {renderLine(nextLine, "next", false)}
+      </div>
     </div>
   );
 }
