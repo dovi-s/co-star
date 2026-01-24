@@ -81,22 +81,26 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           clearTimeout(autoAdvanceTimeoutRef.current);
         }
         
+        // Natural conversational pause before AI responds (800-1200ms feels human)
+        const naturalPause = 800 + Math.random() * 400;
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current) {
             advanceAfterUserLine();
           }
-        }, 400);
+        }, naturalPause);
       }
     });
 
     speechRecognition.onEnd(() => {
+      // If user stopped speaking but we didn't get a final result, 
+      // wait a bit longer before advancing
       if (waitingForUserRef.current && isPlayingRef.current) {
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current && waitingForUserRef.current) {
             waitingForUserRef.current = false;
             advanceAfterUserLine();
           }
-        }, 800);
+        }, 1200);
       }
     });
 
@@ -467,6 +471,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             memorizationMode={session.memorizationMode || "off"}
             onToggleBookmark={toggleBookmark}
             getRoleById={getRoleById}
+            userTranscript={userTranscript}
+            isListening={listeningState === "listening"}
           />
           
           {showUserTurnIndicator && (

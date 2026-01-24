@@ -60,15 +60,18 @@ class SpeechRecognitionEngine {
           this.resetSilenceTimeout();
 
           const result = event.results[event.results.length - 1];
-          const transcript = result[0].transcript;
+          const transcript = result[0].transcript.trim();
           const confidence = result[0].confidence || 0.9;
           const isFinal = result.isFinal;
 
-          this.onResultCallback?.({
-            transcript,
-            confidence,
-            isFinal,
-          });
+          // Only report if there's actual content
+          if (transcript.length > 0) {
+            this.onResultCallback?.({
+              transcript,
+              confidence,
+              isFinal,
+            });
+          }
 
           if (isFinal) {
             this.clearSilenceTimeout();
@@ -87,11 +90,13 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
+    // Give user 2.5 seconds of silence before considering their speech complete
+    // This allows for natural pauses in speech
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
         this.stop();
       }
-    }, 1500);
+    }, 2500);
   }
 
   private clearSilenceTimeout() {

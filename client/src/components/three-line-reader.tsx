@@ -16,6 +16,8 @@ interface ThreeLineReaderProps {
   onToggleBookmark: (lineId: string) => void;
   getRoleById: (roleId: string) => Role | undefined;
   onLineClick?: (line: ScriptLine) => void;
+  userTranscript?: string;
+  isListening?: boolean;
 }
 
 function maskText(text: string, mode: MemorizationMode): { display: string; hint?: string } {
@@ -63,6 +65,8 @@ export function ThreeLineReader({
   onToggleBookmark,
   getRoleById,
   onLineClick,
+  userTranscript,
+  isListening,
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const fontSizeClass = fontSize === 0 ? "text-base" : fontSize === 1 ? "text-lg" : "text-xl";
@@ -192,17 +196,41 @@ export function ThreeLineReader({
               </Button>
             )}
             
-            {/* User's turn indicator */}
+            {/* User's turn indicator with transcript feedback */}
             {isCurrent && isUser && isPlaying && !shouldMask && (
-              <div className="mt-3 flex items-center gap-2">
-                <div className="flex items-center gap-0.5">
-                  <span className="w-1 h-1 rounded-full bg-background/60 animate-pulse" />
-                  <span className="w-1 h-1 rounded-full bg-background/60 animate-pulse" style={{ animationDelay: '0.15s' }} />
-                  <span className="w-1 h-1 rounded-full bg-background/60 animate-pulse" style={{ animationDelay: '0.3s' }} />
+              <div className="mt-3 space-y-2">
+                {/* Listening status */}
+                <div className="flex items-center gap-2">
+                  {isListening ? (
+                    <>
+                      <div className="flex items-center gap-0.5">
+                        <span className="w-1.5 h-3 rounded-full bg-red-400 animate-pulse" />
+                        <span className="w-1.5 h-4 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.1s' }} />
+                        <span className="w-1.5 h-2.5 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
+                        <span className="w-1.5 h-3.5 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.15s' }} />
+                      </div>
+                      <span className="text-xs text-background/90 font-medium">
+                        Listening...
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Mic className="w-3 h-3 text-background/60" />
+                      <span className="text-xs text-background/70">
+                        Your turn to speak
+                      </span>
+                    </>
+                  )}
                 </div>
-                <span className="text-xs text-background/80">
-                  Your line
-                </span>
+                
+                {/* Show what user said */}
+                {userTranscript && (
+                  <div className="px-3 py-2 rounded-md bg-background/10 border border-background/20">
+                    <p className="text-sm text-background/90 italic">
+                      "{userTranscript}"
+                    </p>
+                  </div>
+                )}
               </div>
             )}
             
