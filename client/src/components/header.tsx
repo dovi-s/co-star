@@ -41,12 +41,20 @@ export function Header({
         {onBack && (
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               console.log("[Header] Back button clicked");
               onBack();
             }}
-            className="shrink-0 touch-manipulation -ml-2 p-3 rounded-md hover:bg-accent/80 active:bg-accent transition-colors"
-            style={{ minWidth: 44, minHeight: 44, touchAction: 'manipulation' }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("[Header] Back button touched");
+              onBack();
+            }}
+            className="shrink-0 touch-manipulation -ml-2 p-4 rounded-md hover:bg-accent/80 active:bg-accent transition-colors select-none"
+            style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />
