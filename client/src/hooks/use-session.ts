@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { Session, Role, ScriptLine, UpdateSession, BookmarkUpdate, RoleUpdate } from "@shared/schema";
+import type { Session, Role, ScriptLine, UpdateSession, BookmarkUpdate, RoleUpdate, MemorizationMode } from "@shared/schema";
 import { parseScript } from "@/lib/script-parser";
 
 function generateId(): string {
@@ -56,6 +56,9 @@ export function useSession() {
         currentSceneIndex: 0,
         isPlaying: false,
         ambientEnabled: false,
+        memorizationMode: "off",
+        runsCompleted: 0,
+        linesRehearsed: 0,
         createdAt: now,
         updatedAt: now,
       };
@@ -212,6 +215,32 @@ export function useSession() {
     updateSession({ ambientEnabled });
   }, [updateSession]);
 
+  const setMemorizationMode = useCallback((memorizationMode: MemorizationMode) => {
+    updateSession({ memorizationMode });
+  }, [updateSession]);
+
+  const incrementLinesRehearsed = useCallback(() => {
+    setSession(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        linesRehearsed: prev.linesRehearsed + 1,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
+  const incrementRunsCompleted = useCallback(() => {
+    setSession(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        runsCompleted: prev.runsCompleted + 1,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
   const clearSession = useCallback(() => {
     setSession(null);
     localStorage.removeItem(STORAGE_KEY);
@@ -268,6 +297,9 @@ export function useSession() {
     prevLine,
     setPlaying,
     setAmbient,
+    setMemorizationMode,
+    incrementLinesRehearsed,
+    incrementRunsCompleted,
     clearSession,
     getCurrentLine,
     getPreviousLine,

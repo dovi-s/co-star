@@ -112,15 +112,23 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
-### January 2026 - Major UX/UI Overhaul
+### January 2026 - Major UX/UI Overhaul (Phase 2)
+- **Actor-Focused Copy**: Warm, encouraging language throughout ("Your Private Stage", "Step Into Character")
+- **Line Memorization Mode**: Four levels - Full (see all), Partial (half hidden), Cue (first words), Memory (no help)
+- **Progress Tracking**: Tracks runs completed and lines rehearsed with celebration modal on scene completion
+- **Keyboard Shortcuts**: Space (play/pause), Arrow keys (navigate), R (repeat), Escape (stop)
+- **Theatrical Animations**: Spotlight effect, curtain transitions, heartbeat animations, success pulses
+- **Celebration Moments**: Trophy animation and stats display when completing a scene run
+
+### January 2026 - Major UX/UI Overhaul (Phase 1)
 - **Premium Animations**: Added comprehensive animation system with fade-in, slide, scale, float effects
 - **Home Page Redesign**: New hero section with floating icon, feature pills, cleaner layout
 - **Role Selection Overhaul**: Card-based layout with progress bars, lead badges, AI indicators
 - **Three-Line Reader**: Enhanced with gradient backgrounds, speaking wave indicators, "Your turn" prompts
-- **Transport Bar**: Circular progress ring around play button, refined controls
+- **Transport Bar**: Circular progress ring around play button, refined controls with keyboard hints
 - **Settings Drawer**: Polished drawer with rounded corners, better organization, preset picker
 - **Theme Toggle**: Animated icon rotation between sun/moon
-- **Demo Script**: Built-in sample script for quick testing
+- **Demo Script**: Built-in emotional sample scene for quick testing
 - **Visual Polish**: Consistent rounded corners (rounded-xl/2xl), shadows, glass effects
 - **Micro-interactions**: Hover lift effects, glow pulses, smooth state transitions
 

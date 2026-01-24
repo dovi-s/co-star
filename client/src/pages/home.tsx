@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { useSession } from "@/hooks/use-session";
-import { Mic, Sparkles, Shield, ChevronRight } from "lucide-react";
+import { Mic, Theater, Lock, Sparkles, Heart, Star, Zap } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -18,12 +18,18 @@ export function HomePage({ onSessionReady }: HomePageProps) {
     return "import";
   });
   const [isAnimating, setIsAnimating] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     if (session && session.userRoleId) {
       onSessionReady();
     }
   }, [session, onSessionReady]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setShowWelcome(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleImport = (name: string, rawScript: string) => {
     const newSession = createSession(name, rawScript);
@@ -32,7 +38,7 @@ export function HomePage({ onSessionReady }: HomePageProps) {
       setTimeout(() => {
         setStep("role-select");
         setIsAnimating(false);
-      }, 200);
+      }, 400);
     }
   };
 
@@ -47,12 +53,12 @@ export function HomePage({ onSessionReady }: HomePageProps) {
       clearSession();
       setStep("import");
       setIsAnimating(false);
-    }, 200);
+    }, 300);
   };
 
   if (step === "role-select" && session) {
     return (
-      <div className={isAnimating ? "opacity-0" : "animate-fade-in"}>
+      <div className={`transition-all duration-500 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
         <RoleSelector 
           roles={session.roles} 
           onRoleSelect={handleRoleSelect} 
@@ -65,46 +71,58 @@ export function HomePage({ onSessionReady }: HomePageProps) {
 
   return (
     <div 
-      className={`min-h-screen flex flex-col ${isAnimating ? "opacity-0" : ""}`} 
+      className={`min-h-screen flex flex-col transition-all duration-500 ${isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"}`} 
       data-testid="home-page"
     >
       <header className="flex items-center justify-between px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
-        <div className="flex items-center gap-3 animate-fade-in">
+        <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
-              <Mic className="h-5 w-5 text-primary-foreground" />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-md">
+              <Theater className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-accent border-2 border-background" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background animate-pulse" />
           </div>
           <div>
             <h1 className="font-bold text-lg tracking-tight">CastMate</h1>
-            <p className="text-xs text-muted-foreground -mt-0.5">Rehearse on cue</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Studio</p>
           </div>
         </div>
         <ThemeToggle />
       </header>
 
       <main className="flex-1 flex flex-col">
-        <div className="px-6 py-10 text-center space-y-5 border-b bg-gradient-to-b from-primary/5 via-transparent to-transparent">
-          <div className="animate-fade-in-up">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 mb-4 animate-float">
-              <Mic className="h-10 w-10 text-primary" />
+        <div className="px-6 py-8 text-center space-y-6 bg-gradient-to-b from-primary/8 via-accent/5 to-transparent relative overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="absolute top-4 left-8 w-2 h-2 rounded-full bg-primary/20 animate-float" style={{ animationDelay: '0s' }} />
+            <div className="absolute top-12 right-12 w-1.5 h-1.5 rounded-full bg-accent/30 animate-float" style={{ animationDelay: '0.5s' }} />
+            <div className="absolute bottom-8 left-16 w-1 h-1 rounded-full bg-primary/15 animate-float" style={{ animationDelay: '1s' }} />
+            <div className="absolute top-20 left-1/3 w-1.5 h-1.5 rounded-full bg-accent/20 animate-float" style={{ animationDelay: '1.5s' }} />
+          </div>
+          
+          <div className="relative animate-fade-in-up">
+            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15 mb-2 relative">
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
+              <Mic className="h-12 w-12 text-primary relative z-10" />
             </div>
           </div>
           
-          <div className="space-y-3 animate-fade-in-up stagger-1">
-            <h2 className="text-3xl font-bold tracking-tight">
-              Your AI Scene Partner
-            </h2>
-            <p className="text-muted-foreground text-base max-w-[320px] mx-auto leading-relaxed">
-              Paste your script, pick your role, and start rehearsing with intelligent voices.
+          <div className="space-y-4 animate-fade-in-up stagger-1">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest">Welcome to</p>
+              <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
+                Your Private Stage
+              </h2>
+            </div>
+            <p className="text-muted-foreground text-base max-w-[340px] mx-auto leading-relaxed">
+              Rehearse with AI scene partners who read with <em>real emotion</em>. 
+              No judgment, no scheduling, no limits.
             </p>
           </div>
 
-          <div className="flex items-center justify-center gap-4 pt-2 animate-fade-in-up stagger-2">
-            <FeaturePill icon={<Sparkles className="h-3.5 w-3.5" />} text="Smart Cast" />
-            <FeaturePill icon={<Mic className="h-3.5 w-3.5" />} text="Natural Voices" />
-            <FeaturePill icon={<Shield className="h-3.5 w-3.5" />} text="Private" />
+          <div className="flex flex-wrap items-center justify-center gap-2 pt-1 animate-fade-in-up stagger-2">
+            <FeaturePill icon={<Zap className="h-3 w-3" />} label="Instant Setup" />
+            <FeaturePill icon={<Sparkles className="h-3 w-3" />} label="Smart Voices" />
+            <FeaturePill icon={<Lock className="h-3 w-3" />} label="100% Private" />
           </div>
         </div>
 
@@ -113,21 +131,28 @@ export function HomePage({ onSessionReady }: HomePageProps) {
         </div>
       </main>
 
-      <footer className="px-4 py-4 text-center border-t safe-bottom animate-fade-in stagger-4">
-        <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-          <Shield className="h-3.5 w-3.5" />
-          <span>Everything stays on your device</span>
+      <footer className="px-4 py-4 text-center border-t safe-bottom">
+        <div className="flex flex-col items-center gap-2">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <Lock className="h-3 w-3" />
+            <span>Your scripts never leave this device</span>
+          </div>
+          <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
+            <span>Made with</span>
+            <Heart className="h-2.5 w-2.5 text-red-500/60" />
+            <span>for actors everywhere</span>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-function FeaturePill({ icon, text }: { icon: React.ReactNode; text: string }) {
+function FeaturePill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card border text-xs font-medium text-muted-foreground transition-smooth hover-lift">
+    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/80 border text-xs font-medium text-muted-foreground backdrop-blur-sm">
       <span className="text-primary">{icon}</span>
-      {text}
+      {label}
     </div>
   );
 }

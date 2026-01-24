@@ -3,9 +3,12 @@ import { Header } from "@/components/header";
 import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
+import { MemorizationToggle } from "@/components/memorization-toggle";
 import { useSession } from "@/hooks/use-session";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
-import type { VoicePreset } from "@shared/schema";
+import type { VoicePreset, MemorizationMode } from "@shared/schema";
+import { Trophy, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
   onBack: () => void;
@@ -26,6 +29,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     goToScene,
     setPlaying,
     setAmbient,
+    setMemorizationMode,
+    incrementLinesRehearsed,
+    incrementRunsCompleted,
     toggleBookmark,
     updateRolePreset,
     createSession,
@@ -36,6 +42,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
@@ -52,11 +59,48 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   }, [session?.isPlaying]);
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          handlePlayPause();
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          handleNext();
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          handleBack();
+          break;
+        case "KeyR":
+          e.preventDefault();
+          handleRepeat();
+          break;
+        case "Escape":
+          e.preventDefault();
+          if (session?.isPlaying) {
+            ttsEngine.stop();
+            setPlaying(false);
+          }
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [session?.isPlaying, currentIsUserLine]);
+
+  useEffect(() => {
     if (session?.ambientEnabled && !ambientRef.current) {
       try {
         const ctx = new AudioContext();
         const gain = ctx.createGain();
-        gain.gain.value = 0.02;
+        gain.gain.value = 0.015;
         gain.connect(ctx.destination);
 
         const bufferSize = 2 * ctx.sampleRate;
@@ -72,7 +116,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
         const filter = ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.value = 200;
+        filter.frequency.value = 180;
 
         noise.connect(filter);
         filter.connect(gain);
@@ -80,8 +124,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
         ambientRef.current = ctx;
         ambientGainRef.current = gain;
-      } catch {
-      }
+      } catch {}
     } else if (!session?.ambientEnabled && ambientRef.current) {
       ambientRef.current.close();
       ambientRef.current = null;
@@ -111,15 +154,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
       if (result === "success" && isPlayingRef.current) {
+        incrementLinesRehearsed();
         const next = getNextLine();
         if (next) {
           nextLine();
         } else {
           setPlaying(false);
+          incrementRunsCompleted();
+          setShowCelebration(true);
+          setTimeout(() => setShowCelebration(false), 3000);
         }
       }
     });
-  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session]);
+  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted]);
 
   useEffect(() => {
     if (session?.isPlaying && currentLine) {
@@ -144,7 +191,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleNext = () => {
     ttsEngine.stop();
-    nextLine();
+    if (currentIsUserLine) {
+      incrementLinesRehearsed();
+    }
+    const next = getNextLine();
+    if (next) {
+      nextLine();
+    } else if (session?.isPlaying) {
+      setPlaying(false);
+      incrementRunsCompleted();
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
+    }
   };
 
   const handleBack = () => {
@@ -183,6 +241,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     onBack();
   };
 
+  const handleMemorizationChange = (mode: MemorizationMode) => {
+    setMemorizationMode(mode);
+  };
+
   if (!session) {
     onBack();
     return null;
@@ -210,6 +272,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onJumpToLine={handleJumpToLine}
       />
 
+      {showCelebration && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none animate-fade-in">
+          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center animate-scale-in pointer-events-auto">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 animate-bounce">
+              <Trophy className="h-10 w-10 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Scene Complete!</h3>
+            <p className="text-muted-foreground mb-4">
+              Run #{session.runsCompleted + 1} finished
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Sparkles className="h-4 w-4 text-yellow-500" />
+              <span>{session.linesRehearsed} lines practiced today</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in">
         <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
           <ThreeLineReader
@@ -220,6 +300,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             isPlaying={session.isPlaying}
             showDirections={showDirections}
             fontSize={fontSize}
+            memorizationMode={session.memorizationMode || "off"}
             onToggleBookmark={toggleBookmark}
             getRoleById={getRoleById}
           />
@@ -227,6 +308,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       </main>
 
       <footer className="sticky bottom-0 glass border-t safe-bottom z-40">
+        <div className="px-4 py-2">
+          <MemorizationToggle 
+            mode={session.memorizationMode || "off"}
+            onChange={handleMemorizationChange}
+          />
+        </div>
+        
         <div className="px-4 py-5 max-w-md mx-auto">
           <TransportBar
             isPlaying={session.isPlaying}

@@ -44,6 +44,9 @@ export const sceneSchema = z.object({
 });
 export type Scene = z.infer<typeof sceneSchema>;
 
+export const memorizationModeSchema = z.enum(["off", "partial", "cue", "full"]);
+export type MemorizationMode = z.infer<typeof memorizationModeSchema>;
+
 export const sessionSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -54,6 +57,9 @@ export const sessionSchema = z.object({
   currentSceneIndex: z.number().default(0),
   isPlaying: z.boolean().default(false),
   ambientEnabled: z.boolean().default(false),
+  memorizationMode: memorizationModeSchema.default("off"),
+  runsCompleted: z.number().default(0),
+  linesRehearsed: z.number().default(0),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -71,6 +77,9 @@ export const updateSessionSchema = z.object({
   currentSceneIndex: z.number().optional(),
   isPlaying: z.boolean().optional(),
   ambientEnabled: z.boolean().optional(),
+  memorizationMode: memorizationModeSchema.optional(),
+  runsCompleted: z.number().optional(),
+  linesRehearsed: z.number().optional(),
   name: z.string().optional(),
 });
 export type UpdateSession = z.infer<typeof updateSessionSchema>;
