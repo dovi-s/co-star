@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import logoImage from "@assets/castmate_icon_transparent_512_1769295148528.png";
 
 interface LogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -25,25 +26,11 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
         "relative flex items-center justify-center",
         animated && "transition-transform duration-200 hover:scale-105"
       )}>
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full"
-        >
-          <circle 
-            cx="12" 
-            cy="12" 
-            r="10" 
-            className="fill-foreground"
-          />
-          <circle 
-            cx="12" 
-            cy="12" 
-            r="4" 
-            className="fill-background"
-          />
-        </svg>
+        <img 
+          src={logoImage} 
+          alt="CastMate" 
+          className="w-full h-full object-contain dark:invert-0 invert"
+        />
       </div>
       
       {showWordmark && (
@@ -57,25 +44,22 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
 
 export function LogoIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={cn("w-full h-full", className)}
-    >
-      <circle cx="12" cy="12" r="10" fill="currentColor" />
-      <circle cx="12" cy="12" r="4" fill="hsl(var(--background))" />
-    </svg>
+    <img 
+      src={logoImage} 
+      alt="CastMate" 
+      className={cn("w-full h-full object-contain dark:invert-0 invert", className)}
+    />
   );
 }
 
 export function LogoMark({ className }: { className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
-        <circle cx="12" cy="12" r="10" fill="currentColor" />
-        <circle cx="12" cy="12" r="4" fill="hsl(var(--background))" />
-      </svg>
+      <img 
+        src={logoImage} 
+        alt="CastMate" 
+        className="w-full h-full object-contain dark:invert-0 invert"
+      />
     </div>
   );
 }
