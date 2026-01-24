@@ -9,11 +9,11 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  xs: { container: "w-10 h-10", text: "text-sm" },
-  sm: { container: "w-14 h-14", text: "text-base" },
-  md: { container: "w-16 h-16", text: "text-lg" },
-  lg: { container: "w-20 h-20", text: "text-xl" },
-  xl: { container: "w-24 h-24", text: "text-2xl" },
+  xs: { container: "w-10 h-10", text: "text-base" },
+  sm: { container: "w-14 h-14", text: "text-lg" },
+  md: { container: "w-16 h-16", text: "text-xl" },
+  lg: { container: "w-20 h-20", text: "text-2xl" },
+  xl: { container: "w-24 h-24", text: "text-3xl" },
 };
 
 export function Logo({ size = "md", animated = true, showWordmark = false, className }: LogoProps) {
@@ -34,8 +34,9 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
       </div>
       
       {showWordmark && (
-        <span className={cn("font-semibold tracking-tight", text)}>
-          CastMate
+        <span className={cn("font-semibold tracking-wide", text)}>
+          <span className="font-bold">Cast</span>
+          <span className="font-light">Mate</span>
         </span>
       )}
     </div>
