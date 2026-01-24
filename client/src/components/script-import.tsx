@@ -118,10 +118,26 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   const detectCharacters = (text: string): string[] => {
     const lines = text.split('\n');
     const characters = new Set<string>();
+    
+    const patterns = [
+      /^([A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*.+$/,
+      /^((?:DR|MR|MRS|MS|MISS|PROF|CAPTAIN|DETECTIVE|OFFICER|AGENT|CHEF|WAITER)\.?\s+[A-Za-z][A-Za-z\-'\.]+)(?:\s*\([^)]*\))?\s*[:：]/i,
+    ];
+    
     lines.forEach(line => {
-      const match = line.match(/^([A-Z][A-Z\s]+?):/);
-      if (match) {
-        characters.add(match[1].trim());
+      const trimmed = line.trim();
+      for (const pattern of patterns) {
+        const match = trimmed.match(pattern);
+        if (match && match[1]) {
+          let name = match[1].trim()
+            .replace(/\s*\([^)]*\)\s*$/, "")
+            .replace(/^\d+[\.\)\-\s]+/, "")
+            .toUpperCase();
+          if (name.length >= 1 && name.length <= 35) {
+            characters.add(name);
+            break;
+          }
+        }
       }
     });
     return Array.from(characters);
