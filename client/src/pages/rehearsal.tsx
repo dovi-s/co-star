@@ -9,7 +9,7 @@ import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, MicOff } from "lucide-react";
+import { Check, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
@@ -226,12 +226,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setIsUserTurn(true);
     setUserTranscript("");
     
-    if (speechRecognition.available) {
+    // Only try speech recognition if available and not blocked
+    if (speechRecognition.available && !micBlocked) {
       setTimeout(() => {
         speechRecognition.start();
       }, 300);
+    } else {
+      // Fallback: auto-advance after 4 seconds if no speech recognition
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        if (isPlayingRef.current && waitingForUserRef.current) {
+          waitingForUserRef.current = false;
+          advanceAfterUserLine();
+        }
+      }, 4000);
     }
-  }, []);
+  }, [micBlocked, advanceAfterUserLine]);
 
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
@@ -422,8 +431,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     session.currentSceneIndex < session.scenes.length - 1
   );
 
-  const isListening = listeningState === "listening" && currentIsUserLine && session.isPlaying;
-  const showUserTurnIndicator = currentIsUserLine && (isUserTurn || session.isPlaying);
+  const isListening = listeningState === "listening" && currentIsUserLine;
+  const showUserTurnIndicator = currentIsUserLine && session.isPlaying;
 
   return (
     <div className="min-h-screen flex flex-col bg-background curtain-enter" data-testid="rehearsal-page">
@@ -494,16 +503,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
               <div className={cn(
                 "flex items-center gap-2 px-4 py-2 rounded-full border",
-                micBlocked 
-                  ? "bg-destructive/10 border-destructive/20" 
-                  : "bg-primary/10 border-primary/20"
+                isListening 
+                  ? "bg-primary/10 border-primary/20" 
+                  : "bg-foreground/5 border-foreground/10"
               )}>
-                {micBlocked ? (
-                  <>
-                    <MicOff className="h-4 w-4 text-destructive" />
-                    <span className="text-sm text-destructive font-medium">Mic access needed</span>
-                  </>
-                ) : isListening ? (
+                {isListening ? (
                   <>
                     <div className="relative">
                       <Mic className="h-4 w-4 text-primary" />
@@ -513,8 +517,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                   </>
                 ) : (
                   <>
-                    <Mic className="h-4 w-4 text-primary" />
-                    <span className="text-sm text-primary font-medium">Your turn</span>
+                    <Mic className="h-4 w-4 text-foreground/70" />
+                    <span className="text-sm text-foreground font-medium">Your line</span>
                   </>
                 )}
               </div>
@@ -523,11 +527,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                   "{userTranscript}"
                 </p>
               )}
-              <p className="mt-2 text-xs text-muted-foreground">
-                {micBlocked 
-                  ? "Allow microphone in your browser, then refresh" 
-                  : "Speak your line, then tap Next"}
-              </p>
             </div>
           )}
         </div>
