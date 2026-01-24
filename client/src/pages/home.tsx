@@ -3,7 +3,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { useSession } from "@/hooks/use-session";
-import { Mic, Theater, Lock, Sparkles, Heart, Star, Zap } from "lucide-react";
+import { Mascot, MascotName } from "@/components/mascot";
+import { Theater, Lock, Sparkles, Heart, Zap } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -99,23 +100,26 @@ export function HomePage({ onSessionReady }: HomePageProps) {
             <div className="absolute top-20 left-1/3 w-1.5 h-1.5 rounded-full bg-accent/20 animate-float" style={{ animationDelay: '1.5s' }} />
           </div>
           
-          <div className="relative animate-fade-in-up">
-            <div className="inline-flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-accent/15 mb-2 relative">
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/10 to-transparent animate-pulse" style={{ animationDuration: '3s' }} />
-              <Mic className="h-12 w-12 text-primary relative z-10" />
-            </div>
+          <div className="relative animate-fade-in-up mascot-enter">
+            <Mascot 
+              mood={showWelcome ? "waving" : "excited"} 
+              size="lg" 
+              showMessage={false}
+            />
           </div>
           
           <div className="space-y-4 animate-fade-in-up stagger-1">
             <div className="space-y-1">
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest">Welcome to</p>
+              <p className="text-xs font-semibold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
+                <MascotName /> says: "Ready to rehearse?"
+              </p>
               <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
                 Your Private Stage
               </h2>
             </div>
             <p className="text-muted-foreground text-base max-w-[340px] mx-auto leading-relaxed">
-              Rehearse with AI scene partners who read with <em>real emotion</em>. 
-              No judgment, no scheduling, no limits.
+              I'll be your scene partner! Just paste your script and I'll read
+              every other character with <em>real emotion</em>.
             </p>
           </div>
 
@@ -139,8 +143,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
           </div>
           <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
             <span>Made with</span>
-            <Heart className="h-2.5 w-2.5 text-red-500/60" />
-            <span>for actors everywhere</span>
+            <Heart className="h-2.5 w-2.5 text-red-500/60 animate-pulse" />
+            <span>for actors by <MascotName /></span>
           </div>
         </div>
       </footer>

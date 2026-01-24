@@ -5,9 +5,11 @@ import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { MemorizationToggle } from "@/components/memorization-toggle";
 import { useSession } from "@/hooks/use-session";
+import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Trophy, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Mascot, MascotName } from "@/components/mascot";
 import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
@@ -40,6 +42,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     error,
   } = useSession();
 
+  const { stats, recordRehearsal } = useUserStats();
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -193,6 +196,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     ttsEngine.stop();
     if (currentIsUserLine) {
       incrementLinesRehearsed();
+      recordRehearsal(1, 0);
     }
     const next = getNextLine();
     if (next) {
@@ -200,6 +204,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     } else if (session?.isPlaying) {
       setPlaying(false);
       incrementRunsCompleted();
+      recordRehearsal(0, 1);
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 3000);
     }
@@ -267,25 +272,34 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         showDirections={showDirections}
         scenes={session.scenes}
         currentSceneIndex={session.currentSceneIndex}
+        streak={stats.currentStreak}
+        dailyGoal={stats.dailyGoal}
+        todayLines={stats.todayLines}
         onFontSizeChange={setFontSize}
         onToggleDirections={() => setShowDirections(!showDirections)}
         onJumpToLine={handleJumpToLine}
       />
 
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center celebrate pointer-events-auto">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 heartbeat">
-              <Trophy className="h-10 w-10 text-white" />
-            </div>
-            <h3 className="text-2xl font-bold mb-2">Scene Complete!</h3>
-            <p className="text-muted-foreground mb-4">
-              Run #{session.runsCompleted + 1} finished
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/50 backdrop-blur-sm">
+          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center celebrate pointer-events-auto max-w-sm mx-4">
+            <Mascot mood="celebrating" size="lg" showMessage={false} className="mb-4" />
+            <h3 className="text-2xl font-bold mb-2">
+              <MascotName /> is so proud!
+            </h3>
+            <p className="text-lg font-medium text-primary mb-1">
+              Scene Complete!
             </p>
-            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mb-4">
+              Run #{session.runsCompleted + 1} in the books
+            </p>
+            <div className="flex items-center justify-center gap-2 text-sm bg-muted/50 rounded-full px-4 py-2">
               <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span>{session.linesRehearsed} lines practiced today</span>
+              <span className="font-medium">{session.linesRehearsed} lines practiced</span>
             </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Keep going! You're getting better every run.
+            </p>
           </div>
         </div>
       )}

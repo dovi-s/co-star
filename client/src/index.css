@@ -811,3 +811,168 @@
     transform: scale(1);
   }
 }
+
+/* ========================================
+   CUE MASCOT ANIMATIONS
+   Meet Cue - your friendly spotlight guide!
+   ======================================== */
+
+/* Gentle floating idle animation */
+.mascot-float {
+  animation: mascot-float 3s ease-in-out infinite;
+}
+
+@keyframes mascot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Excited bouncing */
+.mascot-bounce {
+  animation: mascot-bounce 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) infinite;
+}
+
+@keyframes mascot-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-15px) scale(1.05); }
+  50% { transform: translateY(-5px) scale(0.98); }
+  70% { transform: translateY(-10px) scale(1.02); }
+}
+
+/* Encouraging nod */
+.mascot-nod {
+  animation: mascot-nod 1.5s ease-in-out infinite;
+}
+
+@keyframes mascot-nod {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(5deg); }
+  75% { transform: rotate(-5deg); }
+}
+
+/* Celebration dance */
+.mascot-dance {
+  animation: mascot-dance 0.5s ease-in-out infinite;
+}
+
+@keyframes mascot-dance {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); }
+  25% { transform: translateY(-10px) rotate(-8deg) scale(1.1); }
+  50% { transform: translateY(0) rotate(0deg) scale(1); }
+  75% { transform: translateY(-10px) rotate(8deg) scale(1.1); }
+}
+
+/* Thinking pose */
+.mascot-think {
+  animation: mascot-think 2s ease-in-out infinite;
+}
+
+@keyframes mascot-think {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(8deg); }
+}
+
+/* Waving hello */
+.mascot-wave {
+  animation: mascot-wave 1s ease-in-out infinite;
+}
+
+@keyframes mascot-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  75% { transform: rotate(15deg); }
+}
+
+/* Proud stance */
+.mascot-proud {
+  animation: mascot-proud 2s ease-in-out infinite;
+}
+
+@keyframes mascot-proud {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Cheering */
+.mascot-cheer {
+  animation: mascot-cheer 0.4s ease-in-out infinite;
+}
+
+@keyframes mascot-cheer {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.08); }
+}
+
+/* Sparkle animations for excited states */
+.mascot-sparkle-1 {
+  animation: sparkle-pop 1s ease-in-out infinite;
+}
+.mascot-sparkle-2 {
+  animation: sparkle-pop 1s ease-in-out infinite 0.3s;
+}
+.mascot-sparkle-3 {
+  animation: sparkle-pop 1s ease-in-out infinite 0.6s;
+}
+
+@keyframes sparkle-pop {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* Eyes sparkle */
+.mascot-eyes-sparkle {
+  animation: eyes-sparkle 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes eyes-sparkle {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.1); }
+}
+
+/* Eyes look up (thinking) */
+.mascot-eyes-look-up {
+  animation: eyes-look-up 2s ease-in-out infinite;
+}
+
+@keyframes eyes-look-up {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+/* Hand wave */
+.mascot-hand-wave {
+  transform-origin: 75% 50%;
+  animation: hand-wave 0.5s ease-in-out infinite;
+}
+
+@keyframes hand-wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(20deg); }
+  75% { transform: rotate(-20deg); }
+}
+
+/* Shadow bounce sync */
+.mascot-shadow {
+  animation: shadow-sync 0.6s ease-in-out infinite;
+}
+
+@keyframes shadow-sync {
+  0%, 100% { transform: scale(1); opacity: 0.15; }
+  50% { transform: scale(0.8); opacity: 0.1; }
+}
+
+/* Mascot entrance */
+.mascot-enter {
+  animation: mascot-enter 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes mascot-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) translateY(50px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

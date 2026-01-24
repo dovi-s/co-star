@@ -63,6 +63,19 @@ export const sessionSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
 });
+
+export const userStatsSchema = z.object({
+  currentStreak: z.number().default(0),
+  longestStreak: z.number().default(0),
+  totalSessions: z.number().default(0),
+  totalLinesRehearsed: z.number().default(0),
+  totalRunsCompleted: z.number().default(0),
+  lastRehearsalDate: z.string().nullable(),
+  dailyGoal: z.number().default(50),
+  todayLines: z.number().default(0),
+  achievements: z.array(z.string()).default([]),
+});
+export type UserStats = z.infer<typeof userStatsSchema>;
 export type Session = z.infer<typeof sessionSchema>;
 
 export const insertSessionSchema = z.object({

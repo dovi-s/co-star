@@ -1,7 +1,8 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
-import { Mic } from "lucide-react";
+import { StreakDisplay } from "@/components/streak-display";
+import { Mascot } from "@/components/mascot";
 import type { Role, Scene } from "@shared/schema";
 
 interface HeaderProps {
@@ -12,6 +13,9 @@ interface HeaderProps {
   showDirections?: boolean;
   scenes?: Scene[];
   currentSceneIndex?: number;
+  streak?: number;
+  dailyGoal?: number;
+  todayLines?: number;
   onFontSizeChange?: (size: number) => void;
   onToggleDirections?: () => void;
   onJumpToLine?: (lineIndex: number) => void;
@@ -25,6 +29,9 @@ export function Header({
   showDirections = true,
   scenes = [],
   currentSceneIndex = 0,
+  streak = 0,
+  dailyGoal = 50,
+  todayLines = 0,
   onFontSizeChange,
   onToggleDirections,
   onJumpToLine,
@@ -33,12 +40,7 @@ export function Header({
     <header className="flex items-center justify-between gap-3 px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
       <div className="flex items-center gap-3 min-w-0">
         <div className="flex items-center gap-2.5">
-          <div className="relative">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-sm">
-              <Mic className="h-4.5 w-4.5 text-primary-foreground" />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-accent border-2 border-background" />
-          </div>
+          <Mascot mood="encouraging" size="sm" showMessage={false} />
           <div className="hidden sm:block">
             <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
               {sessionName}
@@ -50,6 +52,10 @@ export function Header({
         {userRole && (
           <RoleChip role={userRole} isUserRole />
         )}
+        
+        <div className="hidden sm:block">
+          <StreakDisplay streak={streak} dailyGoal={dailyGoal} todayLines={todayLines} compact />
+        </div>
       </div>
 
       <div className="flex items-center gap-1">

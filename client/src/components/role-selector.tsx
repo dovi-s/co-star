@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Check, User, ChevronLeft, Sparkles, Volume2, Theater, Star, Crown } from "lucide-react";
+import { Check, User, ChevronLeft, Sparkles, Volume2, Star, Crown, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Role } from "@shared/schema";
+import { Mascot, MascotName } from "@/components/mascot";
 import { cn } from "@/lib/utils";
 
 interface RoleSelectorProps {
@@ -67,16 +68,16 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
 
       <div className="flex-1 flex flex-col">
         <div className="px-6 py-8 text-center space-y-4 bg-gradient-to-b from-primary/5 via-transparent to-transparent">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-br from-accent/20 via-primary/15 to-accent/10 mb-2 relative animate-fade-in">
-            <Theater className="h-10 w-10 text-primary" />
-            <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-yellow-500/90 flex items-center justify-center">
-              <Star className="h-3 w-3 text-white fill-white" />
-            </div>
+          <div className="animate-fade-in">
+            <Mascot mood="encouraging" size="md" showMessage={false} />
           </div>
           
           <div className="space-y-2 animate-fade-in-up stagger-1">
+            <p className="text-xs text-muted-foreground">
+              <MascotName /> asks:
+            </p>
             <h2 className="text-2xl font-bold tracking-tight">
-              Step Into Character
+              Who Will You Be Tonight?
             </h2>
             <p className="text-muted-foreground text-sm max-w-[300px] mx-auto leading-relaxed">
               Choose who you'll be. Your scene partners will come to life with natural AI voices.
@@ -205,7 +206,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           >
             {selectedRoleId ? (
               <>
-                <Theater className="h-5 w-5" />
+                <Play className="h-5 w-5" />
                 Enter the Scene
               </>
             ) : (
