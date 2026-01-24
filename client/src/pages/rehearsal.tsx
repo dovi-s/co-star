@@ -91,9 +91,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, 
           `(${Math.round(match.percentMatched)}%)`);
         
-        // Auto-advance when user has matched 70%+ of the words
-        if (match.percentMatched >= 70) {
-          console.log("[Rehearsal] 70%+ match, advancing now!");
+        // Auto-advance when user has matched 80%+ of the words
+        if (match.percentMatched >= 80) {
+          console.log("[Rehearsal] 80%+ match, advancing now!");
           speechRecognition.stop();
           waitingForUserRef.current = false;
           
@@ -185,8 +185,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     
     const match = matchWords(currentLine.text, userTranscript);
-    if (match.percentMatched >= 70 && waitingForUserRef.current) {
-      console.log("[Rehearsal] Backup watcher: 70%+ match detected, forcing advancement");
+    if (match.percentMatched >= 80 && waitingForUserRef.current) {
+      console.log("[Rehearsal] Backup watcher: 80%+ match detected, forcing advancement");
       advancedForLineRef.current = currentLine.id;
       waitingForUserRef.current = false;
       speechRecognition.stop();
