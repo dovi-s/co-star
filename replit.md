@@ -128,9 +128,25 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
+### January 2026 - Voice System Overhaul & Reliability Fixes
+- **Neutral American Voices**: Replaced mixed-accent voices with 6 neutral American English voices
+  - 3 male voices (Brian, Eric, Chris) + 3 female voices (Jessica, Sarah, Charlotte)
+  - Voice assignment cache ensures consistent voices per character throughout session
+  - Deterministic assignment based on character index (different characters get different voices)
+- **Speech Recognition Improvements**: 
+  - Switched to single-utterance mode for more reliable capture
+  - 3-second silence timeout, 15-second max listen limit
+  - LastTranscript recovery - if recognition ends without final, sends last captured text
+  - Comprehensive error recovery - always advances on error
+- **Dialogue Flow Robustness**:
+  - Watchdog timer forces advancement if audio stalls
+  - Safety timeout on user turns (20s max)
+  - Always advances on TTS completion regardless of success/error
+  - Brief 200ms pauses between lines for natural flow
+- **API Additions**: POST /api/tts/reset to clear voice cache between sessions
+
 ### January 2026 - ElevenLabs AI Voices & Bug Fixes
 - **Professional AI Voices**: Upgraded from browser TTS to ElevenLabs AI voices
-  - 9 voice types with smart character-aware assignment (gender, age, personality)
   - Emotion-aware voice settings (stability, similarity, style)
   - Backend proxy for secure API key handling
 - **Critical Bug Fix**: Fixed race condition in role selection
