@@ -5,6 +5,7 @@ export interface WordMatch {
 
 // Contraction mappings - both directions
 const CONTRACTIONS: Record<string, string[]> = {
+  // Negations
   "didn't": ["did", "not", "didnt"],
   "don't": ["do", "not", "dont"],
   "won't": ["will", "not", "wont"],
@@ -20,6 +21,7 @@ const CONTRACTIONS: Record<string, string[]> = {
   "haven't": ["have", "not", "havent"],
   "hadn't": ["had", "not", "hadnt"],
   "doesn't": ["does", "not", "doesnt"],
+  // Pronouns + be
   "i'm": ["i", "am", "im"],
   "you're": ["you", "are", "youre"],
   "we're": ["we", "are", "were"],
@@ -31,10 +33,12 @@ const CONTRACTIONS: Record<string, string[]> = {
   "what's": ["what", "is", "whats"],
   "there's": ["there", "is", "theres"],
   "here's": ["here", "is", "heres"],
+  // Have
   "i've": ["i", "have", "ive"],
   "you've": ["you", "have", "youve"],
   "we've": ["we", "have", "weve"],
   "they've": ["they", "have", "theyve"],
+  // Will
   "i'll": ["i", "will", "ill"],
   "you'll": ["you", "will", "youll"],
   "we'll": ["we", "will", "well"],
@@ -42,6 +46,7 @@ const CONTRACTIONS: Record<string, string[]> = {
   "he'll": ["he", "will", "hell"],
   "she'll": ["she", "will", "shell"],
   "it'll": ["it", "will", "itll"],
+  // Would
   "i'd": ["i", "would", "id"],
   "you'd": ["you", "would", "youd"],
   "we'd": ["we", "would", "wed"],
@@ -49,6 +54,41 @@ const CONTRACTIONS: Record<string, string[]> = {
   "he'd": ["he", "would", "hed"],
   "she'd": ["she", "would", "shed"],
   "let's": ["let", "us", "lets"],
+  // Informal speech patterns
+  "gonna": ["going", "to", "gon", "na"],
+  "wanna": ["want", "to", "wan", "na"],
+  "gotta": ["got", "to", "have", "gota"],
+  "kinda": ["kind", "of", "kindof"],
+  "sorta": ["sort", "of", "sortof"],
+  "outta": ["out", "of", "outof"],
+  "coulda": ["could", "have", "couldve"],
+  "woulda": ["would", "have", "wouldve"],
+  "shoulda": ["should", "have", "shouldve"],
+  "mighta": ["might", "have", "mightve"],
+  "musta": ["must", "have", "mustve"],
+  "oughta": ["ought", "to"],
+  "hafta": ["have", "to"],
+  "useta": ["used", "to"],
+  "lemme": ["let", "me"],
+  "gimme": ["give", "me"],
+  "dunno": ["do", "not", "know", "dont"],
+  "cause": ["because", "cuz", "coz"],
+  "cuz": ["because", "cause", "coz"],
+  "yeah": ["yes", "yea", "yep", "yup"],
+  "yep": ["yes", "yeah", "yea", "yup"],
+  "nope": ["no", "nah"],
+  "nah": ["no", "nope"],
+  "ok": ["okay", "okey"],
+  "okay": ["ok", "okey"],
+  "alright": ["all", "right", "aight"],
+  "ain't": ["is", "not", "are", "am", "aint", "isnt", "arent"],
+  "y'all": ["you", "all", "yall"],
+  "c'mon": ["come", "on", "cmon"],
+  "em": ["them"],
+  "'em": ["them"],
+  "ya": ["you", "your"],
+  "bout": ["about"],
+  "'bout": ["about"],
 };
 
 function normalizeWord(word: string): string {
