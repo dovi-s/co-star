@@ -149,70 +149,77 @@ function assignVoiceToCharacter(characterName: string, index: number): VoiceType
 }
 
 function getVoiceSettings(emotion: string, preset: string) {
-  let stability = 0.5;
-  let similarityBoost = 0.75;
-  let style = 0.5;
+  // Natural conversational defaults - higher stability = calmer, more consistent
+  let stability = 0.7;
+  let similarityBoost = 0.8;
+  let style = 0.25;
   let useSpeakerBoost = true;
 
-  // More dramatic settings for each emotion
+  // Moderate, natural-sounding variations for emotions
   switch (emotion) {
+    case "neutral":
+      stability = 0.75;
+      style = 0.2;
+      similarityBoost = 0.85;
+      break;
     case "angry":
-      stability = 0.25;  // Less stable = more variation/intensity
-      style = 0.85;      // High style = very expressive
-      similarityBoost = 0.6;
+      stability = 0.55;  // More stable to prevent yelling
+      style = 0.45;      // Moderate expression
+      similarityBoost = 0.75;
       break;
     case "sad":
-      stability = 0.75;  // More stable = slower, controlled
-      style = 0.6;
+      stability = 0.8;
+      style = 0.3;
       similarityBoost = 0.85;
       break;
     case "happy":
-      stability = 0.4;
-      style = 0.7;
-      similarityBoost = 0.7;
+      stability = 0.65;
+      style = 0.35;
+      similarityBoost = 0.8;
       break;
     case "excited":
-      stability = 0.3;   // Unstable = energetic variation
-      style = 0.8;       // Very expressive
-      similarityBoost = 0.65;
+      stability = 0.6;
+      style = 0.4;
+      similarityBoost = 0.75;
       break;
     case "whisper":
-      stability = 0.85;  // Very stable = consistent soft tone
-      style = 0.15;      // Low style = subdued
+      stability = 0.85;
+      style = 0.1;
       similarityBoost = 0.9;
       break;
     case "sarcastic":
-      stability = 0.45;
-      style = 0.7;       // Expressive for the dry delivery
-      similarityBoost = 0.75;
+      stability = 0.65;
+      style = 0.35;
+      similarityBoost = 0.8;
       break;
     case "fearful":
-      stability = 0.25;  // Unstable = shaky, nervous
-      style = 0.65;
-      similarityBoost = 0.7;
+      stability = 0.6;
+      style = 0.35;
+      similarityBoost = 0.75;
       break;
     case "urgent":
-      stability = 0.3;
-      style = 0.75;
-      similarityBoost = 0.65;
+      stability = 0.55;
+      style = 0.4;
+      similarityBoost = 0.75;
       break;
   }
 
   switch (preset) {
     case "theatrical":
-      stability *= 0.8;
-      style *= 1.3;
+      stability *= 0.9;
+      style *= 1.15;
       break;
     case "deadpan":
-      stability *= 1.4;
-      style *= 0.5;
+      stability *= 1.15;
+      style *= 0.7;
       break;
   }
 
+  // Clamp to safe ranges for natural speech
   return {
-    stability: Math.max(0, Math.min(1, stability)),
-    similarity_boost: Math.max(0, Math.min(1, similarityBoost)),
-    style: Math.max(0, Math.min(1, style)),
+    stability: Math.max(0.5, Math.min(0.9, stability)),
+    similarity_boost: Math.max(0.7, Math.min(0.95, similarityBoost)),
+    style: Math.max(0.1, Math.min(0.5, style)),
     use_speaker_boost: useSpeakerBoost,
   };
 }

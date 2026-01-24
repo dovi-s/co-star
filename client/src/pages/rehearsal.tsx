@@ -275,20 +275,32 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const naturalPause = Math.random() * 100 + 100;
 
     speakTimeoutRef.current = setTimeout(() => {
-      if (!isPlayingRef.current) return;
+      if (!isPlayingRef.current) {
+        console.log("[Rehearsal] Not playing, skipping TTS");
+        return;
+      }
+      
+      console.log("[Rehearsal] Speaking line:", role?.name, "-", line.text.substring(0, 40));
       
       ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
+        console.log("[Rehearsal] TTS callback:", result, "isPlaying:", isPlayingRef.current);
+        
         if (result === "success" && isPlayingRef.current) {
           incrementLinesRehearsed();
           
           const conversationalPause = Math.random() * 150 + 150;
+          console.log("[Rehearsal] Waiting", conversationalPause, "ms before next line");
           
           setTimeout(() => {
-            if (!isPlayingRef.current) return;
+            if (!isPlayingRef.current) {
+              console.log("[Rehearsal] Stopped playing during pause");
+              return;
+            }
             
             speakingLineRef.current = null;
             
             const next = getNextLine();
+            console.log("[Rehearsal] Next line exists:", !!next);
             if (next) {
               nextLine();
             } else {
@@ -298,6 +310,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               setTimeout(() => setShowCelebration(false), 3000);
             }
           }, conversationalPause);
+        } else if (result === "error") {
+          console.log("[Rehearsal] TTS error, resetting and trying next");
+          speakingLineRef.current = null;
+          // On error, try to continue to next line after a short delay
+          setTimeout(() => {
+            if (isPlayingRef.current) {
+              const next = getNextLine();
+              if (next) nextLine();
+            }
+          }, 500);
         }
       }, {
         characterName: role?.name || "Character",

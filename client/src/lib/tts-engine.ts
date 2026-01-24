@@ -2,14 +2,14 @@ import type { EmotionStyle, ProsodyParams, VoicePreset } from "@shared/schema";
 
 const emotionToProsody: Record<EmotionStyle, Partial<ProsodyParams>> = {
   neutral: { rate: 1, pitch: 0, volume: 0.9 },
-  happy: { rate: 1.1, pitch: 0.3, volume: 0.95 },
-  sad: { rate: 0.85, pitch: -0.4, volume: 0.75 },
-  angry: { rate: 1.15, pitch: 0.5, volume: 1 },
-  sarcastic: { rate: 0.95, pitch: -0.2, volume: 0.85 },
-  fearful: { rate: 1.2, pitch: 0.6, volume: 0.7 },
-  excited: { rate: 1.25, pitch: 0.4, volume: 1 },
-  whisper: { rate: 0.8, pitch: -0.3, volume: 0.5 },
-  urgent: { rate: 1.3, pitch: 0.3, volume: 1 },
+  happy: { rate: 1.05, pitch: 0.15, volume: 0.9 },
+  sad: { rate: 0.9, pitch: -0.2, volume: 0.8 },
+  angry: { rate: 1.05, pitch: 0.2, volume: 0.95 },
+  sarcastic: { rate: 0.95, pitch: -0.1, volume: 0.85 },
+  fearful: { rate: 1.05, pitch: 0.15, volume: 0.85 },
+  excited: { rate: 1.08, pitch: 0.2, volume: 0.95 },
+  whisper: { rate: 0.85, pitch: -0.15, volume: 0.6 },
+  urgent: { rate: 1.1, pitch: 0.15, volume: 0.95 },
 };
 
 const presetModifiers: Record<VoicePreset, Partial<ProsodyParams>> = {
@@ -110,6 +110,8 @@ class TTSEngine {
   private hasSpokenOnce = false;
   private currentAudio: HTMLAudioElement | null = null;
   private useElevenLabs = true;
+  private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private callbackFired = false;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -149,12 +151,45 @@ class TTSEngine {
     return this.isReady || this.useElevenLabs;
   }
 
+  private clearWatchdog() {
+    if (this.watchdogTimer) {
+      clearTimeout(this.watchdogTimer);
+      this.watchdogTimer = null;
+    }
+  }
+
+  private startWatchdog(text: string, onEnd?: (result: SpeakResult) => void): void {
+    this.clearWatchdog();
+    this.callbackFired = false;
+    
+    // Estimate max duration: ~150ms per character + 5 second buffer
+    const estimatedDuration = Math.max(10000, text.length * 150 + 5000);
+    
+    this.watchdogTimer = setTimeout(() => {
+      if (!this.callbackFired) {
+        console.log("[TTS] Watchdog triggered - audio likely stuck");
+        this.stop();
+        onEnd?.("success"); // Treat as success to advance dialogue
+      }
+    }, estimatedDuration);
+  }
+
+  private fireCallback(result: SpeakResult, onEnd?: (result: SpeakResult) => void) {
+    if (!this.callbackFired) {
+      this.callbackFired = true;
+      this.clearWatchdog();
+      onEnd?.(result);
+    }
+  }
+
   async speakWithElevenLabs(
     text: string,
     options: SpeakOptions,
     onEnd?: (result: SpeakResult) => void
   ): Promise<boolean> {
     try {
+      console.log("[TTS] Speaking:", options.characterName, "-", text.substring(0, 50) + "...");
+      
       const response = await fetch("/api/tts/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -169,6 +204,7 @@ class TTSEngine {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+        console.log("[TTS] Response not ok:", error);
         if (error.fallback) {
           return false;
         }
@@ -181,36 +217,48 @@ class TTSEngine {
       this.currentAudio = new Audio(audioUrl);
       this.currentAudio.volume = 1;
 
+      // Start watchdog timer based on text length
+      this.startWatchdog(text, onEnd);
+
       return new Promise((resolve) => {
         if (!this.currentAudio) {
-          onEnd?.("error");
+          console.log("[TTS] No audio element");
+          this.fireCallback("error", onEnd);
           resolve(false);
           return;
         }
 
-        this.currentAudio.onended = () => {
+        const audio = this.currentAudio;
+
+        audio.onended = () => {
+          console.log("[TTS] Audio ended successfully");
           URL.revokeObjectURL(audioUrl);
-          onEnd?.("success");
           this.currentAudio = null;
+          this.fireCallback("success", onEnd);
           resolve(true);
         };
 
-        this.currentAudio.onerror = () => {
+        audio.onerror = (e) => {
+          console.log("[TTS] Audio error:", e);
           URL.revokeObjectURL(audioUrl);
-          onEnd?.("error");
           this.currentAudio = null;
+          this.fireCallback("error", onEnd);
           resolve(false);
         };
 
-        this.currentAudio.play().catch(() => {
+        audio.play().then(() => {
+          console.log("[TTS] Audio playing...");
+        }).catch((e) => {
+          console.log("[TTS] Play failed:", e);
           URL.revokeObjectURL(audioUrl);
-          onEnd?.("error");
           this.currentAudio = null;
+          this.fireCallback("error", onEnd);
           resolve(false);
         });
       });
     } catch (error) {
-      console.error("ElevenLabs TTS error:", error);
+      console.error("[TTS] ElevenLabs error:", error);
+      this.fireCallback("error", onEnd);
       return false;
     }
   }
@@ -316,6 +364,9 @@ class TTSEngine {
   }
 
   stop() {
+    this.clearWatchdog();
+    this.callbackFired = true; // Prevent any pending callbacks
+    
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
