@@ -274,7 +274,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
         {script && (
           <button
             onClick={() => setScript("")}
-            className="absolute top-3 right-3 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground/60 hover:text-foreground transition-all"
+            className="absolute -top-2 -right-2 p-1.5 rounded-full bg-muted border border-border shadow-sm text-muted-foreground hover:text-foreground hover:bg-background transition-all z-10"
             data-testid="button-clear-script"
           >
             <X className="h-3.5 w-3.5" />
