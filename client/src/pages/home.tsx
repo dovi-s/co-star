@@ -39,8 +39,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
   };
 
   const handleRoleSelect = (roleId: string) => {
+    // Just set the role - the useEffect watching session.userRoleId will trigger navigation
     setUserRole(roleId);
-    onSessionReady();
   };
 
   const handleBackToImport = () => {

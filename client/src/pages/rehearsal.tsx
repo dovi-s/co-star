@@ -48,6 +48,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [showCelebration, setShowCelebration] = useState(false);
   const [listeningState, setListeningState] = useState<SpeechRecognitionState>("idle");
   const [userTranscript, setUserTranscript] = useState("");
+  const [isUserTurn, setIsUserTurn] = useState(false);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
@@ -193,6 +194,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     incrementLinesRehearsed();
     recordRehearsal(1, 0);
     setUserTranscript("");
+    setIsUserTurn(false);
+    waitingForUserRef.current = false;
     
     const next = getNextLine();
     if (next) {
@@ -208,21 +211,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const startListeningForUser = useCallback(() => {
     waitingForUserRef.current = true;
+    setIsUserTurn(true);
     setUserTranscript("");
     
     if (speechRecognition.available) {
       setTimeout(() => {
         speechRecognition.start();
       }, 300);
-    } else {
-      autoAdvanceTimeoutRef.current = setTimeout(() => {
-        if (waitingForUserRef.current && isPlayingRef.current) {
-          waitingForUserRef.current = false;
-          advanceAfterUserLine();
-        }
-      }, 3000);
     }
-  }, [advanceAfterUserLine]);
+  }, []);
 
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
@@ -284,12 +281,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       } else {
         speechRecognition.abort();
         waitingForUserRef.current = false;
+        setIsUserTurn(false);
         speakLine();
       }
     } else {
       ttsEngine.stop();
       speechRecognition.abort();
       waitingForUserRef.current = false;
+      setIsUserTurn(false);
     }
   }, [session?.isPlaying, session?.currentLineIndex, currentLine, currentIsUserLine, speakLine, startListeningForUser]);
 
@@ -298,6 +297,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       ttsEngine.stop();
       speechRecognition.abort();
       waitingForUserRef.current = false;
+      setIsUserTurn(false);
       setPlaying(false);
     } else {
       setPlaying(true);
@@ -308,6 +308,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     ttsEngine.stop();
     speechRecognition.abort();
     waitingForUserRef.current = false;
+    setIsUserTurn(false);
     
     if (currentIsUserLine) {
       incrementLinesRehearsed();
@@ -331,6 +332,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     ttsEngine.stop();
     speechRecognition.abort();
     waitingForUserRef.current = false;
+    setIsUserTurn(false);
     setUserTranscript("");
     prevLine();
   };
@@ -358,6 +360,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     ttsEngine.stop();
     speechRecognition.abort();
     waitingForUserRef.current = false;
+    setIsUserTurn(false);
     setUserTranscript("");
     
     if (sceneIndex !== undefined) {
@@ -401,6 +404,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   );
 
   const isListening = listeningState === "listening" && currentIsUserLine && session.isPlaying;
+  const showUserTurnIndicator = currentIsUserLine && (isUserTurn || session.isPlaying);
 
   return (
     <div className="min-h-screen flex flex-col bg-background curtain-enter" data-testid="rehearsal-page">
@@ -465,20 +469,32 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             getRoleById={getRoleById}
           />
           
-          {isListening && (
-            <div className="flex flex-col items-center mt-6 animate-fade-in">
+          {showUserTurnIndicator && (
+            <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
               <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <div className="relative">
-                  <Mic className="h-4 w-4 text-primary" />
-                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                </div>
-                <span className="text-sm text-primary font-medium">Listening...</span>
+                {isListening ? (
+                  <>
+                    <div className="relative">
+                      <Mic className="h-4 w-4 text-primary" />
+                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                    </div>
+                    <span className="text-sm text-primary font-medium">Listening...</span>
+                  </>
+                ) : (
+                  <>
+                    <Mic className="h-4 w-4 text-primary" />
+                    <span className="text-sm text-primary font-medium">Your turn</span>
+                  </>
+                )}
               </div>
               {userTranscript && (
                 <p className="mt-3 text-sm text-muted-foreground italic max-w-xs text-center animate-fade-in">
                   "{userTranscript}"
                 </p>
               )}
+              <p className="mt-2 text-xs text-muted-foreground">
+                Speak your line, then tap Next
+              </p>
             </div>
           )}
         </div>

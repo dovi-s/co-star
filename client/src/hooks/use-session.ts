@@ -279,7 +279,9 @@ export function useSession() {
 
   const isUserLine = useCallback((line: ScriptLine | null): boolean => {
     if (!line || !session?.userRoleId) return false;
-    return line.roleId === session.userRoleId;
+    const userRole = session.roles.find(r => r.id === session.userRoleId);
+    if (!userRole) return false;
+    return line.roleName === userRole.name || line.roleId === session.userRoleId;
   }, [session]);
 
   return {

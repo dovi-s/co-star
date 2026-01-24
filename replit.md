@@ -128,6 +128,16 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
+### January 2026 - ElevenLabs AI Voices & Bug Fixes
+- **Professional AI Voices**: Upgraded from browser TTS to ElevenLabs AI voices
+  - 9 voice types with smart character-aware assignment (gender, age, personality)
+  - Emotion-aware voice settings (stability, similarity, style)
+  - Backend proxy for secure API key handling
+- **Critical Bug Fix**: Fixed race condition in role selection
+  - Issue: `setUserRole()` state update was async, but `onSessionReady()` was called immediately after
+  - Result: `userRoleId` was null on rehearsal page, causing AI to speak user's lines
+  - Solution: Removed immediate `onSessionReady()` call; navigation now driven by existing useEffect that watches `session.userRoleId`
+
 ### January 2026 - Sophisticated Redesign (Phase 4)
 - **Premium Minimal Design**: Complete UI overhaul for $10B company aesthetic
   - Removed playful mascot (Spot) from core flows
