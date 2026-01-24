@@ -367,17 +367,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, [session?.ambientEnabled]);
 
-  const advanceAfterUserLine = useCallback((skipped = false) => {
+  const advanceAfterUserLine = useCallback(() => {
     const line = getCurrentLine();
-    const accuracy = skipped ? 0 : currentLineAccuracyRef.current;
+    const accuracy = currentLineAccuracyRef.current;
     
-    // Record line performance
+    // Record line performance - only count as skipped if very low/no accuracy
+    // A "skipped" line is one where the user didn't really attempt to speak it
     if (line) {
+      const wasSkipped = accuracy < 20;
       recordLinePerformance({
         lineId: line.id,
         accuracy,
         usedHint: false,
-        skipped,
+        skipped: wasSkipped,
       });
     }
     
@@ -624,6 +626,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearInterval(wordTimerRef.current);
       wordTimerRef.current = null;
     }
+    // Clear any pending auto-advance timeout to prevent double-recording
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     setIsSpeaking(false);
     setSpeakingWordIndex(-1);
     
@@ -631,12 +638,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (currentIsUserLine) {
       const line = getCurrentLine();
       if (line) {
-        const hadProgress = currentLineAccuracyRef.current > 20;
+        const accuracy = currentLineAccuracyRef.current;
+        const wasSkipped = accuracy < 20; // Same threshold as advanceAfterUserLine
         recordLinePerformance({
           lineId: line.id,
-          accuracy: currentLineAccuracyRef.current,
+          accuracy,
           usedHint: false,
-          skipped: !hadProgress,
+          skipped: wasSkipped,
         });
         currentLineAccuracyRef.current = 0;
       }
@@ -669,6 +677,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearInterval(wordTimerRef.current);
       wordTimerRef.current = null;
     }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     setIsSpeaking(false);
     setSpeakingWordIndex(-1);
     prevLine();
@@ -689,6 +701,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearInterval(wordTimerRef.current);
       wordTimerRef.current = null;
     }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     setIsSpeaking(false);
     setSpeakingWordIndex(-1);
     
@@ -706,6 +722,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (speakTimeoutRef.current) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
+    }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
     }
     
     if (sceneIndex !== undefined) {
