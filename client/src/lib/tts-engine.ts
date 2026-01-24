@@ -52,21 +52,42 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   const lowerText = text.toLowerCase();
   const lowerDir = direction?.toLowerCase() ?? "";
 
-  if (lowerDir.includes("whisper") || lowerDir.includes("quietly")) return "whisper";
-  if (lowerDir.includes("angry") || lowerDir.includes("furious")) return "angry";
-  if (lowerDir.includes("sarcastic") || lowerDir.includes("mockingly")) return "sarcastic";
-  if (lowerDir.includes("sad") || lowerDir.includes("tearfully")) return "sad";
-  if (lowerDir.includes("excited") || lowerDir.includes("enthusiastic")) return "excited";
-  if (lowerDir.includes("urgent") || lowerDir.includes("desperately")) return "urgent";
-  if (lowerDir.includes("fearful") || lowerDir.includes("scared")) return "fearful";
-  if (lowerDir.includes("happy") || lowerDir.includes("joyfully")) return "happy";
+  // Check stage directions first - most reliable
+  const whisperWords = ["whisper", "quietly", "softly", "under breath", "hushed", "murmur", "muttering"];
+  const angryWords = ["angry", "angrily", "furious", "rage", "yelling", "shouting", "screaming", "snapping", "frustrated", "irritated", "seething", "livid"];
+  const sarcasticWords = ["sarcastic", "sarcastically", "mockingly", "dryly", "deadpan", "ironic", "cynical", "snide", "eye roll", "rolling eyes"];
+  const sadWords = ["sad", "sadly", "tearfully", "crying", "sobbing", "choking up", "voice breaking", "trembling", "devastated", "heartbroken", "grief", "mournful"];
+  const excitedWords = ["excited", "excitedly", "enthusiastic", "thrilled", "giddy", "beaming", "gleeful", "ecstatic", "bouncing", "jumping"];
+  const urgentWords = ["urgent", "urgently", "desperately", "panicked", "frantic", "rushing", "hurried", "breathless", "alarmed"];
+  const fearfulWords = ["fearful", "scared", "terrified", "trembling", "shaking", "nervous", "anxious", "worried", "frightened", "horrified", "cowering"];
+  const happyWords = ["happy", "happily", "joyful", "joyfully", "laughing", "smiling", "grinning", "delighted", "amused", "chuckling", "giggling"];
 
-  if (lowerText.includes("!") && lowerText.length < 50) return "excited";
-  if (lowerText.includes("?!") || lowerText.includes("!?")) return "urgent";
-  if (lowerText.endsWith("...")) return "sad";
+  if (whisperWords.some(w => lowerDir.includes(w))) return "whisper";
+  if (angryWords.some(w => lowerDir.includes(w))) return "angry";
+  if (sarcasticWords.some(w => lowerDir.includes(w))) return "sarcastic";
+  if (sadWords.some(w => lowerDir.includes(w))) return "sad";
+  if (excitedWords.some(w => lowerDir.includes(w))) return "excited";
+  if (urgentWords.some(w => lowerDir.includes(w))) return "urgent";
+  if (fearfulWords.some(w => lowerDir.includes(w))) return "fearful";
+  if (happyWords.some(w => lowerDir.includes(w))) return "happy";
 
+  // Analyze text content for implicit emotions
+  const allCaps = text === text.toUpperCase() && text.length > 3;
   const exclamationCount = (lowerText.match(/!/g) || []).length;
-  if (exclamationCount >= 2) return "angry";
+  const questionCount = (lowerText.match(/\?/g) || []).length;
+  
+  if (allCaps && exclamationCount >= 1) return "angry";
+  if (lowerText.includes("?!") || lowerText.includes("!?")) return "urgent";
+  if (exclamationCount >= 2) return "excited";
+  if (lowerText.endsWith("...") && lowerText.length < 30) return "sad";
+  
+  // Check for emotional words in the dialogue itself
+  if (/\b(help|run|stop|no|wait)\b/i.test(text) && exclamationCount >= 1) return "urgent";
+  if (/\b(please|sorry|forgive|miss you|love you)\b/i.test(text) && lowerText.includes("...")) return "sad";
+  if (/\b(oh god|oh no|what the|holy)\b/i.test(text)) return "fearful";
+  if (/\b(haha|lol|funny|hilarious)\b/i.test(text)) return "happy";
+  
+  if (exclamationCount === 1 && lowerText.length < 50) return "excited";
 
   return "neutral";
 }

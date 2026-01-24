@@ -151,40 +151,50 @@ function assignVoiceToCharacter(characterName: string, index: number): VoiceType
 function getVoiceSettings(emotion: string, preset: string) {
   let stability = 0.5;
   let similarityBoost = 0.75;
-  let style = 0.4;
+  let style = 0.5;
   let useSpeakerBoost = true;
 
+  // More dramatic settings for each emotion
   switch (emotion) {
     case "angry":
-      stability = 0.3;
-      style = 0.7;
+      stability = 0.25;  // Less stable = more variation/intensity
+      style = 0.85;      // High style = very expressive
+      similarityBoost = 0.6;
       break;
     case "sad":
-      stability = 0.7;
-      style = 0.5;
-      similarityBoost = 0.8;
+      stability = 0.75;  // More stable = slower, controlled
+      style = 0.6;
+      similarityBoost = 0.85;
       break;
     case "happy":
-    case "excited":
       stability = 0.4;
-      style = 0.6;
+      style = 0.7;
+      similarityBoost = 0.7;
+      break;
+    case "excited":
+      stability = 0.3;   // Unstable = energetic variation
+      style = 0.8;       // Very expressive
+      similarityBoost = 0.65;
       break;
     case "whisper":
-      stability = 0.8;
-      style = 0.2;
+      stability = 0.85;  // Very stable = consistent soft tone
+      style = 0.15;      // Low style = subdued
       similarityBoost = 0.9;
       break;
     case "sarcastic":
-      stability = 0.4;
-      style = 0.6;
+      stability = 0.45;
+      style = 0.7;       // Expressive for the dry delivery
+      similarityBoost = 0.75;
       break;
     case "fearful":
-      stability = 0.3;
-      style = 0.5;
+      stability = 0.25;  // Unstable = shaky, nervous
+      style = 0.65;
+      similarityBoost = 0.7;
       break;
     case "urgent":
-      stability = 0.35;
-      style = 0.55;
+      stability = 0.3;
+      style = 0.75;
+      similarityBoost = 0.65;
       break;
   }
 
