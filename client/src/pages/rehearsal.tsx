@@ -298,6 +298,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const skippedLines = allPerfs.filter(p => p.skipped).length;
     const duration = Math.round((Date.now() - runPerformanceRef.current.startTime) / 1000);
     
+    console.log("[Performance] Run complete. Total lines:", totalUserLines, "Avg accuracy:", avgAccuracy);
+    console.log("[Performance] Line accuracies:", allPerfs.map(p => Math.round(p.accuracy)));
+    
     // Set completed stats
     setCompletedRunStats({
       averageAccuracy: avgAccuracy,
@@ -370,6 +373,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const advanceAfterUserLine = useCallback(() => {
     const line = getCurrentLine();
     const accuracy = currentLineAccuracyRef.current;
+    
+    console.log("[Performance] Recording line:", line?.id, "accuracy:", accuracy);
     
     // Record line performance - only count as skipped if very low/no accuracy
     // A "skipped" line is one where the user didn't really attempt to speak it
@@ -640,6 +645,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       if (line) {
         const accuracy = currentLineAccuracyRef.current;
         const wasSkipped = accuracy < 20; // Same threshold as advanceAfterUserLine
+        console.log("[Performance] handleNext recording line:", line.id, "accuracy:", accuracy, "skipped:", wasSkipped);
         recordLinePerformance({
           lineId: line.id,
           accuracy,
