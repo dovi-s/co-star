@@ -180,13 +180,13 @@ export function ThreeLineReader({
             >
               {shouldMask && !showHint ? maskedContent?.display : (
                 isCurrent && isUser && wordMatchResult && isListening ? (
-                  // User speaking - highlight matched words
+                  // User speaking - highlight matched words (no layout shift)
                   wordMatchResult.words.map((w, i) => (
                     <span
                       key={i}
                       className={cn(
-                        "transition-all duration-200",
-                        w.matched && "bg-background/30 text-background font-medium rounded px-0.5"
+                        "transition-opacity duration-150",
+                        w.matched ? "opacity-100" : "opacity-50"
                       )}
                     >
                       {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
