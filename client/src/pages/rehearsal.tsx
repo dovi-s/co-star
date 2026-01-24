@@ -7,8 +7,10 @@ import { MemorizationToggle } from "@/components/memorization-toggle";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
+import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check } from "lucide-react";
+import { Check, Mic } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
   onBack: () => void;
@@ -44,9 +46,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [listeningState, setListeningState] = useState<SpeechRecognitionState>("idle");
+  const [userTranscript, setUserTranscript] = useState("");
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
+  const waitingForUserRef = useRef(false);
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -58,6 +64,48 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   useEffect(() => {
     isPlayingRef.current = session?.isPlaying ?? false;
   }, [session?.isPlaying]);
+
+  useEffect(() => {
+    speechRecognition.onStateChange((state) => {
+      setListeningState(state);
+    });
+
+    speechRecognition.onResult((result) => {
+      setUserTranscript(result.transcript);
+      
+      if (result.isFinal && waitingForUserRef.current) {
+        waitingForUserRef.current = false;
+        
+        if (autoAdvanceTimeoutRef.current) {
+          clearTimeout(autoAdvanceTimeoutRef.current);
+        }
+        
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            advanceAfterUserLine();
+          }
+        }, 400);
+      }
+    });
+
+    speechRecognition.onEnd(() => {
+      if (waitingForUserRef.current && isPlayingRef.current) {
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          if (isPlayingRef.current && waitingForUserRef.current) {
+            waitingForUserRef.current = false;
+            advanceAfterUserLine();
+          }
+        }, 800);
+      }
+    });
+
+    return () => {
+      speechRecognition.abort();
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -86,6 +134,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           e.preventDefault();
           if (session?.isPlaying) {
             ttsEngine.stop();
+            speechRecognition.abort();
             setPlaying(false);
           }
           break;
@@ -140,12 +189,48 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, [session?.ambientEnabled]);
 
+  const advanceAfterUserLine = useCallback(() => {
+    incrementLinesRehearsed();
+    recordRehearsal(1, 0);
+    setUserTranscript("");
+    
+    const next = getNextLine();
+    if (next) {
+      nextLine();
+    } else {
+      setPlaying(false);
+      incrementRunsCompleted();
+      recordRehearsal(0, 1);
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 3000);
+    }
+  }, [getNextLine, incrementLinesRehearsed, incrementRunsCompleted, nextLine, recordRehearsal, setPlaying]);
+
+  const startListeningForUser = useCallback(() => {
+    waitingForUserRef.current = true;
+    setUserTranscript("");
+    
+    if (speechRecognition.available) {
+      setTimeout(() => {
+        speechRecognition.start();
+      }, 300);
+    } else {
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        if (waitingForUserRef.current && isPlayingRef.current) {
+          waitingForUserRef.current = false;
+          advanceAfterUserLine();
+        }
+      }, 3000);
+    }
+  }, [advanceAfterUserLine]);
+
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
     if (!line || !session) return;
 
     const isUser = isUserLine(line);
     if (isUser) {
+      startListeningForUser();
       return;
     }
 
@@ -153,37 +238,59 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const emotion = line.emotionHint || detectEmotion(line.text, line.direction);
     const prosody = calculateProsody(emotion, role?.voicePreset || "natural");
 
-    ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
-      if (result === "success" && isPlayingRef.current) {
-        incrementLinesRehearsed();
-        const next = getNextLine();
-        if (next) {
-          nextLine();
-        } else {
-          setPlaying(false);
-          incrementRunsCompleted();
-          setShowCelebration(true);
-          setTimeout(() => setShowCelebration(false), 3000);
+    const naturalPause = Math.random() * 200 + 150;
+
+    setTimeout(() => {
+      if (!isPlayingRef.current) return;
+      
+      ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
+        if (result === "success" && isPlayingRef.current) {
+          incrementLinesRehearsed();
+          
+          const conversationalPause = Math.random() * 300 + 200;
+          
+          setTimeout(() => {
+            if (!isPlayingRef.current) return;
+            
+            const next = getNextLine();
+            if (next) {
+              nextLine();
+            } else {
+              setPlaying(false);
+              incrementRunsCompleted();
+              setShowCelebration(true);
+              setTimeout(() => setShowCelebration(false), 3000);
+            }
+          }, conversationalPause);
         }
-      }
-    });
-  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted]);
+      });
+    }, naturalPause);
+  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted, startListeningForUser]);
 
   useEffect(() => {
     if (session?.isPlaying && currentLine) {
       if (currentIsUserLine) {
         ttsEngine.stop();
+        if (!waitingForUserRef.current) {
+          startListeningForUser();
+        }
       } else {
+        speechRecognition.abort();
+        waitingForUserRef.current = false;
         speakLine();
       }
     } else {
       ttsEngine.stop();
+      speechRecognition.abort();
+      waitingForUserRef.current = false;
     }
-  }, [session?.isPlaying, session?.currentLineIndex, currentLine, currentIsUserLine, speakLine]);
+  }, [session?.isPlaying, session?.currentLineIndex, currentLine, currentIsUserLine, speakLine, startListeningForUser]);
 
   const handlePlayPause = () => {
     if (session?.isPlaying) {
       ttsEngine.stop();
+      speechRecognition.abort();
+      waitingForUserRef.current = false;
       setPlaying(false);
     } else {
       setPlaying(true);
@@ -192,10 +299,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleNext = () => {
     ttsEngine.stop();
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    
     if (currentIsUserLine) {
       incrementLinesRehearsed();
       recordRehearsal(1, 0);
     }
+    setUserTranscript("");
+    
     const next = getNextLine();
     if (next) {
       nextLine();
@@ -210,18 +322,33 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleBack = () => {
     ttsEngine.stop();
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    setUserTranscript("");
     prevLine();
   };
 
   const handleRepeat = () => {
     ttsEngine.stop();
-    if (session?.isPlaying && !currentIsUserLine) {
-      speakLine();
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    setUserTranscript("");
+    
+    if (session?.isPlaying) {
+      if (currentIsUserLine) {
+        startListeningForUser();
+      } else {
+        speakLine();
+      }
     }
   };
 
   const handleJumpToLine = (lineIndex: number, sceneIndex?: number) => {
     ttsEngine.stop();
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    setUserTranscript("");
+    
     if (sceneIndex !== undefined) {
       goToScene(sceneIndex);
     }
@@ -234,12 +361,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleNewScript = (name: string, rawScript: string) => {
     ttsEngine.stop();
+    speechRecognition.abort();
     setPlaying(false);
     createSession(name, rawScript);
   };
 
   const handleClearSession = () => {
     ttsEngine.stop();
+    speechRecognition.abort();
     clearSession();
     onBack();
   };
@@ -259,6 +388,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     session.currentLineIndex < currentScene.lines.length - 1 ||
     session.currentSceneIndex < session.scenes.length - 1
   );
+
+  const isListening = listeningState === "listening" && currentIsUserLine && session.isPlaying;
 
   return (
     <div className="min-h-screen flex flex-col bg-background curtain-enter" data-testid="rehearsal-page">
@@ -322,6 +453,23 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             onToggleBookmark={toggleBookmark}
             getRoleById={getRoleById}
           />
+          
+          {isListening && (
+            <div className="flex flex-col items-center mt-6 animate-fade-in">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
+                <div className="relative">
+                  <Mic className="h-4 w-4 text-primary" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                </div>
+                <span className="text-sm text-primary font-medium">Listening...</span>
+              </div>
+              {userTranscript && (
+                <p className="mt-3 text-sm text-muted-foreground italic max-w-xs text-center animate-fade-in">
+                  "{userTranscript}"
+                </p>
+              )}
+            </div>
+          )}
         </div>
       </main>
 
