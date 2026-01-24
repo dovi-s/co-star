@@ -258,7 +258,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background" data-testid="rehearsal-page">
+    <div className="min-h-screen flex flex-col bg-background curtain-enter" data-testid="rehearsal-page">
       <Header
         sessionName={session.name}
         userRole={userRole ?? null}
@@ -273,9 +273,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       />
 
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none animate-fade-in">
-          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center animate-scale-in pointer-events-auto">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 animate-bounce">
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center celebrate pointer-events-auto">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center mx-auto mb-4 heartbeat">
               <Trophy className="h-10 w-10 text-white" />
             </div>
             <h3 className="text-2xl font-bold mb-2">Scene Complete!</h3>

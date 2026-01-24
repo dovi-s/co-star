@@ -658,30 +658,34 @@
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
-/* Spotlight effect for current line */
+/* Spotlight effect for current line - visible breathing glow */
 .spotlight {
   position: relative;
+  overflow: visible;
 }
 
 .spotlight::before {
   content: '';
   position: absolute;
-  top: -20%;
-  left: -10%;
-  right: -10%;
-  bottom: -20%;
+  top: -25%;
+  left: -12%;
+  right: -12%;
+  bottom: -25%;
   background: radial-gradient(
     ellipse at center,
-    hsl(var(--primary) / 0.08) 0%,
+    hsl(var(--primary) / 0.18) 0%,
+    hsl(var(--primary) / 0.08) 40%,
     transparent 70%
   );
   pointer-events: none;
-  animation: spotlight-breathe 4s ease-in-out infinite;
+  animation: spotlight-breathe 3s ease-in-out infinite;
+  z-index: -1;
+  border-radius: inherit;
 }
 
 @keyframes spotlight-breathe {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.6; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.03); }
 }
 
 /* Curtain transition effect */

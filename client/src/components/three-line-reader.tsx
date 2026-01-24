@@ -101,10 +101,10 @@ export function ThreeLineReader({
       <div
         onClick={() => onLineClick?.(line)}
         className={cn(
-          "relative py-5 px-5 rounded-2xl transition-all duration-500 cursor-pointer",
+          "relative py-5 px-5 rounded-2xl transition-all duration-500 cursor-pointer line-transition",
           type === "previous" && "opacity-35 scale-[0.96] hover:opacity-50",
           type === "next" && "opacity-45 scale-[0.96] hover:opacity-60",
-          isCurrent && isUser && "bg-gradient-to-br from-primary/12 via-primary/8 to-accent/5 border-2 border-primary/40 shadow-lg shadow-primary/10",
+          isCurrent && isUser && "bg-gradient-to-br from-primary/12 via-primary/8 to-accent/5 border-2 border-primary/40 shadow-lg shadow-primary/10 spotlight your-turn-glow",
           isCurrent && !isUser && "bg-card border border-border shadow-sm"
         )}
         data-testid={`line-${type}`}
