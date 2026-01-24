@@ -32,7 +32,7 @@ class SpeechRecognitionEngine {
       
       if (SpeechRecognitionAPI) {
         this.recognition = new SpeechRecognitionAPI();
-        this.recognition.continuous = false;  // Single utterance mode - more reliable
+        this.recognition.continuous = true;   // Continuous mode - keeps listening until we stop
         this.recognition.interimResults = true;
         this.recognition.lang = "en-US";
         this.recognition.maxAlternatives = 1;
@@ -131,13 +131,13 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    // 5 second silence = done speaking (gives more time for pauses in longer lines)
+    // 6 second silence after speaking = done (generous pause allowance)
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
-        console.log("[Speech] Silence timeout, stopping");
+        console.log("[Speech] Silence timeout after speech, stopping");
         this.stop();
       }
-    }, 5000);
+    }, 6000);
   }
 
   private clearSilenceTimeout() {
