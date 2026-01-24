@@ -84,6 +84,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           {sortedRoles.map((role, index) => {
             const isSelected = selectedRoleId === role.id;
             const linePercentage = Math.round((role.lineCount / totalLines) * 100);
+            const isLead = index === 0;
             
             return (
               <Card
@@ -121,7 +122,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                     {role.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {role.lineCount} lines
+                    {role.lineCount} lines {isLead && <span className="text-foreground/50">· lead</span>}
                   </span>
                 </div>
 
