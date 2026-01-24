@@ -26,9 +26,28 @@ const FEMALE_NAMES = new Set([
   "sarah", "jessica", "jennifer", "amanda", "ashley", "stephanie", "nicole", "melissa",
   "michelle", "lisa", "nancy", "karen", "betty", "helen", "sandra", "donna", "carol",
   "ruth", "sharon", "patricia", "catherine", "kate", "anna", "mary", "margaret",
-  "kim", "catherine", "katherine", "kate", "claire", "clara", "diana", "eleanor",
+  "kim", "katherine", "claire", "clara", "diana", "eleanor",
   "eve", "fiona", "gwen", "iris", "jane", "julia", "laura", "lucy", "maria", "natalie",
-  "nina", "paula", "rachel", "rebecca", "rose", "sara", "susan", "wendy", "alice"
+  "nina", "paula", "rachel", "rebecca", "rose", "sara", "susan", "wendy", "alice",
+  "lois", "meg", "bonnie", "jackie", "marge", "maggie", "patty", "selma",
+  "peggy", "luanne", "connie", "minh", "francine", "hayley",
+  "wilma", "pebbles", "daphne", "velma", "hermione", "ginny", "luna", "molly",
+  "cersei", "daenerys", "sansa", "arya", "brienne", "catelyn", "margaery", "ygritte",
+  "buffy", "willow", "cordelia", "dawn", "anya", "tara", "faith", "joyce",
+  "raven", "starfire", "jinx", "vi", "caitlyn", "ellie", "abby", "tess",
+  "lara", "aloy", "zelda", "peach", "samus", "bayonetta", "jill", "ada",
+  "monica", "phoebe", "janice", "amy", "bernadette", "penny",
+  "lorelai", "rory", "lane", "sookie", "paris", "carrie", "samantha", "miranda",
+  "blair", "serena", "jenny", "vanessa", "dorota", "ivy",
+  "leslie", "ann", "april", "tammy", "diane",
+  "britta", "annie", "shirley", "frankie",
+  "tahani", "janet", "simone", "eleanor", "mindy",
+  "bebe", "heidi", "kitty", "laurie", "debra", "marie", "amy", "patricia",
+  "carmela", "meadow", "adriana", "livia", "jennifer", "janice",
+  "skyler", "marie", "lydia", "jane", "andrea", "wendy",
+  "ruth", "beth", "darlene", "wendy", "helen", "marty",
+  "elizabeth", "keira", "mary", "maeve", "dolores", "clementine",
+  "winona", "june", "moira", "emily", "serena", "offred"
 ]);
 
 const MALE_NAMES = new Set([
@@ -44,7 +63,27 @@ const MALE_NAMES = new Set([
   "sean", "gerald", "carl", "dylan", "harold", "jordan", "jesse", "bryan", "lawrence",
   "arthur", "gabriel", "bruce", "logan", "albert", "willie", "alan", "eugene", "russell",
   "bobby", "howard", "carlos", "fred", "ralph", "roy", "louis", "philip", "randy",
-  "marco", "derek", "zrix", "reyes", "patel"
+  "marco", "derek", "zrix", "reyes", "patel",
+  "peter", "stewie", "chris", "quagmire", "cleveland", "joe", "mort", "seamus", "herbert", "carter",
+  "homer", "bart", "ned", "moe", "barney", "apu", "lenny", "carl", "krusty", "milhouse", "ralph",
+  "stan", "kyle", "kenny", "cartman", "butters", "randy", "gerald", "jimbo", "chef", "garrison",
+  "hank", "bobby", "dale", "bill", "boomhauer", "cotton", "buck", "kahn", "lucky",
+  "stan", "roger", "steve", "jeff", "klaus", "avery", "greg", "terry", "barry",
+  "fred", "barney", "george", "elroy", "astro", "shaggy", "fred", "johnny", "dean", "hank",
+  "harry", "ron", "draco", "dumbledore", "snape", "sirius", "lupin", "hagrid", "neville",
+  "jon", "tyrion", "jaime", "ned", "robb", "bran", "rickon", "theon", "jorah", "sandor", "gregor",
+  "spike", "angel", "giles", "xander", "oz", "riley", "wesley", "gunn",
+  "robin", "beast", "cyborg", "aquaman", "flash", "superman", "batman", "joker", "riddler",
+  "mario", "luigi", "link", "ganondorf", "bowser", "wario", "sonic", "tails", "knuckles",
+  "joel", "tommy", "jesse", "dina", "owen", "manny", "leon", "chris", "wesker", "carlos",
+  "ross", "chandler", "joey", "gunther", "mike", "richard", "david", "tag", "joshua", "eddie",
+  "sheldon", "leonard", "howard", "raj", "stuart", "barry", "wil", "bert", "zack", "priya",
+  "luke", "jess", "logan", "dean", "zach", "brian", "christopher", "taylor", "doyle",
+  "chuck", "nate", "eric", "rufus", "william", "carter", "tripp", "damien",
+  "ben", "tom", "andy", "jerry", "larry", "chris", "mark", "craig", "ron", "jean",
+  "jeff", "troy", "abed", "pierce", "chang", "duncan", "starburns", "magnitude",
+  "chidi", "jason", "michael", "derek", "shawn", "trevor", "doug",
+  "eric", "kelso", "hyde", "bob", "red", "pastor", "fenton"
 ]);
 
 function assignVoiceToCharacter(characterName: string, index: number): VoiceType {
