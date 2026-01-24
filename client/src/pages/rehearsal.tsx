@@ -56,6 +56,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const ambientGainRef = useRef<GainNode | null>(null);
   const waitingForUserRef = useRef(false);
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const speakingLineRef = useRef<string | null>(null);
+  const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -246,6 +248,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const line = getCurrentLine();
     if (!line || !session) return;
 
+    const lineKey = `${session.currentSceneIndex}-${session.currentLineIndex}`;
+    
+    if (speakingLineRef.current === lineKey) {
+      return;
+    }
+    speakingLineRef.current = lineKey;
+
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+
     const isUser = isUserLine(line);
     if (isUser) {
       startListeningForUser();
@@ -260,7 +274,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const naturalPause = Math.random() * 200 + 150;
 
-    setTimeout(() => {
+    speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) return;
       
       ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
@@ -271,6 +285,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           
           setTimeout(() => {
             if (!isPlayingRef.current) return;
+            
+            speakingLineRef.current = null;
             
             const next = getNextLine();
             if (next) {
@@ -297,6 +313,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       if (currentIsUserLine) {
         ttsEngine.stop();
         if (!waitingForUserRef.current) {
+          speakingLineRef.current = `${session.currentSceneIndex}-${session.currentLineIndex}`;
           startListeningForUser();
         }
       } else {
@@ -310,8 +327,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       speechRecognition.abort();
       waitingForUserRef.current = false;
       setIsUserTurn(false);
+      speakingLineRef.current = null;
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
     }
-  }, [session?.isPlaying, session?.currentLineIndex, currentLine, currentIsUserLine, speakLine, startListeningForUser]);
+  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
 
   const handlePlayPause = () => {
     if (session?.isPlaying) {
@@ -319,8 +341,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       speechRecognition.abort();
       waitingForUserRef.current = false;
       setIsUserTurn(false);
+      speakingLineRef.current = null;
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
       setPlaying(false);
     } else {
+      speakingLineRef.current = null;
       setPlaying(true);
     }
   };
@@ -330,6 +358,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     speechRecognition.abort();
     waitingForUserRef.current = false;
     setIsUserTurn(false);
+    speakingLineRef.current = null;
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
     
     if (currentIsUserLine) {
       incrementLinesRehearsed();
@@ -355,6 +388,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     waitingForUserRef.current = false;
     setIsUserTurn(false);
     setUserTranscript("");
+    speakingLineRef.current = null;
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
     prevLine();
   };
 
@@ -364,6 +402,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     waitingForUserRef.current = false;
     setIsUserTurn(false);
     setUserTranscript("");
+    speakingLineRef.current = null;
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
     
     goToLine(0);
     setPlaying(false);
@@ -375,6 +418,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     waitingForUserRef.current = false;
     setIsUserTurn(false);
     setUserTranscript("");
+    speakingLineRef.current = null;
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
     
     if (sceneIndex !== undefined) {
       goToScene(sceneIndex);
