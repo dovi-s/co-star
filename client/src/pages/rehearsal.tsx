@@ -567,8 +567,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 )}
               </div>
               {userTranscript && (
-                <p className="mt-3 text-sm text-muted-foreground italic max-w-xs text-center animate-fade-in">
-                  "{userTranscript}"
+                <p className="mt-3 text-sm text-muted-foreground/80 max-w-xs text-center transition-opacity duration-300">
+                  {userTranscript}
                 </p>
               )}
             </div>

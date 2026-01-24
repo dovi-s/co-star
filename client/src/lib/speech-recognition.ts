@@ -30,7 +30,7 @@ class SpeechRecognitionEngine {
       
       if (SpeechRecognitionAPI) {
         this.recognition = new SpeechRecognitionAPI();
-        this.recognition.continuous = false;
+        this.recognition.continuous = true;
         this.recognition.interimResults = true;
         this.recognition.lang = "en-US";
         this.recognition.maxAlternatives = 1;
@@ -93,13 +93,13 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    // Give user 2.5 seconds of silence before considering their speech complete
-    // This allows for natural pauses in speech
+    // Give user 4 seconds of silence before considering their speech complete
+    // This allows for natural pauses and thinking time
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
         this.stop();
       }
-    }, 2500);
+    }, 4000);
   }
 
   private clearSilenceTimeout() {

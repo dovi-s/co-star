@@ -225,9 +225,9 @@ export function ThreeLineReader({
                 
                 {/* Show what user said */}
                 {userTranscript && (
-                  <div className="px-3 py-2 rounded-md bg-background/10 border border-background/20">
-                    <p className="text-sm text-background/90 italic">
-                      "{userTranscript}"
+                  <div className="px-3 py-2 rounded-md bg-background/10 border border-background/20 transition-all duration-300">
+                    <p className="text-sm text-background/80 min-h-[1.25rem]">
+                      {userTranscript}
                     </p>
                   </div>
                 )}
