@@ -132,7 +132,7 @@ OTHER CHARACTER: [stage direction] More dialogue.
 Put stage directions in brackets.`}
             value={script}
             onChange={(e) => setScript(e.target.value)}
-            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[15px] rounded-lg bg-transparent leading-[2.2] px-5 py-4 placeholder:text-muted-foreground/40 font-[450] tracking-[0.01em]"
+            className="min-h-[300px] border-0 resize-none focus-visible:ring-0 text-[15px] rounded-lg bg-transparent leading-[2.6] px-6 py-5 placeholder:text-muted-foreground/40 font-normal"
             data-testid="textarea-script"
           />
 
