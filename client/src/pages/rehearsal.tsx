@@ -115,7 +115,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       // Otherwise let user keep speaking or tap Next manually
       if (result.isFinal && waitingForUserRef.current) {
         const match = line ? matchWords(line.text, result.transcript) : null;
-        if (match && match.percentMatched >= 50) {
+        if (match && match.percentMatched >= 35) {
           console.log("[Rehearsal] Got final speech result with decent match, advancing");
           waitingForUserRef.current = false;
           
