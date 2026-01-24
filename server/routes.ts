@@ -265,28 +265,43 @@ export async function registerRoutes(
         baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
       });
 
-      const systemPrompt = `You are a creative screenwriter. Generate a short, compelling dialogue scene for actor rehearsal practice.
+      const systemPrompt = `You are an expert screenwriter creating dialogue scenes for actor rehearsal. Your PRIMARY goal is to match EXACTLY what the user describes.
 
-Rules:
-- Write 8-16 lines of dialogue
-- Use exactly 2-4 characters
-- Include emotional stage directions in [brackets] like [angrily], [whispering], [laughing nervously]
-- Format each line as: CHARACTER NAME: [stage direction] Dialogue text.
-- Character names should be in ALL CAPS
-- Make the dialogue emotionally engaging with clear tension, conflict, or connection
-- Include a variety of emotions and tones
-- Keep dialogue natural and speakable
+CRITICAL: Follow the user's request precisely:
+- If they mention specific characters, roles, or relationships - use those exact ones
+- If they describe a setting or situation - set the scene there exactly
+- If they want a specific genre or tone - deliver that exact tone
+- If they mention a movie, play, or show style - match that style closely
 
-Output ONLY the script, no title or additional commentary.`;
+Format Requirements:
+- Write 10-18 lines of dialogue (enough for a good rehearsal)
+- Use 2-4 characters with distinct voices
+- Character names in ALL CAPS followed by colon
+- Include emotional stage directions in [brackets] before dialogue
+- Stage directions should indicate: emotion, action, tone (e.g., [furious, slamming the door], [whispering nervously], [with forced calm])
+
+Quality Standards:
+- Natural, speakable dialogue - how real people talk
+- Clear dramatic arc with rising tension or emotional stakes
+- Each character has a distinct voice and motivation
+- Subtext - what's unsaid matters as much as what's said
+- Strong emotional moments for the actor to play
+
+Output ONLY the script lines. No titles, scene headings, or commentary.
+
+Example format:
+SARAH: [coldly] You're late. Again.
+MARCUS: [defensive] Traffic was—
+SARAH: [cutting him off] Don't. Just... don't.`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Write a scene about: ${prompt}` }
+          { role: "user", content: prompt }
         ],
-        max_tokens: 1024,
-        temperature: 0.9,
+        max_tokens: 1500,
+        temperature: 0.7,
       });
 
       const script = response.choices[0]?.message?.content?.trim() || "";
@@ -309,48 +324,57 @@ Output ONLY the script, no title or additional commentary.`;
         baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
       });
 
-      const themes = [
-        "two old friends reuniting after years apart",
-        "a heated argument between siblings",
-        "a job interview that takes an unexpected turn",
-        "two strangers stuck in an elevator",
-        "a confession of a long-held secret",
-        "a breakup conversation in a coffee shop",
-        "a parent confronting their adult child",
-        "two rivals forced to work together",
-        "a first date that's going badly",
-        "someone receiving life-changing news",
-        "a hostage negotiation",
-        "discovering a betrayal",
-        "saying goodbye forever",
-        "a proposal gone wrong",
-        "confronting a childhood bully years later"
+      const scenarios = [
+        { setting: "hospital waiting room", conflict: "two estranged family members forced to wait together for news about a loved one" },
+        { setting: "police interrogation room", conflict: "detective questioning a suspect who may be innocent" },
+        { setting: "therapist's office", conflict: "couple in marriage counseling revealing deep resentments" },
+        { setting: "airport terminal", conflict: "ex-lovers unexpectedly meeting before one leaves the country forever" },
+        { setting: "lawyer's office", conflict: "siblings fighting over their late parent's will" },
+        { setting: "restaurant kitchen", conflict: "head chef confronting sous chef about sabotaging a dish" },
+        { setting: "high school reunion", conflict: "former bully apologizing to their victim 20 years later" },
+        { setting: "hospital room", conflict: "adult child confronting dying parent about childhood abandonment" },
+        { setting: "taxi/rideshare", conflict: "driver and passenger discovering they share a painful connection" },
+        { setting: "job interview", conflict: "candidate realizes interviewer is the person who fired them years ago" },
+        { setting: "wedding venue", conflict: "best man revealing he's in love with the groom moments before ceremony" },
+        { setting: "prison visiting room", conflict: "wrongfully convicted person meeting the witness who lied" },
+        { setting: "therapist's office", conflict: "patient revealing they've been lying about everything for months" },
+        { setting: "late night diner", conflict: "two strangers bonding over shared grief" },
+        { setting: "backstage at a theater", conflict: "understudy confronting lead actor about their toxic behavior" },
+        { setting: "corporate boardroom", conflict: "whistleblower facing the CEO they're about to expose" },
+        { setting: "park bench", conflict: "birth parent meeting the child they gave up for adoption" },
+        { setting: "empty bar at closing", conflict: "bartender talking down a regular from a terrible decision" },
+        { setting: "courtroom hallway", conflict: "victim facing their attacker before the verdict" },
+        { setting: "midnight rooftop", conflict: "two old friends, one trying to prevent the other from giving up" }
       ];
       
-      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+      const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
 
-      const systemPrompt = `You are a creative screenwriter. Generate a short, compelling dialogue scene for actor rehearsal practice.
+      const systemPrompt = `You are an expert screenwriter creating powerful dialogue scenes for actor rehearsal.
 
-Rules:
-- Write 8-16 lines of dialogue
-- Use exactly 2-4 characters
-- Include emotional stage directions in [brackets] like [angrily], [whispering], [laughing nervously]
-- Format each line as: CHARACTER NAME: [stage direction] Dialogue text.
-- Character names should be in ALL CAPS
-- Make the dialogue emotionally engaging with clear tension, conflict, or connection
-- Include a variety of emotions and tones
-- Keep dialogue natural and speakable
+Create an emotionally intense scene with these parameters:
+- Setting: ${scenario.setting}
+- Central conflict: ${scenario.conflict}
 
-Output ONLY the script, no title or additional commentary.`;
+Requirements:
+- Write 12-18 lines of gripping dialogue
+- 2-3 characters with distinct voices and clear motivations
+- Character names in ALL CAPS followed by colon
+- Rich emotional stage directions in [brackets] (e.g., [barely containing rage], [voice cracking], [forced smile])
+- Build tension throughout - start tense, escalate to a breaking point
+- Include a powerful emotional climax or revelation
+- Natural, speakable dialogue with subtext
+- Strong actable moments: pauses, interruptions, physical reactions
+
+Output ONLY the dialogue. No scene headings, titles, or commentary.`;
 
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Write a scene about: ${randomTheme}` }
+          { role: "user", content: "Generate this scene now." }
         ],
-        max_tokens: 1024,
-        temperature: 1.0,
+        max_tokens: 1500,
+        temperature: 0.85,
       });
 
       const script = response.choices[0]?.message?.content?.trim() || "";
@@ -359,7 +383,7 @@ Output ONLY the script, no title or additional commentary.`;
         return res.status(500).json({ error: "Failed to generate script" });
       }
 
-      res.json({ script, theme: randomTheme });
+      res.json({ script, theme: `${scenario.setting}: ${scenario.conflict}` });
     } catch (error: any) {
       console.error("Random script generation error:", error.message || error);
       res.status(500).json({ error: "Failed to generate script" });
