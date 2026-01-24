@@ -249,12 +249,15 @@ export function useSession() {
   const clearUserRole = useCallback(() => {
     setSession(prev => {
       if (!prev) return null;
-      return {
+      const updated = {
         ...prev,
         userRoleId: null,
         roles: prev.roles.map(r => ({ ...r, isUserRole: false })),
         updatedAt: new Date().toISOString(),
       };
+      // Update localStorage synchronously to prevent race condition on navigation
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      return updated;
     });
   }, []);
 
