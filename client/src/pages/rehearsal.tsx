@@ -265,7 +265,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 200);
       
-      // Safety timeout: if no result after 20 seconds, advance anyway
+      // Safety timeout: if no result after 60 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           console.log("[Rehearsal] User turn safety timeout, advancing");
@@ -273,7 +273,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           waitingForUserRef.current = false;
           advanceAfterUserLine();
         }
-      }, 20000);
+      }, 60000);
     } else {
       // Fallback: auto-advance after 5 seconds if no speech recognition
       autoAdvanceTimeoutRef.current = setTimeout(() => {
