@@ -9,9 +9,10 @@ function generateId(): string {
 const STORAGE_KEY = "castmate-session";
 
 export function useSession() {
+  // Use sessionStorage so closing the app starts fresh, but refreshing keeps your place
   const [session, setSession] = useState<Session | null>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
           return JSON.parse(stored);
@@ -28,7 +29,9 @@ export function useSession() {
 
   useEffect(() => {
     if (session) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    } else {
+      sessionStorage.removeItem(STORAGE_KEY);
     }
   }, [session]);
 
@@ -243,7 +246,7 @@ export function useSession() {
 
   const clearSession = useCallback(() => {
     setSession(null);
-    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
   }, []);
 
   const clearUserRole = useCallback(() => {
@@ -255,8 +258,8 @@ export function useSession() {
         roles: prev.roles.map(r => ({ ...r, isUserRole: false })),
         updatedAt: new Date().toISOString(),
       };
-      // Update localStorage synchronously to prevent race condition on navigation
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      // Update sessionStorage synchronously to prevent race condition on navigation
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
       return updated;
     });
   }, []);
