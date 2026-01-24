@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, FileText, Clipboard, X, Loader2, ArrowRight, Check } from "lucide-react";
+import { Upload, FileText, Clipboard, X, Loader2, ArrowRight, Check, Sparkles, Shuffle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 interface ScriptImportProps {
@@ -16,13 +17,66 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
   const [showTip, setShowTip] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showPromptInput, setShowPromptInput] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const promptInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowTip(true), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  const generateRandomScript = async () => {
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/generate-random-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (!response.ok) throw new Error("Generation failed");
+      
+      const data = await response.json();
+      setScript(data.script);
+    } catch (e) {
+      console.error("Failed to generate script:", e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const generateFromPrompt = async () => {
+    if (!customPrompt.trim()) return;
+    
+    setIsGenerating(true);
+    try {
+      const response = await fetch("/api/generate-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: customPrompt }),
+      });
+      
+      if (!response.ok) throw new Error("Generation failed");
+      
+      const data = await response.json();
+      setScript(data.script);
+      setShowPromptInput(false);
+      setCustomPrompt("");
+    } catch (e) {
+      console.error("Failed to generate script:", e);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showPromptInput && promptInputRef.current) {
+      promptInputRef.current.focus();
+    }
+  }, [showPromptInput]);
 
   const handlePaste = async () => {
     try {
@@ -243,74 +297,84 @@ Put stage directions in brackets.`}
         )}
       </Button>
       
-      {/* Try sample link - subtle */}
+      {/* AI Script Generation */}
       {!script && showTip && (
-        <button 
-          onClick={() => setScript(getRandomSampleScript())}
-          className="text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-          data-testid="button-load-sample"
-        >
-          Try a sample script
-        </button>
+        <div className="flex flex-col items-center gap-3 animate-fade-in">
+          {showPromptInput ? (
+            <div className="flex items-center gap-2 w-full max-w-sm">
+              <Input
+                ref={promptInputRef}
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="e.g. two siblings arguing about inheritance"
+                className="text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && customPrompt.trim()) {
+                    generateFromPrompt();
+                  } else if (e.key === "Escape") {
+                    setShowPromptInput(false);
+                    setCustomPrompt("");
+                  }
+                }}
+                disabled={isGenerating}
+                data-testid="input-custom-prompt"
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={generateFromPrompt}
+                disabled={!customPrompt.trim() || isGenerating}
+                data-testid="button-generate-from-prompt"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => {
+                  setShowPromptInput(false);
+                  setCustomPrompt("");
+                }}
+                className="text-muted-foreground"
+                data-testid="button-cancel-prompt"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={generateRandomScript}
+                disabled={isGenerating}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
+                data-testid="button-generate-random"
+              >
+                {isGenerating ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Shuffle className="h-3 w-3" />
+                )}
+                Random scene
+              </button>
+              <span className="text-muted-foreground/30">or</span>
+              <button
+                onClick={() => setShowPromptInput(true)}
+                disabled={isGenerating}
+                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
+                data-testid="button-show-prompt"
+              >
+                <Sparkles className="h-3 w-3" />
+                Write a prompt
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
 }
 
-const SAMPLE_SCRIPTS = [
-  `MAYA: [stopping dead] Jordan? Is that really you?
-JORDAN: [turning slowly] Ten years. You look... different.
-MAYA: [bitter laugh] Prison will do that to a person.
-JORDAN: I wrote you. Every month for the first three years.
-MAYA: [quietly] I know. I burned every letter.
-JORDAN: [hurt] Why?
-MAYA: Because reading them meant hoping. And hope was the cruelest thing in that place.
-JORDAN: [stepping closer] I never stopped believing you were innocent.
-MAYA: [hollow laugh] That makes one of us.
-JORDAN: [firmly] The real killer confessed last month. It's over, Maya. You're free.
-MAYA: [voice breaking] Free? I lost everything. My career. My marriage. A decade of my life.
-JORDAN: [taking her hands] You didn't lose me. You never lost me.
-MAYA: [crying] I don't know who I am anymore.
-JORDAN: [gently] Then we'll figure it out together. That's what family does.
-MAYA: [whisper] I missed you so much.
-JORDAN: [hugging her tight] Welcome home, sis. Welcome home.`,
-
-  `CHEF MARCO: [frantically stirring] The food critic arrives in ten minutes and we have NO LOBSTER!
-SOUS CHEF KIM: [panicking] I thought you ordered the lobster!
-CHEF MARCO: I thought YOU ordered the lobster!
-WAITER DEREK: [bursting in] Table seven just asked if we have lobster. They seem... important.
-CHEF MARCO: [whispering intensely] Tell them the lobster is... on a spiritual journey.
-WAITER DEREK: [confused] A what now?
-SOUS CHEF KIM: [grabbing his arm] Tell them it's a deconstructed lobster experience. Very avant-garde.
-CHEF MARCO: [inspired] Yes! Invisible lobster! The essence of lobster without the physical form!
-WAITER DEREK: [deadpan] You want me to serve invisible lobster to the most famous food critic in the city.
-CHEF MARCO: [grandly] Art, Derek. We're serving ART.`,
-
-  `COMMANDER REYES: [stunned] It's... waving at us.
-SCIENTIST DR PATEL: [scribbling notes] Bipedal, approximately three meters tall, bioluminescent skin patterns.
-ALIEN ZRIX: [in broken English] We... come in... peace. Also, your TV signals are HILARIOUS.
-COMMANDER REYES: [confused] I'm sorry, what?
-ZRIX: [excitedly] The show with the yellow family! We have watched all thirty seasons!
-DR PATEL: [whispering] They've been monitoring our broadcasts.
-ZRIX: [mimicking] "Eat my shorts!" Yes? Ha ha!
-COMMANDER REYES: [trying to stay professional] On behalf of Earth, we welcome you.
-ZRIX: [producing a gift] We bring offering! Season thirty-one of yellow family show, not yet aired on your planet.
-DR PATEL: [grabbing it] GIVE ME THAT.
-COMMANDER REYES: [to Patel] Doctor, please. Dignity.`,
-
-  `QUEEN ELEANOR: [coldly] You dare enter my chambers unannounced?
-LADY CATHERINE: [trembling] Your Majesty, I bring urgent news from the northern provinces.
-QUEEN ELEANOR: [raising an eyebrow] Speak.
-LADY CATHERINE: [hesitant] It concerns... the King's hunting expedition.
-QUEEN ELEANOR: [dismissive] My husband's pursuits bore me. Get to the point.
-LADY CATHERINE: [blurting] He's not hunting deer, Your Majesty. He's meeting with Lord Ashworth. In secret.
-QUEEN ELEANOR: [dangerously quiet] Ashworth. The man who tried to usurp my throne.
-LADY CATHERINE: [nodding] They were seen exchanging documents.
-QUEEN ELEANOR: [standing] How long have you known this?
-LADY CATHERINE: [falling to knees] Three days. I was afraid to speak.
-QUEEN ELEANOR: [cutting her off] Afraid? Loyalty knows no fear, Catherine.`
-];
-
-function getRandomSampleScript(): string {
-  return SAMPLE_SCRIPTS[Math.floor(Math.random() * SAMPLE_SCRIPTS.length)];
-}

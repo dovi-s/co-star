@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
+import OpenAI from "openai";
 
 const ELEVENLABS_VOICES = {
   male_deep: "pNInz6obpgDQGcFmaJgB",
@@ -248,6 +249,120 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("Failed to fetch voices:", error.message || error);
       res.status(500).json({ error: "Failed to fetch voices" });
+    }
+  });
+
+  app.post("/api/generate-script", async (req: Request, res: Response) => {
+    try {
+      const { prompt } = req.body;
+
+      if (!prompt || typeof prompt !== "string") {
+        return res.status(400).json({ error: "Prompt is required" });
+      }
+
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const systemPrompt = `You are a creative screenwriter. Generate a short, compelling dialogue scene for actor rehearsal practice.
+
+Rules:
+- Write 8-16 lines of dialogue
+- Use exactly 2-4 characters
+- Include emotional stage directions in [brackets] like [angrily], [whispering], [laughing nervously]
+- Format each line as: CHARACTER NAME: [stage direction] Dialogue text.
+- Character names should be in ALL CAPS
+- Make the dialogue emotionally engaging with clear tension, conflict, or connection
+- Include a variety of emotions and tones
+- Keep dialogue natural and speakable
+
+Output ONLY the script, no title or additional commentary.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Write a scene about: ${prompt}` }
+        ],
+        max_tokens: 1024,
+        temperature: 0.9,
+      });
+
+      const script = response.choices[0]?.message?.content?.trim() || "";
+      
+      if (!script) {
+        return res.status(500).json({ error: "Failed to generate script" });
+      }
+
+      res.json({ script });
+    } catch (error: any) {
+      console.error("Script generation error:", error.message || error);
+      res.status(500).json({ error: "Failed to generate script" });
+    }
+  });
+
+  app.post("/api/generate-random-script", async (_req: Request, res: Response) => {
+    try {
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const themes = [
+        "two old friends reuniting after years apart",
+        "a heated argument between siblings",
+        "a job interview that takes an unexpected turn",
+        "two strangers stuck in an elevator",
+        "a confession of a long-held secret",
+        "a breakup conversation in a coffee shop",
+        "a parent confronting their adult child",
+        "two rivals forced to work together",
+        "a first date that's going badly",
+        "someone receiving life-changing news",
+        "a hostage negotiation",
+        "discovering a betrayal",
+        "saying goodbye forever",
+        "a proposal gone wrong",
+        "confronting a childhood bully years later"
+      ];
+      
+      const randomTheme = themes[Math.floor(Math.random() * themes.length)];
+
+      const systemPrompt = `You are a creative screenwriter. Generate a short, compelling dialogue scene for actor rehearsal practice.
+
+Rules:
+- Write 8-16 lines of dialogue
+- Use exactly 2-4 characters
+- Include emotional stage directions in [brackets] like [angrily], [whispering], [laughing nervously]
+- Format each line as: CHARACTER NAME: [stage direction] Dialogue text.
+- Character names should be in ALL CAPS
+- Make the dialogue emotionally engaging with clear tension, conflict, or connection
+- Include a variety of emotions and tones
+- Keep dialogue natural and speakable
+
+Output ONLY the script, no title or additional commentary.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Write a scene about: ${randomTheme}` }
+        ],
+        max_tokens: 1024,
+        temperature: 1.0,
+      });
+
+      const script = response.choices[0]?.message?.content?.trim() || "";
+      
+      if (!script) {
+        return res.status(500).json({ error: "Failed to generate script" });
+      }
+
+      res.json({ script, theme: randomTheme });
+    } catch (error: any) {
+      console.error("Random script generation error:", error.message || error);
+      res.status(500).json({ error: "Failed to generate script" });
     }
   });
 
