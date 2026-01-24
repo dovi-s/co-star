@@ -128,6 +128,23 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
+### January 2026 - Performance Feedback System
+- **Run Performance Tracking**: Tracks accuracy per line during rehearsal
+  - Word match accuracy recorded for each user line
+  - Tracks skipped lines (when user advances without speaking)
+  - Calculates overall run statistics on completion
+- **Enhanced Completion Modal**: 
+  - Shows performance feedback based on accuracy (Perfect/Great/Good/Learning)
+  - Displays accuracy percentage, perfect lines count
+  - Color-coded feedback (gold for perfect, green for great, blue for good)
+  - "Try Again" button for instant replay
+- **Encouraging Feedback**:
+  - "Flawless delivery" for 95%+ accuracy with no skips
+  - "Strong run" for 80%+ accuracy
+  - "Solid progress" for 60%+ accuracy
+  - "Getting there" with actionable tips for lower scores
+- **Script Import Font**: Monospace font (JetBrains Mono) for authentic screenplay feel
+
 ### January 2026 - Voice System Overhaul & Reliability Fixes
 - **Neutral American Voices**: Replaced mixed-accent voices with 6 neutral American English voices
   - 3 male voices (Brian, Eric, Chris) + 3 female voices (Jessica, Sarah, Charlotte)

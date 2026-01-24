@@ -10,8 +10,22 @@ import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import { matchWords } from "@/lib/word-matcher";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+
+// Performance tracking for the current run
+interface LinePerformance {
+  lineId: string;
+  accuracy: number;
+  usedHint: boolean;
+  skipped: boolean;
+}
+
+interface RunPerformance {
+  linePerformances: LinePerformance[];
+  startTime: number;
+}
 
 interface RehearsalPageProps {
   onBack: () => void;
@@ -54,6 +68,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [micBlocked, setMicBlocked] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
+  
+  // Performance tracking - use ref to avoid closure issues
+  const runPerformanceRef = useRef<RunPerformance>({
+    linePerformances: [],
+    startTime: Date.now(),
+  });
+  const [completedRunStats, setCompletedRunStats] = useState<{
+    averageAccuracy: number;
+    perfectLines: number;
+    totalUserLines: number;
+    hintsUsed: number;
+    skippedLines: number;
+    duration: number;
+  } | null>(null);
+  const currentLineAccuracyRef = useRef<number>(0);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
@@ -90,6 +119,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         const match = matchWords(line.text, result.transcript);
         console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, 
           `(${Math.round(match.percentMatched)}%)`);
+        
+        // Track best accuracy for this line
+        currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
         
         // Auto-advance when user has matched 80%+ of the words
         if (match.percentMatched >= 80) {
@@ -248,6 +280,49 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [session?.isPlaying, currentIsUserLine]);
 
+  // Record a line performance (helper)
+  const recordLinePerformance = useCallback((linePerf: LinePerformance) => {
+    runPerformanceRef.current.linePerformances.push(linePerf);
+  }, []);
+
+  // Centralized run completion handler
+  const completeRun = useCallback(() => {
+    // Calculate stats from the ref (always current)
+    const allPerfs = runPerformanceRef.current.linePerformances;
+    const totalUserLines = allPerfs.length;
+    const avgAccuracy = totalUserLines > 0 
+      ? allPerfs.reduce((sum, p) => sum + p.accuracy, 0) / totalUserLines 
+      : 100;
+    const perfectLines = allPerfs.filter(p => p.accuracy >= 95).length;
+    const hintsUsed = allPerfs.filter(p => p.usedHint).length;
+    const skippedLines = allPerfs.filter(p => p.skipped).length;
+    const duration = Math.round((Date.now() - runPerformanceRef.current.startTime) / 1000);
+    
+    // Set completed stats
+    setCompletedRunStats({
+      averageAccuracy: avgAccuracy,
+      perfectLines,
+      totalUserLines,
+      hintsUsed,
+      skippedLines,
+      duration,
+    });
+    
+    setPlaying(false);
+    incrementRunsCompleted();
+    recordRehearsal(0, 1);
+    setShowCelebration(true);
+  }, [incrementRunsCompleted, recordRehearsal, setPlaying]);
+
+  // Reset run performance for a new run
+  const resetRunPerformance = useCallback(() => {
+    runPerformanceRef.current = {
+      linePerformances: [],
+      startTime: Date.now(),
+    };
+    currentLineAccuracyRef.current = 0;
+  }, []);
+
   useEffect(() => {
     if (session?.ambientEnabled && !ambientRef.current) {
       try {
@@ -292,7 +367,23 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, [session?.ambientEnabled]);
 
-  const advanceAfterUserLine = useCallback(() => {
+  const advanceAfterUserLine = useCallback((skipped = false) => {
+    const line = getCurrentLine();
+    const accuracy = skipped ? 0 : currentLineAccuracyRef.current;
+    
+    // Record line performance
+    if (line) {
+      recordLinePerformance({
+        lineId: line.id,
+        accuracy,
+        usedHint: false,
+        skipped,
+      });
+    }
+    
+    // Reset for next line
+    currentLineAccuracyRef.current = 0;
+    
     incrementLinesRehearsed();
     recordRehearsal(1, 0);
     setUserTranscript("");
@@ -303,13 +394,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (next) {
       nextLine();
     } else {
-      setPlaying(false);
-      incrementRunsCompleted();
-      recordRehearsal(0, 1);
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 3000);
+      // Complete the run
+      completeRun();
     }
-  }, [getNextLine, incrementLinesRehearsed, incrementRunsCompleted, nextLine, recordRehearsal, setPlaying]);
+  }, [getCurrentLine, getNextLine, incrementLinesRehearsed, nextLine, recordRehearsal, completeRun, recordLinePerformance]);
 
   const startListeningForUser = useCallback(() => {
     console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
@@ -433,10 +521,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               nextLine();
             } else {
               console.log("[Rehearsal] Scene complete");
-              setPlaying(false);
-              incrementRunsCompleted();
-              setShowCelebration(true);
-              setTimeout(() => setShowCelebration(false), 3000);
+              completeRun();
             }
           }, 200);
         } else {
@@ -468,7 +553,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         },
       });
     }, 100);
-  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted, startListeningForUser]);
+  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun]);
 
   useEffect(() => {
     if (session?.isPlaying && currentLine) {
@@ -517,6 +602,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setPlaying(false);
     } else {
       speakingLineRef.current = null;
+      // Only reset performance if starting from the beginning
+      if (session?.currentLineIndex === 0) {
+        resetRunPerformance();
+      }
       setPlaying(true);
     }
   };
@@ -538,7 +627,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setIsSpeaking(false);
     setSpeakingWordIndex(-1);
     
+    // Record line performance if user line
     if (currentIsUserLine) {
+      const line = getCurrentLine();
+      if (line) {
+        const hadProgress = currentLineAccuracyRef.current > 20;
+        recordLinePerformance({
+          lineId: line.id,
+          accuracy: currentLineAccuracyRef.current,
+          usedHint: false,
+          skipped: !hadProgress,
+        });
+        currentLineAccuracyRef.current = 0;
+      }
       incrementLinesRehearsed();
       recordRehearsal(1, 0);
     }
@@ -548,11 +649,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (next) {
       nextLine();
     } else if (session?.isPlaying) {
-      setPlaying(false);
-      incrementRunsCompleted();
-      recordRehearsal(0, 1);
-      setShowCelebration(true);
-      setTimeout(() => setShowCelebration(false), 3000);
+      // Complete the run
+      completeRun();
     }
   };
 
@@ -649,6 +747,75 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setMemorizationMode(mode);
   };
 
+  const handleTryAgain = () => {
+    setShowCelebration(false);
+    setCompletedRunStats(null);
+    // Reset to beginning
+    goToLine(0);
+    // Reset performance tracking
+    resetRunPerformance();
+    // Start playing
+    setTimeout(() => {
+      speakingLineRef.current = null;
+      setPlaying(true);
+    }, 300);
+  };
+
+  const handleDismissCelebration = () => {
+    setShowCelebration(false);
+    setCompletedRunStats(null);
+  };
+
+  // Generate performance feedback message
+  const getPerformanceFeedback = () => {
+    if (!completedRunStats || completedRunStats.totalUserLines === 0) {
+      return null;
+    }
+    
+    const { averageAccuracy, perfectLines, totalUserLines, skippedLines } = completedRunStats;
+    
+    // Perfect run
+    if (averageAccuracy >= 95 && skippedLines === 0) {
+      return { 
+        type: "perfect" as const, 
+        icon: Star,
+        message: "Flawless delivery", 
+        detail: "Every line nailed."
+      };
+    }
+    
+    // Great run
+    if (averageAccuracy >= 80) {
+      const pct = perfectLines > 0 ? `${perfectLines}/${totalUserLines} lines perfect.` : "";
+      return { 
+        type: "great" as const, 
+        icon: TrendingUp,
+        message: "Strong run", 
+        detail: pct || `${Math.round(averageAccuracy)}% accuracy.`
+      };
+    }
+    
+    // Good progress
+    if (averageAccuracy >= 60) {
+      return { 
+        type: "good" as const, 
+        icon: Target,
+        message: "Solid progress", 
+        detail: `${Math.round(averageAccuracy)}% accuracy. Keep practicing.`
+      };
+    }
+    
+    // Needs work
+    return { 
+      type: "learning" as const, 
+      icon: RefreshCcw,
+      message: "Getting there", 
+      detail: skippedLines > 0 
+        ? `${skippedLines} lines skipped. Try speaking each one.`
+        : "Run it again to build confidence."
+    };
+  };
+
   if (!session) {
     onBack();
     return null;
@@ -683,34 +850,125 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onJumpToLine={handleJumpToLine}
       />
 
-      {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-card border shadow-xl rounded-xl p-8 text-center pointer-events-auto max-w-sm mx-4 animate-scale-in">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-5 animate-bounce-in">
-                <Check className="h-8 w-8" />
+      {showCelebration && (() => {
+        const feedback = getPerformanceFeedback();
+        const FeedbackIcon = feedback?.icon || Check;
+        
+        return (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+            onClick={handleDismissCelebration}
+          >
+            <div 
+              className="bg-card border shadow-xl rounded-xl p-8 text-center max-w-sm mx-4 animate-scale-in"
+              onClick={(e) => e.stopPropagation()}
+              data-testid="celebration-modal"
+            >
+              {/* Icon */}
+              <div className="relative mb-5">
+                <div className={cn(
+                  "w-16 h-16 rounded-full flex items-center justify-center mx-auto animate-bounce-in",
+                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
+                  feedback?.type === "great" ? "bg-green-500 text-white" :
+                  "bg-primary text-primary-foreground"
+                )}>
+                  {feedback?.type === "perfect" ? (
+                    <Star className="h-8 w-8 fill-current" />
+                  ) : (
+                    <Check className="h-8 w-8" />
+                  )}
+                </div>
+                {feedback?.type === "perfect" && (
+                  <>
+                    <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-yellow-400/60 animate-ping" />
+                    <div className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-yellow-400/40 animate-ping" style={{ animationDelay: "200ms" }} />
+                  </>
+                )}
               </div>
-              <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-primary/60 animate-ping" />
-              <div className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-primary/40 animate-ping" style={{ animationDelay: "200ms" }} />
-            </div>
-            <h3 className="text-xl font-semibold mb-2">Scene Complete</h3>
-            <p className="text-muted-foreground mb-4">
-              Run {session.runsCompleted + 1} finished
-            </p>
-            <div className="flex items-center justify-center gap-4 text-sm">
-              <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-foreground">{session.linesRehearsed}</span>
-                <span className="text-xs text-muted-foreground">lines</span>
+              
+              <h3 className="text-xl font-semibold mb-1">Scene Complete</h3>
+              <p className="text-muted-foreground text-sm mb-4">
+                Run {session.runsCompleted + 1} finished
+              </p>
+              
+              {/* Performance feedback */}
+              {feedback && (
+                <div className={cn(
+                  "rounded-lg px-4 py-3 mb-5",
+                  feedback.type === "perfect" ? "bg-yellow-500/10" :
+                  feedback.type === "great" ? "bg-green-500/10" :
+                  feedback.type === "good" ? "bg-blue-500/10" :
+                  "bg-muted/50"
+                )}>
+                  <div className="flex items-center justify-center gap-2 mb-1">
+                    <FeedbackIcon className={cn(
+                      "h-4 w-4",
+                      feedback.type === "perfect" ? "text-yellow-600 dark:text-yellow-400" :
+                      feedback.type === "great" ? "text-green-600 dark:text-green-400" :
+                      feedback.type === "good" ? "text-blue-600 dark:text-blue-400" :
+                      "text-muted-foreground"
+                    )} />
+                    <span className={cn(
+                      "font-medium text-sm",
+                      feedback.type === "perfect" ? "text-yellow-700 dark:text-yellow-300" :
+                      feedback.type === "great" ? "text-green-700 dark:text-green-300" :
+                      feedback.type === "good" ? "text-blue-700 dark:text-blue-300" :
+                      "text-foreground"
+                    )}>
+                      {feedback.message}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {feedback.detail}
+                  </p>
+                </div>
+              )}
+              
+              {/* Stats */}
+              <div className="flex items-center justify-center gap-4 text-sm mb-6">
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-bold text-foreground">{session.linesRehearsed}</span>
+                  <span className="text-xs text-muted-foreground">lines</span>
+                </div>
+                <div className="w-px h-8 bg-border" />
+                <div className="flex flex-col items-center">
+                  <span className="text-2xl font-bold text-foreground">{session.runsCompleted + 1}</span>
+                  <span className="text-xs text-muted-foreground">runs</span>
+                </div>
+                {completedRunStats && (
+                  <>
+                    <div className="w-px h-8 bg-border" />
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
+                      <span className="text-xs text-muted-foreground">accuracy</span>
+                    </div>
+                  </>
+                )}
               </div>
-              <div className="w-px h-8 bg-border" />
-              <div className="flex flex-col items-center">
-                <span className="text-2xl font-bold text-foreground">{session.runsCompleted + 1}</span>
-                <span className="text-xs text-muted-foreground">runs</span>
+              
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  className="flex-1"
+                  onClick={handleDismissCelebration}
+                  data-testid="button-dismiss-celebration"
+                >
+                  Done
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={handleTryAgain}
+                  data-testid="button-try-again"
+                >
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in">
         <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
