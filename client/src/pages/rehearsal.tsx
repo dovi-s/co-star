@@ -52,6 +52,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [userTranscript, setUserTranscript] = useState("");
   const [isUserTurn, setIsUserTurn] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
@@ -59,6 +61,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const speakingLineRef = useRef<string | null>(null);
   const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -351,6 +354,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     console.log("[Rehearsal] Speaking AI line:", role?.name, "index:", roleIndex, "emotion:", emotion);
 
+    // Helper to clear word timer
+    const clearWordTimer = () => {
+      if (wordTimerRef.current) {
+        clearInterval(wordTimerRef.current);
+        wordTimerRef.current = null;
+      }
+      setIsSpeaking(false);
+      setSpeakingWordIndex(-1);
+    };
+
     // Very brief pause before speaking (natural flow)
     speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) {
@@ -361,6 +374,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       
       ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
         console.log("[Rehearsal] TTS complete:", result);
+        clearWordTimer();
         
         // Always try to advance regardless of result (success or error)
         if (isPlayingRef.current) {
@@ -396,6 +410,25 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         characterIndex: roleIndex >= 0 ? roleIndex : 0,
         emotion,
         preset,
+        onStart: (duration: number, wordCount: number) => {
+          // Set up word-by-word highlighting timer
+          if (wordCount > 0 && duration > 0) {
+            const msPerWord = (duration * 1000) / wordCount;
+            let currentWord = 0;
+            
+            setIsSpeaking(true);
+            setSpeakingWordIndex(0);
+            
+            wordTimerRef.current = setInterval(() => {
+              currentWord++;
+              if (currentWord < wordCount) {
+                setSpeakingWordIndex(currentWord);
+              } else {
+                clearWordTimer();
+              }
+            }, msPerWord);
+          }
+        },
       });
     }, 100);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted, startListeningForUser]);
@@ -438,6 +471,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         clearTimeout(speakTimeoutRef.current);
         speakTimeoutRef.current = null;
       }
+      if (wordTimerRef.current) {
+        clearInterval(wordTimerRef.current);
+        wordTimerRef.current = null;
+      }
+      setIsSpeaking(false);
+      setSpeakingWordIndex(-1);
       setPlaying(false);
     } else {
       speakingLineRef.current = null;
@@ -455,6 +494,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
     }
+    if (wordTimerRef.current) {
+      clearInterval(wordTimerRef.current);
+      wordTimerRef.current = null;
+    }
+    setIsSpeaking(false);
+    setSpeakingWordIndex(-1);
     
     if (currentIsUserLine) {
       incrementLinesRehearsed();
@@ -485,6 +530,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
     }
+    if (wordTimerRef.current) {
+      clearInterval(wordTimerRef.current);
+      wordTimerRef.current = null;
+    }
+    setIsSpeaking(false);
+    setSpeakingWordIndex(-1);
     prevLine();
   };
 
@@ -499,6 +550,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
     }
+    if (wordTimerRef.current) {
+      clearInterval(wordTimerRef.current);
+      wordTimerRef.current = null;
+    }
+    setIsSpeaking(false);
+    setSpeakingWordIndex(-1);
     
     goToLine(0);
     setPlaying(false);
@@ -633,6 +690,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             getRoleById={getRoleById}
             userTranscript={userTranscript}
             isListening={listeningState === "listening"}
+            isSpeaking={isSpeaking}
+            speakingWordIndex={speakingWordIndex}
           />
           
           {showUserTurnIndicator && (

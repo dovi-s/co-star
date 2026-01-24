@@ -19,6 +19,8 @@ interface ThreeLineReaderProps {
   onLineClick?: (line: ScriptLine) => void;
   userTranscript?: string;
   isListening?: boolean;
+  isSpeaking?: boolean;
+  speakingWordIndex?: number;
 }
 
 function maskText(text: string, mode: MemorizationMode): { display: string; hint?: string } {
@@ -68,6 +70,8 @@ export function ThreeLineReader({
   onLineClick,
   userTranscript,
   isListening,
+  isSpeaking,
+  speakingWordIndex = -1,
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const fontSizeClass = fontSize === 0 ? "text-base" : fontSize === 1 ? "text-lg" : "text-xl";
@@ -176,6 +180,7 @@ export function ThreeLineReader({
             >
               {shouldMask && !showHint ? maskedContent?.display : (
                 isCurrent && isUser && wordMatchResult && isListening ? (
+                  // User speaking - highlight matched words
                   wordMatchResult.words.map((w, i) => (
                     <span
                       key={i}
@@ -187,6 +192,31 @@ export function ThreeLineReader({
                       {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
                     </span>
                   ))
+                ) : isCurrent && !isUser && isSpeaking && speakingWordIndex >= 0 ? (
+                  // AI speaking - highlight current word
+                  line.text.split(/(\s+)/).map((segment, i) => {
+                    const isSpace = /^\s+$/.test(segment);
+                    if (isSpace) return <span key={i}>{segment}</span>;
+                    
+                    // Count actual words up to this point
+                    const wordsBefore = line.text.split(/(\s+)/).slice(0, i).filter(s => !/^\s+$/.test(s)).length;
+                    const isCurrentWord = wordsBefore === speakingWordIndex;
+                    const isPastWord = wordsBefore < speakingWordIndex;
+                    
+                    return (
+                      <span
+                        key={i}
+                        className={cn(
+                          "transition-all duration-150",
+                          isCurrentWord && "text-foreground font-medium",
+                          isPastWord && "text-muted-foreground/60",
+                          !isCurrentWord && !isPastWord && "text-muted-foreground/40"
+                        )}
+                      >
+                        {segment}
+                      </span>
+                    );
+                  })
                 ) : line.text
               )}
             </p>

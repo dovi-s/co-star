@@ -61,6 +61,7 @@ interface SpeakOptions {
   characterIndex?: number;
   emotion?: EmotionStyle;
   preset?: VoicePreset;
+  onStart?: (duration: number, wordCount: number) => void;
 }
 
 class TTSEngine {
@@ -240,7 +241,10 @@ class TTSEngine {
         audio.volume = 1;
         
         audio.play().then(() => {
-          console.log("[TTS] Playing audio, duration:", audio.duration || "unknown");
+          const duration = audio.duration || text.length * 0.08; // Estimate ~80ms per char
+          const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+          console.log("[TTS] Playing audio, duration:", duration, "words:", wordCount);
+          options?.onStart?.(duration, wordCount);
         }).catch((e) => {
           console.log("[TTS] Play failed:", e.message);
           cleanup();
