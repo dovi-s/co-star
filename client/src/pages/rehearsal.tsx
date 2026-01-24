@@ -334,13 +334,17 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     waitingForUserRef.current = false;
     setUserTranscript("");
     
-    if (session?.isPlaying) {
+    if (!session?.isPlaying) {
+      setPlaying(true);
+    }
+    
+    setTimeout(() => {
       if (currentIsUserLine) {
         startListeningForUser();
       } else {
         speakLine();
       }
-    }
+    }, 50);
   };
 
   const handleJumpToLine = (lineIndex: number, sceneIndex?: number) => {
