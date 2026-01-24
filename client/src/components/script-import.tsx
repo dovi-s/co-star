@@ -233,7 +233,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
           placeholder="Paste your script here..."
           value={script}
           onChange={(e) => setScript(e.target.value)}
-          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[15px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50"
+          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50 font-mono"
           data-testid="textarea-script"
         />
 
