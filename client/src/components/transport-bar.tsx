@@ -86,10 +86,7 @@ export function TransportBar({
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className={cn(
-                  "transition-all duration-500 ease-out",
-                  isAtEnd ? "text-emerald-500" : "text-amber-500"
-                )}
+                className="transition-all duration-500 ease-out text-foreground"
               />
             </svg>
             
@@ -122,33 +119,28 @@ export function TransportBar({
           </Button>
         </div>
 
-        {/* Line counter with celebration */}
+        {/* Line counter */}
         <div className="flex flex-col items-center min-w-[44px]">
           <span 
-            className={cn(
-              "text-sm font-bold tabular-nums",
-              isAtEnd 
-                ? "text-emerald-500 animate-soft-bounce" 
-                : "text-foreground"
-            )}
+            className="text-sm font-medium tabular-nums text-foreground"
             data-testid="text-line-counter"
           >
             {currentLine + 1}
           </span>
-          <span className="text-[10px] text-muted-foreground/60">
+          <span className="text-[10px] text-muted-foreground">
             of {totalLines}
           </span>
         </div>
       </div>
       
-      {/* Keyboard hints - fun styling */}
+      {/* Keyboard hints */}
       <div className="flex items-center justify-center gap-4 mt-3">
-        <div className="flex items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity">
-          <kbd className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-muted text-muted-foreground">Space</kbd>
+        <div className="flex items-center gap-1.5 opacity-40">
+          <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground">Space</kbd>
           <span className="text-[9px] text-muted-foreground">play</span>
         </div>
-        <div className="flex items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity">
-          <kbd className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-muted text-muted-foreground">←→</kbd>
+        <div className="flex items-center gap-1.5 opacity-40">
+          <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground">Arrows</kbd>
           <span className="text-[9px] text-muted-foreground">navigate</span>
         </div>
       </div>

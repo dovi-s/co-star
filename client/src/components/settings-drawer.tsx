@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings2, Sparkles } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,7 +23,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RoleChip } from "@/components/role-chip";
 import { ScriptImport } from "@/components/script-import";
-import { SpotMascot } from "@/components/spot-mascot";
 import type { Role, Scene, VoicePreset } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +67,7 @@ export function SettingsDrawer({
           className="w-full gap-2"
           data-testid="button-settings-drawer"
         >
-          <Sparkles className="h-3.5 w-3.5" />
+          <Settings className="h-3.5 w-3.5" />
           <span>Settings</span>
           <ChevronUp className="h-3.5 w-3.5" />
         </Button>
@@ -80,10 +79,7 @@ export function SettingsDrawer({
           </div>
           
           <SheetHeader className="px-5 pb-4">
-            <div className="flex items-center gap-3">
-              <SpotMascot size="xs" mood="happy" />
-              <SheetTitle className="text-left text-lg font-bold">Settings</SheetTitle>
-            </div>
+            <SheetTitle className="text-left text-base font-semibold">Settings</SheetTitle>
           </SheetHeader>
 
           <div className="flex-1 overflow-auto px-5 pb-10">
