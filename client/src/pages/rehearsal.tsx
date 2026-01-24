@@ -9,7 +9,7 @@ import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic } from "lucide-react";
+import { Check, Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
@@ -50,6 +50,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [listeningState, setListeningState] = useState<SpeechRecognitionState>("idle");
   const [userTranscript, setUserTranscript] = useState("");
   const [isUserTurn, setIsUserTurn] = useState(false);
+  const [micBlocked, setMicBlocked] = useState(false);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
   const ambientGainRef = useRef<GainNode | null>(null);
@@ -102,6 +103,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             advanceAfterUserLine();
           }
         }, 1200);
+      }
+    });
+
+    speechRecognition.onError((error) => {
+      if (error === "not-allowed") {
+        setMicBlocked(true);
       }
     });
 
@@ -485,8 +492,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           
           {showUserTurnIndicator && (
             <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                {isListening ? (
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full border",
+                micBlocked 
+                  ? "bg-destructive/10 border-destructive/20" 
+                  : "bg-primary/10 border-primary/20"
+              )}>
+                {micBlocked ? (
+                  <>
+                    <MicOff className="h-4 w-4 text-destructive" />
+                    <span className="text-sm text-destructive font-medium">Mic access needed</span>
+                  </>
+                ) : isListening ? (
                   <>
                     <div className="relative">
                       <Mic className="h-4 w-4 text-primary" />
@@ -507,7 +524,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 </p>
               )}
               <p className="mt-2 text-xs text-muted-foreground">
-                Speak your line, then tap Next
+                {micBlocked 
+                  ? "Allow microphone in your browser, then refresh" 
+                  : "Speak your line, then tap Next"}
               </p>
             </div>
           )}

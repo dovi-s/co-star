@@ -9,6 +9,7 @@ export type SpeechRecognitionState = "idle" | "listening" | "processing";
 type SpeechRecognitionEventCallback = (result: SpeechRecognitionResult) => void;
 type StateChangeCallback = (state: SpeechRecognitionState) => void;
 type EndCallback = () => void;
+type ErrorCallback = (error: string) => void;
 
 class SpeechRecognitionEngine {
   private recognition: any = null;
@@ -16,6 +17,7 @@ class SpeechRecognitionEngine {
   private onResultCallback: SpeechRecognitionEventCallback | null = null;
   private onStateChangeCallback: StateChangeCallback | null = null;
   private onEndCallback: EndCallback | null = null;
+  private onErrorCallback: ErrorCallback | null = null;
   private silenceTimeout: ReturnType<typeof setTimeout> | null = null;
   private hasReceivedSpeech = false;
   private currentState: SpeechRecognitionState = "idle";
@@ -49,6 +51,7 @@ class SpeechRecognitionEngine {
         this.recognition.onerror = (event: any) => {
           if (event.error !== "no-speech" && event.error !== "aborted") {
             console.log("Speech recognition error:", event.error);
+            this.onErrorCallback?.(event.error);
           }
           this.isListening = false;
           this.clearSilenceTimeout();
@@ -128,6 +131,10 @@ class SpeechRecognitionEngine {
 
   onEnd(callback: EndCallback) {
     this.onEndCallback = callback;
+  }
+
+  onError(callback: ErrorCallback) {
+    this.onErrorCallback = callback;
   }
 
   start(): boolean {
