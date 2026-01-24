@@ -253,34 +253,37 @@ export async function registerRoutes(
         baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
       });
 
-      const systemPrompt = `You are an expert screenwriter creating dialogue scenes for actor rehearsal. Your PRIMARY goal is to match EXACTLY what the user describes.
+      const systemPrompt = `You are a professional screenwriter creating realistic dialogue for actor rehearsal. Match the user's request EXACTLY.
 
-CRITICAL: Follow the user's request precisely:
-- If they mention specific characters, roles, or relationships - use those exact ones
-- If they describe a setting or situation - set the scene there exactly
-- If they want a specific genre or tone - deliver that exact tone
-- If they mention a movie, play, or show style - match that style closely
+CRITICAL RULES:
+1. Follow the user's prompt precisely - their characters, setting, situation, and tone
+2. Write dialogue that sounds like REAL PEOPLE talking - natural, conversational, with contractions
+3. Every line must logically follow from the previous line - no random topic jumps
+4. Characters must react to what the other person just said
 
-Format Requirements:
-- Write 10-18 lines of dialogue (enough for a good rehearsal)
-- Use 2-4 characters with distinct voices
-- Character names in ALL CAPS followed by colon
-- Include emotional stage directions in [brackets] before dialogue
-- Stage directions should indicate: emotion, action, tone (e.g., [furious, slamming the door], [whispering nervously], [with forced calm])
+FORMAT:
+- 12-16 lines of dialogue
+- 2-3 characters maximum  
+- Format: CHARACTER: [emotion] Dialogue here.
+- Character names in ALL CAPS
+- Brief stage directions in [brackets] - just the emotion, keep it simple
 
-Quality Standards:
-- Natural, speakable dialogue - how real people talk
-- Clear dramatic arc with rising tension or emotional stakes
-- Each character has a distinct voice and motivation
-- Subtext - what's unsaid matters as much as what's said
-- Strong emotional moments for the actor to play
+WHAT MAKES GOOD DIALOGUE:
+- Each character has a clear goal in the scene
+- Conflict or tension drives the scene forward
+- Lines are SHORT - people don't give speeches, they talk back and forth
+- Interruptions, pauses, trailing off are natural
+- The scene has a beginning, escalation, and resolution/cliffhanger
 
-Output ONLY the script lines. No titles, scene headings, or commentary.
+BAD dialogue examples (don't do this):
+- Long monologues or exposition dumps
+- Characters explaining things they both already know
+- Random topic changes mid-conversation
+- Overly dramatic or theatrical language
 
-Example format:
-SARAH: [coldly] You're late. Again.
-MARCUS: [defensive] Traffic was—
-SARAH: [cutting him off] Don't. Just... don't.`;
+GOOD dialogue feels like eavesdropping on a real conversation.
+
+Output ONLY the dialogue lines. No titles, headers, or explanations.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -337,32 +340,47 @@ SARAH: [cutting him off] Don't. Just... don't.`;
       
       const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
 
-      const systemPrompt = `You are an expert screenwriter creating powerful dialogue scenes for actor rehearsal.
+      const systemPrompt = `Write a realistic dialogue scene for actor rehearsal practice.
 
-Create an emotionally intense scene with these parameters:
-- Setting: ${scenario.setting}
-- Central conflict: ${scenario.conflict}
+SCENE SETUP:
+- Location: ${scenario.setting}
+- Situation: ${scenario.conflict}
 
-Requirements:
-- Write 12-18 lines of gripping dialogue
-- 2-3 characters with distinct voices and clear motivations
-- Character names in ALL CAPS followed by colon
-- Rich emotional stage directions in [brackets] (e.g., [barely containing rage], [voice cracking], [forced smile])
-- Build tension throughout - start tense, escalate to a breaking point
-- Include a powerful emotional climax or revelation
-- Natural, speakable dialogue with subtext
-- Strong actable moments: pauses, interruptions, physical reactions
+REQUIREMENTS:
+1. Write 12-16 lines of natural dialogue between 2 characters
+2. Format each line as: CHARACTER: [emotion] Dialogue text.
+3. Character names in ALL CAPS
+4. Keep stage directions brief - just the emotion in [brackets]
 
-Output ONLY the dialogue. No scene headings, titles, or commentary.`;
+CRITICAL - Make it feel REAL:
+- Short, punchy lines - people interrupt each other, trail off, react
+- Every line must respond to what was just said - no random jumps
+- Use contractions (don't, can't, won't) - nobody talks formally
+- Include awkward pauses, half-sentences, people talking over each other
+- Build naturally from hello/confrontation to climax to resolution
+
+BAD (don't write like this):
+- "I have been meaning to tell you something important about our relationship and how I feel..."
+- Long speeches or monologues
+- Perfectly articulate emotional revelations
+
+GOOD (write like this):
+- "Wait, what? No. No, you can't just—"
+- "I know. I know, okay? But listen—"
+- Messy, real, interrupted speech
+
+This is for actors to practice with, so make the emotions clear but the dialogue natural.
+
+Output ONLY the dialogue. No scene titles or descriptions.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: "Generate this scene now." }
+          { role: "user", content: "Write this scene now. Make it feel like a real conversation." }
         ],
         max_tokens: 1500,
-        temperature: 0.85,
+        temperature: 0.7,
       });
 
       const script = response.choices[0]?.message?.content?.trim() || "";
