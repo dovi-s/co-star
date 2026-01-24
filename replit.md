@@ -101,6 +101,11 @@ Sophisticated, minimal design inspired by premium $10B companies (Stripe, Linear
 - **Subtle interactions** - no jarring animations or playful effects
 - **Professional aesthetic** - minimal, focused, purposeful
 
+### Copy Guidelines
+- No exclamation marks in UI copy
+- Never use em-dashes (use periods or restructure sentences)
+- Simple, direct wording without whimsy
+
 ### Colors
 - **Primary accent**: foreground/background contrast (dark on light, light on dark)
 - **Light Mode**: Background #FFFFFF, Foreground #0F172A

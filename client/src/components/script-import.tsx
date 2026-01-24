@@ -142,13 +142,13 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
           <Textarea
             ref={textareaRef}
             id="script-text"
-            placeholder={`Paste your script here...
+            placeholder={`Paste your script here
 
-Format example:
-JULIET: Romeo, wherefore art thou?
-ROMEO: [calling up] I take thee at thy word!
+Example format:
+CHARACTER: Dialogue goes here.
+OTHER CHARACTER: [stage direction] More dialogue.
 
-Stage directions go in [brackets]`}
+Put stage directions in brackets.`}
             value={script}
             onChange={(e) => setScript(e.target.value)}
             className="min-h-[180px] border-0 resize-none focus-visible:ring-0 text-sm rounded-lg bg-transparent leading-relaxed placeholder:text-muted-foreground/40"
@@ -325,7 +325,7 @@ LADY CATHERINE: [blurting] He's not hunting deer, Your Majesty. He's meeting wit
 QUEEN ELEANOR: [dangerously quiet] Ashworth. The man who tried to usurp my throne.
 LADY CATHERINE: [nodding] They were seen exchanging documents.
 QUEEN ELEANOR: [standing] How long have you known this?
-LADY CATHERINE: [falling to knees] Three days. I was afraid to—
+LADY CATHERINE: [falling to knees] Three days. I was afraid to speak.
 QUEEN ELEANOR: [cutting her off] Afraid? Loyalty knows no fear, Catherine.`
 ];
 
