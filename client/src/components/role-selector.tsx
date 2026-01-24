@@ -48,8 +48,12 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           <Button
             variant="ghost"
             size="icon"
-            onClick={onBack}
-            className="shrink-0 transition-transform active:scale-95"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onBack();
+            }}
+            className="shrink-0 touch-manipulation transition-transform active:scale-95"
             data-testid="button-back-to-import"
           >
             <ChevronLeft className="h-5 w-5" />

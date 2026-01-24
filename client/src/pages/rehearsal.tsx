@@ -393,12 +393,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     createSession(name, rawScript);
   };
 
-  const handleBackToHome = () => {
-    ttsEngine.stop();
-    speechRecognition.abort();
+  const handleBackToHome = useCallback(() => {
+    try {
+      ttsEngine.stop();
+    } catch {}
+    try {
+      speechRecognition.abort();
+    } catch {}
     clearUserRole();
     onBack();
-  };
+  }, [clearUserRole, onBack]);
 
   const handleClearSession = () => {
     ttsEngine.stop();

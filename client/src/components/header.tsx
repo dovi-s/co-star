@@ -42,8 +42,12 @@ export function Header({
           <Button
             variant="ghost"
             size="icon"
-            onClick={onBack}
-            className="shrink-0"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onBack();
+            }}
+            className="shrink-0 touch-manipulation"
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />
