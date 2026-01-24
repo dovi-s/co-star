@@ -39,26 +39,19 @@ export function Header({
     <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 safe-top">
       <div className="flex items-center gap-3 min-w-0">
         {onBack && (
-          <button
+          <Button
             type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
+            variant="ghost"
+            size="icon"
+            onClick={() => {
               console.log("[Header] Back button clicked");
               onBack();
             }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log("[Header] Back button touched");
-              onBack();
-            }}
-            className="shrink-0 touch-manipulation -ml-2 p-4 rounded-md hover:bg-accent/80 active:bg-accent transition-colors select-none"
-            style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
+            className="shrink-0 -ml-1"
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />
-          </button>
+          </Button>
         )}
         
         <div className="min-w-0">
