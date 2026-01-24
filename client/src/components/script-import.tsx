@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from "react";
 import { Upload, FileText, Clipboard, X, Loader2, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +12,6 @@ interface ScriptImportProps {
 }
 
 export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) {
-  const [name, setName] = useState("");
   const [script, setScript] = useState("");
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
@@ -43,9 +41,6 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
     if (file.type === "text/plain" || file.name.endsWith(".txt")) {
       const text = await file.text();
       setScript(text);
-      if (!name) {
-        setName(file.name.replace(/\.[^.]+$/, ""));
-      }
     }
   };
 
@@ -60,7 +55,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
 
   const handleSubmit = () => {
     if (!script.trim()) return;
-    const sessionName = name.trim() || `Scene ${new Date().toLocaleDateString()}`;
+    const sessionName = `Scene ${new Date().toLocaleDateString()}`;
     onImport(sessionName, script);
   };
 
@@ -82,21 +77,6 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
 
   return (
     <div className="flex flex-col gap-5 max-w-lg mx-auto w-full" data-testid="script-import">
-      {/* Session name - optional */}
-      <div className="space-y-1.5">
-        <label htmlFor="session-name" className="text-xs font-medium text-muted-foreground">
-          Session name <span className="text-muted-foreground/50">(optional)</span>
-        </label>
-        <Input
-          id="session-name"
-          placeholder="e.g., Romeo & Juliet Act 2"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="h-11 rounded-lg text-sm border-border/60 focus:border-foreground/30 transition-colors"
-          data-testid="input-session-name"
-        />
-      </div>
-
       {/* Script input */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
