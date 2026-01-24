@@ -171,6 +171,45 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, []);
 
+  // Backup watcher: if word match hits 70%+, force advancement
+  // This catches cases where the speech callback didn't trigger properly
+  const advancedForLineRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!currentLine || !currentIsUserLine || !session?.isPlaying || !userTranscript) {
+      return;
+    }
+    
+    // Don't re-advance for the same line
+    if (advancedForLineRef.current === currentLine.id) {
+      return;
+    }
+    
+    const match = matchWords(currentLine.text, userTranscript);
+    if (match.percentMatched >= 70 && waitingForUserRef.current) {
+      console.log("[Rehearsal] Backup watcher: 70%+ match detected, forcing advancement");
+      advancedForLineRef.current = currentLine.id;
+      waitingForUserRef.current = false;
+      speechRecognition.stop();
+      
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
+      
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        if (isPlayingRef.current) {
+          advanceAfterUserLine();
+        }
+      }, 400);
+    }
+  }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
+
+  // Reset the advanced-for-line tracker when line changes
+  useEffect(() => {
+    if (currentLine?.id !== advancedForLineRef.current) {
+      advancedForLineRef.current = null;
+    }
+  }, [currentLine?.id]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
