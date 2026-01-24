@@ -86,13 +86,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       
       // Check word matching against current line
       const line = getCurrentLine();
-      if (line && waitingForUserRef.current && result.transcript.length > 0) {
+      if (line && result.transcript.length > 0 && waitingForUserRef.current) {
         const match = matchWords(line.text, result.transcript);
-        console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, `(${Math.round(match.percentMatched)}%)`);
+        console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, 
+          `(${Math.round(match.percentMatched)}%)`);
         
-        // Auto-advance when user has matched enough words (60%+ or completed short lines)
-        if (match.isComplete) {
-          console.log("[Rehearsal] Line complete, advancing");
+        // Auto-advance when user has matched 70%+ of the words
+        if (match.percentMatched >= 70) {
+          console.log("[Rehearsal] 70%+ match, advancing now!");
           speechRecognition.stop();
           waitingForUserRef.current = false;
           
@@ -111,12 +112,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }
       
-      // On final result, only auto-advance if we have a decent match (50%+)
-      // Otherwise let user keep speaking or tap Next manually
-      if (result.isFinal && waitingForUserRef.current) {
-        const match = line ? matchWords(line.text, result.transcript) : null;
-        if (match && match.percentMatched >= 35) {
-          console.log("[Rehearsal] Got final speech result with decent match, advancing");
+      // On final result, auto-advance if we have at least some progress (35%+)
+      if (result.isFinal && waitingForUserRef.current && line) {
+        const match = matchWords(line.text, result.transcript);
+        if (match.percentMatched >= 35) {
+          console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match, advancing");
           waitingForUserRef.current = false;
           
           if (autoAdvanceTimeoutRef.current) {
@@ -130,7 +130,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }
           }, 600);
         } else {
-          console.log("[Rehearsal] Final result but low match, waiting for more speech or manual advance");
+          console.log("[Rehearsal] Low match on final result, waiting for manual advance");
         }
       }
     });
