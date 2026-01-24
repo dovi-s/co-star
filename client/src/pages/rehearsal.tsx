@@ -72,45 +72,65 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   useEffect(() => {
     speechRecognition.onStateChange((state) => {
+      console.log("[Rehearsal] Speech state:", state);
       setListeningState(state);
     });
 
     speechRecognition.onResult((result) => {
+      console.log("[Rehearsal] Speech result:", result.isFinal ? "FINAL" : "interim", result.transcript.substring(0, 30));
       setUserTranscript(result.transcript);
       
       if (result.isFinal && waitingForUserRef.current) {
+        console.log("[Rehearsal] Got final speech result, advancing");
+        waitingForUserRef.current = false;
+        
+        if (autoAdvanceTimeoutRef.current) {
+          clearTimeout(autoAdvanceTimeoutRef.current);
+          autoAdvanceTimeoutRef.current = null;
+        }
+        
+        // Quick natural pause after user speaks
+        autoAdvanceTimeoutRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            advanceAfterUserLine();
+          }
+        }, 300);
+      }
+    });
+
+    speechRecognition.onEnd(() => {
+      console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
+      // Speech recognition ended - if we're still waiting for user, advance anyway
+      if (waitingForUserRef.current && isPlayingRef.current) {
         waitingForUserRef.current = false;
         
         if (autoAdvanceTimeoutRef.current) {
           clearTimeout(autoAdvanceTimeoutRef.current);
         }
         
-        // Quick natural pause - real conversations have 200-400ms gaps
-        const naturalPause = 250 + Math.random() * 200;
+        // Brief pause then advance
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current) {
+            console.log("[Rehearsal] Advancing after speech end");
             advanceAfterUserLine();
           }
-        }, naturalPause);
-      }
-    });
-
-    speechRecognition.onEnd(() => {
-      // If user stopped speaking but we didn't get a final result, 
-      // short pause then continue
-      if (waitingForUserRef.current && isPlayingRef.current) {
-        autoAdvanceTimeoutRef.current = setTimeout(() => {
-          if (isPlayingRef.current && waitingForUserRef.current) {
-            waitingForUserRef.current = false;
-            advanceAfterUserLine();
-          }
-        }, 500);
+        }, 400);
       }
     });
 
     speechRecognition.onError((error) => {
+      console.log("[Rehearsal] Speech error:", error);
       if (error === "not-allowed") {
         setMicBlocked(true);
+      }
+      // On error, still try to advance if we're waiting
+      if (waitingForUserRef.current && isPlayingRef.current) {
+        waitingForUserRef.current = false;
+        setTimeout(() => {
+          if (isPlayingRef.current) {
+            advanceAfterUserLine();
+          }
+        }, 500);
       }
     });
 
@@ -224,37 +244,65 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   }, [getNextLine, incrementLinesRehearsed, incrementRunsCompleted, nextLine, recordRehearsal, setPlaying]);
 
   const startListeningForUser = useCallback(() => {
+    console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
+    
     waitingForUserRef.current = true;
     setIsUserTurn(true);
     setUserTranscript("");
     
+    // Clear any pending timeouts
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
+    
     // Only try speech recognition if available and not blocked
     if (speechRecognition.available && !micBlocked) {
+      // Small delay to let audio finish and avoid overlap
       setTimeout(() => {
-        speechRecognition.start();
-      }, 300);
-    } else {
-      // Fallback: auto-advance after 4 seconds if no speech recognition
+        if (isPlayingRef.current && waitingForUserRef.current) {
+          speechRecognition.start();
+        }
+      }, 200);
+      
+      // Safety timeout: if no result after 20 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
+          console.log("[Rehearsal] User turn safety timeout, advancing");
+          speechRecognition.abort();
           waitingForUserRef.current = false;
           advanceAfterUserLine();
         }
-      }, 4000);
+      }, 20000);
+    } else {
+      // Fallback: auto-advance after 5 seconds if no speech recognition
+      autoAdvanceTimeoutRef.current = setTimeout(() => {
+        if (isPlayingRef.current && waitingForUserRef.current) {
+          console.log("[Rehearsal] No mic fallback, advancing");
+          waitingForUserRef.current = false;
+          advanceAfterUserLine();
+        }
+      }, 5000);
     }
   }, [micBlocked, advanceAfterUserLine]);
 
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
-    if (!line || !session) return;
+    if (!line || !session) {
+      console.log("[Rehearsal] No line or session to speak");
+      return;
+    }
 
     const lineKey = `${session.currentSceneIndex}-${session.currentLineIndex}`;
     
+    // Prevent speaking same line twice
     if (speakingLineRef.current === lineKey) {
+      console.log("[Rehearsal] Already speaking this line:", lineKey);
       return;
     }
     speakingLineRef.current = lineKey;
 
+    // Clear any pending speak timeout
     if (speakTimeoutRef.current) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
@@ -262,6 +310,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const isUser = isUserLine(line);
     if (isUser) {
+      console.log("[Rehearsal] User's line, starting listening");
       startListeningForUser();
       return;
     }
@@ -272,54 +321,47 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const preset = role?.voicePreset || "natural";
     const prosody = calculateProsody(emotion, preset);
 
-    const naturalPause = Math.random() * 100 + 100;
+    console.log("[Rehearsal] Speaking AI line:", role?.name, "index:", roleIndex, "emotion:", emotion);
 
+    // Very brief pause before speaking (natural flow)
     speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) {
-        console.log("[Rehearsal] Not playing, skipping TTS");
+        console.log("[Rehearsal] Not playing anymore, skipping TTS");
+        speakingLineRef.current = null;
         return;
       }
       
-      console.log("[Rehearsal] Speaking line:", role?.name, "-", line.text.substring(0, 40));
-      
       ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
-        console.log("[Rehearsal] TTS callback:", result, "isPlaying:", isPlayingRef.current);
+        console.log("[Rehearsal] TTS complete:", result);
         
-        if (result === "success" && isPlayingRef.current) {
+        // Always try to advance regardless of result (success or error)
+        if (isPlayingRef.current) {
           incrementLinesRehearsed();
           
-          const conversationalPause = Math.random() * 150 + 150;
-          console.log("[Rehearsal] Waiting", conversationalPause, "ms before next line");
-          
+          // Brief conversational pause before next line
           setTimeout(() => {
             if (!isPlayingRef.current) {
-              console.log("[Rehearsal] Stopped playing during pause");
+              console.log("[Rehearsal] Stopped during pause");
+              speakingLineRef.current = null;
               return;
             }
             
             speakingLineRef.current = null;
             
             const next = getNextLine();
-            console.log("[Rehearsal] Next line exists:", !!next);
             if (next) {
+              console.log("[Rehearsal] Advancing to next line");
               nextLine();
             } else {
+              console.log("[Rehearsal] Scene complete");
               setPlaying(false);
               incrementRunsCompleted();
               setShowCelebration(true);
               setTimeout(() => setShowCelebration(false), 3000);
             }
-          }, conversationalPause);
-        } else if (result === "error") {
-          console.log("[Rehearsal] TTS error, resetting and trying next");
+          }, 200);
+        } else {
           speakingLineRef.current = null;
-          // On error, try to continue to next line after a short delay
-          setTimeout(() => {
-            if (isPlayingRef.current) {
-              const next = getNextLine();
-              if (next) nextLine();
-            }
-          }, 500);
         }
       }, {
         characterName: role?.name || "Character",
@@ -327,7 +369,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         emotion,
         preset,
       });
-    }, naturalPause);
+    }, 100);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted, startListeningForUser]);
 
   useEffect(() => {

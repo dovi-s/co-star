@@ -4,16 +4,15 @@ import { storage } from "./storage";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
 
+// All neutral American English voices - no accents
 const ELEVENLABS_VOICES = {
-  male_deep: "pNInz6obpgDQGcFmaJgB",
-  male_young: "TxGEqnHWrfWFTfGW9XjX", 
-  male_mature: "VR6AewLTigWG4xSOukaG",
-  female_warm: "EXAVITQu4vr4xnSDxMaL",
-  female_young: "21m00Tcm4TlvDq8ikWAM",
-  female_mature: "ThT5KcBeYPX3keUQqHPh",
-  narrator: "pqHfZKP75CvOlQylNhV4",
-  british_male: "N2lVS1w4EtoT3dr4eOWO",
-  british_female: "jBpfuIE2acCO8z3wKNLl",
+  male_1: "nPczCjzI2devNBz1zQrb",    // Brian - clear American male
+  male_2: "cjVigY5qzO86Huf0OWal",    // Eric - warm American male  
+  male_3: "iP95p4xoKVk53GoZ742B",    // Chris - friendly American male
+  female_1: "cgSgspJ2msm6clMCkdW9",  // Jessica - warm American female
+  female_2: "EXAVITQu4vr4xnSDxMaL",  // Sarah - clear American female
+  female_3: "XB0fDUnXU5powFXDhCwa",  // Charlotte - natural American female
+  narrator: "nPczCjzI2devNBz1zQrb",  // Brian for narration
 };
 
 type VoiceType = keyof typeof ELEVENLABS_VOICES;
@@ -86,66 +85,56 @@ const MALE_NAMES = new Set([
   "eric", "kelso", "hyde", "bob", "red", "pastor", "fenton"
 ]);
 
-function assignVoiceToCharacter(characterName: string, index: number): VoiceType {
-  const name = characterName.toLowerCase();
-  const words = name.split(/[\s_-]+/);
+// Cache voice assignments to ensure consistency within a session
+const voiceAssignmentCache = new Map<string, VoiceType>();
+
+function assignVoiceToCharacter(characterName: string, characterIndex: number): VoiceType {
+  const name = characterName.toLowerCase().trim();
   
+  // Check cache first for consistency
+  if (voiceAssignmentCache.has(name)) {
+    return voiceAssignmentCache.get(name)!;
+  }
+  
+  // Narrator check
   if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
+    voiceAssignmentCache.set(name, "narrator");
     return "narrator";
   }
   
-  const titleIndicators = {
-    female: ["lady", "queen", "mrs", "miss", "ms", "duchess", "countess", "princess", "dame", "madam", "madame"],
-    male: ["lord", "king", "mr", "sir", "duke", "count", "prince", "baron", "captain", "commander", "chef", "dr", "doctor", "detective", "officer", "agent", "professor"],
-    young: ["young", "boy", "girl", "child", "kid", "teen", "junior", "jr"],
-    mature: ["old", "elder", "senior", "ancient", "grandfather", "grandmother", "grandpa", "grandma"],
-    british: ["lord", "duke", "baron", "sir", "dame", "earl", "viscount", "marquess"]
-  };
+  const words = name.split(/[\s_-]+/);
   
+  // Simple gender detection
   let isFemale = false;
-  let isMale = false;
-  let isYoung = false;
-  let isMature = false;
-  let isBritish = false;
   
+  // Check against name lists
   for (const word of words) {
     if (FEMALE_NAMES.has(word)) isFemale = true;
-    if (MALE_NAMES.has(word)) isMale = true;
-    if (titleIndicators.female.some(t => word === t || word.startsWith(t))) isFemale = true;
-    if (titleIndicators.male.some(t => word === t || word.startsWith(t))) isMale = true;
-    if (titleIndicators.young.some(t => word === t)) isYoung = true;
-    if (titleIndicators.mature.some(t => word === t)) isMature = true;
-    if (titleIndicators.british.some(t => word === t)) isBritish = true;
+    if (MALE_NAMES.has(word)) isFemale = false; // Male takes precedence if both
   }
   
-  const femaleKeywords = ["woman", "girl", "mother", "sister", "daughter", "nurse", "wife", "aunt", "niece", "waitress", "actress", "hostess"];
-  const maleKeywords = ["man", "guy", "father", "brother", "son", "waiter", "actor", "host", "uncle", "nephew"];
+  // Title/keyword checks
+  const femaleIndicators = ["lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl", "mother", "sister", "daughter", "wife", "aunt", "waitress", "actress"];
+  const maleIndicators = ["lord", "king", "mr", "sir", "duke", "prince", "baron", "captain", "dr", "man", "guy", "father", "brother", "son", "waiter", "actor", "uncle"];
   
-  if (femaleKeywords.some(k => name.includes(k))) isFemale = true;
-  if (maleKeywords.some(k => name.includes(k))) isMale = true;
+  if (femaleIndicators.some(ind => name.includes(ind))) isFemale = true;
+  if (maleIndicators.some(ind => name.includes(ind))) isFemale = false;
   
-  if (name.includes("sous chef")) isFemale = name.includes("kim") || name.includes("lisa") || name.includes("sarah");
+  // Deterministic voice selection based on character index (ensures different characters get different voices)
+  let voiceType: VoiceType;
   
-  if (isBritish) {
-    return isFemale ? "british_female" : "british_male";
+  if (isFemale) {
+    const femaleVoices: VoiceType[] = ["female_1", "female_2", "female_3"];
+    voiceType = femaleVoices[characterIndex % femaleVoices.length];
+  } else {
+    const maleVoices: VoiceType[] = ["male_1", "male_2", "male_3"];
+    voiceType = maleVoices[characterIndex % maleVoices.length];
   }
   
-  if (isFemale && !isMale) {
-    if (isMature) return "female_mature";
-    if (isYoung) return "female_young";
-    return "female_warm";
-  }
+  voiceAssignmentCache.set(name, voiceType);
+  console.log(`[Voice] Assigned ${name} (index ${characterIndex}) -> ${voiceType} (${isFemale ? 'female' : 'male'})`);
   
-  if (isMature) return "male_mature";
-  if (isYoung) return "male_young";
-  
-  if (isMale || !isFemale) {
-    const maleVoices: VoiceType[] = ["male_deep", "male_mature", "male_young"];
-    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-    return maleVoices[hash % maleVoices.length];
-  }
-  
-  return "male_deep";
+  return voiceType;
 }
 
 function getVoiceSettings(emotion: string, preset: string) {
@@ -231,6 +220,13 @@ export async function registerRoutes(
   
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", app: "CastMate Studio" });
+  });
+
+  // Clear voice cache on session start (call from client when starting new session)
+  app.post("/api/tts/reset", (_req: Request, res: Response) => {
+    voiceAssignmentCache.clear();
+    console.log("[Voice] Cache cleared for new session");
+    res.json({ success: true });
   });
 
   app.post("/api/tts/speak", async (req: Request, res: Response) => {
