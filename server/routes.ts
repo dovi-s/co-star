@@ -17,40 +17,95 @@ const ELEVENLABS_VOICES = {
 
 type VoiceType = keyof typeof ELEVENLABS_VOICES;
 
+const FEMALE_NAMES = new Set([
+  "maya", "juliet", "ophelia", "emma", "sophia", "olivia", "ava", "isabella", 
+  "mia", "charlotte", "amelia", "harper", "evelyn", "abigail", "emily", "elizabeth",
+  "sofia", "avery", "ella", "scarlett", "grace", "chloe", "victoria", "riley",
+  "aria", "lily", "aurora", "zoey", "nora", "camila", "hannah", "lillian",
+  "sarah", "jessica", "jennifer", "amanda", "ashley", "stephanie", "nicole", "melissa",
+  "michelle", "lisa", "nancy", "karen", "betty", "helen", "sandra", "donna", "carol",
+  "ruth", "sharon", "patricia", "catherine", "kate", "anna", "mary", "margaret",
+  "kim", "catherine", "katherine", "kate", "claire", "clara", "diana", "eleanor",
+  "eve", "fiona", "gwen", "iris", "jane", "julia", "laura", "lucy", "maria", "natalie",
+  "nina", "paula", "rachel", "rebecca", "rose", "sara", "susan", "wendy", "alice"
+]);
+
+const MALE_NAMES = new Set([
+  "romeo", "hamlet", "james", "john", "robert", "michael", "william", "david",
+  "richard", "joseph", "thomas", "charles", "christopher", "daniel", "matthew",
+  "anthony", "mark", "donald", "steven", "paul", "andrew", "joshua", "kenneth",
+  "kevin", "brian", "george", "timothy", "ronald", "edward", "jason", "jeffrey",
+  "ryan", "jacob", "gary", "nicholas", "eric", "jonathan", "stephen", "larry",
+  "justin", "scott", "brandon", "benjamin", "samuel", "raymond", "gregory", "frank",
+  "alexander", "patrick", "raymond", "jack", "dennis", "jerry", "tyler", "aaron",
+  "jose", "adam", "nathan", "henry", "douglas", "zachary", "peter", "kyle", "noah",
+  "ethan", "jeremy", "walter", "christian", "keith", "roger", "terry", "austin",
+  "sean", "gerald", "carl", "dylan", "harold", "jordan", "jesse", "bryan", "lawrence",
+  "arthur", "gabriel", "bruce", "logan", "albert", "willie", "alan", "eugene", "russell",
+  "bobby", "howard", "carlos", "fred", "ralph", "roy", "louis", "philip", "randy",
+  "marco", "derek", "zrix", "reyes", "patel"
+]);
+
 function assignVoiceToCharacter(characterName: string, index: number): VoiceType {
   const name = characterName.toLowerCase();
+  const words = name.split(/[\s_-]+/);
   
-  if (name.includes("narrator") || name.includes("stage")) {
+  if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
     return "narrator";
   }
   
-  const femaleIndicators = ["juliet", "ophelia", "lady", "queen", "mrs", "miss", "woman", "girl", "mother", "sister", "daughter", "nurse", "wife"];
-  const isFemale = femaleIndicators.some(ind => name.includes(ind));
+  const titleIndicators = {
+    female: ["lady", "queen", "mrs", "miss", "ms", "duchess", "countess", "princess", "dame", "madam", "madame"],
+    male: ["lord", "king", "mr", "sir", "duke", "count", "prince", "baron", "captain", "commander", "chef", "dr", "doctor", "detective", "officer", "agent", "professor"],
+    young: ["young", "boy", "girl", "child", "kid", "teen", "junior", "jr"],
+    mature: ["old", "elder", "senior", "ancient", "grandfather", "grandmother", "grandpa", "grandma"],
+    british: ["lord", "duke", "baron", "sir", "dame", "earl", "viscount", "marquess"]
+  };
   
-  const youngIndicators = ["young", "boy", "girl", "child", "kid"];
-  const matureIndicators = ["old", "elder", "king", "queen", "lord", "lady", "father", "mother"];
+  let isFemale = false;
+  let isMale = false;
+  let isYoung = false;
+  let isMature = false;
+  let isBritish = false;
   
-  const isYoung = youngIndicators.some(ind => name.includes(ind));
-  const isMature = matureIndicators.some(ind => name.includes(ind));
+  for (const word of words) {
+    if (FEMALE_NAMES.has(word)) isFemale = true;
+    if (MALE_NAMES.has(word)) isMale = true;
+    if (titleIndicators.female.some(t => word === t || word.startsWith(t))) isFemale = true;
+    if (titleIndicators.male.some(t => word === t || word.startsWith(t))) isMale = true;
+    if (titleIndicators.young.some(t => word === t)) isYoung = true;
+    if (titleIndicators.mature.some(t => word === t)) isMature = true;
+    if (titleIndicators.british.some(t => word === t)) isBritish = true;
+  }
   
-  const britishIndicators = ["lord", "duke", "baron", "sir", "dame"];
-  const isBritish = britishIndicators.some(ind => name.includes(ind));
+  const femaleKeywords = ["woman", "girl", "mother", "sister", "daughter", "nurse", "wife", "aunt", "niece", "waitress", "actress", "hostess"];
+  const maleKeywords = ["man", "guy", "father", "brother", "son", "waiter", "actor", "host", "uncle", "nephew"];
+  
+  if (femaleKeywords.some(k => name.includes(k))) isFemale = true;
+  if (maleKeywords.some(k => name.includes(k))) isMale = true;
+  
+  if (name.includes("sous chef")) isFemale = name.includes("kim") || name.includes("lisa") || name.includes("sarah");
   
   if (isBritish) {
     return isFemale ? "british_female" : "british_male";
   }
   
-  if (isFemale) {
+  if (isFemale && !isMale) {
     if (isMature) return "female_mature";
     if (isYoung) return "female_young";
-    return index % 2 === 0 ? "female_warm" : "female_young";
+    return "female_warm";
   }
   
   if (isMature) return "male_mature";
   if (isYoung) return "male_young";
   
-  const maleVoices: VoiceType[] = ["male_deep", "male_young", "male_mature"];
-  return maleVoices[index % maleVoices.length];
+  if (isMale || !isFemale) {
+    const maleVoices: VoiceType[] = ["male_deep", "male_mature", "male_young"];
+    const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return maleVoices[hash % maleVoices.length];
+  }
+  
+  return "male_deep";
 }
 
 function getVoiceSettings(emotion: string, preset: string) {
