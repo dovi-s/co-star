@@ -25,7 +25,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   const promptInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowTip(true), 2500);
+    const timer = setTimeout(() => setShowTip(true), 800);
     return () => clearTimeout(timer);
   }, []);
 
