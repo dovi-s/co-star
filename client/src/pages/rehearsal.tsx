@@ -4,11 +4,12 @@ import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { MemorizationToggle } from "@/components/memorization-toggle";
+import { Confetti } from "@/components/confetti";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Sparkles, Check, Trophy } from "lucide-react";
+import { Sparkles, Check, Trophy, Star } from "lucide-react";
 import { SpotMascot } from "@/components/spot-mascot";
 import { cn } from "@/lib/utils";
 
@@ -281,31 +282,37 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onJumpToLine={handleJumpToLine}
       />
 
+      <Confetti isActive={showCelebration} duration={4000} />
+      
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/50 backdrop-blur-sm">
-          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center celebrate pointer-events-auto max-w-sm mx-4">
-            <SpotMascot mood="celebrating" size="lg" className="mb-4" />
-            <h3 className="text-2xl font-bold mb-2">
-              Spot is so proud!
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center animate-scale-in pointer-events-auto max-w-sm mx-4">
+            <div className="flex justify-center mb-4">
+              <SpotMascot mood="celebrating" size="xl" />
+            </div>
+            <h3 className="text-2xl font-bold mb-1 flex items-center justify-center gap-2">
+              <Star className="h-5 w-5 text-amber-500" />
+              Nailed it
+              <Star className="h-5 w-5 text-amber-500" />
             </h3>
-            <p className="text-lg font-medium text-amber-600 dark:text-amber-400 mb-1">
-              Scene Complete!
+            <p className="text-lg font-semibold bg-gradient-to-r from-amber-500 to-orange-500 bg-clip-text text-transparent mb-3">
+              Scene Complete
             </p>
-            <p className="text-muted-foreground mb-4">
-              Run #{session.runsCompleted + 1} in the books
+            <p className="text-muted-foreground text-sm mb-4">
+              Run #{session.runsCompleted + 1} is in the books
             </p>
             <div className="flex items-center justify-center gap-3 text-sm">
-              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
-                <Trophy className="h-4 w-4 text-yellow-500" />
-                <span className="font-medium">{session.linesRehearsed} lines</span>
+              <div className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-full px-3 py-1.5">
+                <Trophy className="h-4 w-4 text-amber-500" />
+                <span className="font-bold text-amber-700 dark:text-amber-400">{session.linesRehearsed} lines</span>
               </div>
-              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
-                <Sparkles className="h-4 w-4 text-amber-500" />
-                <span className="font-medium">{session.runsCompleted + 1} runs</span>
+              <div className="flex items-center gap-1.5 bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 rounded-full px-3 py-1.5">
+                <Sparkles className="h-4 w-4 text-violet-500" />
+                <span className="font-bold text-violet-700 dark:text-violet-400">{session.runsCompleted + 1} runs</span>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-4">
-              Keep going! You're getting better every run.
+            <p className="text-xs text-muted-foreground mt-5">
+              You're getting better every time. Keep it up.
             </p>
           </div>
         </div>

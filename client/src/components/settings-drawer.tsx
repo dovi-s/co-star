@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings2 } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { RoleChip } from "@/components/role-chip";
 import { ScriptImport } from "@/components/script-import";
+import { SpotMascot } from "@/components/spot-mascot";
 import type { Role, Scene, VoicePreset } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -62,10 +63,10 @@ export function SettingsDrawer({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <button
-          className="w-full py-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/70 transition-colors hover:text-muted-foreground"
+          className="w-full py-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/60 transition-all hover:text-muted-foreground hover:gap-3"
           data-testid="button-settings-drawer"
         >
-          <Settings2 className="h-3.5 w-3.5" />
+          <Sparkles className="h-3.5 w-3.5" />
           <span className="font-medium">Settings</span>
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
@@ -77,7 +78,10 @@ export function SettingsDrawer({
           </div>
           
           <SheetHeader className="px-5 pb-4">
-            <SheetTitle className="text-left text-base font-semibold">Settings</SheetTitle>
+            <div className="flex items-center gap-3">
+              <SpotMascot size="xs" mood="happy" />
+              <SheetTitle className="text-left text-lg font-bold">Settings</SheetTitle>
+            </div>
           </SheetHeader>
 
           <div className="flex-1 overflow-auto px-5 pb-10">
