@@ -45,17 +45,24 @@ export function TransportBar({
         </Button>
 
         <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             disabled={!canGoBack}
-            onClick={onBack}
+            onClick={() => {
+              console.log("[Transport] Back clicked");
+              onBack();
+            }}
             title="Previous"
-            className="rounded-full transition-transform active:scale-90"
+            className={cn(
+              "p-3 rounded-full transition-all active:scale-90 touch-manipulation",
+              "hover:bg-accent/80 active:bg-accent",
+              !canGoBack && "opacity-40 pointer-events-none"
+            )}
+            style={{ minWidth: 44, minHeight: 44 }}
             data-testid="button-prev-line"
           >
             <ChevronLeft className="h-5 w-5" />
-          </Button>
+          </button>
 
           <div className="relative mx-2">
             <svg 
@@ -108,17 +115,24 @@ export function TransportBar({
             </Button>
           </div>
 
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             disabled={!canGoNext}
-            onClick={onNext}
+            onClick={() => {
+              console.log("[Transport] Next clicked");
+              onNext();
+            }}
             title="Next"
-            className="rounded-full transition-transform active:scale-90"
+            className={cn(
+              "p-3 rounded-full transition-all active:scale-90 touch-manipulation",
+              "hover:bg-accent/80 active:bg-accent",
+              !canGoNext && "opacity-40 pointer-events-none"
+            )}
+            style={{ minWidth: 44, minHeight: 44 }}
             data-testid="button-next-line"
           >
             <ChevronRight className="h-5 w-5" />
-          </Button>
+          </button>
         </div>
 
         <div className="flex flex-col items-center min-w-[44px]">
