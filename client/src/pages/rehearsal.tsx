@@ -85,8 +85,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           clearTimeout(autoAdvanceTimeoutRef.current);
         }
         
-        // Natural conversational pause before AI responds (800-1200ms feels human)
-        const naturalPause = 800 + Math.random() * 400;
+        // Quick natural pause - real conversations have 200-400ms gaps
+        const naturalPause = 250 + Math.random() * 200;
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current) {
             advanceAfterUserLine();
@@ -97,14 +97,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     speechRecognition.onEnd(() => {
       // If user stopped speaking but we didn't get a final result, 
-      // wait a bit longer before advancing
+      // short pause then continue
       if (waitingForUserRef.current && isPlayingRef.current) {
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current && waitingForUserRef.current) {
             waitingForUserRef.current = false;
             advanceAfterUserLine();
           }
-        }, 1200);
+        }, 500);
       }
     });
 
@@ -272,7 +272,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const preset = role?.voicePreset || "natural";
     const prosody = calculateProsody(emotion, preset);
 
-    const naturalPause = Math.random() * 200 + 150;
+    const naturalPause = Math.random() * 100 + 100;
 
     speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) return;
@@ -281,7 +281,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (result === "success" && isPlayingRef.current) {
           incrementLinesRehearsed();
           
-          const conversationalPause = Math.random() * 300 + 200;
+          const conversationalPause = Math.random() * 150 + 150;
           
           setTimeout(() => {
             if (!isPlayingRef.current) return;
