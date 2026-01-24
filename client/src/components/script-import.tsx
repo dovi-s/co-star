@@ -297,7 +297,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
 
       {/* Character preview or cleanup hint */}
       {script && characters.length > 0 && (
-        <div className="flex items-center justify-between gap-2 px-1 animate-fade-in">
+        <div className="flex items-center justify-between gap-2 px-1 mt-1 mb-2 animate-fade-in">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-xs text-muted-foreground shrink-0">{characters.length} roles:</span>
             <div className="flex flex-wrap gap-1 min-w-0">
