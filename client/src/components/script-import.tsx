@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Clipboard, X, Loader2, ArrowRight, Check } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -324,21 +324,18 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
         onClick={handleSubmit}
         disabled={!canSubmit}
         size="lg"
-        className="w-full gap-2"
+        className="w-full"
         data-testid="button-choose-role"
       >
         {isLoading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
             Processing
           </>
         ) : canSubmit ? (
-          <>
-            Choose role
-            <ArrowRight className="h-4 w-4" />
-          </>
+          "Continue"
         ) : (
-          "Paste a script to start"
+          "Paste a script"
         )}
       </Button>
       
