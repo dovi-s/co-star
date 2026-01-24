@@ -15,11 +15,14 @@ interface HomePageProps {
 
 export function HomePage({ onSessionReady }: HomePageProps) {
   const { session, createSession, setUserRole, clearSession, isLoading, error } = useSession();
-  const [step, setStep] = useState<Step>(() => {
-    if (session && !session.userRoleId) return "role-select";
-    return "import";
-  });
+  const [step, setStep] = useState<Step>("import");
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  useEffect(() => {
+    if (session && !session.userRoleId) {
+      clearSession();
+    }
+  }, []);
 
   useEffect(() => {
     if (session && session.userRoleId) {
