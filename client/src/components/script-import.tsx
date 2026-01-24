@@ -219,7 +219,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
       <div
         className={cn(
-          "relative rounded-xl transition-all duration-200 bg-muted/30",
+          "relative rounded-xl transition-all duration-200 bg-muted/30 textarea-glow",
           isDragging && "ring-2 ring-foreground/20",
           script && "bg-muted/20"
         )}

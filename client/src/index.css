@@ -1226,3 +1226,173 @@
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* ============================================
+   PREMIUM POLISH EFFECTS
+   ============================================ */
+
+/* Elegant textarea focus glow */
+.textarea-glow {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.textarea-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0) 0%,
+    hsl(var(--primary) / 0.1) 50%,
+    hsl(var(--primary) / 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.textarea-glow:focus-within::before {
+  opacity: 1;
+}
+
+.textarea-glow:focus-within {
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary) / 0.2),
+    0 0 20px -5px hsl(var(--primary) / 0.15),
+    0 0 40px -10px hsl(var(--primary) / 0.1);
+}
+
+/* Breathing animation for user turn */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 3s ease-in-out infinite;
+}
+
+/* Subtle pulse ring for listening state */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.pulse-ring::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 1px solid currentColor;
+  opacity: 0.5;
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+/* Confetti particles */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-100%) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400%) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-particle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall 3s ease-out forwards;
+}
+
+/* Subtle gradient shimmer */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.gradient-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--foreground) / 0) 0%,
+    hsl(var(--primary) / 0.1) 50%,
+    hsl(var(--foreground) / 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+/* Premium card hover lift */
+.card-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 10px 30px -10px hsl(var(--foreground) / 0.1),
+    0 4px 10px -4px hsl(var(--foreground) / 0.05);
+}
+
+/* Gentle float animation */
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: gentle-float 4s ease-in-out infinite;
+}
+
+/* Star burst for perfect score */
+@keyframes star-burst {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2) rotate(180deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 1;
+  }
+}
+
+.animate-star-burst {
+  animation: star-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}

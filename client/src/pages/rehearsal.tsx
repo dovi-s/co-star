@@ -880,23 +880,51 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         const feedback = getPerformanceFeedback();
         const FeedbackIcon = feedback?.icon || Check;
         
+        // Deterministic confetti particles for perfect runs (seeded by position)
+        const confettiParticles = feedback?.type === "perfect" 
+          ? Array.from({ length: 12 }, (_, i) => ({
+              id: i,
+              left: 5 + (i * 8) + (i % 3) * 2,
+              delay: i * 0.08,
+              duration: 2.5 + (i % 3) * 0.3,
+            }))
+          : [];
+        
         return (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
             onClick={handleDismissCelebration}
           >
+            {/* Confetti for perfect runs */}
+            {feedback?.type === "perfect" && (
+              <div className="confetti-container">
+                {confettiParticles.map(p => (
+                  <div
+                    key={p.id}
+                    className="confetti-particle bg-yellow-400 dark:bg-yellow-500"
+                    style={{
+                      left: `${p.left}%`,
+                      animationDelay: `${p.delay}s`,
+                      animationDuration: `${p.duration}s`,
+                      opacity: 0.7,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            
             <div 
-              className="bg-card border shadow-xl rounded-xl p-8 text-center max-w-sm mx-4 animate-scale-in"
+              className="bg-card border shadow-xl rounded-xl p-8 text-center max-w-sm mx-4 animate-scale-in relative"
               onClick={(e) => e.stopPropagation()}
               data-testid="celebration-modal"
             >
               {/* Icon */}
               <div className="relative mb-5">
                 <div className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center mx-auto animate-bounce-in",
-                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
-                  feedback?.type === "great" ? "bg-green-500 text-white" :
-                  "bg-primary text-primary-foreground"
+                  "w-16 h-16 rounded-full flex items-center justify-center mx-auto",
+                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950 animate-star-burst" :
+                  feedback?.type === "great" ? "bg-green-500 text-white animate-bounce-in" :
+                  "bg-primary text-primary-foreground animate-bounce-in"
                 )}>
                   {feedback?.type === "perfect" ? (
                     <Star className="h-8 w-8 fill-current" />
@@ -908,6 +936,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                   <>
                     <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-yellow-400/60 animate-ping" />
                     <div className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-yellow-400/40 animate-ping" style={{ animationDelay: "200ms" }} />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-yellow-300/50 animate-ping" style={{ animationDelay: "400ms" }} />
                   </>
                 )}
               </div>
@@ -1013,10 +1042,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           {showUserTurnIndicator && (
             <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
               <div className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border",
+                "flex items-center gap-2 px-4 py-2 rounded-full border relative",
                 isListening 
-                  ? "bg-primary/10 border-primary/20" 
-                  : "bg-foreground/5 border-foreground/10"
+                  ? "bg-primary/10 border-primary/20 pulse-ring text-primary" 
+                  : "bg-foreground/5 border-foreground/10 animate-breathe"
               )}>
                 {isListening ? (
                   <>
