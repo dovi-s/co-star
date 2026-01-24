@@ -331,7 +331,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       try {
         const ctx = new AudioContext();
         const gain = ctx.createGain();
-        gain.gain.value = 0.015;
+        gain.gain.value = 0.04;
         gain.connect(ctx.destination);
 
         const bufferSize = 2 * ctx.sampleRate;

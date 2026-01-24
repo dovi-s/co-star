@@ -102,7 +102,7 @@ export function SettingsDrawer({
                       Ambient Sound
                     </label>
                     <p className="text-[11px] text-muted-foreground/60">
-                      Room tone for immersion
+                      Subtle background hum for focus
                     </p>
                   </div>
                 </div>
