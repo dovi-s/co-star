@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Clipboard, X, Loader2, ArrowRight, Check, Sparkles, Shuffle } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -264,17 +264,17 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
         )}
       </Button>
       
-      {/* AI generation */}
+      {/* Sample script option */}
       {!script && showTip && (
-        <div className="flex justify-center animate-fade-in">
+        <div className="animate-fade-in">
           {showPromptInput ? (
-            <div className="flex items-center gap-2 w-full">
+            <div className="flex items-center gap-2">
               <Input
                 ref={promptInputRef}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="Describe your scene..."
-                className="text-sm h-9"
+                placeholder="two friends reuniting after 10 years..."
+                className="text-sm h-9 flex-1"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && customPrompt.trim()) {
                     generateFromPrompt();
@@ -292,42 +292,40 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
                 disabled={!customPrompt.trim() || isGenerating}
                 data-testid="button-generate-from-prompt"
               >
-                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
+                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Go"}
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
+              <button
                 onClick={() => {
                   setShowPromptInput(false);
                   setCustomPrompt("");
                 }}
+                className="p-2 text-muted-foreground hover:text-foreground transition-colors"
                 data-testid="button-cancel-prompt"
               >
                 <X className="h-3.5 w-3.5" />
-              </Button>
+              </button>
             </div>
           ) : (
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <p className="text-center text-sm text-muted-foreground/70">
+              No script?{" "}
               <button
                 onClick={generateRandomScript}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
+                className="underline underline-offset-2 hover:text-foreground transition-colors disabled:opacity-50"
                 data-testid="button-generate-random"
               >
-                {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shuffle className="h-3 w-3" />}
-                Random scene
+                {isGenerating ? "Generating..." : "Try a sample"}
               </button>
-              <span className="text-muted-foreground/30">or</span>
+              {" "}or{" "}
               <button
                 onClick={() => setShowPromptInput(true)}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
+                className="underline underline-offset-2 hover:text-foreground transition-colors disabled:opacity-50"
                 data-testid="button-show-prompt"
               >
-                <Sparkles className="h-3 w-3" />
-                Describe a scene
+                create one
               </button>
-            </div>
+            </p>
           )}
         </div>
       )}
