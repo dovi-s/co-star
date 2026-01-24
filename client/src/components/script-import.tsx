@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, FileText, Clipboard, X, Loader2, ArrowRight, Check, Sparkles, Shuffle, Send } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, ArrowRight, Check, Sparkles, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -146,184 +145,136 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   const characters = script ? detectCharacters(script) : [];
 
   return (
-    <div className="flex flex-col gap-5 max-w-lg mx-auto w-full" data-testid="script-import">
-      {/* Script input */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label htmlFor="script-text" className="text-xs font-medium text-muted-foreground">
-            Script
-          </label>
-          <button
-            onClick={handlePaste}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors",
-              pasteSuccess 
-                ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-            )}
-            data-testid="button-paste"
-          >
-            {pasteSuccess ? (
-              <>
-                <Check className="h-3 w-3" />
-                Pasted
-              </>
-            ) : (
-              <>
-                <Clipboard className="h-3 w-3" />
-                Paste
-              </>
-            )}
-          </button>
-        </div>
-
-        <div
-          className={cn(
-            "relative rounded-lg transition-all duration-200",
-            isDragging 
-              ? "ring-2 ring-foreground/20 bg-muted/30" 
-              : script 
-                ? "border border-border/60" 
-                : "border border-border/40 hover:border-border/60"
-          )}
-          onDrop={handleDrop}
-          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-          onDragLeave={() => setIsDragging(false)}
-        >
-          <Textarea
-            ref={textareaRef}
-            id="script-text"
-            placeholder={`Paste your script here
-
-Example format:
-CHARACTER: Dialogue goes here.
-OTHER CHARACTER: [stage direction] More dialogue.
-
-Put stage directions in brackets.`}
-            value={script}
-            onChange={(e) => setScript(e.target.value)}
-            className="min-h-[300px] border-0 resize-none focus-visible:ring-0 text-[15px] rounded-lg bg-transparent leading-[2.6] px-6 py-5 placeholder:text-muted-foreground/40 font-normal"
-            data-testid="textarea-script"
-          />
-
-          {isDragging && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 rounded-lg bg-muted/50 backdrop-blur-sm">
-              <Upload className="h-6 w-6 text-muted-foreground" />
-              <span className="text-xs font-medium text-muted-foreground">
-                Drop file
-              </span>
-            </div>
-          )}
-        </div>
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".txt,text/plain"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleFileSelect(file);
-          }}
+    <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
+      <div
+        className={cn(
+          "relative rounded-xl transition-all duration-200 bg-muted/30",
+          isDragging && "ring-2 ring-foreground/20",
+          script && "bg-muted/20"
+        )}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+      >
+        <Textarea
+          ref={textareaRef}
+          id="script-text"
+          placeholder="Paste your script here..."
+          value={script}
+          onChange={(e) => setScript(e.target.value)}
+          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[15px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50"
+          data-testid="textarea-script"
         />
 
-        {/* File actions and character count */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
-              data-testid="button-upload-file"
-            >
-              <FileText className="h-3 w-3" />
-              Upload .txt
-            </button>
-            {script && (
-              <button
-                onClick={() => setScript("")}
-                className="inline-flex items-center justify-center w-6 h-6 text-muted-foreground/60 hover:text-foreground rounded-md transition-colors"
-                data-testid="button-clear-script"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-          
-          {script && characters.length > 0 && (
-            <span className="text-[11px] text-muted-foreground" data-testid="text-character-count">
-              {characters.length} character{characters.length !== 1 ? 's' : ''} detected
-            </span>
-          )}
-        </div>
-        
-        {/* Character badges with animation */}
-        {script && characters.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 pt-1">
-            {characters.slice(0, 5).map((char, index) => (
-              <Badge 
-                key={char}
-                variant="secondary"
-                className="text-[10px] animate-fade-in"
-                style={{ animationDelay: `${index * 50}ms` }}
-              >
-                {char}
-              </Badge>
-            ))}
-            {characters.length > 5 && (
-              <span className="px-2 py-0.5 text-[10px] text-muted-foreground/60 animate-fade-in" style={{ animationDelay: "250ms" }}>
-                +{characters.length - 5}
-              </span>
-            )}
+        {isDragging && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-sm">
+            <span className="text-sm text-muted-foreground">Drop file here</span>
           </div>
         )}
+
+        {/* Floating actions */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={handlePaste}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                pasteSuccess 
+                  ? "bg-green-500/15 text-green-600 dark:text-green-400" 
+                  : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
+              )}
+              data-testid="button-paste"
+            >
+              {pasteSuccess ? <Check className="h-3 w-3" /> : <Clipboard className="h-3 w-3" />}
+              {pasteSuccess ? "Done" : "Paste"}
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background transition-all"
+              data-testid="button-upload-file"
+            >
+              <Upload className="h-3 w-3" />
+              Upload
+            </button>
+          </div>
+          
+          {script && (
+            <button
+              onClick={() => setScript("")}
+              className="p-1.5 rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground/60 hover:text-foreground transition-all"
+              data-testid="button-clear-script"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
       </div>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".txt,text/plain"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileSelect(file);
+        }}
+      />
+
+      {/* Character preview */}
+      {script && characters.length > 0 && (
+        <div className="flex items-center gap-2 px-1 animate-fade-in">
+          <span className="text-xs text-muted-foreground">{characters.length} roles:</span>
+          <div className="flex flex-wrap gap-1">
+            {characters.slice(0, 4).map((char) => (
+              <span key={char} className="text-xs text-foreground/80">{char}</span>
+            ))}
+            {characters.length > 4 && (
+              <span className="text-xs text-muted-foreground">+{characters.length - 4}</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {error && (
-        <div 
-          className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm" 
-          data-testid="text-error"
-        >
+        <div className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm" data-testid="text-error">
           {error}
         </div>
       )}
 
-      {/* Submit button */}
       <Button
         onClick={handleSubmit}
         disabled={!canSubmit}
         size="lg"
-        className={cn(
-          "w-full gap-2 transition-all duration-200",
-          canSubmit && "shadow-sm"
-        )}
+        className="w-full gap-2"
         data-testid="button-choose-role"
       >
         {isLoading ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
-            Processing...
+            Processing
           </>
         ) : canSubmit ? (
           <>
-            Continue
+            Choose role
             <ArrowRight className="h-4 w-4" />
           </>
         ) : (
-          "Paste a script to begin"
+          "Paste a script to start"
         )}
       </Button>
       
-      {/* AI Script Generation */}
+      {/* AI generation */}
       {!script && showTip && (
-        <div className="flex flex-col items-center gap-3 animate-fade-in">
+        <div className="flex justify-center animate-fade-in">
           {showPromptInput ? (
-            <div className="flex items-center gap-2 w-full max-w-sm">
+            <div className="flex items-center gap-2 w-full">
               <Input
                 ref={promptInputRef}
                 value={customPrompt}
                 onChange={(e) => setCustomPrompt(e.target.value)}
-                placeholder="e.g. two siblings arguing about inheritance"
-                className="text-sm"
+                placeholder="Describe your scene..."
+                className="text-sm h-9"
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && customPrompt.trim()) {
                     generateFromPrompt();
@@ -336,55 +287,45 @@ Put stage directions in brackets.`}
                 data-testid="input-custom-prompt"
               />
               <Button
-                size="icon"
-                variant="ghost"
+                size="sm"
                 onClick={generateFromPrompt}
                 disabled={!customPrompt.trim() || isGenerating}
                 data-testid="button-generate-from-prompt"
               >
-                {isGenerating ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
+                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRight className="h-3.5 w-3.5" />}
               </Button>
               <Button
-                size="icon"
+                size="sm"
                 variant="ghost"
                 onClick={() => {
                   setShowPromptInput(false);
                   setCustomPrompt("");
                 }}
-                className="text-muted-foreground"
                 data-testid="button-cancel-prompt"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
               <button
                 onClick={generateRandomScript}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
                 data-testid="button-generate-random"
               >
-                {isGenerating ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                ) : (
-                  <Shuffle className="h-3 w-3" />
-                )}
+                {isGenerating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Shuffle className="h-3 w-3" />}
                 Random scene
               </button>
               <span className="text-muted-foreground/30">or</span>
               <button
                 onClick={() => setShowPromptInput(true)}
                 disabled={isGenerating}
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-foreground transition-colors disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 hover:text-foreground transition-colors disabled:opacity-50"
                 data-testid="button-show-prompt"
               >
                 <Sparkles className="h-3 w-3" />
-                Write a prompt
+                Describe a scene
               </button>
             </div>
           )}
