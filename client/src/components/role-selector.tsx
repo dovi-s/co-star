@@ -84,10 +84,10 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
             </p>
           </div>
           
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 text-xs font-medium animate-fade-in-up stagger-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span className="text-foreground">Smart Cast</span>
-            <span className="text-muted-foreground">auto-assigns voices</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 text-xs font-medium animate-fade-in-up stagger-2">
+            <Sparkles className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+            <span className="text-foreground/90">Smart Cast</span>
+            <span className="text-muted-foreground/70">auto-assigns voices</span>
           </div>
         </div>
 
@@ -102,31 +102,31 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 key={role.id}
                 onClick={() => setSelectedRoleId(role.id)}
                 className={cn(
-                  "w-full flex items-center gap-4 p-4 rounded-2xl border text-left",
-                  "transition-all duration-300 hover-lift",
+                  "w-full flex items-center gap-4 p-4 rounded-2xl text-left",
+                  "transition-all duration-300",
                   "animate-fade-in-up",
                   isSelected
-                    ? "border-primary bg-gradient-to-br from-primary/8 to-accent/5 shadow-md shadow-primary/10"
-                    : "border-border bg-card hover:border-primary/30"
+                    ? "bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border-2 border-amber-500/40 shadow-lg shadow-amber-500/10"
+                    : "bg-card/60 border border-border/50 hover:border-amber-500/30 hover:bg-card"
                 )}
                 style={{ animationDelay: `${index * 0.08}s` }}
                 data-testid={`card-role-${role.name}`}
               >
                 <div
                   className={cn(
-                    "relative flex items-center justify-center w-14 h-14 rounded-xl transition-all duration-300",
+                    "relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-300",
                     isSelected
-                      ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25"
+                      : "bg-muted/60 text-muted-foreground"
                   )}
                 >
                   {isSelected ? (
-                    <Check className="h-7 w-7" />
+                    <Check className="h-6 w-6" />
                   ) : (
-                    <User className="h-7 w-7" />
+                    <User className="h-6 w-6" />
                   )}
                   {isLead && !isSelected && (
-                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-yellow-500 flex items-center justify-center shadow">
+                    <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-gradient-to-br from-yellow-400 to-amber-500 flex items-center justify-center shadow-sm">
                       <Crown className="h-2.5 w-2.5 text-white" />
                     </div>
                   )}
@@ -134,33 +134,30 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className={cn(
-                      "font-bold text-lg transition-colors",
-                      isSelected ? "text-foreground" : "text-foreground"
-                    )}>
+                    <span className="font-semibold text-base">
                       {role.name}
                     </span>
                     {isLead && (
-                      <Badge variant="secondary" className="text-[10px] px-2 py-0 gap-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/20">
+                      <span className="inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full bg-gradient-to-r from-yellow-400/20 to-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold uppercase tracking-wide border border-amber-400/30">
                         <Star className="h-2 w-2 fill-current" />
                         Lead
-                      </Badge>
+                      </span>
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="font-medium">{role.lineCount} line{role.lineCount !== 1 ? "s" : ""}</span>
-                    <span className="w-1 h-1 rounded-full bg-border" />
+                    <span className="text-muted-foreground/40">•</span>
                     <span>{linePercentage}% of scene</span>
                   </div>
                   
-                  <div className="mt-2.5 h-2 rounded-full bg-muted/50 overflow-hidden">
+                  <div className="mt-2 h-1.5 rounded-full bg-muted/40 overflow-hidden">
                     <div 
                       className={cn(
                         "h-full rounded-full transition-all duration-700 ease-out",
                         isSelected 
-                          ? "bg-gradient-to-r from-primary to-primary/70" 
-                          : "bg-muted-foreground/20"
+                          ? "bg-gradient-to-r from-amber-500 to-orange-500" 
+                          : "bg-muted-foreground/15"
                       )}
                       style={{ 
                         width: `${linePercentage}%`,
@@ -171,9 +168,9 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 </div>
 
                 {!isSelected && (
-                  <div className="flex flex-col items-center gap-0.5 text-muted-foreground/60">
-                    <Volume2 className="h-5 w-5" />
-                    <span className="text-[10px] font-medium uppercase tracking-wide">AI</span>
+                  <div className="flex flex-col items-center gap-0.5 text-muted-foreground/50">
+                    <Volume2 className="h-4 w-4" />
+                    <span className="text-[9px] font-medium uppercase tracking-wide">AI</span>
                   </div>
                 )}
               </button>
@@ -194,13 +191,15 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
               </p>
             </div>
           )}
-          <Button
+          <button
             onClick={handleContinue}
             disabled={!selectedRoleId}
-            size="lg"
             className={cn(
-              "w-full h-14 text-base font-semibold rounded-xl gap-2 transition-all duration-300",
-              selectedRoleId && "shadow-lg shadow-primary/25"
+              "w-full h-14 rounded-2xl font-semibold text-base flex items-center justify-center gap-2",
+              "transition-all duration-300",
+              selectedRoleId
+                ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 active:scale-[0.98]"
+                : "bg-muted/50 text-muted-foreground cursor-not-allowed"
             )}
             data-testid="button-start-rehearsal"
           >
@@ -212,7 +211,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
             ) : (
               "Choose your character"
             )}
-          </Button>
+          </button>
         </div>
       </div>
     </div>

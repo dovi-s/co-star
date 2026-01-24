@@ -142,13 +142,13 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
 
         <div
           className={cn(
-            "relative rounded-2xl border-2 border-dashed transition-all duration-300",
+            "relative rounded-2xl transition-all duration-300",
             isDragging 
-              ? "border-primary bg-primary/5 scale-[1.02] shadow-lg" 
+              ? "border-2 border-amber-500 bg-amber-500/5 scale-[1.01] shadow-lg shadow-amber-500/10" 
               : script 
-                ? "border-primary/40 bg-card shadow-sm" 
-                : "border-border hover:border-muted-foreground/30",
-            "focus-within:border-primary focus-within:shadow-md"
+                ? "border border-amber-500/30 bg-card/80 shadow-sm" 
+                : "border border-border/60 hover:border-amber-500/30 bg-card/50",
+            "focus-within:border-amber-500/50 focus-within:shadow-md focus-within:shadow-amber-500/5"
           )}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -159,7 +159,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
             id="script-text"
             placeholder={`Paste your script here...
 
-We'll auto-detect your characters!
+Spot will auto-detect your characters!
 
 FORMAT EXAMPLE:
 JULIET: Romeo, Romeo, wherefore art thou Romeo?
@@ -169,7 +169,7 @@ JULIET: [surprised] What man art thou?
 Stage directions go in [brackets]`}
             value={script}
             onChange={(e) => setScript(e.target.value)}
-            className="min-h-[240px] border-0 resize-none focus-visible:ring-0 text-base rounded-2xl bg-transparent leading-relaxed"
+            className="min-h-[220px] border-0 resize-none focus-visible:ring-0 text-base rounded-2xl bg-transparent leading-relaxed placeholder:text-muted-foreground/50"
             data-testid="textarea-script"
           />
 
@@ -222,10 +222,10 @@ Stage directions go in [brackets]`}
           </div>
           
           {script && characters.length > 0 && (
-            <div className="flex items-center gap-2 animate-fade-in" data-testid="text-character-count">
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span className="text-xs text-muted-foreground">
-                Found <span className="font-semibold text-foreground">{characters.length}</span> character{characters.length !== 1 ? 's' : ''}
+            <div className="flex items-center gap-1.5 animate-fade-in" data-testid="text-character-count">
+              <Sparkles className="h-3 w-3 text-amber-500" />
+              <span className="text-[11px] text-muted-foreground">
+                Found <span className="font-semibold text-amber-600 dark:text-amber-400">{characters.length}</span> character{characters.length !== 1 ? 's' : ''}
               </span>
             </div>
           )}
@@ -236,14 +236,14 @@ Stage directions go in [brackets]`}
             {characters.slice(0, 5).map((char, i) => (
               <span 
                 key={char}
-                className="px-2.5 py-1 text-xs font-medium rounded-full bg-muted border"
+                className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-300"
                 style={{ animationDelay: `${i * 50}ms` }}
               >
                 {char}
               </span>
             ))}
             {characters.length > 5 && (
-              <span className="px-2.5 py-1 text-xs text-muted-foreground">
+              <span className="px-2.5 py-1 text-[11px] text-muted-foreground/70">
                 +{characters.length - 5} more
               </span>
             )}
@@ -261,13 +261,14 @@ Stage directions go in [brackets]`}
       )}
 
       <div className="space-y-3">
-        <Button
+        <button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          size="lg"
           className={cn(
-            "w-full h-14 text-base font-semibold rounded-xl gap-2.5 transition-all duration-300",
-            canSubmit && "shadow-lg shadow-primary/20"
+            "w-full h-14 text-base font-semibold rounded-2xl flex items-center justify-center gap-2.5 transition-all duration-300",
+            canSubmit 
+              ? "bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/25 hover:shadow-xl hover:shadow-amber-500/30 active:scale-[0.98]"
+              : "bg-muted/50 text-muted-foreground cursor-not-allowed"
           )}
           data-testid="button-choose-role"
         >
@@ -287,10 +288,10 @@ Stage directions go in [brackets]`}
               Paste a script to begin
             </>
           )}
-        </Button>
+        </button>
         
         {canSubmit && (
-          <p className="text-center text-xs text-muted-foreground animate-fade-in">
+          <p className="text-center text-xs text-muted-foreground/70 animate-fade-in">
             {encouragement}
           </p>
         )}
@@ -298,12 +299,12 @@ Stage directions go in [brackets]`}
       
       {!script && showTip && (
         <div className="text-center space-y-2 animate-fade-in">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground/70">
             Just want to try it out?
           </p>
           <button 
             onClick={() => setScript(getRandomSampleScript())}
-            className="inline-flex items-center gap-1.5 text-sm text-primary font-medium hover:underline underline-offset-4 transition-all"
+            className="inline-flex items-center gap-1.5 text-sm text-amber-600 dark:text-amber-400 font-medium hover:underline underline-offset-4 transition-all"
             data-testid="button-load-sample"
           >
             <Sparkles className="h-3.5 w-3.5" />

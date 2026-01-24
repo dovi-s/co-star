@@ -1,5 +1,4 @@
-import { Badge } from "@/components/ui/badge";
-import { User, Volume2, Sparkles, Check } from "lucide-react";
+import { User, Volume2, Check } from "lucide-react";
 import type { Role, VoicePreset } from "@shared/schema";
 import {
   DropdownMenu,
@@ -32,26 +31,28 @@ const presetDescriptions: Record<VoicePreset, string> = {
 
 export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }: RoleChipProps) {
   const chipContent = (
-    <Badge
-      variant={isUserRole ? "default" : "secondary"}
+    <div
       className={cn(
-        "gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg",
-        showPresetPicker && !isUserRole && "cursor-pointer"
+        "inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg transition-colors",
+        isUserRole 
+          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm"
+          : "bg-muted/60 text-muted-foreground border border-border/40",
+        showPresetPicker && !isUserRole && "cursor-pointer hover:bg-muted"
       )}
       data-testid={`chip-role-${role.id}`}
     >
       {isUserRole ? (
-        <User className="h-3.5 w-3.5" />
+        <User className="h-3 w-3" />
       ) : (
-        <Volume2 className="h-3.5 w-3.5" />
+        <Volume2 className="h-3 w-3" />
       )}
       {role.name}
       {!isUserRole && showPresetPicker && (
-        <span className="text-[10px] opacity-70 uppercase tracking-wide ml-0.5">
+        <span className="text-[9px] opacity-60 uppercase tracking-wide ml-0.5">
           {presetLabels[role.voicePreset]}
         </span>
       )}
-    </Badge>
+    </div>
   );
 
   if (!showPresetPicker || isUserRole) {
@@ -76,24 +77,24 @@ export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }:
               onClick={() => onPresetChange?.(preset)}
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg cursor-pointer",
-                isSelected && "bg-primary/10"
+                isSelected && "bg-amber-500/10"
               )}
               data-testid={`menu-preset-${preset}`}
             >
               <div className={cn(
                 "w-5 h-5 rounded-full flex items-center justify-center mt-0.5 shrink-0",
-                isSelected ? "bg-primary text-primary-foreground" : "bg-muted"
+                isSelected ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white" : "bg-muted/60"
               )}>
                 {isSelected && <Check className="h-3 w-3" />}
               </div>
               <div className="flex-1">
                 <div className={cn(
-                  "font-medium",
-                  isSelected && "text-primary"
+                  "font-medium text-sm",
+                  isSelected && "text-amber-700 dark:text-amber-300"
                 )}>
                   {presetLabels[preset]}
                 </div>
-                <div className="text-xs text-muted-foreground mt-0.5">
+                <div className="text-[11px] text-muted-foreground/70 mt-0.5">
                   {presetDescriptions[preset]}
                 </div>
               </div>

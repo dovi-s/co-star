@@ -141,8 +141,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
 
 function FeaturePill({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/80 border text-xs font-medium text-muted-foreground backdrop-blur-sm">
-      <span className="text-primary">{icon}</span>
+    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 border border-border/40 text-[11px] font-medium text-muted-foreground/90 backdrop-blur-sm shadow-sm">
+      <span className="text-amber-600 dark:text-amber-400">{icon}</span>
       {label}
     </div>
   );

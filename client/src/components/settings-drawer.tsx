@@ -87,25 +87,25 @@ export function SettingsDrawer({
               <div 
                 className={cn(
                   "flex items-center justify-between p-4 rounded-2xl border transition-all duration-200",
-                  ambientEnabled ? "bg-primary/5 border-primary/20" : "bg-card border-border"
+                  ambientEnabled ? "bg-amber-500/5 border-amber-500/20" : "bg-card/60 border-border/50"
                 )}
               >
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
                   <div className={cn(
-                    "w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200",
-                    ambientEnabled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    "w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200",
+                    ambientEnabled ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md" : "bg-muted/60 text-muted-foreground"
                   )}>
                     {ambientEnabled ? (
-                      <Volume2 className="h-5 w-5" />
+                      <Volume2 className="h-4.5 w-4.5" />
                     ) : (
-                      <VolumeX className="h-5 w-5" />
+                      <VolumeX className="h-4.5 w-4.5" />
                     )}
                   </div>
                   <div>
-                    <Label htmlFor="ambient" className="font-semibold text-base cursor-pointer">
+                    <Label htmlFor="ambient" className="font-medium text-sm cursor-pointer">
                       Ambient Sound
                     </Label>
-                    <p className="text-xs text-muted-foreground mt-0.5">
+                    <p className="text-[11px] text-muted-foreground/70 mt-0.5">
                       Subtle room tone for immersion
                     </p>
                   </div>
@@ -133,22 +133,22 @@ export function SettingsDrawer({
                           setIsOpen(false);
                         }}
                         className={cn(
-                          "text-left p-4 rounded-xl border transition-all duration-200 hover-lift",
+                          "text-left p-4 rounded-xl border transition-all duration-200",
                           index === currentSceneIndex
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border bg-card hover:border-primary/30"
+                            ? "border-amber-500/30 bg-amber-500/5 shadow-sm"
+                            : "border-border/50 bg-card/60 hover:border-amber-500/30"
                         )}
                         data-testid={`button-scene-${index}`}
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold">{scene.name}</div>
-                            <div className="text-xs text-muted-foreground mt-0.5">
+                            <div className="font-medium text-sm">{scene.name}</div>
+                            <div className="text-[11px] text-muted-foreground/70 mt-0.5">
                               {scene.lines.length} line{scene.lines.length !== 1 ? "s" : ""}
                             </div>
                           </div>
                           {index === currentSceneIndex && (
-                            <span className="text-xs font-medium text-primary px-2 py-1 rounded-full bg-primary/10">
+                            <span className="text-[10px] font-medium text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full bg-amber-500/15">
                               Current
                             </span>
                           )}
@@ -183,15 +183,14 @@ export function SettingsDrawer({
               <Separator className="my-6" />
 
               <div className="space-y-3">
-                <Button
-                  variant="outline"
-                  className="w-full h-12 gap-2 rounded-xl font-semibold"
+                <button
+                  className="w-full h-12 gap-2 rounded-xl font-medium text-sm flex items-center justify-center border border-border/50 bg-card/60 hover:border-amber-500/30 hover:bg-card transition-all duration-200"
                   onClick={() => setShowImport(!showImport)}
                   data-testid="button-new-script"
                 >
-                  <FileText className="h-5 w-5" />
+                  <FileText className="h-4.5 w-4.5 text-muted-foreground" />
                   {showImport ? "Hide Import" : "Import New Script"}
-                </Button>
+                </button>
 
                 {showImport && (
                   <Card className="animate-scale-in rounded-2xl overflow-hidden">

@@ -4,7 +4,6 @@ import { RoleChip } from "@/components/role-chip";
 import { StreakDisplay } from "@/components/streak-display";
 import { BrandLogo } from "@/components/brand-logo";
 import { SpotMascot } from "@/components/spot-mascot";
-import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import type { Role, Scene } from "@shared/schema";
 
@@ -42,27 +41,26 @@ export function Header({
   onJumpToLine,
 }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-3 px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
-      <div className="flex items-center gap-3 min-w-0">
+    <header className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 safe-top">
+      <div className="flex items-center gap-2 min-w-0">
         {onBack ? (
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
             onClick={onBack}
-            className="shrink-0"
+            className="shrink-0 w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />
-          </Button>
+          </button>
         ) : (
           <BrandLogo size="sm" />
         )}
         <SpotMascot mood="listening" size="xs" animate={false} />
-        <div className="hidden sm:block">
-          <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
+        
+        <div className="hidden sm:block min-w-0 max-w-[140px]">
+          <h1 className="font-medium text-sm truncate text-foreground/90" data-testid="text-session-name">
             {sessionName}
           </h1>
-          <p className="text-[10px] text-muted-foreground -mt-0.5">Rehearsing</p>
+          <p className="text-[10px] text-muted-foreground/60 -mt-0.5">Rehearsing</p>
         </div>
 
         {userRole && (

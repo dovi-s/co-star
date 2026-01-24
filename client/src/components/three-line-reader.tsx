@@ -102,24 +102,27 @@ export function ThreeLineReader({
         onClick={() => onLineClick?.(line)}
         className={cn(
           "relative py-5 px-5 rounded-2xl transition-all duration-500 cursor-pointer line-transition",
-          type === "previous" && "opacity-35 scale-[0.96] hover:opacity-50",
-          type === "next" && "opacity-45 scale-[0.96] hover:opacity-60",
-          isCurrent && isUser && "bg-gradient-to-br from-primary/12 via-primary/8 to-accent/5 border-2 border-primary/40 shadow-lg shadow-primary/10 spotlight your-turn-glow",
-          isCurrent && !isUser && "bg-card border border-border shadow-sm"
+          type === "previous" && "opacity-30 scale-[0.97] hover:opacity-45",
+          type === "next" && "opacity-40 scale-[0.97] hover:opacity-55",
+          isCurrent && isUser && "bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border border-amber-500/30 shadow-lg shadow-amber-500/5",
+          isCurrent && !isUser && "bg-card/80 border border-border/60 shadow-sm"
         )}
         data-testid={`line-${type}`}
       >
-        <div className="flex items-start gap-4">
+        {isCurrent && isUser && (
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-500/5 via-transparent to-orange-500/5 pointer-events-none" />
+        )}
+        <div className="flex items-start gap-4 relative">
           {isCurrent && (
             <div
               className={cn(
-                "flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300",
+                "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300",
                 isUser 
-                  ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md" 
-                  : "bg-accent/15 text-accent"
+                  ? "bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-md shadow-amber-500/20" 
+                  : "bg-muted/80 text-muted-foreground"
               )}
             >
-              {isUser ? <Mic className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+              {isUser ? <Mic className="h-4.5 w-4.5" /> : <Volume2 className="h-4.5 w-4.5" />}
             </div>
           )}
           
@@ -127,16 +130,16 @@ export function ThreeLineReader({
             <div className="flex items-center gap-2 mb-2">
               <span
                 className={cn(
-                  "font-bold text-sm uppercase tracking-wider",
-                  isCurrent && isUser && "text-primary",
-                  isCurrent && !isUser && "text-accent",
-                  !isCurrent && "text-muted-foreground/70"
+                  "font-semibold text-xs uppercase tracking-widest",
+                  isCurrent && isUser && "text-amber-600 dark:text-amber-400",
+                  isCurrent && !isUser && "text-muted-foreground",
+                  !isCurrent && "text-muted-foreground/60"
                 )}
               >
                 {line.roleName}
               </span>
               {isUser && isCurrent && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider shadow-sm">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[9px] font-bold uppercase tracking-wider shadow-sm">
                   <User className="h-2.5 w-2.5" />
                   You
                 </span>
@@ -182,35 +185,35 @@ export function ThreeLineReader({
             )}
             
             {isCurrent && isUser && isPlaying && !shouldMask && (
-              <div className="mt-4 flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-primary/15 to-primary/10 border border-primary/25 animate-fade-in">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.15s' }} />
-                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.3s' }} />
+              <div className="mt-4 flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/8 border border-amber-500/20 animate-fade-in">
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" style={{ animationDelay: '0.15s' }} />
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" style={{ animationDelay: '0.3s' }} />
                 </div>
-                <span className="text-sm font-medium text-primary">
+                <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
                   Your cue — deliver your line
                 </span>
               </div>
             )}
             
             {isCurrent && isUser && isPlaying && shouldMask && (
-              <div className="mt-4 flex items-center justify-center gap-3 py-3.5 px-4 rounded-xl bg-gradient-to-r from-accent/15 to-accent/10 border border-accent/25 animate-fade-in">
-                <span className="text-sm font-medium text-accent">
+              <div className="mt-4 flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-muted/50 border border-border/50 animate-fade-in">
+                <span className="text-sm font-medium text-muted-foreground">
                   Recall your line, then tap Next when ready
                 </span>
               </div>
             )}
             
             {isCurrent && !isUser && isPlaying && (
-              <div className="mt-3 flex items-center gap-2.5 animate-fade-in">
+              <div className="mt-3 flex items-center gap-2 animate-fade-in">
                 <div className="speaking-wave">
                   <span />
                   <span />
                   <span />
                   <span />
                 </div>
-                <span className="text-xs text-muted-foreground font-medium">Speaking...</span>
+                <span className="text-[11px] text-muted-foreground/80 font-medium">Speaking...</span>
               </div>
             )}
           </div>
