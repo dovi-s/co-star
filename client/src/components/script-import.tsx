@@ -170,6 +170,16 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   };
   
   const characters = script ? detectCharacters(script) : [];
+  
+  const estimateSceneTime = (text: string): string | null => {
+    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
+    if (words < 20) return null;
+    const minutes = Math.ceil(words / 130);
+    if (minutes < 1) return null;
+    return `${minutes} min`;
+  };
+  
+  const sceneTime = script ? estimateSceneTime(script) : null;
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
@@ -251,16 +261,23 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
 
       {/* Character preview or cleanup hint */}
       {script && characters.length > 0 && (
-        <div className="flex items-center gap-2 px-1 animate-fade-in">
-          <span className="text-xs text-muted-foreground">{characters.length} roles:</span>
-          <div className="flex flex-wrap gap-1">
-            {characters.slice(0, 4).map((char) => (
-              <span key={char} className="text-xs text-foreground/80">{char}</span>
-            ))}
-            {characters.length > 4 && (
-              <span className="text-xs text-muted-foreground">+{characters.length - 4}</span>
-            )}
+        <div className="flex items-center justify-between gap-2 px-1 animate-fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-xs text-muted-foreground shrink-0">{characters.length} roles:</span>
+            <div className="flex flex-wrap gap-1 min-w-0">
+              {characters.slice(0, 4).map((char) => (
+                <span key={char} className="text-xs text-foreground/80">{char}</span>
+              ))}
+              {characters.length > 4 && (
+                <span className="text-xs text-muted-foreground">+{characters.length - 4}</span>
+              )}
+            </div>
           </div>
+          {sceneTime && (
+            <span className="text-xs text-muted-foreground shrink-0" data-testid="text-scene-time">
+              {sceneTime} scene
+            </span>
+          )}
         </div>
       )}
       
