@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Check, User, ChevronLeft, Volume2, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { SpotMascot } from "@/components/spot-mascot";
 import type { Role } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -79,15 +80,13 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
             const isLead = index === 0;
             
             return (
-              <button
+              <Card
                 key={role.id}
                 onClick={() => setSelectedRoleId(role.id)}
                 className={cn(
-                  "w-full flex items-center gap-3.5 p-4 rounded-xl text-left animate-fade-in-up",
-                  "transition-all duration-200 hover-lift",
-                  isSelected
-                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-amber-500/50 shadow-lg shadow-amber-500/20"
-                    : "bg-card hover:bg-muted/50 border border-border/60",
+                  "w-full flex items-center gap-3.5 p-4 text-left cursor-pointer animate-fade-in-up",
+                  "transition-all duration-200 hover-elevate",
+                  isSelected && "ring-2 ring-primary bg-primary/5",
                   `stagger-${Math.min(index + 1, 6)}`
                 )}
                 data-testid={`card-role-${role.name}`}
@@ -95,14 +94,14 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 {/* Selection indicator */}
                 <div
                   className={cn(
-                    "flex items-center justify-center w-11 h-11 rounded-xl transition-all",
+                    "flex items-center justify-center w-10 h-10 rounded-lg transition-all",
                     isSelected
-                      ? "bg-white/20 scale-110"
-                      : "bg-muted/50"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                   )}
                 >
                   {isSelected ? (
-                    <Check className="h-5 w-5 text-white" />
+                    <Check className="h-5 w-5" />
                   ) : (
                     <User className="h-5 w-5 text-muted-foreground" />
                   )}
@@ -111,39 +110,28 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 {/* Role info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className={cn(
-                      "font-semibold text-base",
-                      isSelected ? "text-white" : "text-foreground"
-                    )}>
+                    <span className="font-semibold text-base text-foreground">
                       {role.name}
                     </span>
                     {isLead && (
-                      <span className={cn(
-                        "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide",
-                        isSelected 
-                          ? "bg-white/20 text-white" 
-                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                      )}>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide bg-amber-500/10 text-amber-600 dark:text-amber-400">
                         Lead
                       </span>
                     )}
                   </div>
-                  <div className={cn(
-                    "text-xs mt-0.5 font-medium",
-                    isSelected ? "text-white/80" : "text-muted-foreground"
-                  )}>
+                  <div className="text-xs mt-0.5 font-medium text-muted-foreground">
                     {role.lineCount} lines · {linePercentage}% of script
                   </div>
                 </div>
 
                 {/* AI voice indicator for unselected */}
                 {!isSelected && (
-                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-muted text-muted-foreground">
                     <Volume2 className="h-3 w-3" />
                     <span className="text-[10px] font-bold uppercase">AI</span>
                   </div>
                 )}
-              </button>
+              </Card>
             );
           })}
         </div>
@@ -151,16 +139,11 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
 
       {/* Vibrant footer */}
       <div className="p-4 border-t border-border/40 bg-background safe-bottom animate-slide-up">
-        <button
+        <Button
           onClick={handleContinue}
           disabled={!selectedRoleId}
-          className={cn(
-            "w-full h-13 rounded-xl font-bold text-base flex items-center justify-center gap-2",
-            "transition-all duration-300",
-            selectedRoleId
-              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/30 active:scale-[0.98]"
-              : "bg-muted text-muted-foreground cursor-not-allowed"
-          )}
+          size="lg"
+          className="w-full"
           data-testid="button-start-rehearsal"
         >
           {selectedRoleId ? (
@@ -172,7 +155,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           ) : (
             "Pick a character above"
           )}
-        </button>
+        </Button>
         
         {selectedRole && (
           <p className="text-center text-xs text-muted-foreground mt-2">

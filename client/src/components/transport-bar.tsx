@@ -81,40 +81,32 @@ export function TransportBar({
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="url(#progressGradient)"
+                stroke="currentColor"
                 strokeWidth="3"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className="transition-all duration-500 ease-out"
+                className={cn(
+                  "transition-all duration-500 ease-out",
+                  isAtEnd ? "text-emerald-500" : "text-amber-500"
+                )}
               />
-              <defs>
-                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#EF4444" />
-                </linearGradient>
-              </defs>
             </svg>
             
-            <button
+            <Button
               onClick={onPlayPause}
               title="Play/Pause (Space)"
+              size="icon"
+              variant={isPlaying ? "secondary" : "default"}
               data-testid="button-play-pause"
-              className={cn(
-                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                "w-12 h-12 rounded-full flex items-center justify-center",
-                "transition-all duration-200 active:scale-90 shadow-lg",
-                isPlaying 
-                  ? "bg-muted text-foreground" 
-                  : "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-amber-500/30"
-              )}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5" />
               ) : (
                 <Play className="h-5 w-5 ml-0.5" />
               )}
-            </button>
+            </Button>
           </div>
 
           <Button

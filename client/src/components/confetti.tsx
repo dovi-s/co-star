@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { cn } from "@/lib/utils";
 
 interface ConfettiPiece {
   id: number;
@@ -7,6 +6,8 @@ interface ConfettiPiece {
   color: string;
   delay: number;
   duration: number;
+  isCircle: boolean;
+  rotation: number;
 }
 
 interface ConfettiProps {
@@ -15,13 +16,13 @@ interface ConfettiProps {
 }
 
 const COLORS = [
-  "#FCD34D", // amber
-  "#F59E0B", // orange
-  "#EC4899", // pink
-  "#8B5CF6", // purple
-  "#06B6D4", // cyan
-  "#10B981", // emerald
-  "#3B82F6", // blue
+  "#FCD34D",
+  "#F59E0B",
+  "#EC4899",
+  "#8B5CF6",
+  "#06B6D4",
+  "#10B981",
+  "#3B82F6",
 ];
 
 export function Confetti({ isActive, duration = 3000 }: ConfettiProps) {
@@ -36,6 +37,8 @@ export function Confetti({ isActive, duration = 3000 }: ConfettiProps) {
         color: COLORS[Math.floor(Math.random() * COLORS.length)],
         delay: Math.random() * 0.5,
         duration: 2 + Math.random() * 2,
+        isCircle: Math.random() > 0.5,
+        rotation: Math.random() * 360,
       }));
       setPieces(newPieces);
       setVisible(true);
@@ -61,8 +64,8 @@ export function Confetti({ isActive, duration = 3000 }: ConfettiProps) {
             backgroundColor: piece.color,
             animationDelay: `${piece.delay}s`,
             animationDuration: `${piece.duration}s`,
-            borderRadius: Math.random() > 0.5 ? "50%" : "2px",
-            transform: `rotate(${Math.random() * 360}deg)`,
+            borderRadius: piece.isCircle ? "50%" : "2px",
+            transform: `rotate(${piece.rotation}deg)`,
           }}
         />
       ))}

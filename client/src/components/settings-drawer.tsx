@@ -62,14 +62,16 @@ export function SettingsDrawer({
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <button
-          className="w-full py-3 flex items-center justify-center gap-2 text-xs text-muted-foreground/60 transition-all hover:text-muted-foreground hover:gap-3"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full gap-2"
           data-testid="button-settings-drawer"
         >
           <Sparkles className="h-3.5 w-3.5" />
-          <span className="font-medium">Settings</span>
+          <span>Settings</span>
           <ChevronUp className="h-3.5 w-3.5" />
-        </button>
+        </Button>
       </SheetTrigger>
       <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl p-0">
         <div className="flex flex-col h-full">
@@ -125,32 +127,23 @@ export function SettingsDrawer({
                   </div>
                   <div className="grid gap-1.5">
                     {scenes.map((scene, index) => (
-                      <button
+                      <Button
                         key={scene.id}
                         onClick={() => {
                           onSceneChange(index);
                           setIsOpen(false);
                         }}
-                        className={cn(
-                          "text-left p-3 rounded-lg transition-colors",
-                          index === currentSceneIndex
-                            ? "bg-foreground text-background"
-                            : "hover:bg-muted/50"
-                        )}
+                        variant={index === currentSceneIndex ? "default" : "ghost"}
+                        className="w-full"
                         data-testid={`button-scene-${index}`}
                       >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-sm font-medium">{scene.name}</div>
-                            <div className={cn(
-                              "text-[10px]",
-                              index === currentSceneIndex ? "text-background/70" : "text-muted-foreground/60"
-                            )}>
-                              {scene.lines.length} lines
-                            </div>
+                        <div>
+                          <div className="text-sm font-medium">{scene.name}</div>
+                          <div className="text-[10px] opacity-70">
+                            {scene.lines.length} lines
                           </div>
                         </div>
-                      </button>
+                      </Button>
                     ))}
                   </div>
                 </div>
@@ -179,14 +172,16 @@ export function SettingsDrawer({
 
               <div className="border-t border-border/40 pt-6 space-y-2">
                 {/* Import New Script */}
-                <button
-                  className="w-full h-11 rounded-lg text-sm font-medium flex items-center justify-center gap-2 border border-border/50 hover:bg-muted/50 transition-colors"
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full gap-2"
                   onClick={() => setShowImport(!showImport)}
                   data-testid="button-new-script"
                 >
-                  <FileText className="h-4 w-4 text-muted-foreground" />
+                  <FileText className="h-4 w-4" />
                   {showImport ? "Hide" : "New Script"}
-                </button>
+                </Button>
 
                 {showImport && (
                   <Card className="rounded-lg overflow-hidden">
@@ -208,8 +203,9 @@ export function SettingsDrawer({
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button
-                      variant="ghost"
-                      className="w-full h-11 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg gap-2"
+                      variant="destructive"
+                      size="lg"
+                      className="w-full gap-2"
                       data-testid="button-clear-session"
                     >
                       <Trash2 className="h-4 w-4" />
@@ -232,7 +228,6 @@ export function SettingsDrawer({
                           onClearSession();
                           setIsOpen(false);
                         }}
-                        className="bg-destructive hover:bg-destructive/90 rounded-lg"
                         data-testid="button-confirm-clear"
                       >
                         Clear
