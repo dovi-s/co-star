@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type { ScriptLine, Role, MemorizationMode } from "@shared/schema";
 import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { matchWords } from "@/lib/word-matcher";
 
 interface ThreeLineReaderProps {
   previousLine: ScriptLine | null;
@@ -74,6 +75,11 @@ export function ThreeLineReader({
   useEffect(() => {
     setShowHint(false);
   }, [currentLine?.id]);
+
+  const wordMatchResult = useMemo(() => {
+    if (!currentLine || !isUserLine || !userTranscript) return null;
+    return matchWords(currentLine.text, userTranscript);
+  }, [currentLine, isUserLine, userTranscript]);
 
   const renderLine = (
     line: ScriptLine | null,
@@ -168,7 +174,21 @@ export function ThreeLineReader({
                 shouldMask && !showHint && "italic opacity-70"
               )}
             >
-              {shouldMask && !showHint ? maskedContent?.display : line.text}
+              {shouldMask && !showHint ? maskedContent?.display : (
+                isCurrent && isUser && wordMatchResult && isListening ? (
+                  wordMatchResult.words.map((w, i) => (
+                    <span
+                      key={i}
+                      className={cn(
+                        "transition-all duration-200",
+                        w.matched && "bg-background/30 text-background font-medium rounded px-0.5"
+                      )}
+                    >
+                      {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
+                    </span>
+                  ))
+                ) : line.text
+              )}
             </p>
             
             {shouldMask && maskedContent?.hint && (
@@ -223,12 +243,18 @@ export function ThreeLineReader({
                   )}
                 </div>
                 
-                {/* Show what user said */}
-                {userTranscript && (
-                  <div className="px-3 py-2 rounded-md bg-background/10 border border-background/20 transition-all duration-300">
-                    <p className="text-sm text-background/80 min-h-[1.25rem]">
-                      {userTranscript}
-                    </p>
+                {/* Show progress */}
+                {wordMatchResult && userTranscript && (
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className="flex-1 h-1.5 bg-background/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-400 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, wordMatchResult.percentMatched)}%` }}
+                      />
+                    </div>
+                    <span className="text-[10px] text-background/70 font-medium">
+                      {Math.round(wordMatchResult.percentMatched)}%
+                    </span>
                   </div>
                 )}
               </div>

@@ -8,6 +8,7 @@ import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
+import { matchWords } from "@/lib/word-matcher";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
 import { Check, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,34 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       console.log("[Rehearsal] Speech result:", result.isFinal ? "FINAL" : "interim", result.transcript.substring(0, 30));
       setUserTranscript(result.transcript);
       
+      // Check word matching against current line
+      const line = getCurrentLine();
+      if (line && waitingForUserRef.current && result.transcript.length > 0) {
+        const match = matchWords(line.text, result.transcript);
+        console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, `(${Math.round(match.percentMatched)}%)`);
+        
+        // Auto-advance when user has matched enough words (60%+ or completed short lines)
+        if (match.isComplete) {
+          console.log("[Rehearsal] Line complete, advancing");
+          speechRecognition.stop();
+          waitingForUserRef.current = false;
+          
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+            autoAdvanceTimeoutRef.current = null;
+          }
+          
+          // Quick pause then advance
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current) {
+              advanceAfterUserLine();
+            }
+          }, 400);
+          return;
+        }
+      }
+      
+      // Also advance on final result even if not fully matched
       if (result.isFinal && waitingForUserRef.current) {
         console.log("[Rehearsal] Got final speech result, advancing");
         waitingForUserRef.current = false;
@@ -89,7 +118,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           autoAdvanceTimeoutRef.current = null;
         }
         
-        // Quick natural pause after user speaks
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           if (isPlayingRef.current) {
             advanceAfterUserLine();
