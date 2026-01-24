@@ -73,6 +73,13 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
 
 export type SpeakResult = "success" | "error" | "unavailable";
 
+interface SpeakOptions {
+  characterName?: string;
+  characterIndex?: number;
+  emotion?: EmotionStyle;
+  preset?: VoicePreset;
+}
+
 class TTSEngine {
   private synth: SpeechSynthesis | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -80,6 +87,8 @@ class TTSEngine {
   private onEndCallback: ((result: SpeakResult) => void) | null = null;
   private isReady = false;
   private hasSpokenOnce = false;
+  private currentAudio: HTMLAudioElement | null = null;
+  private useElevenLabs = true;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -112,20 +121,108 @@ class TTSEngine {
   }
 
   get available(): boolean {
-    return this.synth !== null;
+    return this.synth !== null || this.useElevenLabs;
   }
 
   get ready(): boolean {
-    return this.isReady && this.voices.length > 0;
+    return this.isReady || this.useElevenLabs;
   }
 
-  speak(text: string, prosody: ProsodyParams, onEnd?: (result: SpeakResult) => void): boolean {
+  async speakWithElevenLabs(
+    text: string,
+    options: SpeakOptions,
+    onEnd?: (result: SpeakResult) => void
+  ): Promise<boolean> {
+    try {
+      const response = await fetch("/api/tts/speak", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          characterName: options.characterName || "Character",
+          characterIndex: options.characterIndex || 0,
+          emotion: options.emotion || "neutral",
+          preset: options.preset || "natural",
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        if (error.fallback) {
+          return false;
+        }
+        throw new Error(error.error || "TTS request failed");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      this.currentAudio = new Audio(audioUrl);
+      this.currentAudio.volume = 1;
+
+      return new Promise((resolve) => {
+        if (!this.currentAudio) {
+          onEnd?.("error");
+          resolve(false);
+          return;
+        }
+
+        this.currentAudio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          onEnd?.("success");
+          this.currentAudio = null;
+          resolve(true);
+        };
+
+        this.currentAudio.onerror = () => {
+          URL.revokeObjectURL(audioUrl);
+          onEnd?.("error");
+          this.currentAudio = null;
+          resolve(false);
+        };
+
+        this.currentAudio.play().catch(() => {
+          URL.revokeObjectURL(audioUrl);
+          onEnd?.("error");
+          this.currentAudio = null;
+          resolve(false);
+        });
+      });
+    } catch (error) {
+      console.error("ElevenLabs TTS error:", error);
+      return false;
+    }
+  }
+
+  speak(
+    text: string, 
+    prosody: ProsodyParams, 
+    onEnd?: (result: SpeakResult) => void,
+    options?: SpeakOptions
+  ): boolean {
+    this.stop();
+
+    if (this.useElevenLabs && options) {
+      this.speakWithElevenLabs(text, options, onEnd).then((success) => {
+        if (!success) {
+          this.speakWithBrowserTTS(text, prosody, onEnd);
+        }
+      });
+      return true;
+    }
+
+    return this.speakWithBrowserTTS(text, prosody, onEnd);
+  }
+
+  private speakWithBrowserTTS(
+    text: string,
+    prosody: ProsodyParams,
+    onEnd?: (result: SpeakResult) => void
+  ): boolean {
     if (!this.synth) {
       onEnd?.("unavailable");
       return false;
     }
-
-    this.stop();
     
     this.loadVoices();
 
@@ -198,6 +295,12 @@ class TTSEngine {
   }
 
   stop() {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+      this.currentAudio.currentTime = 0;
+      this.currentAudio = null;
+    }
+    
     if (this.synth) {
       this.synth.cancel();
     }
@@ -205,22 +308,34 @@ class TTSEngine {
   }
 
   pause() {
+    if (this.currentAudio) {
+      this.currentAudio.pause();
+    }
     if (this.synth) {
       this.synth.pause();
     }
   }
 
   resume() {
+    if (this.currentAudio) {
+      this.currentAudio.play();
+    }
     if (this.synth) {
       this.synth.resume();
     }
   }
 
   get isSpeaking(): boolean {
+    if (this.currentAudio && !this.currentAudio.paused) {
+      return true;
+    }
     return this.synth?.speaking ?? false;
   }
 
   get isPaused(): boolean {
+    if (this.currentAudio?.paused) {
+      return true;
+    }
     return this.synth?.paused ?? false;
   }
 }

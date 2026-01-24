@@ -235,8 +235,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
 
     const role = getRoleById(line.roleId);
+    const roleIndex = session.roles.findIndex(r => r.id === line.roleId);
     const emotion = line.emotionHint || detectEmotion(line.text, line.direction);
-    const prosody = calculateProsody(emotion, role?.voicePreset || "natural");
+    const preset = role?.voicePreset || "natural";
+    const prosody = calculateProsody(emotion, preset);
 
     const naturalPause = Math.random() * 200 + 150;
 
@@ -263,6 +265,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }
           }, conversationalPause);
         }
+      }, {
+        characterName: role?.name || "Character",
+        characterIndex: roleIndex >= 0 ? roleIndex : 0,
+        emotion,
+        preset,
       });
     }, naturalPause);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, incrementRunsCompleted, startListeningForUser]);
