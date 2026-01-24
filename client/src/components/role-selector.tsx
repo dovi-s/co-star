@@ -135,7 +135,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
         </div>
       </div>
 
-      <div className="p-4 border-t border-border/40 bg-background safe-bottom animate-slide-up">
+      <div className="sticky bottom-0 p-4 border-t border-border/40 bg-background safe-bottom animate-slide-up z-40">
         <Button
           onClick={handleContinue}
           disabled={!selectedRoleId}
