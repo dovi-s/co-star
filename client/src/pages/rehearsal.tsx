@@ -362,19 +362,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     ttsEngine.stop();
     speechRecognition.abort();
     waitingForUserRef.current = false;
+    setIsUserTurn(false);
     setUserTranscript("");
     
-    if (!session?.isPlaying) {
-      setPlaying(true);
-    }
-    
-    setTimeout(() => {
-      if (currentIsUserLine) {
-        startListeningForUser();
-      } else {
-        speakLine();
-      }
-    }, 50);
+    goToLine(0);
+    setPlaying(false);
   };
 
   const handleJumpToLine = (lineIndex: number, sceneIndex?: number) => {

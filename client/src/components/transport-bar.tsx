@@ -37,9 +37,9 @@ export function TransportBar({
           variant="ghost"
           size="icon"
           onClick={onRepeat}
-          title="Repeat (R)"
+          title="Start Over (R)"
           className="rounded-full transition-transform active:scale-90"
-          data-testid="button-repeat"
+          data-testid="button-start-over"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
