@@ -3,6 +3,7 @@ import { Upload, FileText, Clipboard, X, Loader2, ArrowRight, Check } from "luci
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface ScriptImportProps {
@@ -205,19 +206,21 @@ Put stage directions in brackets.`}
           )}
         </div>
         
-        {/* Character badges - minimal */}
+        {/* Character badges with animation */}
         {script && characters.length > 0 && (
           <div className="flex flex-wrap gap-1.5 pt-1">
-            {characters.slice(0, 5).map((char) => (
-              <span 
+            {characters.slice(0, 5).map((char, index) => (
+              <Badge 
                 key={char}
-                className="px-2 py-0.5 text-[10px] font-medium rounded bg-muted/60 text-muted-foreground"
+                variant="secondary"
+                className="text-[10px] animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {char}
-              </span>
+              </Badge>
             ))}
             {characters.length > 5 && (
-              <span className="px-2 py-0.5 text-[10px] text-muted-foreground/60">
+              <span className="px-2 py-0.5 text-[10px] text-muted-foreground/60 animate-fade-in" style={{ animationDelay: "250ms" }}>
                 +{characters.length - 5}
               </span>
             )}
@@ -234,15 +237,14 @@ Put stage directions in brackets.`}
         </div>
       )}
 
-      {/* Submit button - clean and minimal */}
-      <button
+      {/* Submit button */}
+      <Button
         onClick={handleSubmit}
         disabled={!canSubmit}
+        size="lg"
         className={cn(
-          "w-full h-11 rounded-lg font-medium text-sm flex items-center justify-center gap-2 transition-all duration-200",
-          canSubmit
-            ? "bg-foreground text-background hover:opacity-90 active:scale-[0.98]"
-            : "bg-muted text-muted-foreground cursor-not-allowed"
+          "w-full gap-2 transition-all duration-200",
+          canSubmit && "shadow-sm"
         )}
         data-testid="button-choose-role"
       >
@@ -259,7 +261,7 @@ Put stage directions in brackets.`}
         ) : (
           "Paste a script to begin"
         )}
-      </button>
+      </Button>
       
       {/* Try sample link - subtle */}
       {!script && showTip && (

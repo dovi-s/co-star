@@ -280,18 +280,30 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       />
 
       {showCelebration && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/80 backdrop-blur-sm">
-          <div className="bg-card border rounded-lg p-6 text-center pointer-events-auto max-w-xs mx-4">
-            <div className="w-12 h-12 rounded-full bg-foreground text-background flex items-center justify-center mx-auto mb-4">
-              <Check className="h-6 w-6" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border shadow-xl rounded-xl p-8 text-center pointer-events-auto max-w-sm mx-4 animate-scale-in">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full bg-primary text-primary-foreground flex items-center justify-center mx-auto mb-5 animate-bounce-in">
+                <Check className="h-8 w-8" />
+              </div>
+              <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-primary/60 animate-ping" />
+              <div className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-primary/40 animate-ping" style={{ animationDelay: "200ms" }} />
             </div>
-            <h3 className="text-lg font-semibold mb-1">Scene Complete</h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <h3 className="text-xl font-semibold mb-2">Scene Complete</h3>
+            <p className="text-muted-foreground mb-4">
               Run {session.runsCompleted + 1} finished
             </p>
-            <p className="text-xs text-muted-foreground">
-              {session.linesRehearsed} lines rehearsed
-            </p>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold text-foreground">{session.linesRehearsed}</span>
+                <span className="text-xs text-muted-foreground">lines</span>
+              </div>
+              <div className="w-px h-8 bg-border" />
+              <div className="flex flex-col items-center">
+                <span className="text-2xl font-bold text-foreground">{session.runsCompleted + 1}</span>
+                <span className="text-xs text-muted-foreground">runs</span>
+              </div>
+            </div>
           </div>
         </div>
       )}

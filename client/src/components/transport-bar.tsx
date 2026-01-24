@@ -28,44 +28,40 @@ export function TransportBar({
   const progress = totalLines > 0 ? ((currentLine + 1) / totalLines) * 100 : 0;
   const circumference = 2 * Math.PI * 28;
   const strokeDashoffset = circumference - (progress / 100) * circumference;
-  const isAtEnd = currentLine + 1 === totalLines;
+  const isComplete = currentLine + 1 === totalLines;
 
   return (
     <div className="w-full" data-testid="transport-bar">
       <div className="flex items-center justify-center gap-3">
-        {/* Repeat button */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onRepeat}
           title="Repeat (R)"
-          className="rounded-full"
+          className="rounded-full transition-transform active:scale-90"
           data-testid="button-repeat"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
 
-        {/* Main controls */}
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             disabled={!canGoBack}
             onClick={onBack}
-            title="Previous (←)"
-            className="rounded-full"
+            title="Previous"
+            className="rounded-full transition-transform active:scale-90"
             data-testid="button-prev-line"
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
 
-          {/* Play button with progress ring */}
-          <div className="relative mx-1">
+          <div className="relative mx-2">
             <svg 
               className="w-16 h-16 -rotate-90"
               viewBox="0 0 64 64"
             >
-              {/* Background track */}
               <circle
                 cx="32"
                 cy="32"
@@ -75,7 +71,6 @@ export function TransportBar({
                 strokeWidth="2"
                 className="text-muted/30"
               />
-              {/* Progress arc */}
               <circle
                 cx="32"
                 cy="32"
@@ -86,7 +81,10 @@ export function TransportBar({
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className="transition-all duration-500 ease-out text-foreground"
+                className={cn(
+                  "transition-all duration-300 ease-out",
+                  isComplete ? "text-green-500" : "text-primary"
+                )}
               />
             </svg>
             
@@ -96,7 +94,11 @@ export function TransportBar({
               size="icon"
               variant={isPlaying ? "secondary" : "default"}
               data-testid="button-play-pause"
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full"
+              className={cn(
+                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
+                "transition-all duration-150 active:scale-90",
+                isPlaying && "animate-pulse-subtle"
+              )}
             >
               {isPlaying ? (
                 <Pause className="h-5 w-5" />
@@ -111,18 +113,20 @@ export function TransportBar({
             size="icon"
             disabled={!canGoNext}
             onClick={onNext}
-            title="Next (→)"
-            className="rounded-full"
+            title="Next"
+            className="rounded-full transition-transform active:scale-90"
             data-testid="button-next-line"
           >
             <ChevronRight className="h-5 w-5" />
           </Button>
         </div>
 
-        {/* Line counter */}
         <div className="flex flex-col items-center min-w-[44px]">
           <span 
-            className="text-sm font-medium tabular-nums text-foreground"
+            className={cn(
+              "text-sm font-medium tabular-nums transition-colors",
+              isComplete ? "text-green-500" : "text-foreground"
+            )}
             data-testid="text-line-counter"
           >
             {currentLine + 1}
@@ -133,16 +137,13 @@ export function TransportBar({
         </div>
       </div>
       
-      {/* Keyboard hints */}
       <div className="flex items-center justify-center gap-4 mt-3">
-        <div className="flex items-center gap-1.5 opacity-40">
-          <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground">Space</kbd>
-          <span className="text-[9px] text-muted-foreground">play</span>
-        </div>
-        <div className="flex items-center gap-1.5 opacity-40">
-          <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground">Arrows</kbd>
-          <span className="text-[9px] text-muted-foreground">navigate</span>
-        </div>
+        <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground/70">
+          Space
+        </kbd>
+        <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground/70">
+          Arrows
+        </kbd>
       </div>
     </div>
   );
