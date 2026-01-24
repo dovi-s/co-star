@@ -4,15 +4,16 @@ import { storage } from "./storage";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
 
-// All neutral American English voices - no accents
+// Standard American English voices ONLY - no accents, no mixing
+// Using ElevenLabs' verified American voices
 const ELEVENLABS_VOICES = {
-  male_1: "nPczCjzI2devNBz1zQrb",    // Brian - clear American male
-  male_2: "cjVigY5qzO86Huf0OWal",    // Eric - warm American male  
-  male_3: "iP95p4xoKVk53GoZ742B",    // Chris - friendly American male
-  female_1: "cgSgspJ2msm6clMCkdW9",  // Jessica - warm American female
-  female_2: "EXAVITQu4vr4xnSDxMaL",  // Sarah - clear American female
-  female_3: "XB0fDUnXU5powFXDhCwa",  // Charlotte - natural American female
-  narrator: "nPczCjzI2devNBz1zQrb",  // Brian for narration
+  male_1: "29vD33N1CtxCmqQRPOHJ",    // Drew - American male (neutral)
+  male_2: "ErXwobaYiN019PkySvjV",    // Antoni - American male (calm)  
+  male_3: "VR6AewLTigWG4xSOukaG",    // Arnold - American male (clear)
+  female_1: "21m00Tcm4TlvDq8ikWAM",  // Rachel - American female (neutral)
+  female_2: "AZnzlk1XvdvUeBnXmlld",  // Domi - American female (calm)
+  female_3: "MF3mGyEYCl7XYWbV9V6O",  // Elli - American female (clear)
+  narrator: "29vD33N1CtxCmqQRPOHJ",  // Drew for narration
 };
 
 type VoiceType = keyof typeof ELEVENLABS_VOICES;
