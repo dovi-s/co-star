@@ -9,11 +9,11 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  xs: { container: "w-6 h-6", text: "text-sm" },
-  sm: { container: "w-7 h-7", text: "text-base" },
-  md: { container: "w-9 h-9", text: "text-lg" },
-  lg: { container: "w-12 h-12", text: "text-xl" },
-  xl: { container: "w-16 h-16", text: "text-2xl" },
+  xs: { container: "w-8 h-8", text: "text-sm" },
+  sm: { container: "w-10 h-10", text: "text-base" },
+  md: { container: "w-12 h-12", text: "text-lg" },
+  lg: { container: "w-16 h-16", text: "text-xl" },
+  xl: { container: "w-20 h-20", text: "text-2xl" },
 };
 
 export function Logo({ size = "md", animated = true, showWordmark = false, className }: LogoProps) {
