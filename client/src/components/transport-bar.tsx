@@ -48,17 +48,26 @@ export function TransportBar({
           <button
             type="button"
             disabled={!canGoBack}
-            onClick={() => {
-              console.log("[Transport] Back clicked");
-              onBack();
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("[Transport] Back clicked, canGoBack:", canGoBack);
+              if (canGoBack) onBack();
+            }}
+            onTouchEnd={(e) => {
+              if (canGoBack) {
+                e.preventDefault();
+                console.log("[Transport] Back touch");
+                onBack();
+              }
             }}
             title="Previous"
             className={cn(
-              "p-3 rounded-full transition-all active:scale-90 touch-manipulation",
+              "p-3 rounded-full transition-all active:scale-90 touch-manipulation select-none",
               "hover:bg-accent/80 active:bg-accent",
-              !canGoBack && "opacity-40 pointer-events-none"
+              !canGoBack && "opacity-40"
             )}
-            style={{ minWidth: 44, minHeight: 44 }}
+            style={{ minWidth: 44, minHeight: 44, touchAction: 'manipulation' }}
             data-testid="button-prev-line"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -118,17 +127,26 @@ export function TransportBar({
           <button
             type="button"
             disabled={!canGoNext}
-            onClick={() => {
-              console.log("[Transport] Next clicked");
-              onNext();
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("[Transport] Next clicked, canGoNext:", canGoNext);
+              if (canGoNext) onNext();
+            }}
+            onTouchEnd={(e) => {
+              if (canGoNext) {
+                e.preventDefault();
+                console.log("[Transport] Next touch");
+                onNext();
+              }
             }}
             title="Next"
             className={cn(
-              "p-3 rounded-full transition-all active:scale-90 touch-manipulation",
+              "p-3 rounded-full transition-all active:scale-90 touch-manipulation select-none",
               "hover:bg-accent/80 active:bg-accent",
-              !canGoNext && "opacity-40 pointer-events-none"
+              !canGoNext && "opacity-40"
             )}
-            style={{ minWidth: 44, minHeight: 44 }}
+            style={{ minWidth: 44, minHeight: 44, touchAction: 'manipulation' }}
             data-testid="button-next-line"
           >
             <ChevronRight className="h-5 w-5" />
