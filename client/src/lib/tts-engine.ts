@@ -71,12 +71,15 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   return "neutral";
 }
 
+export type SpeakResult = "success" | "error" | "unavailable";
+
 class TTSEngine {
   private synth: SpeechSynthesis | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   private voices: SpeechSynthesisVoice[] = [];
-  private onEndCallback: (() => void) | null = null;
+  private onEndCallback: ((result: SpeakResult) => void) | null = null;
   private isReady = false;
+  private hasSpokenOnce = false;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -116,10 +119,9 @@ class TTSEngine {
     return this.isReady && this.voices.length > 0;
   }
 
-  speak(text: string, prosody: ProsodyParams, onEnd?: () => void): boolean {
+  speak(text: string, prosody: ProsodyParams, onEnd?: (result: SpeakResult) => void): boolean {
     if (!this.synth) {
-      console.warn("Speech synthesis not available");
-      onEnd?.();
+      onEnd?.("unavailable");
       return false;
     }
 
@@ -129,6 +131,11 @@ class TTSEngine {
 
     if (this.synth.paused) {
       this.synth.resume();
+    }
+
+    if (this.voices.length === 0) {
+      onEnd?.("unavailable");
+      return false;
     }
 
     const utterance = new SpeechSynthesisUtterance(text);
@@ -151,23 +158,24 @@ class TTSEngine {
     this.onEndCallback = onEnd ?? null;
     
     utterance.onstart = () => {
-      console.log("TTS started speaking:", text.substring(0, 30) + "...");
+      this.hasSpokenOnce = true;
     };
     
     utterance.onend = () => {
-      console.log("TTS finished speaking");
       if (prosody.breakMs > 0) {
         setTimeout(() => {
-          this.onEndCallback?.();
+          this.onEndCallback?.("success");
         }, prosody.breakMs);
       } else {
-        this.onEndCallback?.();
+        this.onEndCallback?.("success");
       }
     };
 
     utterance.onerror = (event) => {
-      console.error("TTS error:", event.error);
-      this.onEndCallback?.();
+      if (event.error === "canceled") {
+        return;
+      }
+      this.onEndCallback?.("error");
     };
 
     this.currentUtterance = utterance;
@@ -176,8 +184,7 @@ class TTSEngine {
       this.synth.speak(utterance);
       
       setTimeout(() => {
-        if (this.synth && !this.synth.speaking && this.currentUtterance === utterance) {
-          console.log("TTS workaround: re-triggering speech");
+        if (this.synth && !this.synth.speaking && this.currentUtterance === utterance && !this.hasSpokenOnce) {
           this.synth.cancel();
           this.synth.speak(utterance);
         }
@@ -185,8 +192,7 @@ class TTSEngine {
       
       return true;
     } catch (e) {
-      console.error("TTS speak failed:", e);
-      onEnd?.();
+      onEnd?.("error");
       return false;
     }
   }

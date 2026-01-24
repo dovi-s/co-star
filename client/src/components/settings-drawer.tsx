@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Music, Volume2, VolumeX, Layers, ChevronUp, ChevronDown, Trash2 } from "lucide-react";
+import { FileText, Music, Volume2, VolumeX, Layers, ChevronUp, Trash2, Sparkles, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -64,36 +64,49 @@ export function SettingsDrawer({
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <button
-          className="w-full py-3 flex items-center justify-center gap-2 text-sm text-muted-foreground hover-elevate transition-colors"
+          className="w-full py-3 flex items-center justify-center gap-2 text-sm text-muted-foreground transition-all duration-200 hover:text-foreground hover:bg-muted/50"
           data-testid="button-settings-drawer"
         >
+          <Settings2 className="h-4 w-4" />
+          <span className="font-medium">Settings</span>
           <ChevronUp className="h-4 w-4" />
-          Settings
         </button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="h-[80vh] rounded-t-2xl p-0">
+      <SheetContent side="bottom" className="h-[85vh] rounded-t-3xl p-0 animate-slide-up">
         <div className="flex flex-col h-full">
-          <SheetHeader className="p-4 pb-2">
-            <SheetTitle className="text-left flex items-center gap-2">
-              Settings
-            </SheetTitle>
+          <div className="flex justify-center py-3">
+            <div className="w-10 h-1 rounded-full bg-border" />
+          </div>
+          
+          <SheetHeader className="px-5 pb-4">
+            <SheetTitle className="text-left text-xl font-bold">Settings</SheetTitle>
           </SheetHeader>
 
-          <div className="flex-1 overflow-auto custom-scrollbar px-4 pb-8">
+          <div className="flex-1 overflow-auto custom-scrollbar px-5 pb-10">
             <div className="space-y-6">
-              <div className="flex items-center justify-between py-3">
-                <div className="flex items-center gap-3">
-                  {ambientEnabled ? (
-                    <Volume2 className="h-5 w-5 text-primary" />
-                  ) : (
-                    <VolumeX className="h-5 w-5 text-muted-foreground" />
-                  )}
+              <div 
+                className={cn(
+                  "flex items-center justify-between p-4 rounded-2xl border transition-all duration-200",
+                  ambientEnabled ? "bg-primary/5 border-primary/20" : "bg-card border-border"
+                )}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200",
+                    ambientEnabled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                  )}>
+                    {ambientEnabled ? (
+                      <Volume2 className="h-5 w-5" />
+                    ) : (
+                      <VolumeX className="h-5 w-5" />
+                    )}
+                  </div>
                   <div>
-                    <Label htmlFor="ambient" className="font-medium">
+                    <Label htmlFor="ambient" className="font-semibold text-base cursor-pointer">
                       Ambient Sound
                     </Label>
-                    <p className="text-xs text-muted-foreground">
-                      Subtle room tone during rehearsal
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Subtle room tone for immersion
                     </p>
                   </div>
                 </div>
@@ -105,45 +118,55 @@ export function SettingsDrawer({
                 />
               </div>
 
-              <Separator />
-
               {scenes.length > 1 && (
-                <>
-                  <div className="space-y-3">
-                    <Label className="flex items-center gap-2 text-sm font-medium">
-                      <Layers className="h-4 w-4" />
-                      Scenes ({scenes.length})
-                    </Label>
-                    <div className="grid gap-2">
-                      {scenes.map((scene, index) => (
-                        <button
-                          key={scene.id}
-                          onClick={() => {
-                            onSceneChange(index);
-                            setIsOpen(false);
-                          }}
-                          className={cn(
-                            "text-left p-3 rounded-lg border transition-all hover-elevate",
-                            index === currentSceneIndex
-                              ? "border-primary bg-primary/5"
-                              : "border-border bg-card"
-                          )}
-                          data-testid={`button-scene-${index}`}
-                        >
-                          <div className="font-medium text-sm">{scene.name}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {scene.lines.length} lines
+                <div className="space-y-3">
+                  <Label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                    <Layers className="h-4 w-4" />
+                    Scenes
+                  </Label>
+                  <div className="grid gap-2">
+                    {scenes.map((scene, index) => (
+                      <button
+                        key={scene.id}
+                        onClick={() => {
+                          onSceneChange(index);
+                          setIsOpen(false);
+                        }}
+                        className={cn(
+                          "text-left p-4 rounded-xl border transition-all duration-200 hover-lift",
+                          index === currentSceneIndex
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border bg-card hover:border-primary/30"
+                        )}
+                        data-testid={`button-scene-${index}`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-semibold">{scene.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {scene.lines.length} line{scene.lines.length !== 1 ? "s" : ""}
+                            </div>
                           </div>
-                        </button>
-                      ))}
-                    </div>
+                          {index === currentSceneIndex && (
+                            <span className="text-xs font-medium text-primary px-2 py-1 rounded-full bg-primary/10">
+                              Current
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                  <Separator />
-                </>
+                </div>
               )}
 
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Cast</Label>
+                <Label className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  <Sparkles className="h-4 w-4" />
+                  Cast Voices
+                </Label>
+                <p className="text-xs text-muted-foreground -mt-1">
+                  Tap a character to change their voice style
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {roles.map((role) => (
                     <RoleChip
@@ -157,22 +180,22 @@ export function SettingsDrawer({
                 </div>
               </div>
 
-              <Separator />
+              <Separator className="my-6" />
 
               <div className="space-y-3">
                 <Button
                   variant="outline"
-                  className="w-full gap-2"
+                  className="w-full h-12 gap-2 rounded-xl font-semibold"
                   onClick={() => setShowImport(!showImport)}
                   data-testid="button-new-script"
                 >
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-5 w-5" />
                   {showImport ? "Hide Import" : "Import New Script"}
                 </Button>
 
                 {showImport && (
-                  <Card>
-                    <CardContent className="pt-4">
+                  <Card className="animate-scale-in rounded-2xl overflow-hidden">
+                    <CardContent className="pt-5">
                       <ScriptImport
                         onImport={(name, script) => {
                           onNewScript(name, script);
@@ -187,39 +210,43 @@ export function SettingsDrawer({
                 )}
               </div>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                    data-testid="button-clear-session"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Clear Session
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Clear Session?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will remove your current script and all progress. This cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel data-testid="button-cancel-clear">Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => {
-                        onClearSession();
-                        setIsOpen(false);
-                      }}
-                      className="bg-destructive hover:bg-destructive/90"
-                      data-testid="button-confirm-clear"
+              <div className="pt-4">
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="w-full h-12 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl gap-2"
+                      data-testid="button-clear-session"
                     >
-                      Clear
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Trash2 className="h-5 w-5" />
+                      Clear Session
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="rounded-2xl">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Clear Session?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will remove your current script and all progress. This cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="rounded-xl" data-testid="button-cancel-clear">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          onClearSession();
+                          setIsOpen(false);
+                        }}
+                        className="bg-destructive hover:bg-destructive/90 rounded-xl"
+                        data-testid="button-confirm-clear"
+                      >
+                        Clear
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
         </div>

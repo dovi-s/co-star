@@ -9,11 +9,11 @@ export function SmartCastBadge({ enabled = true }: SmartCastBadgeProps) {
   return (
     <Badge
       variant="outline"
-      className="gap-1.5 px-2.5 py-1 text-xs font-medium border-primary/30 text-primary bg-primary/5"
+      className="gap-1.5 px-2.5 py-1 text-xs font-medium border-primary/20 text-primary bg-primary/5 rounded-lg animate-shimmer"
       data-testid="badge-smart-cast"
     >
       <Sparkles className="h-3 w-3" />
-      Smart Cast {enabled ? "On" : "Off"}
+      Smart Cast
     </Badge>
   );
 }

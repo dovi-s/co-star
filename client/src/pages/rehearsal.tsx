@@ -4,7 +4,7 @@ import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { useSession } from "@/hooks/use-session";
-import { ttsEngine, calculateProsody, detectEmotion } from "@/lib/tts-engine";
+import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import type { VoicePreset } from "@shared/schema";
 
 interface RehearsalPageProps {
@@ -109,8 +109,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const emotion = line.emotionHint || detectEmotion(line.text, line.direction);
     const prosody = calculateProsody(emotion, role?.voicePreset || "natural");
 
-    ttsEngine.speak(line.text, prosody, () => {
-      if (isPlayingRef.current) {
+    ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
+      if (result === "success" && isPlayingRef.current) {
         const next = getNextLine();
         if (next) {
           nextLine();
@@ -210,7 +210,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onJumpToLine={handleJumpToLine}
       />
 
-      <main className="flex-1 flex flex-col justify-center px-4 py-6">
+      <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in">
         <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
           <ThreeLineReader
             previousLine={previousLine}
@@ -226,8 +226,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         </div>
       </main>
 
-      <footer className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t">
-        <div className="px-4 py-4 max-w-md mx-auto">
+      <footer className="sticky bottom-0 glass border-t safe-bottom z-40">
+        <div className="px-4 py-5 max-w-md mx-auto">
           <TransportBar
             isPlaying={session.isPlaying}
             canGoBack={canGoBack}

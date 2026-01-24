@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
 import type { ScriptLine, Role } from "@shared/schema";
-import { Bookmark, BookmarkCheck, User } from "lucide-react";
+import { Bookmark, BookmarkCheck, User, Mic, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -38,13 +37,13 @@ export function ThreeLineReader({
       return (
         <div
           className={cn(
-            "min-h-[4rem] flex items-center justify-center",
+            "min-h-[5rem] flex items-center justify-center rounded-2xl",
             type === "previous" && "opacity-30",
             type === "next" && "opacity-40"
           )}
         >
           <span className="text-muted-foreground italic text-sm">
-            {type === "previous" ? "Start of scene" : type === "next" ? "End of scene" : ""}
+            {type === "previous" ? "Beginning of scene" : type === "next" ? "End of scene" : ""}
           </span>
         </div>
       );
@@ -56,20 +55,33 @@ export function ThreeLineReader({
     return (
       <div
         className={cn(
-          "relative py-4 px-4 rounded-lg line-transition",
-          type === "previous" && "opacity-40",
-          type === "next" && "opacity-50",
-          isCurrent && isUser && "bg-primary/10 border border-primary/20",
-          isCurrent && !isUser && "bg-card border border-card-border"
+          "relative py-5 px-5 rounded-2xl transition-all duration-300",
+          type === "previous" && "opacity-40 scale-[0.97]",
+          type === "next" && "opacity-50 scale-[0.97]",
+          isCurrent && isUser && "bg-gradient-to-br from-primary/10 to-accent/5 border-2 border-primary/30 your-turn-glow shadow-sm",
+          isCurrent && !isUser && "bg-card border border-border shadow-sm"
         )}
         data-testid={`line-${type}`}
       >
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-4">
+          {isCurrent && (
+            <div
+              className={cn(
+                "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200",
+                isUser 
+                  ? "bg-primary text-primary-foreground shadow-sm" 
+                  : "bg-accent/10 text-accent"
+              )}
+            >
+              {isUser ? <Mic className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
+            </div>
+          )}
+          
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-2 mb-2">
               <span
                 className={cn(
-                  "font-semibold text-sm uppercase tracking-wide",
+                  "font-bold text-sm uppercase tracking-wide",
                   isCurrent && isUser && "text-primary",
                   isCurrent && !isUser && "text-accent",
                   !isCurrent && "text-muted-foreground"
@@ -78,14 +90,14 @@ export function ThreeLineReader({
                 {line.roleName}
               </span>
               {isUser && isCurrent && (
-                <span className="flex items-center gap-1 text-xs text-primary">
-                  <User className="h-3 w-3" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold uppercase tracking-wider">
+                  <User className="h-2.5 w-2.5" />
                   You
                 </span>
               )}
               {showDirections && line.direction && (
-                <span className="text-xs text-muted-foreground italic">
-                  [{line.direction}]
+                <span className="text-xs text-muted-foreground italic bg-muted/50 px-2 py-0.5 rounded-md">
+                  {line.direction}
                 </span>
               )}
             </div>
@@ -99,13 +111,38 @@ export function ThreeLineReader({
             >
               {line.text}
             </p>
+            
+            {isCurrent && isUser && isPlaying && (
+              <div className="mt-4 flex items-center justify-center gap-3 py-3 px-4 rounded-xl bg-primary/10 border border-primary/20 animate-fade-in">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.2s' }} />
+                  <span className="w-2 h-2 rounded-full bg-primary animate-pulse" style={{ animationDelay: '0.4s' }} />
+                </div>
+                <span className="text-sm font-medium text-primary">
+                  Your turn — speak your line, then tap Next
+                </span>
+              </div>
+            )}
+            
+            {isCurrent && !isUser && isPlaying && (
+              <div className="mt-3 flex items-center gap-2 animate-fade-in">
+                <div className="speaking-wave">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="text-xs text-muted-foreground">Speaking...</span>
+              </div>
+            )}
           </div>
           
           {isCurrent && (
             <Button
               variant="ghost"
               size="icon"
-              className="flex-shrink-0 -mr-2"
+              className="flex-shrink-0 -mr-2 -mt-1 rounded-xl"
               onClick={() => onToggleBookmark(line.id)}
               data-testid="button-bookmark"
             >
@@ -117,25 +154,12 @@ export function ThreeLineReader({
             </Button>
           )}
         </div>
-
-        {isCurrent && isUser && isPlaying && (
-          <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-primary rounded-full cue-pulse" />
-        )}
-        
-        {isCurrent && isUser && isPlaying && (
-          <div className="mt-3 text-center text-sm text-primary font-medium animate-pulse">
-            Your turn - speak your line, then tap Next
-          </div>
-        )}
       </div>
     );
   };
 
-  const userLineForPrev = previousLine ? previousLine.roleId === currentLine?.roleId && isUserLine : false;
-  const userLineForNext = nextLine && currentLine ? nextLine.roleId === currentLine?.roleId && isUserLine : false;
-
   return (
-    <div className="flex flex-col gap-2" data-testid="three-line-reader">
+    <div className="flex flex-col gap-3" data-testid="three-line-reader">
       {renderLine(previousLine, "previous", false)}
       {renderLine(currentLine, "current", isUserLine)}
       {renderLine(nextLine, "next", false)}

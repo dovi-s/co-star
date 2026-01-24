@@ -112,4 +112,17 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
-- Initial build: Complete MVP with script import, role selection, three-line reader, TTS playback, bookmarks, ambient sound, and dark mode
+### January 2026 - Major UX/UI Overhaul
+- **Premium Animations**: Added comprehensive animation system with fade-in, slide, scale, float effects
+- **Home Page Redesign**: New hero section with floating icon, feature pills, cleaner layout
+- **Role Selection Overhaul**: Card-based layout with progress bars, lead badges, AI indicators
+- **Three-Line Reader**: Enhanced with gradient backgrounds, speaking wave indicators, "Your turn" prompts
+- **Transport Bar**: Circular progress ring around play button, refined controls
+- **Settings Drawer**: Polished drawer with rounded corners, better organization, preset picker
+- **Theme Toggle**: Animated icon rotation between sun/moon
+- **Demo Script**: Built-in sample script for quick testing
+- **Visual Polish**: Consistent rounded corners (rounded-xl/2xl), shadows, glass effects
+- **Micro-interactions**: Hover lift effects, glow pulses, smooth state transitions
+
+### Initial Build
+- Complete MVP with script import, role selection, three-line reader, TTS playback, bookmarks, ambient sound, and dark mode
