@@ -94,17 +94,28 @@ shared/
 
 ## Design System
 
+### Philosophy
+Sophisticated, minimal design inspired by premium $10B companies (Stripe, Linear, Notion):
+- **Clean typography** with clear hierarchy
+- **High contrast** using foreground/background color scheme
+- **Subtle interactions** - no jarring animations or playful effects
+- **Professional aesthetic** - minimal, focused, purposeful
+
 ### Colors
-- **Light Mode**: Paper #F7F4EE, Ink #0F172A, Brand #1A73E8, Accent #B08763
-- **Dark Mode**: Paper #0E1218, Ink #E6EDF3, Brand #59A4FF
+- **Primary accent**: foreground/background contrast (dark on light, light on dark)
+- **Light Mode**: Background #FFFFFF, Foreground #0F172A
+- **Dark Mode**: Background #0E1218, Foreground #E6EDF3
+- **Status colors**: Green for success/completion, muted tones for secondary elements
 
 ### Typography
 - Inter font family
-- Weight contrast for hierarchy
+- Weight contrast for hierarchy (semibold headings, medium body)
+- Minimal text sizes (xs, sm, base)
 
 ### Motion
-- 120ms ease-out transitions
-- No jarring animations
+- 200ms ease-out transitions
+- Subtle scale effects on press (0.98)
+- No playful animations or bounces
 
 ## Data Storage
 
@@ -112,42 +123,28 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
-### January 2026 - Spot Mascot & Brand Identity (Phase 3)
-- **Spot the Mascot**: Lovable golden theatrical spotlight character (Duolingo-style)
-  - A warm, friendly spotlight with expressive eyes and smile
-  - Multiple moods: happy, excited, encouraging, thinking, celebrating, waving, listening, proud
-  - Appears throughout app: home page, role selector, rehearsal header, celebration modal
-  - Distinctive amber/orange/gold color palette
-- **Brand Logo**: Amber gradient icon featuring Spot's face
-  - Warm, approachable, memorable identity
-  - "Your Scene Partner Awaits" tagline
-  - "Spot says:" personalized messaging
-- **Gamification System**: Progress tracking features
-  - Daily streak tracking with flame icon
-  - Daily goal progress bar (default 50 lines)
-  - Line and run count tracking
-  - Stats persistence in localStorage
-- **PWA Ready**: Service worker, manifest, offline support, home screen installation
+### January 2026 - Sophisticated Redesign (Phase 4)
+- **Premium Minimal Design**: Complete UI overhaul for $10B company aesthetic
+  - Removed playful mascot (Spot) from core flows
+  - Replaced amber/orange gradients with foreground/background contrast
+  - Simplified copy - no whimsical language
+  - Clean typography, subtle borders, minimal shadows
+- **Component Refinements**:
+  - Home page: Clean hero with text-only headings, minimal feature indicators
+  - Role selector: Dark cards when selected (bg-foreground text-background)
+  - Transport bar: Minimal play button with simple progress ring
+  - Three-line reader: User's line with dark background, clean styling
+  - Settings drawer: Minimal toggles, clean organization
+- **Technical Improvements**:
+  - Proper Shadcn Button usage throughout for consistent hover/active states
+  - All interactive elements have data-testid attributes
+  - Streamlined component code
 
-### January 2026 - Major UX/UI Overhaul (Phase 2)
-- **Actor-Focused Copy**: Warm, encouraging language throughout ("Your Private Stage", "Step Into Character")
-- **Line Memorization Mode**: Four levels - Full (see all), Partial (half hidden), Cue (first words), Memory (no help)
-- **Progress Tracking**: Tracks runs completed and lines rehearsed with celebration modal on scene completion
+### January 2026 - Line Memorization & Progress (Phase 2-3)
+- **Line Memorization Mode**: Four levels - Full, Partial, Cue, Memory
+- **Progress Tracking**: Runs completed, lines rehearsed
 - **Keyboard Shortcuts**: Space (play/pause), Arrow keys (navigate), R (repeat), Escape (stop)
-- **Theatrical Animations**: Spotlight effect, curtain transitions, heartbeat animations, success pulses
-- **Celebration Moments**: Mascot animation and stats display when completing a scene run
-
-### January 2026 - Major UX/UI Overhaul (Phase 1)
-- **Premium Animations**: Added comprehensive animation system with fade-in, slide, scale, float effects
-- **Home Page Redesign**: New hero section with floating icon, feature pills, cleaner layout
-- **Role Selection Overhaul**: Card-based layout with progress bars, lead badges, AI indicators
-- **Three-Line Reader**: Enhanced with gradient backgrounds, speaking wave indicators, "Your turn" prompts
-- **Transport Bar**: Circular progress ring around play button, refined controls with keyboard hints
-- **Settings Drawer**: Polished drawer with rounded corners, better organization, preset picker
-- **Theme Toggle**: Animated icon rotation between sun/moon
-- **Demo Script**: Built-in emotional sample scene for quick testing
-- **Visual Polish**: Consistent rounded corners (rounded-xl/2xl), shadows, glass effects
-- **Micro-interactions**: Hover lift effects, glow pulses, smooth state transitions
+- **PWA Ready**: Service worker, manifest, offline support
 
 ### Initial Build
 - Complete MVP with script import, role selection, three-line reader, TTS playback, bookmarks, ambient sound, and dark mode
