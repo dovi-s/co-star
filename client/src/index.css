@@ -710,6 +710,22 @@
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* Confetti animation */
+@keyframes confetti {
+  0% {
+    transform: translateY(-10px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti 3s ease-out forwards;
+}
+
 /* Subtle pattern background */
 .pattern-dots {
   background-image: radial-gradient(

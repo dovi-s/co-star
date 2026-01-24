@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Check, User, ChevronLeft, Volume2, ArrowRight } from "lucide-react";
+import { Check, User, ChevronLeft, Volume2, ArrowRight, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SpotMascot } from "@/components/spot-mascot";
 import type { Role } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -36,8 +37,8 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
       )} 
       data-testid="role-selector"
     >
-      {/* Minimal header */}
-      <header className="flex items-center gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+      {/* Animated header */}
+      <header className="flex items-center gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top animate-fade-in">
         <Button
           variant="ghost"
           size="icon"
@@ -55,21 +56,23 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
             {roles.length} characters · {totalLines} lines
           </p>
         </div>
+        <SpotMascot size="xs" mood="thinking" />
       </header>
 
       <div className="flex-1 flex flex-col">
-        {/* Clean section header */}
-        <div className="px-5 pt-6 pb-4">
-          <h2 className="text-lg font-semibold tracking-tight text-foreground">
-            Choose your role
+        {/* Fun section header */}
+        <div className="px-5 pt-6 pb-4 animate-fade-in-up">
+          <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-amber-500" />
+            Who will you be?
           </h2>
-          <p className="text-sm text-muted-foreground/70 mt-0.5">
-            AI will voice the other characters
+          <p className="text-sm text-muted-foreground/70 mt-1">
+            Pick your character. AI handles everyone else.
           </p>
         </div>
 
-        {/* Role cards - clean, professional design */}
-        <div className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto">
+        {/* Role cards with stagger animations */}
+        <div className="flex-1 px-4 pb-4 space-y-2.5 overflow-y-auto">
           {sortedRoles.map((role, index) => {
             const isSelected = selectedRoleId === role.id;
             const linePercentage = Math.round((role.lineCount / totalLines) * 100);
@@ -80,25 +83,26 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 key={role.id}
                 onClick={() => setSelectedRoleId(role.id)}
                 className={cn(
-                  "w-full flex items-center gap-3.5 p-3.5 rounded-xl text-left",
-                  "transition-all duration-200",
+                  "w-full flex items-center gap-3.5 p-4 rounded-xl text-left animate-fade-in-up",
+                  "transition-all duration-200 hover-lift",
                   isSelected
-                    ? "bg-foreground text-background ring-1 ring-foreground"
-                    : "bg-card hover:bg-muted/50 border border-border/60"
+                    ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white ring-2 ring-amber-500/50 shadow-lg shadow-amber-500/20"
+                    : "bg-card hover:bg-muted/50 border border-border/60",
+                  `stagger-${Math.min(index + 1, 6)}`
                 )}
                 data-testid={`card-role-${role.name}`}
               >
                 {/* Selection indicator */}
                 <div
                   className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg transition-colors",
+                    "flex items-center justify-center w-11 h-11 rounded-xl transition-all",
                     isSelected
-                      ? "bg-background/20"
+                      ? "bg-white/20 scale-110"
                       : "bg-muted/50"
                   )}
                 >
                   {isSelected ? (
-                    <Check className={cn("h-5 w-5", isSelected ? "text-background" : "text-foreground")} />
+                    <Check className="h-5 w-5 text-white" />
                   ) : (
                     <User className="h-5 w-5 text-muted-foreground" />
                   )}
@@ -108,35 +112,35 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={cn(
-                      "font-medium",
-                      isSelected ? "text-background" : "text-foreground"
+                      "font-semibold text-base",
+                      isSelected ? "text-white" : "text-foreground"
                     )}>
                       {role.name}
                     </span>
                     {isLead && (
                       <span className={cn(
-                        "text-[10px] px-1.5 py-0.5 rounded font-medium",
+                        "text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide",
                         isSelected 
-                          ? "bg-background/20 text-background/90" 
-                          : "bg-muted text-muted-foreground"
+                          ? "bg-white/20 text-white" 
+                          : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                       )}>
                         Lead
                       </span>
                     )}
                   </div>
                   <div className={cn(
-                    "text-xs mt-0.5",
-                    isSelected ? "text-background/70" : "text-muted-foreground"
+                    "text-xs mt-0.5 font-medium",
+                    isSelected ? "text-white/80" : "text-muted-foreground"
                   )}>
-                    {role.lineCount} lines · {linePercentage}%
+                    {role.lineCount} lines · {linePercentage}% of script
                   </div>
                 </div>
 
                 {/* AI voice indicator for unselected */}
                 {!isSelected && (
-                  <div className="flex items-center gap-1 text-muted-foreground/50">
-                    <Volume2 className="h-3.5 w-3.5" />
-                    <span className="text-[10px] font-medium">AI</span>
+                  <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400">
+                    <Volume2 className="h-3 w-3" />
+                    <span className="text-[10px] font-bold uppercase">AI</span>
                   </div>
                 )}
               </button>
@@ -145,33 +149,34 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
         </div>
       </div>
 
-      {/* Clean footer */}
-      <div className="p-4 border-t border-border/40 bg-background safe-bottom">
+      {/* Vibrant footer */}
+      <div className="p-4 border-t border-border/40 bg-background safe-bottom animate-slide-up">
         <button
           onClick={handleContinue}
           disabled={!selectedRoleId}
           className={cn(
-            "w-full h-12 rounded-xl font-medium text-sm flex items-center justify-center gap-2",
-            "transition-all duration-200",
+            "w-full h-13 rounded-xl font-bold text-base flex items-center justify-center gap-2",
+            "transition-all duration-300",
             selectedRoleId
-              ? "bg-foreground text-background hover:opacity-90 active:scale-[0.98]"
+              ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/30 active:scale-[0.98]"
               : "bg-muted text-muted-foreground cursor-not-allowed"
           )}
           data-testid="button-start-rehearsal"
         >
           {selectedRoleId ? (
             <>
-              Start rehearsal
+              <Sparkles className="h-4 w-4" />
+              Let's rehearse
               <ArrowRight className="h-4 w-4" />
             </>
           ) : (
-            "Select a role to continue"
+            "Pick a character above"
           )}
         </button>
         
         {selectedRole && (
-          <p className="text-center text-xs text-muted-foreground/60 mt-2">
-            You'll play {selectedRole.name}
+          <p className="text-center text-xs text-muted-foreground mt-2">
+            You're playing <span className="font-semibold text-foreground">{selectedRole.name}</span>
           </p>
         )}
       </div>

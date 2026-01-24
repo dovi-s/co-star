@@ -81,16 +81,19 @@ export function TransportBar({
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
+                stroke="url(#progressGradient)"
+                strokeWidth="3"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className={cn(
-                  "transition-all duration-500 ease-out",
-                  isAtEnd ? "text-green-500" : "text-foreground"
-                )}
+                className="transition-all duration-500 ease-out"
               />
+              <defs>
+                <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#F59E0B" />
+                  <stop offset="100%" stopColor="#EF4444" />
+                </linearGradient>
+              </defs>
             </svg>
             
             <button
@@ -99,11 +102,11 @@ export function TransportBar({
               data-testid="button-play-pause"
               className={cn(
                 "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
-                "w-11 h-11 rounded-full flex items-center justify-center",
-                "transition-all duration-200 active:scale-95",
+                "w-12 h-12 rounded-full flex items-center justify-center",
+                "transition-all duration-200 active:scale-90 shadow-lg",
                 isPlaying 
-                  ? "bg-muted/80 text-foreground" 
-                  : "bg-foreground text-background"
+                  ? "bg-muted text-foreground" 
+                  : "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-amber-500/30"
               )}
             >
               {isPlaying ? (
@@ -127,31 +130,33 @@ export function TransportBar({
           </Button>
         </div>
 
-        {/* Line counter */}
-        <div className="flex flex-col items-center min-w-[40px]">
+        {/* Line counter with celebration */}
+        <div className="flex flex-col items-center min-w-[44px]">
           <span 
             className={cn(
-              "text-sm font-semibold tabular-nums",
-              isAtEnd ? "text-green-500" : "text-foreground"
+              "text-sm font-bold tabular-nums",
+              isAtEnd 
+                ? "text-emerald-500 animate-soft-bounce" 
+                : "text-foreground"
             )}
             data-testid="text-line-counter"
           >
             {currentLine + 1}
           </span>
-          <span className="text-[10px] text-muted-foreground/50">
+          <span className="text-[10px] text-muted-foreground/60">
             of {totalLines}
           </span>
         </div>
       </div>
       
-      {/* Keyboard hints */}
-      <div className="flex items-center justify-center gap-4 mt-3 opacity-40">
-        <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-muted/50 text-muted-foreground">Space</kbd>
+      {/* Keyboard hints - fun styling */}
+      <div className="flex items-center justify-center gap-4 mt-3">
+        <div className="flex items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity">
+          <kbd className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-muted text-muted-foreground">Space</kbd>
           <span className="text-[9px] text-muted-foreground">play</span>
         </div>
-        <div className="flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-muted/50 text-muted-foreground">←→</kbd>
+        <div className="flex items-center gap-1.5 opacity-50 hover:opacity-80 transition-opacity">
+          <kbd className="px-2 py-0.5 rounded-md text-[9px] font-bold bg-muted text-muted-foreground">←→</kbd>
           <span className="text-[9px] text-muted-foreground">navigate</span>
         </div>
       </div>

@@ -1,8 +1,9 @@
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
+import { SpotMascot } from "@/components/spot-mascot";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Mic } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import type { Role, Scene } from "@shared/schema";
 
 interface HeaderProps {
@@ -36,7 +37,7 @@ export function Header({
   onJumpToLine,
 }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 safe-top">
+    <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 safe-top animate-fade-in">
       <div className="flex items-center gap-3 min-w-0">
         {onBack ? (
           <Button
@@ -49,13 +50,11 @@ export function Header({
             <ChevronLeft className="h-5 w-5" />
           </Button>
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-foreground flex items-center justify-center">
-            <Mic className="h-4 w-4 text-background" />
-          </div>
+          <SpotMascot size="xs" mood="listening" />
         )}
         
         <div className="min-w-0">
-          <h1 className="font-medium text-sm truncate text-foreground" data-testid="text-session-name">
+          <h1 className="font-semibold text-sm truncate text-foreground" data-testid="text-session-name">
             {sessionName}
           </h1>
         </div>
