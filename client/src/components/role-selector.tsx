@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Check, User, ChevronLeft, Sparkles, Volume2, Star, Crown, Play } from "lucide-react";
+import { Check, User, ChevronLeft, Sparkles, Volume2, Star, Crown, Play, AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { Role } from "@shared/schema";
-import { Mascot, MascotName } from "@/components/mascot";
+import { LogoIcon } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 interface RoleSelectorProps {
@@ -67,17 +67,20 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-6 py-8 text-center space-y-4 bg-gradient-to-b from-primary/5 via-transparent to-transparent">
+        <div className="px-6 py-8 text-center space-y-4 bg-gradient-to-b from-slate-900/5 via-primary/5 to-transparent dark:from-slate-800/20">
           <div className="animate-fade-in">
-            <Mascot mood="encouraging" size="md" showMessage={false} />
+            <div className="w-16 h-16 mx-auto rounded-xl bg-slate-800 dark:bg-slate-900 shadow-lg p-3">
+              <LogoIcon className="text-white" />
+            </div>
           </div>
           
           <div className="space-y-2 animate-fade-in-up stagger-1">
-            <p className="text-xs text-muted-foreground">
-              <MascotName /> asks:
-            </p>
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20">
+              <AudioLines className="h-2.5 w-2.5 text-primary" />
+              <span className="text-[9px] font-semibold text-primary uppercase tracking-wider">Scene IQ Ready</span>
+            </div>
             <h2 className="text-2xl font-bold tracking-tight">
-              Who Will You Be Tonight?
+              Select Your Role
             </h2>
             <p className="text-muted-foreground text-sm max-w-[300px] mx-auto leading-relaxed">
               Choose who you'll be. Your scene partners will come to life with natural AI voices.

@@ -3,8 +3,8 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { useSession } from "@/hooks/use-session";
-import { Mascot, MascotName } from "@/components/mascot";
-import { Theater, Lock, Sparkles, Heart, Zap } from "lucide-react";
+import { Logo, LogoIcon } from "@/components/logo";
+import { Lock, Sparkles, Heart, Zap, AudioLines, Brain } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -76,57 +76,49 @@ export function HomePage({ onSessionReady }: HomePageProps) {
       data-testid="home-page"
     >
       <header className="flex items-center justify-between px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary via-primary to-accent flex items-center justify-center shadow-md">
-              <Theater className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background animate-pulse" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg tracking-tight">CastMate</h1>
-            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest">Studio</p>
-          </div>
-        </div>
+        <Logo size="md" showWordmark />
         <ThemeToggle />
       </header>
 
       <main className="flex-1 flex flex-col">
-        <div className="px-6 py-8 text-center space-y-6 bg-gradient-to-b from-primary/8 via-accent/5 to-transparent relative overflow-hidden">
+        <div className="px-6 py-10 text-center space-y-6 bg-gradient-to-b from-slate-900/5 via-primary/5 to-transparent dark:from-slate-800/20 dark:via-primary/10 relative overflow-hidden">
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-4 left-8 w-2 h-2 rounded-full bg-primary/20 animate-float" style={{ animationDelay: '0s' }} />
-            <div className="absolute top-12 right-12 w-1.5 h-1.5 rounded-full bg-accent/30 animate-float" style={{ animationDelay: '0.5s' }} />
-            <div className="absolute bottom-8 left-16 w-1 h-1 rounded-full bg-primary/15 animate-float" style={{ animationDelay: '1s' }} />
-            <div className="absolute top-20 left-1/3 w-1.5 h-1.5 rounded-full bg-accent/20 animate-float" style={{ animationDelay: '1.5s' }} />
+            <div className="absolute top-6 left-10 w-0.5 h-8 bg-primary/20 rounded-full" />
+            <div className="absolute top-10 left-14 w-0.5 h-12 bg-primary/30 rounded-full" />
+            <div className="absolute top-8 left-18 w-0.5 h-6 bg-primary/15 rounded-full" />
+            <div className="absolute top-6 right-10 w-0.5 h-10 bg-primary/25 rounded-full" />
+            <div className="absolute top-12 right-14 w-0.5 h-8 bg-primary/20 rounded-full" />
+            <div className="absolute top-8 right-18 w-0.5 h-5 bg-primary/15 rounded-full" />
           </div>
           
-          <div className="relative animate-fade-in-up mascot-enter">
-            <Mascot 
-              mood={showWelcome ? "waving" : "excited"} 
-              size="lg" 
-              showMessage={false}
-            />
+          <div className="relative animate-fade-in-up">
+            <div className="w-24 h-24 mx-auto rounded-2xl bg-slate-800 dark:bg-slate-900 shadow-2xl shadow-slate-900/30 p-4">
+              <LogoIcon className="text-white" />
+            </div>
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-green-500/90 text-[9px] font-bold text-white uppercase tracking-wider">
+              Ready
+            </div>
           </div>
           
           <div className="space-y-4 animate-fade-in-up stagger-1">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-primary uppercase tracking-widest flex items-center justify-center gap-1.5">
-                <MascotName /> says: "Ready to rehearse?"
-              </p>
-              <h2 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
-                Your Private Stage
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                <Brain className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-semibold text-primary uppercase tracking-wider">Scene IQ Technology</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                Your Intelligent Scene Partner
               </h2>
             </div>
             <p className="text-muted-foreground text-base max-w-[340px] mx-auto leading-relaxed">
-              I'll be your scene partner! Just paste your script and I'll read
-              every other character with <em>real emotion</em>.
+              Paste your script. We analyze every line, detect emotion, and deliver your cues with <em>natural timing and prosody</em>.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1 animate-fade-in-up stagger-2">
-            <FeaturePill icon={<Zap className="h-3 w-3" />} label="Instant Setup" />
-            <FeaturePill icon={<Sparkles className="h-3 w-3" />} label="Smart Voices" />
-            <FeaturePill icon={<Lock className="h-3 w-3" />} label="100% Private" />
+            <FeaturePill icon={<Zap className="h-3 w-3" />} label="Zero Setup" />
+            <FeaturePill icon={<AudioLines className="h-3 w-3" />} label="Voice-First" />
+            <FeaturePill icon={<Lock className="h-3 w-3" />} label="Private by Default" />
           </div>
         </div>
 
@@ -143,8 +135,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
           </div>
           <div className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground/60">
             <span>Made with</span>
-            <Heart className="h-2.5 w-2.5 text-red-500/60 animate-pulse" />
-            <span>for actors by <MascotName /></span>
+            <Heart className="h-2.5 w-2.5 text-red-500/60" />
+            <span>for actors</span>
           </div>
         </div>
       </footer>

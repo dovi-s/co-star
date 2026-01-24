@@ -2,7 +2,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
 import { StreakDisplay } from "@/components/streak-display";
-import { Mascot } from "@/components/mascot";
+import { Logo } from "@/components/logo";
 import type { Role, Scene } from "@shared/schema";
 
 interface HeaderProps {
@@ -39,14 +39,12 @@ export function Header({
   return (
     <header className="flex items-center justify-between gap-3 px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-2.5">
-          <Mascot mood="encouraging" size="sm" showMessage={false} />
-          <div className="hidden sm:block">
-            <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
-              {sessionName}
-            </h1>
-            <p className="text-[10px] text-muted-foreground -mt-0.5">Rehearsing</p>
-          </div>
+        <Logo size="sm" />
+        <div className="hidden sm:block">
+          <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
+            {sessionName}
+          </h1>
+          <p className="text-[10px] text-muted-foreground -mt-0.5">Rehearsing</p>
         </div>
 
         {userRole && (

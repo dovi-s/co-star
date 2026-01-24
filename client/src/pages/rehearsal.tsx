@@ -8,8 +8,8 @@ import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Sparkles } from "lucide-react";
-import { Mascot, MascotName } from "@/components/mascot";
+import { Sparkles, Check, Trophy } from "lucide-react";
+import { LogoIcon } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 interface RehearsalPageProps {
@@ -283,22 +283,30 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       {showCelebration && (
         <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none bg-background/50 backdrop-blur-sm">
           <div className="bg-card border shadow-2xl rounded-3xl p-8 text-center celebrate pointer-events-auto max-w-sm mx-4">
-            <Mascot mood="celebrating" size="lg" showMessage={false} className="mb-4" />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-green-500 shadow-lg shadow-green-500/30 flex items-center justify-center">
+              <Check className="h-10 w-10 text-white" strokeWidth={3} />
+            </div>
             <h3 className="text-2xl font-bold mb-2">
-              <MascotName /> is so proud!
+              Scene Complete
             </h3>
             <p className="text-lg font-medium text-primary mb-1">
-              Scene Complete!
+              Run #{session.runsCompleted + 1} Finished
             </p>
             <p className="text-muted-foreground mb-4">
-              Run #{session.runsCompleted + 1} in the books
+              Great work on this scene!
             </p>
-            <div className="flex items-center justify-center gap-2 text-sm bg-muted/50 rounded-full px-4 py-2">
-              <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span className="font-medium">{session.linesRehearsed} lines practiced</span>
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
+                <Trophy className="h-4 w-4 text-yellow-500" />
+                <span className="font-medium">{session.linesRehearsed} lines</span>
+              </div>
+              <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1.5">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="font-medium">{session.runsCompleted + 1} runs</span>
+              </div>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              Keep going! You're getting better every run.
+              Keep rehearsing to build muscle memory.
             </p>
           </div>
         </div>
