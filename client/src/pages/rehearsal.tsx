@@ -275,6 +275,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         streak={stats.currentStreak}
         dailyGoal={stats.dailyGoal}
         todayLines={stats.todayLines}
+        onBack={onBack}
         onFontSizeChange={setFontSize}
         onToggleDirections={() => setShowDirections(!showDirections)}
         onJumpToLine={handleJumpToLine}

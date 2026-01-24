@@ -3,6 +3,8 @@ import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
 import { StreakDisplay } from "@/components/streak-display";
 import { Logo } from "@/components/logo";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 import type { Role, Scene } from "@shared/schema";
 
 interface HeaderProps {
@@ -16,6 +18,7 @@ interface HeaderProps {
   streak?: number;
   dailyGoal?: number;
   todayLines?: number;
+  onBack?: () => void;
   onFontSizeChange?: (size: number) => void;
   onToggleDirections?: () => void;
   onJumpToLine?: (lineIndex: number) => void;
@@ -32,6 +35,7 @@ export function Header({
   streak = 0,
   dailyGoal = 50,
   todayLines = 0,
+  onBack,
   onFontSizeChange,
   onToggleDirections,
   onJumpToLine,
@@ -39,7 +43,19 @@ export function Header({
   return (
     <header className="flex items-center justify-between gap-3 px-4 py-3 border-b glass sticky top-0 z-50 safe-top">
       <div className="flex items-center gap-3 min-w-0">
-        <Logo size="sm" />
+        {onBack ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onBack}
+            className="shrink-0"
+            data-testid="button-back-home"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+        ) : (
+          <Logo size="sm" />
+        )}
         <div className="hidden sm:block">
           <h1 className="font-semibold text-sm truncate max-w-[120px]" data-testid="text-session-name">
             {sessionName}
