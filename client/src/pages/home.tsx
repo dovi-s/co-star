@@ -17,9 +17,10 @@ export function HomePage({ onSessionReady }: HomePageProps) {
   const [step, setStep] = useState<Step>("import");
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // If we have a session with script but no role selected, go to role selection
   useEffect(() => {
-    if (session && !session.userRoleId) {
-      clearSession();
+    if (session && session.scenes.length > 0 && !session.userRoleId) {
+      setStep("role-select");
     }
   }, []);
 
@@ -48,7 +49,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
   const handleBackToImport = () => {
     setIsTransitioning(true);
     setTimeout(() => {
-      clearSession();
+      // Don't clear session - just go back to import step
+      // The script will still be there in the textarea
       setStep("import");
       setIsTransitioning(false);
     }, 200);
@@ -94,7 +96,14 @@ export function HomePage({ onSessionReady }: HomePageProps) {
         </div>
 
         <div className="flex-1 px-4 pb-6 animate-fade-in-up stagger-1">
-          <ScriptImport onImport={handleImport} isLoading={isLoading} error={error} />
+          <ScriptImport 
+            onImport={handleImport} 
+            isLoading={isLoading} 
+            error={error}
+            initialScript={session?.scenes.map(s => 
+              s.lines.map(l => `${l.roleName}: ${l.direction ? `[${l.direction}] ` : ''}${l.text}`).join('\n')
+            ).join('\n\n') || ''}
+          />
         </div>
       </main>
 

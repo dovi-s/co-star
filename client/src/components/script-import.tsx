@@ -9,10 +9,11 @@ interface ScriptImportProps {
   onImport: (name: string, rawScript: string) => void;
   isLoading?: boolean;
   error?: string | null;
+  initialScript?: string;
 }
 
-export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) {
-  const [script, setScript] = useState("");
+export function ScriptImport({ onImport, isLoading, error, initialScript = "" }: ScriptImportProps) {
+  const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
   const [showTip, setShowTip] = useState(false);

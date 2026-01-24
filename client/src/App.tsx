@@ -12,7 +12,8 @@ type View = "home" | "rehearsal";
 function App() {
   const [view, setView] = useState<View>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("castmate-session");
+      // Check sessionStorage (not localStorage) for session state
+      const stored = sessionStorage.getItem("castmate-session");
       if (stored) {
         try {
           const session = JSON.parse(stored);
