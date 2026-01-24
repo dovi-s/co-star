@@ -48,47 +48,9 @@ function calculateBreak(emotion: EmotionStyle): number {
   }
 }
 
-export function detectEmotion(text: string, direction?: string): EmotionStyle {
-  const lowerText = text.toLowerCase();
-  const lowerDir = direction?.toLowerCase() ?? "";
-
-  // Check stage directions first - most reliable
-  const whisperWords = ["whisper", "quietly", "softly", "under breath", "hushed", "murmur", "muttering"];
-  const angryWords = ["angry", "angrily", "furious", "rage", "yelling", "shouting", "screaming", "snapping", "frustrated", "irritated", "seething", "livid"];
-  const sarcasticWords = ["sarcastic", "sarcastically", "mockingly", "dryly", "deadpan", "ironic", "cynical", "snide", "eye roll", "rolling eyes"];
-  const sadWords = ["sad", "sadly", "tearfully", "crying", "sobbing", "choking up", "voice breaking", "trembling", "devastated", "heartbroken", "grief", "mournful"];
-  const excitedWords = ["excited", "excitedly", "enthusiastic", "thrilled", "giddy", "beaming", "gleeful", "ecstatic", "bouncing", "jumping"];
-  const urgentWords = ["urgent", "urgently", "desperately", "panicked", "frantic", "rushing", "hurried", "breathless", "alarmed"];
-  const fearfulWords = ["fearful", "scared", "terrified", "trembling", "shaking", "nervous", "anxious", "worried", "frightened", "horrified", "cowering"];
-  const happyWords = ["happy", "happily", "joyful", "joyfully", "laughing", "smiling", "grinning", "delighted", "amused", "chuckling", "giggling"];
-
-  if (whisperWords.some(w => lowerDir.includes(w))) return "whisper";
-  if (angryWords.some(w => lowerDir.includes(w))) return "angry";
-  if (sarcasticWords.some(w => lowerDir.includes(w))) return "sarcastic";
-  if (sadWords.some(w => lowerDir.includes(w))) return "sad";
-  if (excitedWords.some(w => lowerDir.includes(w))) return "excited";
-  if (urgentWords.some(w => lowerDir.includes(w))) return "urgent";
-  if (fearfulWords.some(w => lowerDir.includes(w))) return "fearful";
-  if (happyWords.some(w => lowerDir.includes(w))) return "happy";
-
-  // Analyze text content for implicit emotions
-  const allCaps = text === text.toUpperCase() && text.length > 3;
-  const exclamationCount = (lowerText.match(/!/g) || []).length;
-  const questionCount = (lowerText.match(/\?/g) || []).length;
-  
-  if (allCaps && exclamationCount >= 1) return "angry";
-  if (lowerText.includes("?!") || lowerText.includes("!?")) return "urgent";
-  if (exclamationCount >= 2) return "excited";
-  if (lowerText.endsWith("...") && lowerText.length < 30) return "sad";
-  
-  // Check for emotional words in the dialogue itself
-  if (/\b(help|run|stop|no|wait)\b/i.test(text) && exclamationCount >= 1) return "urgent";
-  if (/\b(please|sorry|forgive|miss you|love you)\b/i.test(text) && lowerText.includes("...")) return "sad";
-  if (/\b(oh god|oh no|what the|holy)\b/i.test(text)) return "fearful";
-  if (/\b(haha|lol|funny|hilarious)\b/i.test(text)) return "happy";
-  
-  if (exclamationCount === 1 && lowerText.length < 50) return "excited";
-
+export function detectEmotion(_text: string, _direction?: string): EmotionStyle {
+  // Keep it simple - always neutral for natural audition-style reads
+  // No theatrical emotions, just people reading lines naturally
   return "neutral";
 }
 
@@ -188,7 +150,11 @@ class TTSEngine {
     onEnd?: (result: SpeakResult) => void
   ): Promise<boolean> {
     try {
-      console.log("[TTS] Speaking:", options.characterName, "-", text.substring(0, 50) + "...");
+      console.log("[TTS] Fetching audio for:", options.characterName);
+      
+      // Set a timeout for the fetch itself
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 15000);
       
       const response = await fetch("/api/tts/speak", {
         method: "POST",
@@ -197,14 +163,17 @@ class TTSEngine {
           text,
           characterName: options.characterName || "Character",
           characterIndex: options.characterIndex || 0,
-          emotion: options.emotion || "neutral",
-          preset: options.preset || "natural",
+          emotion: "neutral",
+          preset: "natural",
         }),
+        signal: controller.signal,
       });
+      
+      clearTimeout(fetchTimeout);
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
-        console.log("[TTS] Response not ok:", error);
+        console.log("[TTS] API error:", error);
         if (error.fallback) {
           return false;
         }
@@ -212,52 +181,79 @@ class TTSEngine {
       }
 
       const audioBlob = await response.blob();
+      if (audioBlob.size === 0) {
+        console.log("[TTS] Empty audio blob");
+        this.fireCallback("error", onEnd);
+        return false;
+      }
+      
       const audioUrl = URL.createObjectURL(audioBlob);
       
-      this.currentAudio = new Audio(audioUrl);
-      this.currentAudio.volume = 1;
+      // Create audio element
+      const audio = new Audio();
+      audio.preload = "auto";
+      this.currentAudio = audio;
 
-      // Start watchdog timer based on text length
+      // Start watchdog timer
       this.startWatchdog(text, onEnd);
 
       return new Promise((resolve) => {
-        if (!this.currentAudio) {
-          console.log("[TTS] No audio element");
-          this.fireCallback("error", onEnd);
-          resolve(false);
-          return;
-        }
-
-        const audio = this.currentAudio;
+        let hasEnded = false;
+        
+        const cleanup = () => {
+          if (!hasEnded) {
+            hasEnded = true;
+            URL.revokeObjectURL(audioUrl);
+            if (this.currentAudio === audio) {
+              this.currentAudio = null;
+            }
+          }
+        };
 
         audio.onended = () => {
-          console.log("[TTS] Audio ended successfully");
-          URL.revokeObjectURL(audioUrl);
-          this.currentAudio = null;
+          console.log("[TTS] Audio finished");
+          cleanup();
           this.fireCallback("success", onEnd);
           resolve(true);
         };
 
-        audio.onerror = (e) => {
-          console.log("[TTS] Audio error:", e);
-          URL.revokeObjectURL(audioUrl);
-          this.currentAudio = null;
+        audio.onerror = () => {
+          console.log("[TTS] Audio playback error");
+          cleanup();
           this.fireCallback("error", onEnd);
           resolve(false);
         };
+        
+        // Handle stalled/stuck audio
+        audio.onstalled = () => {
+          console.log("[TTS] Audio stalled");
+        };
+        
+        audio.onabort = () => {
+          console.log("[TTS] Audio aborted");
+          cleanup();
+          // Don't fire callback on abort - let watchdog handle it
+        };
 
+        // Set source and play
+        audio.src = audioUrl;
+        audio.volume = 1;
+        
         audio.play().then(() => {
-          console.log("[TTS] Audio playing...");
+          console.log("[TTS] Playing audio, duration:", audio.duration || "unknown");
         }).catch((e) => {
-          console.log("[TTS] Play failed:", e);
-          URL.revokeObjectURL(audioUrl);
-          this.currentAudio = null;
+          console.log("[TTS] Play failed:", e.message);
+          cleanup();
           this.fireCallback("error", onEnd);
           resolve(false);
         });
       });
-    } catch (error) {
-      console.error("[TTS] ElevenLabs error:", error);
+    } catch (error: any) {
+      if (error.name === "AbortError") {
+        console.log("[TTS] Fetch timed out");
+      } else {
+        console.error("[TTS] Error:", error.message);
+      }
       this.fireCallback("error", onEnd);
       return false;
     }
