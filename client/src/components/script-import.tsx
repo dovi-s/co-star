@@ -19,6 +19,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPromptInput, setShowPromptInput] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
+  const [isCleaning, setIsCleaning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +69,32 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
       console.error("Failed to generate script:", e);
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const [cleanupError, setCleanupError] = useState(false);
+  
+  const cleanupScript = async () => {
+    if (!script.trim()) return;
+    
+    setIsCleaning(true);
+    setCleanupError(false);
+    try {
+      const response = await fetch("/api/cleanup-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script }),
+      });
+      
+      if (!response.ok) throw new Error("Cleanup failed");
+      
+      const data = await response.json();
+      setScript(data.script);
+    } catch (e) {
+      console.error("Failed to clean up script:", e);
+      setCleanupError(true);
+    } finally {
+      setIsCleaning(false);
     }
   };
 
@@ -172,9 +199,9 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
           </div>
         )}
 
-        {/* Floating actions */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          <div className="flex items-center gap-1">
+        {/* Floating actions - only show when empty */}
+        {!script && (
+          <div className="absolute bottom-3 left-3 flex items-center gap-1">
             <button
               onClick={handlePaste}
               className={cn(
@@ -197,17 +224,18 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
               Upload
             </button>
           </div>
-          
-          {script && (
-            <button
-              onClick={() => setScript("")}
-              className="p-1.5 rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground/60 hover:text-foreground transition-all"
-              data-testid="button-clear-script"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        )}
+        
+        {/* Clear button - only show when has content */}
+        {script && (
+          <button
+            onClick={() => setScript("")}
+            className="absolute top-3 right-3 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground/60 hover:text-foreground transition-all"
+            data-testid="button-clear-script"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
 
       <input
@@ -221,7 +249,7 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
         }}
       />
 
-      {/* Character preview */}
+      {/* Character preview or cleanup hint */}
       {script && characters.length > 0 && (
         <div className="flex items-center gap-2 px-1 animate-fade-in">
           <span className="text-xs text-muted-foreground">{characters.length} roles:</span>
@@ -234,6 +262,39 @@ export function ScriptImport({ onImport, isLoading, error }: ScriptImportProps) 
             )}
           </div>
         </div>
+      )}
+      
+      {script && characters.length === 0 && script.trim().length > 50 && (
+        <p className="text-center text-sm text-muted-foreground/70 animate-fade-in" data-testid="text-cleanup-hint">
+          {isCleaning ? (
+            <span className="inline-flex items-center gap-1.5" data-testid="text-cleanup-loading">
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Formatting...
+            </span>
+          ) : cleanupError ? (
+            <span data-testid="text-cleanup-error">
+              Formatting failed.{" "}
+              <button
+                onClick={cleanupScript}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                data-testid="button-retry-cleanup"
+              >
+                Try again
+              </button>
+            </span>
+          ) : (
+            <>
+              Can't find dialogue.{" "}
+              <button
+                onClick={cleanupScript}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                data-testid="button-cleanup-script"
+              >
+                Auto-format
+              </button>
+            </>
+          )}
+        </p>
       )}
 
       {error && (

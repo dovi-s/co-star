@@ -439,5 +439,76 @@ Output ONLY the dialogue. No scene headings, titles, or commentary.`;
     }
   });
 
+  app.post("/api/cleanup-script", async (req: Request, res: Response) => {
+    try {
+      const { script } = req.body;
+
+      if (!script || typeof script !== "string") {
+        return res.status(400).json({ error: "Script text is required" });
+      }
+
+      if (script.length > 50000) {
+        return res.status(400).json({ error: "Script too long. Maximum 50,000 characters." });
+      }
+
+      if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+        return res.status(503).json({ error: "AI service not configured" });
+      }
+
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+
+      const systemPrompt = `You are a script formatter. Extract dialogue from the given text and output it in a clean, standard format.
+
+RULES:
+1. Identify all speaking characters and their dialogue
+2. Format each line as: CHARACTER NAME: dialogue text
+3. Character names should be in ALL CAPS
+4. Include stage directions in [brackets] when they appear before or within dialogue
+5. Remove scene headings, action descriptions, and non-dialogue text
+6. Preserve the order of dialogue as it appears
+7. If the format is unclear, make your best intelligent guess based on context
+8. Keep emotional parentheticals like (whispering), (angry), (laughing) as [stage directions]
+
+SUPPORTED INPUT FORMATS:
+- Standard screenplay: CHARACTER NAME then dialogue below
+- Colon format: CHARACTER: dialogue
+- Play format: CHARACTER. dialogue
+- Novel format: "Dialogue," said Character.
+- Chat/messenger format: Name: message
+- Any other format - extract dialogue intelligently
+
+OUTPUT ONLY the formatted dialogue lines. No explanations or commentary.
+
+Example output:
+JOHN: [excited] Did you hear the news?
+MARY: [surprised] What news?
+JOHN: We got the contract.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: script }
+        ],
+        max_tokens: 4000,
+        temperature: 0.3,
+      });
+
+      const cleanedScript = response.choices[0]?.message?.content?.trim() || "";
+      
+      if (!cleanedScript) {
+        return res.status(500).json({ error: "Failed to clean script" });
+      }
+
+      res.json({ script: cleanedScript });
+    } catch (error: any) {
+      console.error("Script cleanup error:", error.message || error);
+      res.status(500).json({ error: "Failed to clean script" });
+    }
+  });
+
   return httpServer;
 }
