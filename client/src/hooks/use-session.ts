@@ -246,6 +246,18 @@ export function useSession() {
     localStorage.removeItem(STORAGE_KEY);
   }, []);
 
+  const clearUserRole = useCallback(() => {
+    setSession(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        userRoleId: null,
+        roles: prev.roles.map(r => ({ ...r, isUserRole: false })),
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, []);
+
   const getCurrentLine = useCallback((): ScriptLine | null => {
     if (!session) return null;
     const scene = session.scenes[session.currentSceneIndex];
@@ -291,6 +303,7 @@ export function useSession() {
     createSession,
     updateSession,
     setUserRole,
+    clearUserRole,
     updateRolePreset,
     toggleBookmark,
     goToLine,

@@ -38,6 +38,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     updateRolePreset,
     createSession,
     clearSession,
+    clearUserRole,
     isLoading,
     error,
   } = useSession();
@@ -384,6 +385,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     createSession(name, rawScript);
   };
 
+  const handleBackToHome = () => {
+    ttsEngine.stop();
+    speechRecognition.abort();
+    clearUserRole();
+    onBack();
+  };
+
   const handleClearSession = () => {
     ttsEngine.stop();
     speechRecognition.abort();
@@ -423,7 +431,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         streak={stats.currentStreak}
         dailyGoal={stats.dailyGoal}
         todayLines={stats.todayLines}
-        onBack={onBack}
+        onBack={handleBackToHome}
         onFontSizeChange={setFontSize}
         onToggleDirections={() => setShowDirections(!showDirections)}
         onJumpToLine={handleJumpToLine}
