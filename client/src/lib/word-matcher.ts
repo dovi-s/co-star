@@ -31,7 +31,8 @@ export function matchWords(expectedText: string, spokenText: string): {
   const totalWords = expectedWords.length;
   const percentMatched = totalWords > 0 ? (matchedCount / totalWords) * 100 : 0;
   
-  const isComplete = percentMatched >= 60 || (totalWords <= 3 && matchedCount >= 1);
+  // Require 80% match for auto-complete, or all words for short lines
+  const isComplete = percentMatched >= 80 || (totalWords <= 3 && matchedCount >= totalWords);
   
   return {
     words,
@@ -75,7 +76,8 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
   const totalWords = expectedWords.length;
   const percentMatched = totalWords > 0 ? (matchedCount / totalWords) * 100 : 0;
   
-  const isComplete = percentMatched >= 60 || (totalWords <= 3 && matchedCount >= 1);
+  // Require 80% match for auto-complete, or all words for short lines
+  const isComplete = percentMatched >= 80 || (totalWords <= 3 && matchedCount >= totalWords);
   
   return {
     words,

@@ -111,41 +111,39 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }
       
-      // Also advance on final result even if not fully matched
+      // On final result, only auto-advance if we have a decent match (50%+)
+      // Otherwise let user keep speaking or tap Next manually
       if (result.isFinal && waitingForUserRef.current) {
-        console.log("[Rehearsal] Got final speech result, advancing");
-        waitingForUserRef.current = false;
-        
-        if (autoAdvanceTimeoutRef.current) {
-          clearTimeout(autoAdvanceTimeoutRef.current);
-          autoAdvanceTimeoutRef.current = null;
-        }
-        
-        autoAdvanceTimeoutRef.current = setTimeout(() => {
-          if (isPlayingRef.current) {
-            advanceAfterUserLine();
+        const match = line ? matchWords(line.text, result.transcript) : null;
+        if (match && match.percentMatched >= 50) {
+          console.log("[Rehearsal] Got final speech result with decent match, advancing");
+          waitingForUserRef.current = false;
+          
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+            autoAdvanceTimeoutRef.current = null;
           }
-        }, 300);
+          
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current) {
+              advanceAfterUserLine();
+            }
+          }, 600);
+        } else {
+          console.log("[Rehearsal] Final result but low match, waiting for more speech or manual advance");
+        }
       }
     });
 
     speechRecognition.onEnd(() => {
       console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
-      // Speech recognition ended - if we're still waiting for user, advance anyway
+      // Speech recognition ended - only advance if user has made some progress
+      // Otherwise they can tap Next manually or try speaking again
       if (waitingForUserRef.current && isPlayingRef.current) {
-        waitingForUserRef.current = false;
-        
-        if (autoAdvanceTimeoutRef.current) {
-          clearTimeout(autoAdvanceTimeoutRef.current);
-        }
-        
-        // Brief pause then advance
-        autoAdvanceTimeoutRef.current = setTimeout(() => {
-          if (isPlayingRef.current) {
-            console.log("[Rehearsal] Advancing after speech end");
-            advanceAfterUserLine();
-          }
-        }, 400);
+        // Don't auto-advance on speech end - let user control the pace
+        // They can tap Next when ready or speak again to resume listening
+        console.log("[Rehearsal] Speech ended, waiting for user to tap Next or speak again");
+        // Note: We're NOT auto-advancing here anymore - better user experience
       }
     });
 
