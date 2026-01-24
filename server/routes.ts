@@ -263,8 +263,8 @@ CRITICAL RULES:
 4. Characters must react to what the other person just said
 
 FORMAT:
-- 12-16 lines of dialogue
-- 2-3 characters maximum  
+- 12-20 lines of dialogue
+- Any number of characters the user requests
 - Format: CHARACTER: [emotion] Dialogue here.
 - Character names in ALL CAPS
 - Brief stage directions in [brackets] - just the emotion, keep it simple
