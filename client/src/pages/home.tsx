@@ -107,7 +107,7 @@ export function HomePage({ onSessionReady }: HomePageProps) {
         </div>
       </main>
 
-      <footer className="px-5 py-4 border-t border-border/40 safe-bottom animate-fade-in stagger-3">
+      <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom animate-fade-in stagger-3">
         <p className="text-[11px] text-muted-foreground/60 text-center">
           All data stays on your device.
         </p>
