@@ -321,26 +321,47 @@ Output ONLY the dialogue lines. No titles, headers, or explanations.`;
       });
 
       const scenarios = [
-        { setting: "hospital waiting room", conflict: "two estranged family members forced to wait together for news about a loved one" },
-        { setting: "police interrogation room", conflict: "detective questioning a suspect who may be innocent" },
-        { setting: "therapist's office", conflict: "couple in marriage counseling revealing deep resentments" },
-        { setting: "airport terminal", conflict: "ex-lovers unexpectedly meeting before one leaves the country forever" },
-        { setting: "lawyer's office", conflict: "siblings fighting over their late parent's will" },
-        { setting: "restaurant kitchen", conflict: "head chef confronting sous chef about sabotaging a dish" },
-        { setting: "high school reunion", conflict: "former bully apologizing to their victim 20 years later" },
-        { setting: "hospital room", conflict: "adult child confronting dying parent about childhood abandonment" },
-        { setting: "taxi/rideshare", conflict: "driver and passenger discovering they share a painful connection" },
-        { setting: "job interview", conflict: "candidate realizes interviewer is the person who fired them years ago" },
-        { setting: "wedding venue", conflict: "best man revealing he's in love with the groom moments before ceremony" },
-        { setting: "prison visiting room", conflict: "wrongfully convicted person meeting the witness who lied" },
-        { setting: "therapist's office", conflict: "patient revealing they've been lying about everything for months" },
-        { setting: "late night diner", conflict: "two strangers bonding over shared grief" },
-        { setting: "backstage at a theater", conflict: "understudy confronting lead actor about their toxic behavior" },
-        { setting: "corporate boardroom", conflict: "whistleblower facing the CEO they're about to expose" },
-        { setting: "park bench", conflict: "birth parent meeting the child they gave up for adoption" },
-        { setting: "empty bar at closing", conflict: "bartender talking down a regular from a terrible decision" },
-        { setting: "courtroom hallway", conflict: "victim facing their attacker before the verdict" },
-        { setting: "midnight rooftop", conflict: "two old friends, one trying to prevent the other from giving up" }
+        // INTENSE DRAMA
+        { setting: "hospital ICU waiting room, 3 AM", conflict: "estranged siblings who haven't spoken in 10 years, forced to decide whether to take their mother off life support" },
+        { setting: "police interrogation room", conflict: "detective realizes mid-interview the suspect is their own daughter using a fake identity" },
+        { setting: "prison visiting room, final visit", conflict: "wrongfully convicted man meets the witness who lied, now dying and wanting to confess" },
+        { setting: "rooftop ledge at midnight", conflict: "stranger talks down a tech billionaire who just lost everything in a scandal" },
+        { setting: "empty church after a funeral", conflict: "widow discovers from the priest that her husband had a secret second family" },
+        
+        // EMOTIONAL REVELATIONS
+        { setting: "therapist's office", conflict: "patient reveals they've been pretending to be someone else for the entire year of sessions" },
+        { setting: "airport gate, final boarding call", conflict: "person stops their ex from leaving, confessing the real reason they broke up" },
+        { setting: "hospice room", conflict: "dying parent finally tells their child the truth about their real father" },
+        { setting: "adoption agency", conflict: "birth mother meets the daughter she gave up 25 years ago, who tracked her down" },
+        { setting: "AA meeting, after hours", conflict: "sponsor confronts sponsee who they caught drinking but won't admit it" },
+        
+        // THRILLER/SUSPENSE
+        { setting: "parking garage, midnight", conflict: "hitman discovers target is their long-lost brother who faked his death" },
+        { setting: "isolated cabin during a storm", conflict: "true crime podcaster trapped with the serial killer they've been investigating" },
+        { setting: "embassy safe room", conflict: "spy must convince handler they weren't turned, with 5 minutes to live" },
+        { setting: "bank vault, mid-heist", conflict: "robber recognizes hostage as the teacher who saved their life as a kid" },
+        { setting: "witness protection apartment", conflict: "protected witness realizes their new neighbor is from the family they testified against" },
+        
+        // WORKPLACE DRAMA
+        { setting: "corporate boardroom, midnight", conflict: "CFO confronts CEO with evidence of fraud, but CEO has dirt on them too" },
+        { setting: "surgical operating room", conflict: "surgeon realizes patient on table is person who killed their child in DUI" },
+        { setting: "newsroom before broadcast", conflict: "anchor must decide whether to air story that will destroy their own family" },
+        { setting: "backstage, opening night", conflict: "legendary actor confesses to younger understudy they can't remember any lines" },
+        { setting: "restaurant kitchen during rush", conflict: "head chef discovers sous chef has been slowly poisoning a regular customer" },
+        
+        // RELATIONSHIPS
+        { setting: "divorce lawyer's office", conflict: "couple signing papers, one makes a final desperate plea" },
+        { setting: "wedding venue, 10 minutes before", conflict: "maid of honor tells bride she's been having an affair with the groom" },
+        { setting: "couple's bedroom, 4 AM", conflict: "one partner wakes the other to confess a secret they've kept for 20 years" },
+        { setting: "hotel room after class reunion", conflict: "two people who were best friends discover they each married the other's abuser" },
+        { setting: "train compartment, overnight journey", conflict: "strangers share a cabin and one recognizes the other from a traumatic shared past" },
+        
+        // QUIRKY/DARK COMEDY
+        { setting: "astronaut capsule, deep space", conflict: "two astronauts, one year into mission, one admits they lied on psych eval" },
+        { setting: "escape room, stuck for 6 hours", conflict: "exes trapped together realize they both came with new dates who left without them" },
+        { setting: "funeral home, viewing room", conflict: "two 'widows' meet at the same man's casket, neither knew about the other" },
+        { setting: "game show green room", conflict: "contestant recognizes rival as the kid who bullied them into dropping out of school" },
+        { setting: "DMV, closing time", conflict: "customer and DMV worker discover they matched on dating app and ghosted each other" }
       ];
       
       const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];

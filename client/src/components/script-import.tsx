@@ -593,7 +593,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
                 className="underline underline-offset-2 hover:text-foreground transition-colors disabled:opacity-50"
                 data-testid="button-generate-random"
               >
-                {isGenerating ? "Generating..." : "Try a sample"}
+                {isGenerating ? "Generating..." : "Generate a scene"}
               </button>
               {" "}or{" "}
               <button
