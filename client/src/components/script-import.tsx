@@ -21,6 +21,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
   const [showPromptInput, setShowPromptInput] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
   const [isCleaning, setIsCleaning] = useState(false);
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -121,9 +122,28 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [fileError, setFileError] = useState<string | null>(null);
 
+  // Extract a clean title from filename
+  const extractTitleFromFilename = (filename: string): string => {
+    // Remove extension
+    let title = filename.replace(/\.(pdf|txt|fountain|rtf|fdx)$/i, '');
+    // Replace common separators with spaces
+    title = title.replace(/[-_\.]/g, ' ');
+    // Clean up multiple spaces
+    title = title.replace(/\s+/g, ' ').trim();
+    // Title case
+    title = title.split(' ').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+    return title;
+  };
+
   const handleFileSelect = async (file: File) => {
     const fileName = file.name.toLowerCase();
     setFileError(null);
+    
+    // Store the filename for use as script title
+    const extractedTitle = extractTitleFromFilename(file.name);
+    setUploadedFileName(extractedTitle);
     
     // Handle plain text files directly
     if (file.type === "text/plain" || fileName.endsWith(".txt") || fileName.endsWith(".fountain")) {
@@ -208,7 +228,8 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
   
   const handleSubmit = () => {
     if (!script.trim()) return;
-    const sessionName = detectSceneName(script, characters);
+    // Use uploaded filename if available, otherwise detect from content
+    const sessionName = uploadedFileName || detectSceneName(script, characters);
     onImport(sessionName, script);
   };
 
@@ -271,7 +292,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
           id="script-text"
           placeholder="Paste your script here..."
           value={script}
-          onChange={(e) => setScript(e.target.value)}
+          onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
           className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50 font-mono"
           data-testid="textarea-script"
         />
