@@ -814,6 +814,25 @@ export function parseScript(rawText: string): ParsedScript {
       return true;
     }
     
+    // Lines containing third-person pronouns referring to a character are action, not dialogue
+    // e.g., "He glances down, swerves slightly", "his phone buzzes", "she walks away"
+    // Real dialogue wouldn't use "he/she/his/her" to refer to the speaker
+    if (/\b(he|she|his|her|him)\s+(is|was|looks?|walks?|runs?|turns?|moves?|stands?|sits?|glances?|watches?|pulls?|swears?|mutters?|drives?|stares?|notices?|opens?|closes?|grabs?|reaches?|picks?|puts?|gets?|sees?|hears?)\b/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines containing "his/her [noun]" pattern are usually action descriptions
+    // e.g., "his phone buzzes", "her eyes widen"
+    if (/\b(his|her)\s+(phone|eyes?|hands?|face|head|voice|back|body|arms?|legs?|feet|car|seat|breath)\b/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines mentioning character name in ALL CAPS + action verb mid-line are action
+    // e.g., "JOHN swears under his breath and pulls over"
+    if (/[A-Z]{2,}\s+(swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|turns?|enters?|exits?|stands?|sits?)\b/i.test(trimmed)) {
+      return true;
+    }
+    
     return false;
   };
 
