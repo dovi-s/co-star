@@ -385,9 +385,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
-      {/* Header row with label and help icon */}
-      <div className="flex items-center justify-between px-1">
-        <span className="text-sm text-muted-foreground">Paste your script</span>
+      {/* Format tips link */}
+      <div className="flex items-center justify-end px-1">
         <Dialog>
           <DialogTrigger asChild>
             <button
