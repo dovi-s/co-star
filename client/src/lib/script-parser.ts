@@ -52,12 +52,12 @@ const ACTION_PATTERNS = [
   /^[A-Z]+\s+(REALIZES?|WALKS?|RUNS?|LOOKS?|TURNS?|MOVES?|STANDS?|SITS?|ENTERS?|EXITS?|LEAVES?|COMES?|GOES?|TAKES?|PUTS?|GETS?|SEES?|HEARS?|FEELS?|THINKS?|KNOWS?|WANTS?|TRIES?|STARTS?|STOPS?|OPENS?|CLOSES?|PICKS?|DROPS?|HOLDS?|GRABS?|REACHES?|POINTS?|NODS?|SHAKES?|SMILES?|LAUGHS?|CRIES?|SCREAMS?|YELLS?|WHISPERS?|SIGHS?|PAUSES?|HESITATES?|CONTINUES?|BEGINS?|ENDS?|APPEARS?|DISAPPEARS?)(\s|$)/i,
   // Phrase patterns that are clearly not character names
   /^(MEANWHILE|SUDDENLY|LATER|EARLIER|OUTSIDE|INSIDE|NEARBY|ABOVE|BELOW|BEHIND|BEFORE|AFTER)/i,
-  // Preposition in middle (e.g., "PRIORITY IN THIS JOB")
-  /^[A-Z]+\s+(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH)\s+/i,
+  // Preposition anywhere (e.g., "PRIORITY IN THIS JOB", "MAN WITH GUN")
+  /\s(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH|AND|OR)\s/i,
   // Common phrases that aren't names
   /^(THE|THIS|THAT|THESE|THOSE|A|AN)\s+/i,
-  // 4+ words is likely a phrase, not a name
-  /^[A-Z]+\s+[A-Z]+\s+[A-Z]+\s+[A-Z]+/i,
+  // 3+ words is likely a phrase (real names are 1-2 words max, maybe 3 with title)
+  /^\S+\s+\S+\s+\S+/,
 ];
 
 function normalizeCharacterName(name: string): string {
@@ -102,9 +102,9 @@ function isValidCharacterName(name: string): boolean {
   // Should be mostly letters (allow spaces, hyphens, apostrophes, periods for titles)
   if (!/^[A-Z][A-Z0-9\s\-'\.#]+$/.test(normalized)) return false;
   
-  // Character names typically don't have more than 3-4 words
+  // Character names typically are 1-2 words (maybe 3 with title like "DR. JOHN SMITH")
   const wordCount = normalized.split(/\s+/).length;
-  if (wordCount > 4) return false;
+  if (wordCount > 3) return false;
   
   return true;
 }
@@ -121,9 +121,9 @@ function isStandaloneCharacterName(line: string): { isCharacter: boolean; name: 
   let coreName = trimmed.replace(EXTENSION_PATTERN, "").trim();
   coreName = coreName.replace(/\([^)]*\)\s*$/, "").trim();
   
-  // Should be short (character names are typically 1-3 words)
+  // Should be short (character names are typically 1-2 words)
   const wordCount = coreName.split(/\s+/).length;
-  if (wordCount > 4) return { isCharacter: false, name: "" };
+  if (wordCount > 3) return { isCharacter: false, name: "" };
   
   // Validate as character name
   if (!isValidCharacterName(coreName)) return { isCharacter: false, name: "" };
