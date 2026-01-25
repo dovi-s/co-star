@@ -471,6 +471,14 @@ const RESERVED_WORDS = new Set([
   "THINGS", "STUFF", "SOMETHING", "NOTHING", "EVERYTHING", "ANYTHING",
   "PRIORITY", "IMPORTANT", "NOTE", "NOTES", "COMMENT", "COMMENTS",
   "SCENE", "SCENES", "ACT", "ACTS", "PART", "PARTS", "CHAPTER", "CHAPTERS",
+  // Scene/Act numbers as words (stage plays)
+  "SCENE ONE", "SCENE TWO", "SCENE THREE", "SCENE FOUR", "SCENE FIVE",
+  "SCENE SIX", "SCENE SEVEN", "SCENE EIGHT", "SCENE NINE", "SCENE TEN",
+  "SCENE ELEVEN", "SCENE TWELVE", "ACT ONE", "ACT TWO", "ACT THREE",
+  "ACT I", "ACT II", "ACT III", "ACT IV", "ACT V",
+  // Number words (often part of scene markers)
+  "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN",
+  "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN",
   // Preposition phrases
   "IN THE", "ON THE", "AT THE", "TO THE", "FOR THE", "WITH THE",
   // Known false positives
