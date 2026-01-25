@@ -328,60 +328,57 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   if (!trimmed) return false;
   
-  // Skip clear non-dialogue patterns first
+  // === STOP PATTERNS: These definitely end dialogue ===
+  
+  // Scene headings
   if (SCENE_HEADING_REGEX.test(trimmed)) return false;
+  
+  // Transitions
   if (TRANSITION_REGEX.test(trimmed)) return false;
+  
+  // Scene numbers  
   if (isSceneNumber(trimmed)) return false;
   
-  // Skip camera/action directions
+  // Camera/action directions
   for (const pattern of CAMERA_ACTION_PATTERNS) {
     if (pattern.test(trimmed)) return false;
   }
   
-  // Skip if it looks like a new standalone character name (ALL CAPS, short)
+  // Standalone character names (ALL CAPS, short, on own line)
   if (/^[A-Z][A-Z\s\-'\.]+$/.test(trimmed) && trimmed.length < 30) {
     const wordCount = trimmed.split(/\s+/).length;
-    if (wordCount <= 3) return false; // Likely a character name
+    if (wordCount <= 3) return false;
   }
   
-  // CRITICAL: Stop dialogue when we hit third-person action descriptions
-  // These describe what characters DO, not what they SAY
-  // e.g., "He meets eyes with a woman", "She looks away", "They fall onto the bed"
-  if (/^(He|She|They|It|We|The\s+\w+)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|hits?|kicks?|throws?)/i.test(trimmed)) {
+  // Third-person action descriptions (He walks, She looks, They fall)
+  if (/^(He|She|They|It|We)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|ushers?)/i.test(trimmed)) {
     return false;
   }
   
-  // Skip lines that describe character introduction (e.g., "She is NANCY HUFF, 60.")
-  if (/^(He|She|They|It)\s+(is|are)\s+[A-Z]/i.test(trimmed)) {
+  // "The [noun] [verb]" action descriptions
+  if (/^The\s+\w+\s+(is|are|was|were|opens?|closes?|falls?|begins?|starts?)/i.test(trimmed)) {
     return false;
   }
   
-  // Skip lines with character introductions (NAME, age pattern)
+  // Character introductions (NAME, age)
   if (/[A-Z]{2,}\s+[A-Z]+,\s*\d{1,2}/.test(trimmed)) {
     return false;
   }
   
-  // Parenthetical direction (like "(sighing)")
-  if (trimmed.startsWith("(") && trimmed.endsWith(")")) return true;
+  // Page numbers (just a number or "2." at start)
+  if (/^\d+\.?\s*$/.test(trimmed)) return false;
   
-  // Starts with lowercase (definitely continuation)
-  if (/^[a-z]/.test(trimmed)) return true;
+  // MUSIC: cue lines
+  if (/^MUSIC:/i.test(trimmed)) return false;
   
-  // Original line was indented (tabs or multiple spaces)
-  if (/^[\t]|^[ ]{2,}/.test(originalLine)) return true;
-  
-  // Starts with ellipsis, dash, or punctuation (continuation)
-  if (/^[…—–\-"'.!?]/.test(trimmed)) return true;
-  
-  // Starts with quotation
-  if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
-  
-  // Check for common dialogue starters (first-person speech patterns)
-  if (/^(I\s|I'm|I've|I'll|I'd|You\s|You're|You've|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't|Let's|Let me)/i.test(trimmed)) {
-    return true;
+  // Action lines starting with proper name + verb
+  if (/^[A-Z][a-z]+\s+(is|are|was|were|and\s+[A-Z][a-z]+\s+(is|are|was|were))/i.test(trimmed)) {
+    return false;
   }
   
-  return false;
+  // === IF NONE OF THE STOP PATTERNS MATCHED, IT'S LIKELY DIALOGUE ===
+  // Dialogue can be anything that's not an action/heading/character name
+  return true;
 }
 
 export function parseScript(rawText: string): ParsedScript {
