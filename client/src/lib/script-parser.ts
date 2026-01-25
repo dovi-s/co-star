@@ -319,11 +319,61 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
   return { isCharacter: false, name: "", dialogue: "" };
 }
 
+// Detect where action/description begins within dialogue text and truncate
+// This handles cases where PDF extraction merged dialogue with following action
+function truncateAtActionStart(text: string): { dialogue: string; action: string } {
+  // Patterns that indicate transition from dialogue to action/description
+  // These patterns look for where narrative action begins mid-text
+  const actionStartPatterns = [
+    // "the [object] [verbs]" - narrative description of objects
+    /\.\s+(the\s+(?:stick|helicopter|car|door|phone|camera|screen|lights?|plane|boat|room)\s+(?:descends?|rises?|moves?|opens?|closes?|falls?|crashes?|lands?|hovers?|flies?|spins?|turns?|shakes?))/i,
+    // Lowercase sentence after period that describes action
+    /\.\s+(the\s+[a-z]+\s+[a-z]+s\s)/i,
+    // ALL CAPS action words mid-sentence (sound effects, actions)
+    /\s+(then\s+)?([A-Z]{4,}S?\s+(and\s+)?[A-Z]{4,}S?\s+to\s+the)/i,
+    // "then LURCHES", "then SLAMS" patterns  
+    /\.\.\.\s*then\s+[A-Z]{4,}/i,
+    // Character name's body part doing something (mid-text)
+    /\.\s+([A-Z][a-z]+'s\s+(?:head|eyes|face|hand|hands|body|voice)\s+(?:bobs?|turns?|moves?|drops?|rises?))/i,
+  ];
+  
+  let earliestMatch = text.length;
+  let actionPart = "";
+  
+  for (const pattern of actionStartPatterns) {
+    const match = text.match(pattern);
+    if (match && match.index !== undefined) {
+      // Find where the action actually starts (after the period/ellipsis)
+      const actionStart = match.index + (match[0].indexOf(match[1] || match[0]));
+      if (actionStart < earliestMatch && actionStart > 10) { // Ensure we keep at least some dialogue
+        earliestMatch = actionStart;
+        actionPart = text.substring(actionStart).trim();
+      }
+    }
+  }
+  
+  if (earliestMatch < text.length) {
+    return {
+      dialogue: text.substring(0, earliestMatch).trim(),
+      action: actionPart
+    };
+  }
+  
+  return { dialogue: text, action: "" };
+}
+
 function extractDirectionsFromDialogue(text: string): { cleanText: string; directions: string[] } {
   const directions: string[] = [];
   
+  // First, try to truncate at action start (PDF merge issue)
+  const { dialogue, action } = truncateAtActionStart(text);
+  let cleanText = dialogue;
+  if (action) {
+    directions.push(action);
+  }
+  
   // Extract [bracketed directions]
-  let cleanText = text.replace(DIRECTION_REGEX, (_, dir) => {
+  cleanText = cleanText.replace(DIRECTION_REGEX, (_, dir) => {
     directions.push(dir.trim());
     return "";
   });
