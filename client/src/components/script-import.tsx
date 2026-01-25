@@ -118,11 +118,50 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
     }
   };
 
+  const [isParsingFile, setIsParsingFile] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+
   const handleFileSelect = async (file: File) => {
-    if (file.type === "text/plain" || file.name.endsWith(".txt")) {
+    const fileName = file.name.toLowerCase();
+    setFileError(null);
+    
+    // Handle plain text files directly
+    if (file.type === "text/plain" || fileName.endsWith(".txt") || fileName.endsWith(".fountain")) {
       const text = await file.text();
       setScript(text);
+      return;
     }
+    
+    // For PDF and other files, send to server for parsing
+    if (fileName.endsWith(".pdf") || fileName.endsWith(".rtf") || fileName.endsWith(".fdx")) {
+      setIsParsingFile(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        const response = await fetch("/api/parse-file", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to parse file");
+        }
+        
+        const data = await response.json();
+        setScript(data.text);
+      } catch (e: any) {
+        console.error("File parse error:", e);
+        setFileError(e.message || "Failed to parse file");
+      } finally {
+        setIsParsingFile(false);
+      }
+      return;
+    }
+    
+    // Unsupported file type
+    setFileError("Please upload a PDF, TXT, or Fountain file");
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -261,11 +300,26 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background press-effect"
+              disabled={isParsingFile}
+              className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
+                isParsingFile
+                  ? "bg-primary/10 text-primary"
+                  : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
+              )}
               data-testid="button-upload-file"
             >
-              <Upload className="h-3 w-3" />
-              Upload
+              {isParsingFile ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-3 w-3" />
+                  Upload
+                </>
+              )}
             </button>
           </div>
         )}
@@ -287,11 +341,12 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
       <input
         ref={fileInputRef}
         type="file"
-        accept=".txt,text/plain"
+        accept=".txt,.pdf,.fountain,.fdx,.rtf,text/plain,application/pdf"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
+          e.target.value = ""; // Reset so same file can be selected again
         }}
       />
 
@@ -350,9 +405,9 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
         </p>
       )}
 
-      {error && (
+      {(error || fileError) && (
         <div className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm" data-testid="text-error">
-          {error}
+          {error || fileError}
         </div>
       )}
 

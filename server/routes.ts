@@ -3,6 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
+import multer from "multer";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdf = require("pdf-parse");
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -465,6 +469,83 @@ JOHN: We got the contract.`;
     } catch (error: any) {
       console.error("Script cleanup error:", error.message || error);
       res.status(500).json({ error: "Failed to clean script" });
+    }
+  });
+
+  // File upload for PDF/TXT parsing
+  const upload = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  });
+
+  app.post("/api/parse-file", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const file = req.file;
+      const mimeType = file.mimetype;
+      const fileName = file.originalname.toLowerCase();
+      let text = "";
+
+      // Handle different file types
+      if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
+        // Parse PDF
+        try {
+          const data = await pdf(file.buffer);
+          text = data.text;
+        } catch (pdfError) {
+          console.error("PDF parse error:", pdfError);
+          return res.status(400).json({ error: "Failed to parse PDF file" });
+        }
+      } else if (
+        mimeType === "text/plain" || 
+        fileName.endsWith(".txt") ||
+        fileName.endsWith(".fountain") ||
+        fileName.endsWith(".fdx")
+      ) {
+        // Plain text or screenplay formats
+        text = file.buffer.toString("utf-8");
+      } else if (
+        mimeType === "application/rtf" || 
+        fileName.endsWith(".rtf")
+      ) {
+        // RTF - extract plain text (basic)
+        text = file.buffer.toString("utf-8")
+          .replace(/\\[a-z]+\d*\s?/gi, "") // Remove RTF control words
+          .replace(/[{}]/g, "") // Remove braces
+          .replace(/\\\\/g, "\\")
+          .replace(/\\'/g, "'");
+      } else if (
+        mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+        fileName.endsWith(".docx")
+      ) {
+        // DOCX - we'd need mammoth or similar, for now suggest PDF
+        return res.status(400).json({ 
+          error: "DOCX files not yet supported. Please save as PDF or TXT and try again." 
+        });
+      } else {
+        return res.status(400).json({ 
+          error: "Unsupported file type. Please upload a PDF, TXT, or Fountain file." 
+        });
+      }
+
+      // Clean up the extracted text
+      text = text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\n{4,}/g, "\n\n\n") // Max 3 newlines
+        .trim();
+
+      if (!text || text.length < 10) {
+        return res.status(400).json({ error: "Could not extract text from file" });
+      }
+
+      res.json({ text, fileName: file.originalname });
+    } catch (error: any) {
+      console.error("File parse error:", error.message || error);
+      res.status(500).json({ error: "Failed to parse file" });
     }
   });
 
