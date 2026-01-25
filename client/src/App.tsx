@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,11 +8,11 @@ import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
 
 type View = "home" | "rehearsal";
+type CurtainState = "idle" | "closing" | "opening";
 
 function App() {
   const [view, setView] = useState<View>(() => {
     if (typeof window !== "undefined") {
-      // Check sessionStorage (not localStorage) for session state
       const stored = sessionStorage.getItem("castmate-session");
       if (stored) {
         try {
@@ -26,18 +26,48 @@ function App() {
     return "home";
   });
 
+  const [curtainState, setCurtainState] = useState<CurtainState>("idle");
+  const pendingViewRef = useRef<View | null>(null);
+
+  const transitionTo = useCallback((newView: View) => {
+    if (curtainState !== "idle") return;
+    
+    pendingViewRef.current = newView;
+    setCurtainState("closing");
+    
+    // After curtains close, switch view and open
+    setTimeout(() => {
+      setView(newView);
+      setCurtainState("opening");
+      
+      // After curtains open, reset state
+      setTimeout(() => {
+        setCurtainState("idle");
+        pendingViewRef.current = null;
+      }, 350);
+    }, 280);
+  }, [curtainState]);
+
   const handleSessionReady = useCallback(() => {
-    setView("rehearsal");
-  }, []);
+    transitionTo("rehearsal");
+  }, [transitionTo]);
 
   const handleBackToHome = useCallback(() => {
-    setView("home");
-  }, []);
+    transitionTo("home");
+  }, [transitionTo]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
+          {/* Curtain overlay */}
+          {curtainState !== "idle" && (
+            <div className={`curtain-overlay ${curtainState === "closing" ? "curtain-closing" : "curtain-opening"}`}>
+              <div className="curtain-left" />
+              <div className="curtain-right" />
+            </div>
+          )}
+          
           <div className="min-h-screen bg-background text-foreground">
             {view === "home" ? (
               <HomePage onSessionReady={handleSessionReady} />
