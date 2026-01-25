@@ -784,6 +784,32 @@ function isValidCharacterName(name: string): boolean {
   return true;
 }
 
+// Check if a line LOOKS like a character name (all caps, short) even if invalid
+// Used to detect when we should flush pending dialogue
+function looksLikeCharacterName(line: string): boolean {
+  const trimmed = line.trim();
+  if (trimmed.length < 2 || trimmed.length > 40) return false;
+  
+  // Remove extensions
+  let coreName = trimmed.replace(EXTENSION_PATTERN, "").trim();
+  coreName = coreName.replace(/\([^)]*\)\s*$/, "").trim();
+  
+  if (!coreName || coreName.length < 2) return false;
+  
+  // Check caps ratio
+  const letters = coreName.match(/[A-Za-z]/g) || [];
+  const upperLetters = coreName.match(/[A-Z]/g) || [];
+  if (letters.length === 0) return false;
+  const capsRatio = upperLetters.length / letters.length;
+  if (capsRatio < 0.7) return false;
+  
+  // Should be short
+  const wordCount = coreName.split(/\s+/).length;
+  if (wordCount > 3) return false;
+  
+  return true;
+}
+
 // Check if a line is JUST a character name (professional screenplay format)
 function isStandaloneCharacterName(line: string): { isCharacter: boolean; name: string } {
   const trimmed = line.trim();
@@ -1437,6 +1463,12 @@ export function parseScript(rawText: string): ParsedScript {
         if (standaloneCheck.isCharacter) {
           flushPendingDialogue();
           pendingCharacter = standaloneCheck.name;
+          pendingDialogue = [];
+        } else if (looksLikeCharacterName(trimmed)) {
+          // Looks like character name but failed validation (e.g., "SCENE TWENTY")
+          // Flush and clear pending - don't attribute next lines to previous character
+          flushPendingDialogue();
+          pendingCharacter = null;
           pendingDialogue = [];
         } else {
           // Might be dialogue if we have an empty pending dialogue (character on prev line)
