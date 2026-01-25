@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Settings2, Plus, Minus, Eye, EyeOff, List, Bookmark, Type } from "lucide-react";
+import { useState, useMemo, useRef, useEffect } from "react";
+import { Settings2, Plus, Minus, Eye, EyeOff, List, Bookmark, Type, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,7 +39,33 @@ export function ReaderMenu({
   onJumpToLine,
 }: ReaderMenuProps) {
   const [jumpDialogOpen, setJumpDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const currentScene = scenes[currentSceneIndex];
+
+  // Focus search input when dialog opens
+  useEffect(() => {
+    if (jumpDialogOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 100);
+    } else {
+      setSearchQuery(""); // Clear search when closing
+    }
+  }, [jumpDialogOpen]);
+
+  // Filter lines based on search
+  const filteredLines = useMemo(() => {
+    if (!currentScene?.lines) return [];
+    if (!searchQuery.trim()) {
+      return currentScene.lines.map((line, index) => ({ line, index }));
+    }
+    const query = searchQuery.toLowerCase();
+    return currentScene.lines
+      .map((line, index) => ({ line, index }))
+      .filter(({ line }) => 
+        line.text.toLowerCase().includes(query) ||
+        line.roleName.toLowerCase().includes(query)
+      );
+  }, [currentScene?.lines, searchQuery]);
 
   const bookmarkedLines = currentScene?.lines
     .map((line, index) => ({ line, index }))
@@ -150,35 +176,65 @@ export function ReaderMenu({
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">Jump to Line</DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4 custom-scrollbar">
+          
+          {/* Search input */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search lines..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 pl-9 pr-9 rounded-lg bg-muted/50 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              data-testid="input-search-lines"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                data-testid="button-clear-search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          
+          <ScrollArea className="max-h-[55vh] pr-4 custom-scrollbar">
             <div className="space-y-1">
-              {currentScene?.lines.map((line, index) => (
-                <button
-                  key={line.id}
-                  onClick={() => {
-                    onJumpToLine(index);
-                    setJumpDialogOpen(false);
-                  }}
-                  className={cn(
-                    "w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200",
-                    "hover:bg-muted flex items-start gap-3"
-                  )}
-                  data-testid={`jump-line-${index}`}
-                >
-                  <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0 w-7 h-7 rounded-lg bg-muted flex items-center justify-center font-medium">
-                    {index + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-semibold text-accent">{line.roleName}</span>
-                    <p className="text-muted-foreground mt-0.5 line-clamp-2">
-                      {line.text}
-                    </p>
-                  </div>
-                  {line.isBookmarked && (
-                    <Bookmark className="h-4 w-4 text-accent flex-shrink-0 mt-1" />
-                  )}
-                </button>
-              ))}
+              {filteredLines.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-8">
+                  No lines match your search
+                </p>
+              ) : (
+                filteredLines.map(({ line, index }) => (
+                  <button
+                    key={line.id}
+                    onClick={() => {
+                      onJumpToLine(index);
+                      setJumpDialogOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200",
+                      "hover:bg-muted flex items-start gap-3"
+                    )}
+                    data-testid={`jump-line-${index}`}
+                  >
+                    <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0 w-7 h-7 rounded-lg bg-muted flex items-center justify-center font-medium">
+                      {index + 1}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-semibold text-accent">{line.roleName}</span>
+                      <p className="text-muted-foreground mt-0.5 line-clamp-2">
+                        {line.text}
+                      </p>
+                    </div>
+                    {line.isBookmarked && (
+                      <Bookmark className="h-4 w-4 text-accent flex-shrink-0 mt-1" />
+                    )}
+                  </button>
+                ))
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
