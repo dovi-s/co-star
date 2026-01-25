@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { Session, Role, ScriptLine, UpdateSession, BookmarkUpdate, RoleUpdate, MemorizationMode } from "@shared/schema";
+import type { Session, Role, Scene, ScriptLine, UpdateSession, BookmarkUpdate, RoleUpdate, MemorizationMode } from "@shared/schema";
 import { parseScript } from "@/lib/script-parser";
 
 function generateId(): string {
@@ -141,6 +141,52 @@ export function useSession() {
       return newSession;
     } catch (e) {
       setError("Failed to parse script. Please check the format.");
+      setIsLoading(false);
+      return null;
+    }
+  }, []);
+
+  // Create session from pre-parsed data (from server-side parsing)
+  const createSessionFromParsed = useCallback((name: string, parsed: { roles: Role[], scenes: Scene[] }) => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      console.log('[Session] Creating from server-parsed data:', {
+        roles: parsed.roles.map(r => `${r.name}(${r.lineCount})`),
+        scenes: parsed.scenes.length,
+        totalLines: parsed.scenes.reduce((s, sc) => s + sc.lines.length, 0)
+      });
+      
+      if (parsed.roles.length === 0) {
+        setError("No roles detected. Make sure your script uses 'CHARACTER: dialogue' format.");
+        setIsLoading(false);
+        return null;
+      }
+
+      const now = new Date().toISOString();
+      const newSession: Session = {
+        id: generateId(),
+        name,
+        roles: parsed.roles,
+        scenes: parsed.scenes,
+        userRoleId: null,
+        currentLineIndex: 0,
+        currentSceneIndex: 0,
+        isPlaying: false,
+        ambientEnabled: false,
+        memorizationMode: "off",
+        runsCompleted: 0,
+        linesRehearsed: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      setSession(newSession);
+      setIsLoading(false);
+      return newSession;
+    } catch (e) {
+      setError("Failed to create session from parsed data.");
       setIsLoading(false);
       return null;
     }
@@ -393,6 +439,7 @@ export function useSession() {
     isLoading,
     error,
     createSession,
+    createSessionFromParsed,
     updateSession,
     setUserRole,
     clearUserRole,

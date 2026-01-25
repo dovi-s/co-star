@@ -12,7 +12,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ onSessionReady }: HomePageProps) {
-  const { session, createSession, setUserRole, isLoading, error } = useSession();
+  const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error } = useSession();
   const [step, setStep] = useState<Step>(() => {
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem("castmate-session");
@@ -36,6 +36,13 @@ export function HomePage({ onSessionReady }: HomePageProps) {
 
   const handleImport = (name: string, rawScript: string) => {
     const newSession = createSession(name, rawScript);
+    if (newSession) {
+      setStep("role-select");
+    }
+  };
+
+  const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }) => {
+    const newSession = createSessionFromParsed(name, parsed);
     if (newSession) {
       setStep("role-select");
     }
@@ -80,7 +87,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
 
         <div className="flex-1 px-4 pb-6">
           <ScriptImport 
-            onImport={handleImport} 
+            onImport={handleImport}
+            onImportParsed={handleImportParsed}
             isLoading={isLoading} 
             error={error}
             initialScript={session?.scenes.map(s => 

@@ -5,14 +5,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+interface ParsedScript {
+  roles: any[];
+  scenes: any[];
+}
+
 interface ScriptImportProps {
   onImport: (name: string, rawScript: string) => void;
+  onImportParsed?: (name: string, parsed: ParsedScript) => void;
   isLoading?: boolean;
   error?: string | null;
   initialScript?: string;
 }
 
-export function ScriptImport({ onImport, isLoading, error, initialScript = "" }: ScriptImportProps) {
+export function ScriptImport({ onImport, onImportParsed, isLoading, error, initialScript = "" }: ScriptImportProps) {
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
@@ -137,9 +143,12 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
     return title;
   };
 
+  const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
+
   const handleFileSelect = async (file: File) => {
     const fileName = file.name.toLowerCase();
     setFileError(null);
+    setServerParsedData(null);
     
     // Store the filename for use as script title
     const extractedTitle = extractTitleFromFilename(file.name);
@@ -152,8 +161,47 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
       return;
     }
     
-    // For PDF and other files, send to server for parsing
-    if (fileName.endsWith(".pdf") || fileName.endsWith(".rtf") || fileName.endsWith(".fdx")) {
+    // For PDF files, use server-side parsing to avoid data truncation
+    if (fileName.endsWith(".pdf")) {
+      setIsParsingFile(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        // Use the new endpoint that returns parsed data directly
+        const response = await fetch("/api/parse-file-to-session", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to parse file");
+        }
+        
+        const data = await response.json();
+        console.log('[PDF Import] Server parsed:', {
+          roles: data.parsed.roles.length,
+          scenes: data.parsed.scenes.length,
+          totalLines: data.parsed.scenes.reduce((s: number, sc: any) => s + sc.lines.length, 0)
+        });
+        
+        // Store the parsed data - we'll use it directly when starting rehearsal
+        setServerParsedData(data.parsed);
+        // Show a preview in the text area
+        const preview = data.parsed.roles.map((r: any) => `${r.name} (${r.lineCount} lines)`).join('\n');
+        setScript(`[Parsed ${data.parsed.scenes.length} scenes with ${data.parsed.roles.length} characters]\n\n${preview}`);
+      } catch (e: any) {
+        console.error("File parse error:", e);
+        setFileError(e.message || "Failed to parse file");
+      } finally {
+        setIsParsingFile(false);
+      }
+      return;
+    }
+    
+    // For other files (RTF, FDX), use original endpoint
+    if (fileName.endsWith(".rtf") || fileName.endsWith(".fdx")) {
       setIsParsingFile(true);
       try {
         const formData = new FormData();
@@ -230,7 +278,15 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
     if (!script.trim()) return;
     // Use uploaded filename if available, otherwise detect from content
     const sessionName = uploadedFileName || detectSceneName(script, characters);
-    onImport(sessionName, script);
+    
+    // If we have server-parsed data (from PDF), use it directly
+    if (serverParsedData && onImportParsed) {
+      console.log('[Import] Using server-parsed data');
+      onImportParsed(sessionName, serverParsedData);
+    } else {
+      // Otherwise parse on client
+      onImport(sessionName, script);
+    }
   };
 
   const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning;

@@ -5,6 +5,7 @@ import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
+import { parseScript } from "./script-parser";
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -604,6 +605,115 @@ JOHN: We got the contract.`;
       res.json({ text, fileName: file.originalname });
     } catch (error: any) {
       console.error("File parse error:", error.message || error);
+      res.status(500).json({ error: "Failed to parse file" });
+    }
+  });
+
+  // New endpoint: Parse file and return parsed script (not raw text)
+  // This avoids data transfer limits for very long scripts
+  app.post("/api/parse-file-to-session", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const file = req.file;
+      const mimeType = file.mimetype;
+      const fileName = file.originalname.toLowerCase();
+      let text = "";
+
+      // Handle different file types - same as /api/parse-file
+      if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
+        try {
+          const data = new Uint8Array(file.buffer);
+          console.log(`[PDF->Session] Parsing ${file.originalname}, size: ${data.length} bytes`);
+          const pdf = await pdfjsLib.getDocument({ data }).promise;
+          console.log(`[PDF->Session] Document loaded, ${pdf.numPages} pages`);
+          const textParts: string[] = [];
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const items = content.items as any[];
+            if (items.length === 0) continue;
+            
+            const lines: { y: number; items: any[] }[] = [];
+            const yThreshold = 5;
+            
+            for (const item of items) {
+              if (!item.str || item.str.trim() === '') continue;
+              const y = item.transform?.[5] || 0;
+              let line = lines.find(l => Math.abs(l.y - y) < yThreshold);
+              if (!line) {
+                line = { y, items: [] };
+                lines.push(line);
+              }
+              line.items.push(item);
+            }
+            
+            lines.sort((a, b) => b.y - a.y);
+            for (const line of lines) {
+              line.items.sort((a: any, b: any) => 
+                (a.transform?.[4] || 0) - (b.transform?.[4] || 0)
+              );
+            }
+            
+            const pageLines = lines.map(line => 
+              line.items.map((item: any) => item.str).join(' ')
+            );
+            textParts.push(pageLines.join('\n'));
+          }
+          
+          text = textParts.join('\n\n');
+          console.log(`[PDF->Session] Extracted ${text.length} characters`);
+        } catch (pdfError) {
+          console.error("PDF parse error:", pdfError);
+          return res.status(400).json({ error: "Failed to parse PDF file" });
+        }
+      } else if (
+        mimeType === "text/plain" || 
+        fileName.endsWith(".txt") ||
+        fileName.endsWith(".fountain") ||
+        fileName.endsWith(".fdx")
+      ) {
+        text = file.buffer.toString("utf-8");
+      } else {
+        return res.status(400).json({ 
+          error: "Unsupported file type. Please upload a PDF, TXT, or Fountain file." 
+        });
+      }
+
+      text = text
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\n{4,}/g, "\n\n\n")
+        .trim();
+
+      if (!text || text.length < 10) {
+        return res.status(400).json({ error: "Could not extract text from file" });
+      }
+
+      // Parse the script on the server
+      console.log(`[PDF->Session] Parsing script...`);
+      const parsed = parseScript(text);
+      console.log(`[PDF->Session] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
+      
+      const totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      console.log(`[PDF->Session] Total dialogue lines: ${totalLines}`);
+
+      if (parsed.roles.length === 0) {
+        return res.status(400).json({ 
+          error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
+        });
+      }
+
+      // Return the parsed result (much smaller than raw text)
+      res.json({ 
+        parsed,
+        fileName: file.originalname 
+      });
+    } catch (error: any) {
+      console.error("File parse to session error:", error.message || error);
       res.status(500).json({ error: "Failed to parse file" });
     }
   });
