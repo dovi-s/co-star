@@ -103,6 +103,11 @@ const NOT_CHARACTER_PATTERNS = [
   /^(First|Second|Third|Final)$/i,
   /^(Draft|Revision|Revised)$/i,
   /^(Blue|Pink|White|Yellow|Green)$/i,
+  // "I [VERB]" patterns - dialogue fragments, not names
+  /^I\s+(THOUGHT|THINK|KNOW|KNEW|WANT|WANTED|NEED|NEEDED|SAID|SAY|SEE|SAW|FEEL|FELT|HEARD|HEAR|WISH|HOPE|BELIEVE|BELIEVED|WONDER|WONDERED|GUESS|GUESSED|MEAN|MEANT|REMEMBER|FORGOT|UNDERSTAND|UNDERSTOOD|LOVE|LOVED|HATE|HATED|LIKE|LIKED|AM|WAS|WILL|WOULD|CAN|COULD|SHOULD|MUST|HAVE|HAD|DO|DID|DONT|DIDNT|CANT|COULDNT|WONT|WOULDNT)$/i,
+  // Common dialogue starters that aren't names
+  /^(WHAT|WHY|HOW|WHEN|WHERE|WHO|WHICH|WHOSE)$/i,
+  /^(YES|NO|YEAH|NAH|OKAY|OK|SURE|FINE|WELL|RIGHT|LOOK|LISTEN|HEY|HI|HELLO|BYE|GOODBYE)$/i,
 ];
 
 // Clean a line by removing scene numbers from margins and revision marks
