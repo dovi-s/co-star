@@ -558,11 +558,33 @@ function preprocessScript(rawText: string): string {
   
   // Fix character name running directly into dialogue without space
   // e.g., "JORDANWhat do you mean" -> "JORDAN\nWhat do you mean"
-  text = text.replace(/([A-Z]{2,}(?:\s+[A-Z]{2,})?)([A-Z][a-z])/g, '$1\n$2');
+  // Also handles names like "McCALLISTER" with mixed case
+  text = text.replace(/([A-Z]{2,}(?:\s+(?:[A-Z]{2,}|Mc[A-Z][a-z]+))?)([A-Z][a-z])/g, '$1\n$2');
   
   // Split on character names that appear mid-line (common in PDF extraction)
   // e.g., "...the best. GENE HACKMAN Trained professionals" -> "...the best.\nGENE HACKMAN\nTrained professionals"
-  text = text.replace(/([.!?])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([A-Z.\s]+\))?)\s+([A-Z][a-z])/g, '$1\n$2\n$3');
+  // Handle names with optional extensions (V.O., CONT'D, etc.)
+  text = text.replace(/([.!?])\s+([A-Z]{2,}(?:\s+(?:[A-Z]{2,}|Mc[A-Z][a-z]+))?(?:\s*\([A-Z.\s']+\))?)\s+([A-Z][a-z])/g, '$1\n$2\n$3');
+  
+  // Split when lowercase dialogue ends and all-caps name starts directly
+  // e.g., "...phone. KEVIN McCALLISTER enters." -> "...phone.\nKEVIN McCALLISTER enters."
+  text = text.replace(/([a-z][.!?])\s*([A-Z]{2,}(?:\s+(?:[A-Z]{2,}|Mc[A-Z][a-z]+))+)\s+(enters|exits|walks|runs|looks|turns|appears|leaves|crosses|stands|sits|moves|comes|goes)/gi, 
+    '$1\n$2 $3');
+  
+  // Split when we see "He's/She's" after a sentence (indicates action line)
+  // e.g., "...on the phone. He's seven." -> "...on the phone.\nHe's seven."
+  text = text.replace(/([.!?])\s+(He's|She's|It's|They're)\s+/gi, '$1\n$2 ');
+  
+  // Split consecutive character names (e.g., "CLAUDETTEHave...COUNSELORCLAUDETTE")
+  // Look for ALLCAPS name followed by another ALLCAPS name
+  text = text.replace(/([A-Z]{2,}(?:\s+[A-Z]{2,})?)\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)\s+([a-z])/g, 
+    (match, name1, name2, startLower) => {
+      // name2 might be action like "leaves" or another character
+      if (/^(enters|exits|walks|runs|looks|turns|appears|leaves|crosses|stands|sits|moves|comes|goes)$/i.test(name2)) {
+        return match; // Keep as is - it's action
+      }
+      return `${name1}\n${name2}\n${startLower}`;
+    });
   
   return text;
 }
