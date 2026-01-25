@@ -35,6 +35,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
   const [customPrompt, setCustomPrompt] = useState("");
   const [isCleaning, setIsCleaning] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
+  const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -46,6 +47,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
 
   const generateRandomScript = async () => {
     setIsGenerating(true);
+    // Clear any stale data from previous PDF uploads
+    setServerParsedData(null);
+    setUploadedFileName(null);
     try {
       const response = await fetch("/api/generate-random-script", {
         method: "POST",
@@ -67,6 +71,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     if (!customPrompt.trim()) return;
     
     setIsGenerating(true);
+    // Clear any stale data from previous PDF uploads
+    setServerParsedData(null);
+    setUploadedFileName(null);
     try {
       const response = await fetch("/api/generate-script", {
         method: "POST",
@@ -149,8 +156,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     ).join(' ');
     return title;
   };
-
-  const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
 
   const handleFileSelect = async (file: File) => {
     const fileName = file.name.toLowerCase();
