@@ -322,6 +322,15 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\s*SCENES?\s+\d+(-\d+)?[A-Z]?\s*OMITTED\s*/gi, ' ');
   cleaned = cleaned.replace(/\s*OMITTED\s*/gi, ' ');
   
+  // Remove embedded character names with extensions mid-text
+  // e.g., "...please? JOHN passes his" or "OFFICER HUDSON (CONT'D) Have you"
+  // These are other character lines that got merged in
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}(?:\s+[A-Z]{2,})?\s*\([^)]*\)\s+[A-Z][a-z]/g, ' ');
+  
+  // Remove "NAME action verb phrase" patterns (action lines mixed in)
+  // e.g., "JOHN passes his documents out to the Officer."
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves|hands|reaches|pulls|pushes|throws|catches|nods|shakes|smiles|laughs|points)[^.!?]*[.!?]/gi, '. ');
+  
   // Replace bullet characters with proper ellipsis
   cleaned = cleaned.replace(/•{2,}/g, '...'); // Multiple bullets -> ellipsis
   cleaned = cleaned.replace(/•/g, '.'); // Single bullet -> period
@@ -340,6 +349,14 @@ function cleanDialogueText(text: string): string {
   
   // Fix spacing issues
   cleaned = cleaned.replace(/\s{2,}/g, ' '); // Multiple spaces
+  
+  // Fix merged character names at start: "HUDSONGood evening" -> "Good evening"
+  // This removes the accidentally merged character name from dialogue
+  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*/, '');
+  
+  // Also clean trailing character name patterns
+  // e.g., "...please? OFFICER HUDSON" at end
+  cleaned = cleaned.replace(/[.!?]\s*[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*$/g, '. ');
   
   return cleaned.trim();
 }

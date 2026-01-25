@@ -318,6 +318,30 @@ function cleanScriptLine(line: string): string {
 }
 
 // Clean dialogue text to remove OCR artifacts and production notes
+// Detect merged lines from PDF extraction and split them
+// e.g., "OFFICER HUDSONGood evening" -> ["OFFICER HUDSON", "Good evening"]
+function splitMergedLines(text: string): string[] {
+  // Pattern: ALL CAPS word immediately followed by mixed/lowercase word
+  // This indicates a line break was lost: "HUDSONGood" should be "HUDSON" + newline + "Good"
+  
+  // First, add space where uppercase character name runs into lowercase dialogue
+  // Match: 2+ uppercase letters followed immediately by uppercase+lowercase (start of word)
+  let fixed = text.replace(/([A-Z]{2,})([A-Z][a-z])/g, '$1 $2');
+  
+  // Split on character names with extensions that appear mid-text
+  // Pattern: [ALLCAPS NAME] or [NAME (CONT'D)] appearing after punctuation or lowercase
+  const charNameMidText = /([.!?]\s*)([A-Z][A-Z\s]+(?:\s*\([^)]+\))?)\s+([A-Z][a-z])/g;
+  fixed = fixed.replace(charNameMidText, '$1\n$2\n$3');
+  
+  // Also handle action lines embedded in dialogue
+  // Pattern: after punctuation, NAME + action verb (passes, walks, looks, etc.)
+  const actionMidText = /([.!?]\s*)([A-Z][A-Z]+)\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves)/gi;
+  fixed = fixed.replace(actionMidText, '$1\n[$2 $3');
+  
+  // Return as array of lines
+  return fixed.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+}
+
 function cleanDialogueText(text: string): string {
   let cleaned = text;
   
@@ -325,6 +349,15 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\s*\d+[A-Z]?\s*OMITTED\s*/gi, ' ');
   cleaned = cleaned.replace(/\s*SCENES?\s+\d+(-\d+)?[A-Z]?\s*OMITTED\s*/gi, ' ');
   cleaned = cleaned.replace(/\s*OMITTED\s*/gi, ' ');
+  
+  // Remove embedded character names with extensions mid-text
+  // e.g., "...please? JOHN passes his" or "OFFICER HUDSON (CONT'D) Have you"
+  // These are other character lines that got merged in
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}(?:\s+[A-Z]{2,})?\s*\([^)]*\)\s+[A-Z][a-z]/g, ' ');
+  
+  // Remove "NAME action verb phrase" patterns (action lines mixed in)
+  // e.g., "JOHN passes his documents out to the Officer."
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves|hands|reaches|pulls|pushes|throws|catches|nods|shakes|smiles|laughs|points)[^.!?]*[.!?]/gi, '. ');
   
   // Replace bullet characters with proper ellipsis
   cleaned = cleaned.replace(/•{2,}/g, '...'); // Multiple bullets -> ellipsis
@@ -344,6 +377,14 @@ function cleanDialogueText(text: string): string {
   
   // Fix spacing issues
   cleaned = cleaned.replace(/\s{2,}/g, ' '); // Multiple spaces
+  
+  // Fix merged character names at start: "HUDSONGood evening" -> "Good evening"
+  // This removes the accidentally merged character name from dialogue
+  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*/, '');
+  
+  // Also clean trailing character name patterns
+  // e.g., "...please? OFFICER HUDSON" at end
+  cleaned = cleaned.replace(/[.!?]\s*[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*$/g, '. ');
   
   return cleaned.trim();
 }
