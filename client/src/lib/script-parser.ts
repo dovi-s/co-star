@@ -468,13 +468,6 @@ export function parseScript(rawText: string): ParsedScript {
       continue;
     }
     
-    // Skip action description lines (third-person narrative)
-    // These describe what's happening, not dialogue
-    if (isActionDescriptionLine(trimmed)) {
-      flushPendingDialogue();
-      continue;
-    }
-    
     // Check for inline character: dialogue format
     const characterCheck = isLikelyCharacterLine(trimmed);
     
