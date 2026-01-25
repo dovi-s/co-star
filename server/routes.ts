@@ -597,10 +597,10 @@ JOHN: We got the contract.`;
         // Check if it was a PDF with no text (likely scanned/image-based)
         if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
           return res.status(400).json({ 
-            error: "This PDF appears to be scanned or image-based. Please use a text-based PDF, or copy and paste the script text directly." 
+            error: "This PDF is scanned or image-based. Try opening it in a PDF reader, select all text (Cmd/Ctrl+A), copy (Cmd/Ctrl+C), and paste it here." 
           });
         }
-        return res.status(400).json({ error: "Could not extract text from file" });
+        return res.status(400).json({ error: "Could not extract text from file. Try copying and pasting the script text directly." });
       }
 
       res.json({ text, fileName: file.originalname });
@@ -745,7 +745,7 @@ JOHN: We got the contract.`;
         // Check if it was a PDF with no text (likely scanned/image-based)
         if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
           return res.status(400).json({ 
-            error: "This PDF appears to be scanned or image-based. Please use a text-based PDF, or copy and paste the script text directly." 
+            error: "This PDF is scanned or image-based. Try opening it in a PDF reader, select all text (Cmd/Ctrl+A), copy (Cmd/Ctrl+C), and paste it here." 
           });
         }
         return res.status(400).json({ error: "Could not extract text from file. Try copying and pasting the script text directly." });
