@@ -6,9 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
+import { cn } from "@/lib/utils";
 
 type View = "home" | "rehearsal";
-type CurtainState = "idle" | "closing" | "opening";
 
 function App() {
   const [view, setView] = useState<View>(() => {
@@ -26,27 +26,28 @@ function App() {
     return "home";
   });
 
-  const [curtainState, setCurtainState] = useState<CurtainState>("idle");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showContent, setShowContent] = useState(true);
   const pendingViewRef = useRef<View | null>(null);
 
   const transitionTo = useCallback((newView: View) => {
-    if (curtainState !== "idle") return;
+    if (isTransitioning) return;
     
     pendingViewRef.current = newView;
-    setCurtainState("closing");
+    setIsTransitioning(true);
+    setShowContent(false);
     
-    // After curtains close, switch view and open
+    // Quick fade out, then switch and fade in
     setTimeout(() => {
       setView(newView);
-      setCurtainState("opening");
+      setShowContent(true);
       
-      // After curtains open, reset state
       setTimeout(() => {
-        setCurtainState("idle");
+        setIsTransitioning(false);
         pendingViewRef.current = null;
-      }, 350);
-    }, 280);
-  }, [curtainState]);
+      }, 200);
+    }, 150);
+  }, [isTransitioning]);
 
   const handleSessionReady = useCallback(() => {
     transitionTo("rehearsal");
@@ -60,15 +61,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          {/* Curtain overlay */}
-          {curtainState !== "idle" && (
-            <div className={`curtain-overlay ${curtainState === "closing" ? "curtain-closing" : "curtain-opening"}`}>
-              <div className="curtain-left" />
-              <div className="curtain-right" />
-            </div>
-          )}
-          
-          <div className="min-h-screen bg-background text-foreground">
+          <div className={cn(
+            "min-h-screen bg-background text-foreground transition-all duration-200",
+            showContent ? "opacity-100 scale-100" : "opacity-0 scale-[0.99]"
+          )}>
             {view === "home" ? (
               <HomePage onSessionReady={handleSessionReady} />
             ) : (
