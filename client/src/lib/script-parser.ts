@@ -35,8 +35,26 @@ const RESERVED_WORDS = new Set([
   "FADE", "CUT", "DISSOLVE", "SMASH", "MATCH", "JUMP", "THE END",
   "CONTINUED", "MORE", "ANGLE ON", "CLOSE ON", "WIDE ON", "INSERT",
   "POV", "SUPER", "TITLE", "SUBTITLE", "CHYRON", "MONTAGE", "SERIES OF SHOTS",
-  "BEGIN", "END", "BACK TO", "INTERCUT", "SPLIT SCREEN"
+  "BEGIN", "END", "BACK TO", "INTERCUT", "SPLIT SCREEN",
+  // Common scene direction starters
+  "CUT TO", "FADE TO", "SMASH CUT", "JUMP CUT", "MATCH CUT", "DISSOLVE TO",
+  // Generic words that aren't names
+  "THINGS", "STUFF", "SOMETHING", "NOTHING", "EVERYTHING", "ANYTHING",
+  "PRIORITY", "IMPORTANT", "NOTE", "NOTES", "COMMENT", "COMMENTS",
+  "SCENE", "SCENES", "ACT", "ACTS", "PART", "PARTS", "CHAPTER", "CHAPTERS",
+  // Preposition phrases
+  "IN THE", "ON THE", "AT THE", "TO THE", "FOR THE", "WITH THE",
 ]);
+
+// Patterns that indicate action/direction lines, not character dialogue
+const ACTION_PATTERNS = [
+  // Character name + verb pattern (e.g., "JORDAN REALIZES", "SARAH WALKS")
+  /^[A-Z]+\s+(REALIZES?|WALKS?|RUNS?|LOOKS?|TURNS?|MOVES?|STANDS?|SITS?|ENTERS?|EXITS?|LEAVES?|COMES?|GOES?|TAKES?|PUTS?|GETS?|SEES?|HEARS?|FEELS?|THINKS?|KNOWS?|WANTS?|TRIES?|STARTS?|STOPS?|OPENS?|CLOSES?|PICKS?|DROPS?|HOLDS?|GRABS?|REACHES?|POINTS?|NODS?|SHAKES?|SMILES?|LAUGHS?|CRIES?|SCREAMS?|YELLS?|WHISPERS?|SIGHS?|PAUSES?|HESITATES?|CONTINUES?|BEGINS?|ENDS?|APPEARS?|DISAPPEARS?)(\s|$)/i,
+  // Phrase patterns that are clearly not character names
+  /^(MEANWHILE|SUDDENLY|LATER|EARLIER|OUTSIDE|INSIDE|NEARBY|ABOVE|BELOW|BEHIND|BEFORE|AFTER)/i,
+  // Preposition in middle (e.g., "PRIORITY IN THIS JOB")
+  /^[A-Z]+\s+(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH)\s+/i,
+];
 
 function normalizeCharacterName(name: string): string {
   let normalized = name.trim();
@@ -58,7 +76,7 @@ function isValidCharacterName(name: string): boolean {
   const normalized = normalizeCharacterName(name);
   
   // Must be reasonable length
-  if (normalized.length < 1 || normalized.length > 35) return false;
+  if (normalized.length < 2 || normalized.length > 35) return false;
   
   // Must start with a letter
   if (!/^[A-Z]/.test(normalized)) return false;
@@ -72,8 +90,17 @@ function isValidCharacterName(name: string): boolean {
   // Must not be a transition
   if (TRANSITION_REGEX.test(normalized)) return false;
   
+  // Must not match action patterns (e.g., "JORDAN REALIZES")
+  for (const pattern of ACTION_PATTERNS) {
+    if (pattern.test(normalized)) return false;
+  }
+  
   // Should be mostly letters (allow spaces, hyphens, apostrophes, periods for titles)
   if (!/^[A-Z][A-Z0-9\s\-'\.#]+$/.test(normalized)) return false;
+  
+  // Character names typically don't have more than 3-4 words
+  const wordCount = normalized.split(/\s+/).length;
+  if (wordCount > 4) return false;
   
   return true;
 }
