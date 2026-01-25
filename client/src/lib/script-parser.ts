@@ -108,6 +108,10 @@ const NOT_CHARACTER_PATTERNS = [
   // Common dialogue starters that aren't names
   /^(WHAT|WHY|HOW|WHEN|WHERE|WHO|WHICH|WHOSE)$/i,
   /^(YES|NO|YEAH|NAH|OKAY|OK|SURE|FINE|WELL|RIGHT|LOOK|LISTEN|HEY|HI|HELLO|BYE|GOODBYE)$/i,
+  // Sound effects / onomatopoeia that are NOT character names
+  /^(SCREAMS?|YELLS?|SHOUTS?|CRIES|WHISPERS?|SIGHS?|GASPS?|LAUGHS?|GROANS?|MOANS?|HOWLS?|VROOM|CRASH|BANG|BOOM|SLAM|CLICK|BEEP|RING|BUZZ|HONK|THUD|SPLAT|WHOOSH|SCREECH|ROAR|GROWL|SNORE|COUGH|SNEEZE|CLAP|STOMP|THUMP|KNOCK|DING|CHIME|SWISH|SWOOSH|CRACK|SNAP|POP|CRUNCH|SPLASH|SIZZLE|RUMBLE|THUNDER|LIGHTNING|EXPLOSION|GUNSHOT|GUNFIRE|ENGINE|TIRES|BRAKES)$/i,
+  // Camera/editing terms that look like character names but aren't
+  /^(ANGLE|SHOT|CLOSE|CLOSEUP|WIDE|MEDIUM|INSERT|FLASHBACK|MONTAGE|INTERCUT|CONTINUOUS|LATER|MEANWHILE|SUDDENLY|SILENCE|PAUSE|BEAT|GEARS|TURBINE)$/i,
 ];
 
 // Valid single-letter dialogue (exclamations, sounds)
@@ -116,7 +120,7 @@ const VALID_SHORT_DIALOGUE = new Set([
   '...', '?', '!', // Punctuation-only
 ]);
 
-// Check if dialogue is valid (not OCR garbage)
+// Check if dialogue is valid (not OCR garbage or action prose)
 function isValidDialogue(text: string): boolean {
   if (!text) return false;
   
@@ -147,6 +151,17 @@ function isValidDialogue(text: string): boolean {
   const total = trimmed.replace(/\s/g, '').length;
   if (total > 3 && letters / total < 0.3) {
     return false; // Less than 30% letters = likely garbage
+  }
+  
+  // Detect action/prose description that got mis-parsed as dialogue
+  // "The [noun] [verb]" patterns are action description, not speech
+  if (/^The\s+(rear|front|car|door|phone|screen|lights?|camera|scene|room|house|street|man|woman|boy|girl|crowd|engine|tires?|wheels?)\s+/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Third-person action prose patterns
+  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|drives?|pulls?|pushes?|grabs?|opens?|closes?|stands?|sits?|enters?|exits?|falls?|shifts?|struggles?)\b/i.test(trimmed)) {
+    return false;
   }
   
   return true;
