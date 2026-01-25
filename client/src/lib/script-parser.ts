@@ -360,12 +360,22 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\s{2,}/g, ' '); // Multiple spaces
   
   // Fix merged character names at start: "HUDSONGood evening" -> "Good evening"
-  // This removes the accidentally merged character name from dialogue
-  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*/, '');
+  // Also handles "OLIVERYou refused" -> "You refused" (no space between name and dialogue)
+  // The pattern matches: ALL_CAPS_NAME possibly followed by extension, then optionally transition to Title case
+  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?(?=[A-Z][a-z])/, '');
+  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s+/, '');
+  
+  // Extract embedded stage directions mid-dialogue: "(Beverly starts to cry.)" 
+  // These are descriptive and should be removed from spoken dialogue
+  // Match parentheticals that contain "he/she/they + verb" or character names + verbs
+  cleaned = cleaned.replace(/\s*\([^)]*(?:starts?|begins?|stops?|pauses?|looks?|turns?|walks?|moves?|exits?|enters?|stands?|sits?|rises?|falls?|cries?|laughs?|sighs?|nods?|shakes?)[^)]*\)\s*/gi, ' ');
   
   // Also clean trailing character name patterns
   // e.g., "...please? OFFICER HUDSON" at end
   cleaned = cleaned.replace(/[.!?]\s*[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s*$/g, '. ');
+  
+  // Clean up any resulting double spaces
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
   
   return cleaned.trim();
 }
