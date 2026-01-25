@@ -44,6 +44,8 @@ const RESERVED_WORDS = new Set([
   "SCENE", "SCENES", "ACT", "ACTS", "PART", "PARTS", "CHAPTER", "CHAPTERS",
   // Preposition phrases
   "IN THE", "ON THE", "AT THE", "TO THE", "FOR THE", "WITH THE",
+  // Known false positives
+  "PRIORITY IN THIS JOB", "WE SEE", "WE HEAR",
 ]);
 
 // Patterns that indicate action/direction lines, not character dialogue
