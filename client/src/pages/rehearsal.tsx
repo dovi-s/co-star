@@ -895,7 +895,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const showUserTurnIndicator = currentIsUserLine && session.isPlaying;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background curtain-enter" data-testid="rehearsal-page">
+    <div className="min-h-screen flex flex-col bg-background" data-testid="rehearsal-page">
       <Header
         sessionName={session.name}
         userRole={userRole ?? null}
