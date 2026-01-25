@@ -44,14 +44,14 @@ class SpeechRecognitionEngine {
           this.lastTranscript = "";
           this.setState("listening");
           
-          // Max listen time of 45 seconds - plenty of time for longer lines
+          // Max listen time of 90 seconds - plenty of time for very long monologues
           this.clearMaxListenTimeout();
           this.maxListenTimeout = setTimeout(() => {
             console.log("[Speech] Max listen time reached, stopping");
             if (this.isListening) {
               this.stop();
             }
-          }, 45000);
+          }, 90000);
         };
 
         this.recognition.onend = () => {
@@ -131,13 +131,13 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    // 6 second silence after speaking = done (generous pause allowance)
+    // 10 second silence after speaking = done (very generous for long monologues with natural pauses)
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
         console.log("[Speech] Silence timeout after speech, stopping");
         this.stop();
       }
-    }, 6000);
+    }, 10000);
   }
 
   private clearSilenceTimeout() {

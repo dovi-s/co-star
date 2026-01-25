@@ -232,11 +232,12 @@ export function ThreeLineReader({
             <p
               className={cn(
                 fontSizeClass,
-                "leading-relaxed transition-all duration-300",
+                "leading-[1.8] transition-all duration-300",
                 isCurrent && isUser && "text-background",
                 isCurrent && !isUser && "text-foreground",
                 !isCurrent && "text-muted-foreground",
-                shouldMask && !showHint && "italic opacity-70"
+                shouldMask && !showHint && "italic opacity-70",
+                isCurrent && "max-h-[45vh] overflow-y-auto pr-1"
               )}
             >
               {shouldMask && !showHint ? maskedContent?.display : (
