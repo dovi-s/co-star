@@ -451,7 +451,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
           <button
             type="button"
             onClick={() => setScript("")}
-            className="absolute top-2 right-2 p-2 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-background hover:border-border icon-btn-press z-10 touch-manipulation"
+            className="absolute top-3 right-3 p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground/70 hover:text-foreground transition-colors icon-btn-press z-10 touch-manipulation"
             style={{ minWidth: 36, minHeight: 36 }}
             data-testid="button-clear-script"
           >
