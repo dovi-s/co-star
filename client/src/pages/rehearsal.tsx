@@ -62,6 +62,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [sceneCompleted, setSceneCompleted] = useState(false);
   const [listeningState, setListeningState] = useState<SpeechRecognitionState>("idle");
   const [userTranscript, setUserTranscript] = useState("");
   const [isUserTurn, setIsUserTurn] = useState(false);
@@ -315,6 +316,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     incrementRunsCompleted();
     recordRehearsal(0, 1);
     setShowCelebration(true);
+    setSceneCompleted(true);
   }, [incrementRunsCompleted, recordRehearsal, setPlaying]);
 
   // Reset run performance for a new run
@@ -775,6 +777,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleTryAgain = () => {
     setShowCelebration(false);
+    setSceneCompleted(false);
     setCompletedRunStats(null);
     // Reset to beginning
     goToLine(0);
@@ -789,7 +792,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handleDismissCelebration = () => {
     setShowCelebration(false);
-    setCompletedRunStats(null);
+    // Keep sceneCompleted true so sticky bar shows
   };
 
   // Generate performance feedback message
@@ -892,7 +895,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         
         return (
           <div 
-            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm animate-fade-in"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md animate-fade-in"
             onClick={handleDismissCelebration}
           >
             {/* Confetti for perfect runs */}
@@ -914,107 +917,79 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             )}
             
             <div 
-              className="bg-card border shadow-xl rounded-xl p-8 text-center max-w-sm mx-4 animate-scale-in relative"
+              className="bg-card border shadow-2xl rounded-2xl p-6 text-center max-w-xs mx-4 animate-scale-in relative"
               onClick={(e) => e.stopPropagation()}
               data-testid="celebration-modal"
             >
-              {/* Icon */}
-              <div className="relative mb-5">
+              {/* Compact icon + title row */}
+              <div className="flex items-center justify-center gap-3 mb-4">
                 <div className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center mx-auto",
-                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950 animate-star-burst" :
-                  feedback?.type === "great" ? "bg-green-500 text-white animate-bounce-in" :
-                  "bg-primary text-primary-foreground animate-bounce-in"
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
+                  feedback?.type === "great" ? "bg-green-500 text-white" :
+                  "bg-foreground text-background"
                 )}>
                   {feedback?.type === "perfect" ? (
-                    <Star className="h-8 w-8 fill-current" />
+                    <Star className="h-5 w-5 fill-current" />
                   ) : (
-                    <Check className="h-8 w-8" />
+                    <Check className="h-5 w-5" />
                   )}
                 </div>
-                {feedback?.type === "perfect" && (
-                  <>
-                    <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-yellow-400/60 animate-ping" />
-                    <div className="absolute -top-1 -right-3 w-2 h-2 rounded-full bg-yellow-400/40 animate-ping" style={{ animationDelay: "200ms" }} />
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-yellow-300/50 animate-ping" style={{ animationDelay: "400ms" }} />
-                  </>
-                )}
-              </div>
-              
-              <h3 className="text-xl font-semibold mb-3">Scene Complete</h3>
-              
-              {/* Performance feedback */}
-              {feedback && (
-                <div className={cn(
-                  "rounded-lg px-4 py-3 mb-5",
-                  feedback.type === "perfect" ? "bg-yellow-500/10" :
-                  feedback.type === "great" ? "bg-green-500/10" :
-                  feedback.type === "good" ? "bg-blue-500/10" :
-                  "bg-muted/50"
-                )}>
-                  <div className="flex items-center justify-center gap-2 mb-1">
-                    <FeedbackIcon className={cn(
-                      "h-4 w-4",
+                <div className="text-left">
+                  <h3 className="text-lg font-semibold leading-tight">Scene Complete</h3>
+                  {feedback && (
+                    <p className={cn(
+                      "text-sm",
                       feedback.type === "perfect" ? "text-yellow-600 dark:text-yellow-400" :
                       feedback.type === "great" ? "text-green-600 dark:text-green-400" :
-                      feedback.type === "good" ? "text-blue-600 dark:text-blue-400" :
                       "text-muted-foreground"
-                    )} />
-                    <span className={cn(
-                      "font-medium text-sm",
-                      feedback.type === "perfect" ? "text-yellow-700 dark:text-yellow-300" :
-                      feedback.type === "great" ? "text-green-700 dark:text-green-300" :
-                      feedback.type === "good" ? "text-blue-700 dark:text-blue-300" :
-                      "text-foreground"
                     )}>
                       {feedback.message}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {feedback.detail}
-                  </p>
+                    </p>
+                  )}
                 </div>
-              )}
-              
-              {/* Stats */}
-              {completedRunStats && completedRunStats.totalUserLines > 0 && (
-                <div className="flex items-center justify-center gap-4 text-sm mb-6">
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
-                    <span className="text-xs text-muted-foreground">accuracy</span>
-                  </div>
-                  <div className="w-px h-8 bg-border" />
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl font-bold text-foreground">{completedRunStats.perfectLines}</span>
-                    <span className="text-xs text-muted-foreground">perfect</span>
-                  </div>
-                  <div className="w-px h-8 bg-border" />
-                  <div className="flex flex-col items-center">
-                    <span className="text-2xl font-bold text-foreground">{completedRunStats.totalUserLines}</span>
-                    <span className="text-xs text-muted-foreground">your lines</span>
-                  </div>
-                </div>
-              )}
-              
-              {/* Actions */}
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={handleDismissCelebration}
-                  data-testid="button-dismiss-celebration"
-                >
-                  Done
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={handleTryAgain}
-                  data-testid="button-try-again"
-                >
-                  <RefreshCcw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
               </div>
+              
+              {/* Performance detail */}
+              {feedback && feedback.detail && (
+                <p className="text-xs text-muted-foreground mb-4 px-2">
+                  {feedback.detail}
+                </p>
+              )}
+              
+              {/* Compact stats row */}
+              {completedRunStats && completedRunStats.totalUserLines > 0 && (
+                <div className="flex items-center justify-center gap-6 py-3 px-4 bg-muted/30 rounded-lg mb-4">
+                  <div className="text-center">
+                    <span className="text-xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">accuracy</p>
+                  </div>
+                  <div className="w-px h-6 bg-border" />
+                  <div className="text-center">
+                    <span className="text-xl font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">perfect</p>
+                  </div>
+                </div>
+              )}
+              
+              {/* Single primary action */}
+              <Button
+                className="w-full"
+                onClick={handleTryAgain}
+                data-testid="button-try-again"
+              >
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Run Again
+              </Button>
+              
+              {/* Subtle dismiss link */}
+              <button
+                onClick={handleDismissCelebration}
+                className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-dismiss-celebration"
+              >
+                or review your lines
+              </button>
             </div>
           </div>
         );
@@ -1073,6 +1048,20 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           )}
         </div>
       </main>
+
+      {/* Sticky "Run Again" bar when scene completed but modal dismissed */}
+      {sceneCompleted && !showCelebration && (
+        <div className="fixed bottom-24 left-0 right-0 z-30 flex justify-center px-4 animate-fade-in">
+          <button
+            onClick={handleTryAgain}
+            className="flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            data-testid="button-sticky-run-again"
+          >
+            <RefreshCcw className="h-4 w-4" />
+            <span className="text-sm font-medium">Run Again</span>
+          </button>
+        </div>
+      )}
 
       <footer className="sticky bottom-0 glass border-t safe-bottom z-40">
         <div className="px-4 py-2">
