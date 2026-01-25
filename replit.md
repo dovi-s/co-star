@@ -133,6 +133,30 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
+### January 2026 - Robust PDF/OCR Script Parsing
+- **OCR Artifact Cleaning**: Automatic cleanup of PDF extraction issues
+  - Bullet characters (•••) converted to proper ellipsis
+  - Tilde (~), pipe (|), backtick (`) artifacts cleaned
+  - Production notes like "4 OMITTED" stripped from dialogue
+- **Merged Line Detection**: Fixes PDF lines that run together
+  - "HUDSONGood evening" → split into "HUDSON" + "Good evening"
+  - Embedded action lines like "JOHN passes his documents" stripped
+  - Character name + extension patterns (CONT'D) properly separated
+- **Character Name Validation**: 150+ reserved words blocked
+  - Articles/conjunctions: THE, A, AN, AND, OR, BUT, etc.
+  - Time transitions: MINUTES LATER, HOURS LATER, NEXT DAY
+  - Location words: BACKYARD, KITCHEN, HOSPITAL, STREET (50+)
+  - Sound effects: SCREAMS, VROOM, CRASH, BANG, HOWLS
+  - Camera terms: ANGLE, SHOT, CLOSE, POV, INTERCUT
+  - Production terms: OMITTED, REVISED, DRAFT, PAGE
+- **Context Validation**: Rejects dialogue fragments as stage directions
+  - "Ben and he had a beard" patterns blocked
+  - Only accepts real action: "He walks...", "The door opens..."
+- **Dialogue Validation**: General heuristics for prose detection
+  - Third-person patterns: "He looks", "She turns", "They walk"
+  - "The [noun] [verb]" action descriptions rejected
+  - Mixed ALL-CAPS text with sound effects filtered
+
 ### January 2026 - AI Smart Cleanup Feature
 - **AI Post-Processing Validation**: After regex parsing, AI reviews first 80 parsed lines
   - Identifies and removes title page content, writer credits, cast lists
