@@ -1068,6 +1068,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             isListening={listeningState === "listening"}
             isSpeaking={isSpeaking}
             speakingWordIndex={speakingWordIndex}
+            currentScene={currentScene}
+            isFirstLineOfScene={session.currentLineIndex === 0}
           />
           
           {showUserTurnIndicator && (

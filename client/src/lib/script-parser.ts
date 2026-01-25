@@ -267,7 +267,24 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
   
   // Extract (parenthetical directions) that contain emotion/action keywords
   cleanText = cleanText.replace(PARENTHETICAL_REGEX, (match, content) => {
-    const lower = content.toLowerCase();
+    const lower = content.toLowerCase().trim();
+    
+    // Common stage direction patterns (start with "to", action verb, or location)
+    const directionPatterns = [
+      /^to\s+(himself|herself|themselves|the|a|nancy|robert|dale|brennan)/i,
+      /^(off|on)\s+(mic|camera|screen)/i,
+      /^(looks?|looking)\s+(at|up|down|around|away)/i,
+      /^(turns?|turning)\s+(to|around|away|back)/i,
+      /^(slams?|slamming|grabs?|grabbing|picks?|picking|holds?|holding)/i,
+      /^(singing|humming|whistling|dancing|clapping)/i,
+      /^(then|and then)\s+/i,
+    ];
+    
+    if (directionPatterns.some(pattern => pattern.test(lower))) {
+      directions.push(content.trim());
+      return "";
+    }
+    
     const emotionKeywords = [
       "angry", "angrily", "sad", "sadly", "happy", "happily", "excited", "excitedly",
       "nervous", "nervously", "scared", "whispering", "whispers", "whispered",
@@ -285,11 +302,13 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
       "pause", "pauses", "pausing", "beat", "a beat",
       "sighing", "sighs", "sighed", "trembling", "trembles", "trembled",
       "to self", "to himself", "to herself", "aside", "under breath",
-      "continuing", "interrupting", "overlapping", "cutting off",
+      "continuing", "continues", "interrupting", "interrupts", "overlapping", "cutting off",
       "reading", "quoting", "imitating", "mimicking",
       "re:", "regarding", "about", "pointing", "gesturing", "nodding",
       "shaking head", "looking", "turning", "moving", "walking",
-      "sitting", "standing", "entering", "exiting", "crossing"
+      "sitting", "standing", "entering", "exiting", "crossing",
+      "off camera", "off mic", "off screen", "o.c.", "v.o.",
+      "smiling", "smiles", "grinning", "grins", "frowning", "frowns"
     ];
     
     if (emotionKeywords.some(kw => lower.includes(kw))) {

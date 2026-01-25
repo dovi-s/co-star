@@ -57,8 +57,9 @@ shared/
 ### Script Import
 - Paste text or upload .txt files
 - Automatic parsing of `CHARACTER: dialogue` format
-- Stage directions detected in `[brackets]`
-- Multi-scene detection
+- Stage directions detected in `[brackets]` and `(parentheticals)`
+- Multi-scene detection with scene descriptions
+- Action lines preceding dialogue captured as context
 
 ### Role Selection
 - Auto-detect all roles from script
@@ -71,6 +72,8 @@ shared/
 - Current line (bold, highlighted if user's turn)
 - Next line (ghost)
 - Visual cue pulse when it's user's turn
+- Scene transition card on scene entry
+- Context peek button for lines with action/directions
 
 ### Transport Controls
 - Back / Play-Pause / Next buttons
@@ -127,6 +130,26 @@ Sophisticated, minimal design inspired by premium $10B companies (Stripe, Linear
 Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
+
+### January 2026 - Context & Scene Awareness Features
+- **Script Context Capture**: Parser now captures action/stage directions preceding dialogue
+  - Action lines between dialogues are attached as `context` field to the next dialogue
+  - Scene descriptions captured from first action line after scene heading
+  - `isActionLine()` detection filters third-person action patterns (He/She/They/The)
+- **Scene Transition Cards**: When entering a new scene, displays a card with:
+  - Scene name (e.g., "INT. HOTEL ROOM - ONE HOUR LATER")
+  - Scene description when available (first action after heading)
+  - Subtle fade-in/slide-in animation
+- **Context Peek Feature**: Tap the "Action" button below dialogue to reveal:
+  - Stage directions and action preceding the line
+  - Expandable/collapsible display
+  - Styled with Film icon and subtle design
+- **Improved Parenthetical Detection**: Enhanced regex patterns for stage directions:
+  - Catches "to himself", "singing", "off mic", "looks up" patterns
+  - Detects emotion keywords more comprehensively
+- **Global Script Navigation**: Progress indicator now shows position across entire script
+  - `getTotalScriptLines()` and `getGlobalLineNumber()` functions
+  - Automatic scene advancement at end of scene
 
 ### January 2026 - Performance Feedback System
 - **Run Performance Tracking**: Tracks accuracy per line during rehearsal
