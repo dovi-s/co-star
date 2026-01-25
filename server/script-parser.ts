@@ -175,6 +175,9 @@ const RESERVED_WORDS = new Set([
   "BEGIN", "END", "BACK TO", "INTERCUT", "SPLIT SCREEN",
   // Common scene direction starters
   "CUT TO", "FADE TO", "SMASH CUT", "JUMP CUT", "MATCH CUT", "DISSOLVE TO",
+  // Two-word technical/cinematic phrases
+  "SPEED TRAP", "TIME LAPSE", "SLOW MOTION", "FAST FORWARD", "FLASH BACK",
+  "FADE IN", "FADE OUT", "BLACK OUT", "WHITE OUT",
   // Sound/music cues (NOT characters!)
   "MUSIC", "SOUND", "SFX", "SCORE", "SONG", "AUDIO",
   // Generic words that aren't names
@@ -228,14 +231,16 @@ function isActionDescriptionLine(line: string): boolean {
 
 // Patterns that indicate action/direction lines, not character dialogue
 const ACTION_PATTERNS = [
-  // Character name + verb pattern (e.g., "JORDAN REALIZES", "SARAH WALKS")
-  /^[A-Z]+\s+(REALIZES?|WALKS?|RUNS?|LOOKS?|TURNS?|MOVES?|STANDS?|SITS?|ENTERS?|EXITS?|LEAVES?|COMES?|GOES?|TAKES?|PUTS?|GETS?|SEES?|HEARS?|FEELS?|THINKS?|KNOWS?|WANTS?|TRIES?|STARTS?|STOPS?|OPENS?|CLOSES?|PICKS?|DROPS?|HOLDS?|GRABS?|REACHES?|POINTS?|NODS?|SHAKES?|SMILES?|LAUGHS?|CRIES?|SCREAMS?|YELLS?|WHISPERS?|SIGHS?|PAUSES?|HESITATES?|CONTINUES?|BEGINS?|ENDS?|APPEARS?|DISAPPEARS?)(\s|$)/i,
+  // Character name + verb pattern (e.g., "JORDAN REALIZES", "SARAH WALKS", "JOHN DRIVES")
+  /^[A-Z]+\s+(REALIZES?|WALKS?|RUNS?|LOOKS?|TURNS?|MOVES?|STANDS?|SITS?|ENTERS?|EXITS?|LEAVES?|COMES?|GOES?|TAKES?|PUTS?|GETS?|SEES?|HEARS?|FEELS?|THINKS?|KNOWS?|WANTS?|TRIES?|STARTS?|STOPS?|OPENS?|CLOSES?|PICKS?|DROPS?|HOLDS?|GRABS?|REACHES?|POINTS?|NODS?|SHAKES?|SMILES?|LAUGHS?|CRIES?|SCREAMS?|YELLS?|WHISPERS?|SIGHS?|PAUSES?|HESITATES?|CONTINUES?|BEGINS?|ENDS?|APPEARS?|DISAPPEARS?|DRIVES?|WATCHES?|PULLS?|PUSHES?|FALLS?|JUMPS?|CLIMBS?|READS?|WRITES?|SPEAKS?|TALKS?|LISTENS?|WAITS?|STEPS?|STARES?|GLANCES?|GLARES?|NOTICES?|IGNORES?|CROSSES?|FOLLOWS?|LEADS?|CARRIES?|THROWS?|CATCHES?|PLACES?|SETS?|LAYS?|RISES?|LIFTS?|LOWERS?|ANSWERS?|CALLS?|DIALS?|HANGS?|CHECKS?|SWEARS?|CURSES?|MUTTERS?|MUMBLES?|GROANS?|MOANS?)(\s|$)/i,
   // Phrase patterns that are clearly not character names
-  /^(MEANWHILE|SUDDENLY|LATER|EARLIER|OUTSIDE|INSIDE|NEARBY|ABOVE|BELOW|BEHIND|BEFORE|AFTER)/i,
-  // Preposition anywhere (e.g., "PRIORITY IN THIS JOB", "MAN WITH GUN")
-  /\s(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH|AND|OR)\s/i,
+  /^(MEANWHILE|SUDDENLY|LATER|EARLIER|OUTSIDE|INSIDE|NEARBY|ABOVE|BELOW|BEHIND|BEFORE|AFTER|SPEED|SLOW|QUICK|FAST)/i,
+  // Preposition anywhere (e.g., "PRIORITY IN THIS JOB", "MAN WITH GUN", "SPEED TRAP")
+  /\s(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH|AND|OR|TRAP)\s/i,
   // Common phrases that aren't names
   /^(THE|THIS|THAT|THESE|THOSE|A|AN)\s+/i,
+  // Two-word phrases that are definitely not character names
+  /^(SPEED TRAP|TIME LAPSE|SLOW MOTION|FAST FORWARD|FLASH BACK|CUT TO|FADE IN|FADE OUT|DISSOLVE TO|SMASH CUT|JUMP CUT|MATCH CUT)$/i,
   // 4+ words is likely a phrase (real names can be up to 3 words with title like "DR. ROBERT DOBACK")
   /^\S+\s+\S+\s+\S+\s+\S+/,
 ];
@@ -800,6 +805,12 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Camera directions (very reliable)
     if (/^(CUT TO|FADE TO|DISSOLVE TO|ANGLE ON|CLOSE ON|WIDE ON|PAN TO|ZOOM|BACK TO|INTERCUT)/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines starting with lowercase action verbs are clearly action/description, not dialogue
+    // e.g., "drives, perhaps a little over the speed limit" (after "JOHNdrives" was split)
+    if (/^(drives?|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|leaves?|comes?|goes?|takes?|puts?|gets?|sees?|hears?|watches?|pulls?|pushes?|falls?|jumps?|climbs?|reads?|writes?|speaks?|talks?|listens?|waits?|steps?|stares?|glances?|notices?|crosses?|follows?|carries?|throws?|catches?|places?|answers?|calls?|swears?|mutters?|perhaps|meanwhile|suddenly)[,\s]/i.test(trimmed)) {
       return true;
     }
     
