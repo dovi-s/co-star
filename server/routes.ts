@@ -379,21 +379,23 @@ REQUIREMENTS:
 4. Keep stage directions brief - just the emotion in [brackets]
 
 CRITICAL - Make it feel REAL:
-- Short, punchy lines - people interrupt each other, trail off, react
+- Short, punchy lines - 1-2 sentences each, never long speeches
 - Every line must respond to what was just said - no random jumps
 - Use contractions (don't, can't, won't) - nobody talks formally
-- Include awkward pauses, half-sentences, people talking over each other
-- Build naturally from hello/confrontation to climax to resolution
+- Every line must be a COMPLETE thought that makes sense on its own
+- Build naturally from confrontation to climax to resolution
 
 BAD (don't write like this):
 - "I have been meaning to tell you something important about our relationship and how I feel..."
 - Long speeches or monologues
 - Perfectly articulate emotional revelations
+- Incomplete sentences: "That's when the real." or "I thought maybe we could—"
 
 GOOD (write like this):
-- "Wait, what? No. No, you can't just—"
-- "I know. I know, okay? But listen—"
-- Messy, real, interrupted speech
+- "Wait, what? You can't be serious."
+- "I know. I know, okay? Just let me explain."
+- "Don't look at me like that. I had no choice."
+- Short, complete sentences that actors can deliver
 
 This is for actors to practice with, so make the emotions clear but the dialogue natural.
 
