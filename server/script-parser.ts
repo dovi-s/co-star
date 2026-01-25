@@ -133,12 +133,12 @@ function isValidDialogue(text: string): boolean {
   // Reject empty
   if (!trimmed) return false;
   
-  // For very short text (1-2 chars), be strict
-  if (trimmed.length <= 2) {
+  // For very short text (1-3 chars), be strict
+  if (trimmed.length <= 3) {
     const lower = trimmed.toLowerCase();
     // Allow valid short dialogue like "I", "A", "OK", "?", "!"
     if (VALID_SHORT_DIALOGUE.has(lower)) return true;
-    if (trimmed === 'OK' || trimmed === 'ok') return true;
+    if (/^(ok|no|hi|go|oh|ah|ow|um|uh|hm|eh|so|up|in|on|do|it|is|am|be|we|us|me|my|an|or|as|at|by|to|if)$/i.test(trimmed)) return true;
     if (/^[.!?]+$/.test(trimmed)) return true; // Punctuation only
     
     // Single letters that aren't meaningful words are garbage
@@ -147,6 +147,11 @@ function isValidDialogue(text: string): boolean {
       if (!/^[aioAIO]$/.test(trimmed)) {
         return false;
       }
+    }
+    
+    // 2-3 random letters are likely OCR garbage
+    if (/^[a-z]{2,3}$/i.test(trimmed) && !/^(ok|no|hi|go|oh|ah|ow|um|uh|hm|eh|so|up|in|on|do|it|is|am|be|we|us|me|my|an|or|as|at|by|to|if|yes|yep|nah|hey|bye|why|who|how|now|out|off|run|see|get|got|let|put|say|try|too|all|but|can|did|has|had|not|its|own|per|and|the|was|are|you|for|any|one|two|via)$/i.test(trimmed)) {
+      return false;
     }
   }
   
@@ -157,15 +162,60 @@ function isValidDialogue(text: string): boolean {
     return false; // Less than 30% letters = likely garbage
   }
   
-  // Detect action/prose description that got mis-parsed as dialogue
-  // "The [noun] [verb]" patterns are action description, not speech
-  if (/^The\s+(rear|front|car|door|phone|screen|lights?|camera|scene|room|house|street|man|woman|boy|girl|crowd|engine|tires?|wheels?)\s+/i.test(trimmed)) {
+  // === GENERAL PROSE/ACTION DETECTION ===
+  // These patterns indicate narrative description, not spoken dialogue
+  
+  // "The [word]" at start is almost always action/prose, not dialogue
+  // Real dialogue rarely starts with "The" + noun phrase
+  if (/^The\s+[a-z]+\s+(is|are|was|were|has|have|had|does|do|did|can|could|will|would|shall|should|may|might|must|spins?|rolls?|moves?|goes?|comes?|falls?|rises?|opens?|closes?|turns?|shifts?|sits?|stands?|lies?|lands?|hits?|runs?|walks?|drives?|flies?|floats?|shakes?|rattles?|rumbles?|glows?|flashes?|flickers?|burns?|explodes?|crashes?|slams?|bangs?|cracks?|snaps?|pops?|clicks?|beeps?|rings?|buzzes?|honks?|roars?|screams?|howls?|whistles?|hisses?|sizzles?)\b/i.test(trimmed)) {
     return false;
   }
   
-  // Third-person action prose patterns
-  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|drives?|pulls?|pushes?|grabs?|opens?|closes?|stands?|sits?|enters?|exits?|falls?|shifts?|struggles?)\b/i.test(trimmed)) {
+  // Third-person pronouns + verbs = action description
+  if (/^(He|She|They|It|His|Her|Their|Its)\s+[a-z]/i.test(trimmed)) {
+    // More general: if it starts with he/she/they/it + any word, it's likely prose
+    // Real dialogue uses "I", "You", "We" as subjects
+    if (/^(He|She|They|It)\s+(is|are|was|were|has|had|does|did|will|would|can|could|shall|should|may|might|must)\b/i.test(trimmed)) {
+      return false;
+    }
+    // He/She + verb patterns
+    if (/^(He|She|They|It)\s+[a-z]+s\b/i.test(trimmed)) {
+      return false; // "He walks", "She runs", etc.
+    }
+  }
+  
+  // Possessive pronouns starting prose: "His eyes narrow", "Her hand trembles"
+  if (/^(His|Her|Their|Its)\s+[a-z]+\s+(is|are|was|were|narrow|widen|flash|gleam|dart|focus|soften|harden|shake|tremble|grip|release|move|open|close|rise|fall|drop|lift|reach|grab|pull|push|turn|twist|clench|relax)\b/i.test(trimmed)) {
     return false;
+  }
+  
+  // Stage direction markers that indicate action, not dialogue
+  // Bullets, dashes, asterisks at start or mixed in
+  if (/^[•\-\*–—]\s+[A-Z]/i.test(trimmed)) {
+    return false; // "• VROOM! The car..." 
+  }
+  
+  // Multiple ALL-CAPS words mixed with prose = likely action description with sound effects
+  // e.g., "The turbine HOWLS. 1st gear, clutch up."
+  const capsWords = (trimmed.match(/\b[A-Z]{2,}\b/g) || []).length;
+  const totalWords = (trimmed.match(/\b\w+\b/g) || []).length;
+  if (totalWords > 5 && capsWords >= 2 && capsWords / totalWords > 0.2) {
+    // High ratio of ALL-CAPS words mixed with normal text = action prose with sound effects
+    return false;
+  }
+  
+  // Camera/technical directions embedded in text
+  if (/\b(CUT TO|FADE|DISSOLVE|ANGLE ON|CLOSE ON|POV|SLOW MOTION|FREEZE FRAME)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Very long "dialogue" with multiple sentences describing action
+  // Real dialogue can be long, but action prose has specific patterns
+  if (trimmed.length > 100) {
+    // Contains third-person references to characters by action (not in quotes)
+    if (/\b(he|she|they|it)\s+(shifts?|struggles?|fishtails?|rockets?|spins?|shimmies?|floats?|misfits?)\b/i.test(trimmed)) {
+      return false;
+    }
   }
   
   return true;
