@@ -524,11 +524,10 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
 function truncateAtActionStart(text: string): { dialogue: string; action: string } {
   // Patterns that indicate transition from dialogue to action/description
   // These patterns look for where narrative action begins mid-text
+  // BE VERY CONSERVATIVE - only truncate when absolutely certain it's action
   const actionStartPatterns = [
-    // "the [object] [verbs]" - narrative description of objects
+    // "the [object] [verbs]" - narrative description of SPECIFIC objects with action verbs
     /\.\s+(the\s+(?:stick|helicopter|car|door|phone|camera|screen|lights?|plane|boat|room)\s+(?:descends?|rises?|moves?|opens?|closes?|falls?|crashes?|lands?|hovers?|flies?|spins?|turns?|shakes?))/i,
-    // Lowercase sentence after period that describes action
-    /\.\s+(the\s+[a-z]+\s+[a-z]+s\s)/i,
     // ALL CAPS action words mid-sentence (sound effects, actions)
     /\s+(then\s+)?([A-Z]{4,}S?\s+(and\s+)?[A-Z]{4,}S?\s+to\s+the)/i,
     // "then LURCHES", "then SLAMS" patterns  
@@ -537,12 +536,6 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     /\.\s+([A-Z][a-z]+'s\s+(?:head|eyes|face|hand|hands|body|voice)\s+(?:bobs?|turns?|moves?|drops?|rises?))/i,
     // ALL CAPS CHARACTER NAME + enters/exits/walks etc. (e.g., "KEVIN McCALLISTER enters")
     /\.\s+([A-Z][A-Z\s]+(?:[A-Z][a-z]+)?\s+(?:enters?|exits?|walks?|runs?|appears?|leaves?|crosses?|stands?|sits?|looks?|turns?|moves?|comes?|goes?))/,
-    // "He's/She's [age/description]" pattern (e.g., "He's seven.")
-    /\.\s+(He's|She's|It's|They're)\s+[a-z]/i,
-    // Third person starts after period (He/She/They + verb)
-    /\.\s+(He|She|They|It)\s+(is|are|was|were|has|have|had|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?)\b/i,
-    // "A/An/The [noun]" starting a new descriptive sentence
-    /\.\s+(A|An|The)\s+[a-z]+\s+(man|woman|boy|girl|child|kid|person|figure|voice|sound|noise)\b/i,
   ];
   
   let earliestMatch = text.length;
