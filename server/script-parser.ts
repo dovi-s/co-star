@@ -660,6 +660,25 @@ function isValidCharacterName(name: string): boolean {
   // Must start with a letter
   if (!/^[A-Z]/.test(normalized)) return false;
   
+  // Reject names ending with numbers (e.g., "DET. COLE. 4")
+  if (/\d+$/.test(normalized)) return false;
+  
+  // Reject names with duplicate words (e.g., "CALLIE CALLIE" or "CALLIE. CALLIE")
+  const words = normalized.replace(/\./g, '').split(/\s+/).filter(w => w.length > 0);
+  const uniqueWords = new Set(words);
+  if (words.length >= 2 && uniqueWords.size < words.length) {
+    // Allow some legitimate duplicates like "MAMA" but not "CALLIE CALLIE"
+    const firstWord = words[0];
+    if (words.every(w => w === firstWord) && words.length > 1) return false;
+  }
+  
+  // Reject if it looks like dialogue got merged: "NAME WORD WORD WORD"
+  // where WORD is a common English word
+  const commonWords = new Set(['THE', 'A', 'AN', 'IS', 'ARE', 'WAS', 'WERE', 'HAVE', 'HAS', 'HAD', 
+    'DO', 'DOES', 'DID', 'WILL', 'WOULD', 'COULD', 'SHOULD', 'MAY', 'MIGHT', 'MUST',
+    'CAN', 'BE', 'BEEN', 'BEING', 'NOT', 'NO', 'YES', 'SO', 'BUT', 'AND', 'OR']);
+  if (words.length >= 2 && commonWords.has(words[words.length - 1])) return false;
+  
   // Must not match NOT_CHARACTER_PATTERNS (title page fragments, dates, etc.)
   for (const pattern of NOT_CHARACTER_PATTERNS) {
     if (pattern.test(normalized)) return false;
@@ -1425,7 +1444,7 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
     let canonical = name;
     let foundMatch = false;
     
-    for (const [existingNorm, existingCanon] of nameMap) {
+    for (const [existingNorm, existingCanon] of Array.from(nameMap.entries())) {
       const existingRole = rolesByCanonical.get(existingCanon);
       if (!existingRole) continue;
       
@@ -1466,9 +1485,9 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
   // Update scene lines to use canonical names
   for (const scene of scenes) {
     for (const line of scene.lines) {
-      const canonical = nameMap.get(line.character);
-      if (canonical && canonical !== line.character) {
-        line.character = canonical;
+      const canonical = nameMap.get(line.roleName);
+      if (canonical && canonical !== line.roleName) {
+        line.roleName = canonical;
         line.roleId = rolesByCanonical.get(canonical)?.id || line.roleId;
       }
     }
