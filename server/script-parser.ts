@@ -697,8 +697,8 @@ function normalizeCharacterName(name: string): string {
 
 // Valid short names (2-3 chars) - real names only
 const VALID_SHORT_NAMES = new Set([
-  // 2-letter names
-  "AL", "BO", "ED", "JO", "KY", "LU", "TY", "VI",
+  // 2-letter names (very conservative - only unambiguous names)
+  "AL", "BO", "ED", "JO", "LU", "VI",
   // 3-letter names (common)
   "ABI", "ACE", "ADA", "AMY", "ANA", "ANN", "ASH", "AVA", "BEA", "BEN", "BOB", "CAL", "CAM", "DAN", 
   "DEE", "DOC", "DOM", "DON", "DOT", "DRU", "ELI", "EVA", "EVE", "FLO", "GAB", "GUS", "GUY", "HAL", 
@@ -725,6 +725,21 @@ function isValidCharacterName(name: string): boolean {
   // Must start with a letter
   if (!/^[A-Z]/.test(normalized)) return false;
   
+  // Reject names starting with "I" followed by a name (OCR merge: "ICALLIE")
+  if (/^I[A-Z]{3,}$/.test(normalized)) return false;
+  
+  // Reject "NAME. WORD" patterns (merged dialogue)
+  if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized)) return false;
+  
+  // Reject if contains apostrophe in weird places (OCR artifact: "T'WENTY")
+  if (/[A-Z]'[A-Z]{2,}/i.test(normalized)) return false;
+  
+  // Reject "SCENE" anything
+  if (/^SCENE\b/i.test(normalized)) return false;
+  
+  // Reject "SOUND" anything
+  if (/^SOUND\b/i.test(normalized)) return false;
+  
   // Reject names ending with numbers (e.g., "DET. COLE. 4")
   if (/\d+$/.test(normalized)) return false;
   
@@ -741,7 +756,7 @@ function isValidCharacterName(name: string): boolean {
   // where WORD is a common English word
   const commonWords = new Set(['THE', 'A', 'AN', 'IS', 'ARE', 'WAS', 'WERE', 'HAVE', 'HAS', 'HAD', 
     'DO', 'DOES', 'DID', 'WILL', 'WOULD', 'COULD', 'SHOULD', 'MAY', 'MIGHT', 'MUST',
-    'CAN', 'BE', 'BEEN', 'BEING', 'NOT', 'NO', 'YES', 'SO', 'BUT', 'AND', 'OR']);
+    'CAN', 'BE', 'BEEN', 'BEING', 'NOT', 'NO', 'YES', 'SO', 'BUT', 'AND', 'OR', 'OK', 'OKAY']);
   if (words.length >= 2 && commonWords.has(words[words.length - 1])) return false;
   
   // Must not match NOT_CHARACTER_PATTERNS (title page fragments, dates, etc.)
