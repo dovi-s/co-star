@@ -704,7 +704,7 @@ const VALID_SHORT_NAMES = new Set([
   "NIK", "ORA", "PAM", "PAT", "PEG", "RAE", "RAY", "REX", "ROB", "ROD", "RON", "ROY", "RUE", "SAL", 
   "SAM", "SID", "SIS", "SKY", "SLY", "STU", "SUE", "TAD", "TED", "TIM", "TOM", "VIC", "ZAC", "ZAK", "ZOE",
   // Common role descriptors that are valid
-  "MOM", "DAD", "SIS", "BRO", "DOC", "COP", "REF",
+  "MOM", "DAD", "SIS", "BRO", "DOC", "COP", "REF", "KID", "SON", "BOY", "MAN", "GUY", "GOD", "NUN",
 ]);
 
 function isValidCharacterName(name: string): boolean {
