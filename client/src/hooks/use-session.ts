@@ -40,7 +40,17 @@ export function useSession() {
     setError(null);
 
     try {
+      console.log('[Parser] Input length:', rawScript.length, 'chars');
+      console.log('[Parser] First 500 chars:', rawScript.substring(0, 500));
+      console.log('[Parser] Last 500 chars:', rawScript.substring(rawScript.length - 500));
+      
       const parsed = parseScript(rawScript);
+      
+      console.log('[Parser] Result:', {
+        roles: parsed.roles.map(r => `${r.name}(${r.lineCount})`),
+        scenes: parsed.scenes.length,
+        totalLines: parsed.scenes.reduce((s, sc) => s + sc.lines.length, 0)
+      });
       
       if (parsed.roles.length === 0) {
         setError("No roles detected. Make sure your script uses 'CHARACTER: dialogue' format.");
