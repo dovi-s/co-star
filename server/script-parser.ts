@@ -114,6 +114,48 @@ const NOT_CHARACTER_PATTERNS = [
   /^(YES|NO|YEAH|NAH|OKAY|OK|SURE|FINE|WELL|RIGHT|LOOK|LISTEN|HEY|HI|HELLO|BYE|GOODBYE)$/i,
 ];
 
+// Valid single-letter dialogue (exclamations, sounds)
+const VALID_SHORT_DIALOGUE = new Set([
+  'a', 'i', 'o', // Actual letters that can be dialogue
+  '...', '?', '!', // Punctuation-only
+]);
+
+// Check if dialogue is valid (not OCR garbage)
+function isValidDialogue(text: string): boolean {
+  if (!text) return false;
+  
+  const trimmed = text.trim();
+  
+  // Reject empty
+  if (!trimmed) return false;
+  
+  // For very short text (1-2 chars), be strict
+  if (trimmed.length <= 2) {
+    const lower = trimmed.toLowerCase();
+    // Allow valid short dialogue like "I", "A", "OK", "?", "!"
+    if (VALID_SHORT_DIALOGUE.has(lower)) return true;
+    if (trimmed === 'OK' || trimmed === 'ok') return true;
+    if (/^[.!?]+$/.test(trimmed)) return true; // Punctuation only
+    
+    // Single letters that aren't meaningful words are garbage
+    if (/^[a-z]$/i.test(trimmed)) {
+      // Only "I", "A", and "O" are valid single-letter words
+      if (!/^[aioAIO]$/.test(trimmed)) {
+        return false;
+      }
+    }
+  }
+  
+  // Check if mostly non-alphabetic (OCR garbage like "~.;,.-")
+  const letters = (trimmed.match(/[a-zA-Z]/g) || []).length;
+  const total = trimmed.replace(/\s/g, '').length;
+  if (total > 3 && letters / total < 0.3) {
+    return false; // Less than 30% letters = likely garbage
+  }
+  
+  return true;
+}
+
 // Clean a line by removing scene numbers from margins and revision marks
 function cleanScriptLine(line: string): string {
   let cleaned = line;
@@ -751,7 +793,8 @@ export function parseScript(rawText: string): ParsedScript {
       const fullDialogue = pendingDialogue.join(" ");
       const { cleanText, directions } = extractDirectionsFromDialogue(fullDialogue);
       
-      if (cleanText) {
+      // Validate dialogue - reject garbage like single letters "r", OCR artifacts
+      if (cleanText && isValidDialogue(cleanText)) {
         if (!roles.has(pendingCharacter)) {
           roles.set(pendingCharacter, {
             id: generateId(),
