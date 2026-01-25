@@ -448,6 +448,41 @@ function cleanDialogueText(text: string): string {
   // Fix hyphenated line breaks from PDF extraction: "sar- castic" -> "sarcastic"
   cleaned = cleaned.replace(/(\w+)-\s+(\w+)/g, '$1$2');
   
+  // Fix common OCR word merge issues where spaces were lost
+  // "Iyou" -> "I you", "myfriend" -> "my friend", etc.
+  cleaned = cleaned.replace(/\bIyou\b/g, 'I you');
+  cleaned = cleaned.replace(/\bIfI\b/g, 'If I');
+  cleaned = cleaned.replace(/\bIf I\b/g, 'If I');
+  cleaned = cleaned.replace(/\bmyfriend\b/gi, 'my friend');
+  cleaned = cleaned.replace(/\byoure\b/gi, "you're");
+  cleaned = cleaned.replace(/\bwhatre\b/gi, "what're");
+  cleaned = cleaned.replace(/\btheyre\b/gi, "they're");
+  cleaned = cleaned.replace(/\bdidnt\b/gi, "didn't");
+  cleaned = cleaned.replace(/\bwouldnt\b/gi, "wouldn't");
+  cleaned = cleaned.replace(/\bcouldnt\b/gi, "couldn't");
+  cleaned = cleaned.replace(/\bshouldnt\b/gi, "shouldn't");
+  cleaned = cleaned.replace(/\bwasnt\b/gi, "wasn't");
+  cleaned = cleaned.replace(/\bisnt\b/gi, "isn't");
+  cleaned = cleaned.replace(/\barent\b/gi, "aren't");
+  cleaned = cleaned.replace(/\bwont\b/gi, "won't");
+  cleaned = cleaned.replace(/\bdont\b/gi, "don't");
+  cleaned = cleaned.replace(/\bcant\b/gi, "can't");
+  cleaned = cleaned.replace(/\bhavent\b/gi, "haven't");
+  cleaned = cleaned.replace(/\bhasnt\b/gi, "hasn't");
+  cleaned = cleaned.replace(/\bweve\b/gi, "we've");
+  cleaned = cleaned.replace(/\bIve\b/g, "I've"); // Case-sensitive - only "Ive" not "ive"
+  cleaned = cleaned.replace(/\byouve\b/gi, "you've");
+  cleaned = cleaned.replace(/\btheyve\b/gi, "they've");
+  cleaned = cleaned.replace(/\bIll\b/g, "I'll"); // Case-sensitive - only "Ill" at start of sentence
+  cleaned = cleaned.replace(/\byoull\b/gi, "you'll");
+  // Skip "well" -> "we'll" - too many false positives with the word "well"
+  cleaned = cleaned.replace(/\btheyll\b/gi, "they'll");
+  // Skip "whats", "thats", "hes", "shes", "its", "lets" - too many false positives
+  // (what's vs whats, that's vs thats, he's vs hes, it's vs its possessive)
+  cleaned = cleaned.replace(/\bwheres\b/gi, "where's");
+  cleaned = cleaned.replace(/\bheres\b/gi, "here's");
+  cleaned = cleaned.replace(/\btheres\b/gi, "there's");
+  
   // Fix common OCR letter substitutions (conservative - avoid false positives)
   // Note: Many OCR errors like "rosses" for "crosses" require spell-checking which we avoid
   // to prevent introducing new errors. Users should use cleaner source PDFs when possible.
