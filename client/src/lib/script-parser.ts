@@ -423,6 +423,12 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   // Scene numbers only (like "1", "1A")
   if (isSceneNumber(trimmed)) return false;
   
+  // Lines starting with scene numbers followed by text (e.g., "1C-1D VARIOUS SHOTS")
+  if (/^\d+[A-Z]?[\-\s]+\d*[A-Z]?\s+[A-Z]/i.test(trimmed)) return false;
+  
+  // Action description with dashes (e.g., "VARIOUS SHOTS -- a conservative young MAN")
+  if (/\s--\s+[a-z]/i.test(trimmed)) return false;
+  
   // Camera/action directions (WE SEE, ANGLE ON, etc.)
   for (const pattern of CAMERA_ACTION_PATTERNS) {
     if (pattern.test(trimmed)) return false;
