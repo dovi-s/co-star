@@ -268,28 +268,27 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   if (!trimmed) return false;
   
+  // Skip clear non-dialogue patterns first
+  if (SCENE_HEADING_REGEX.test(trimmed)) return false;
+  if (TRANSITION_REGEX.test(trimmed)) return false;
+  
   // Parenthetical or bracketed direction
   if (trimmed.startsWith("(") || trimmed.startsWith("[")) return true;
   
-  // Starts with lowercase (likely continuation)
+  // Starts with lowercase (definitely continuation)
   if (/^[a-z]/.test(trimmed)) return true;
   
   // Original line was indented (tabs or multiple spaces)
   if (/^[\t]|^[ ]{2,}/.test(originalLine)) return true;
   
-  // Starts with ellipsis or dash (continuation)
-  if (/^[…—–\-]/.test(trimmed)) return true;
+  // Starts with ellipsis, dash, or punctuation (continuation)
+  if (/^[…—–\-"']/.test(trimmed)) return true;
   
-  // Starts with quotation continuation
+  // Starts with quotation
   if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
   
-  // If line doesn't look like a new character name or scene heading, treat as continuation
-  // This is more permissive for professional screenplay PDFs where indentation is lost
-  if (!SCENE_HEADING_REGEX.test(trimmed) && 
-      !TRANSITION_REGEX.test(trimmed) &&
-      !/^[A-Z][A-Z\s\-'\.]+(?:\s*\([^)]*\))?\s*$/.test(trimmed) && // Not a standalone character name
-      !trimmed.includes(":") && // No colon (not NAME: dialogue format)
-      trimmed.length < 200) { // Reasonable line length
+  // Short lines that start with "I " or common dialogue starters
+  if (/^(I\s|You\s|We\s|He\s|She\s|They\s|It\s|What|Why|How|When|Where|Who|No\s|Yes\s|Oh\s|Well\s|But\s|And\s|So\s|Just\s|Look\s|Listen\s|Hey\s|Wait\s|Please\s|Thank|Sorry|Okay|Ok\s|Alright)/i.test(trimmed)) {
     return true;
   }
   
