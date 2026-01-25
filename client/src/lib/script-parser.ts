@@ -491,6 +491,12 @@ export function parseScript(rawText: string): ParsedScript {
       return true;
     }
     
+    // Single proper name + action verb (e.g., "Mary sits on the couch")
+    // Must have lowercase continuation (to distinguish from CHARACTER NAME)
+    if (/^[A-Z][a-z]+\s+(sits?|stands?|walks?|runs?|looks?|enters?|exits?|turns?|moves?|picks?|grabs?|holds?|opens?|closes?|falls?|reads?|watches?|waits?|stares?|smiles?|laughs?|cries?|speaks?|whispers?|screams?|yells?|sighs?|nods?|shakes?)\b/i.test(trimmed)) {
+      return true;
+    }
+    
     // "There is/are..." scene descriptions
     if (/^There\s+(is|are|was|were)\s+/i.test(trimmed)) {
       return true;
