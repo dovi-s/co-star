@@ -6,6 +6,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
+import { aiCleanupScript } from "./ai-script-cleanup";
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -634,16 +635,26 @@ JOHN: We got the contract.`;
       const parsed = parseScript(text);
       console.log(`[Parse Script] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
       
-      const totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
       console.log(`[Parse Script] Total dialogue lines: ${totalLines}`);
 
-      if (parsed.roles.length === 0) {
+      // AI Smart Cleanup - validate and filter parsed results
+      console.log(`[Parse Script] Running AI Smart Cleanup...`);
+      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
+      
+      if (removedCount > 0) {
+        console.log(`[Parse Script] AI removed ${removedCount} non-dialogue lines:`, removedLines.slice(0, 5));
+        totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+        console.log(`[Parse Script] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
+      }
+
+      if (cleanedScript.roles.length === 0) {
         return res.status(400).json({ 
           error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
         });
       }
 
-      res.json({ parsed });
+      res.json({ parsed: cleanedScript });
     } catch (error: any) {
       console.error("Script parse error:", error.message || error);
       res.status(500).json({ error: "Failed to parse script" });
@@ -745,10 +756,20 @@ JOHN: We got the contract.`;
       const parsed = parseScript(text);
       console.log(`[PDF->Session] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
       
-      const totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
       console.log(`[PDF->Session] Total dialogue lines: ${totalLines}`);
 
-      if (parsed.roles.length === 0) {
+      // AI Smart Cleanup - validate and filter parsed results
+      console.log(`[PDF->Session] Running AI Smart Cleanup...`);
+      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
+      
+      if (removedCount > 0) {
+        console.log(`[PDF->Session] AI removed ${removedCount} non-dialogue lines:`, removedLines.slice(0, 5));
+        totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+        console.log(`[PDF->Session] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
+      }
+
+      if (cleanedScript.roles.length === 0) {
         return res.status(400).json({ 
           error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
         });
@@ -756,7 +777,7 @@ JOHN: We got the contract.`;
 
       // Return the parsed result AND the raw text for display
       res.json({ 
-        parsed,
+        parsed: cleanedScript,
         rawText: text,
         fileName: file.originalname 
       });

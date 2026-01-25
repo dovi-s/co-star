@@ -45,6 +45,8 @@ client/
 server/
 ├── routes.ts                # API endpoints
 ├── storage.ts               # Data persistence
+├── script-parser.ts         # Script parsing with pattern matching
+├── ai-script-cleanup.ts     # AI post-processing for script validation
 └── index.ts                 # Server entry point
 
 shared/
@@ -130,6 +132,16 @@ Sophisticated, minimal design inspired by premium $10B companies (Stripe, Linear
 Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
+
+### January 2026 - AI Smart Cleanup Feature
+- **AI Post-Processing Validation**: After regex parsing, AI reviews first 80 parsed lines
+  - Identifies and removes title page content, writer credits, cast lists
+  - Filters out production notes, copyright notices, revision markers
+  - Catches action descriptions mistakenly parsed as dialogue
+  - Returns perfectly clean dialogue-only results
+- **Graceful Degradation**: If AI is unavailable, returns original parsed result
+- **Performance Optimized**: 15-second timeout, only processes first 80 lines for speed
+- **Type Safe**: Immutable operations, proper cloning of roles/scenes
 
 ### January 2026 - Multi-Format Script Parser Improvements
 - **Professional Screenplay Format Support**: Parser now handles industry-standard scripts
