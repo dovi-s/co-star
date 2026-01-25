@@ -217,6 +217,74 @@ function isValidDialogue(text: string): boolean {
   return true;
 }
 
+// Validate that context is actually stage direction/action, not dialogue fragments
+function isValidContext(text: string): boolean {
+  if (!text) return false;
+  
+  const trimmed = text.trim();
+  if (!trimmed) return false;
+  if (trimmed.length < 5) return false; // Too short to be meaningful context
+  
+  // Context should NOT look like dialogue fragments
+  // Dialogue fragments typically have:
+  // - Personal pronouns in conversational patterns ("and he was", "but she said")
+  // - Run-on patterns with "and" that continue thoughts
+  // - Incomplete sentences that trail off
+  
+  // Fragment patterns that indicate broken dialogue, not action
+  if (/^(and|but|or|so|then|because|that|which|who|when|where|if|though|although)\s+/i.test(trimmed)) {
+    return false; // Starts with conjunction = probably fragment
+  }
+  
+  // "[Name] and he/she..." patterns = dialogue fragment
+  if (/^[A-Z][a-z]+\s+and\s+(he|she|they|I|we)\s+/i.test(trimmed)) {
+    return false; // "Ben and he had..." is dialogue
+  }
+  
+  // "and he/she [verb]" patterns mid-sentence
+  if (/\band\s+(he|she|I|we)\s+(had|was|were|is|are|would|could|should|will|did)\b/i.test(trimmed)) {
+    return false; // Conversational fragment
+  }
+  
+  // Valid context should have action-like patterns:
+  // - Stage directions in brackets: [he stands]
+  // - Third-person action: "He walks to the door"
+  // - Scene description: "The room is dark"
+  // - Camera directions: "ANGLE ON", "CLOSE UP"
+  
+  // Accept bracketed directions
+  if (/^\[.*\]$/.test(trimmed)) return true;
+  if (/^\(.*\)$/.test(trimmed)) return true;
+  
+  // Accept clear action patterns
+  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|picks?|grabs?|holds?|opens?|closes?)/i.test(trimmed)) {
+    return true;
+  }
+  
+  // Accept scene descriptions
+  if (/^(The|A|An)\s+[a-z]+\s+(is|are|was|were|opens?|closes?|sits?|stands?|lies?)/i.test(trimmed)) {
+    return true;
+  }
+  
+  // Accept camera/transition directions
+  if (/^(CUT|FADE|DISSOLVE|ANGLE|CLOSE|WIDE|PAN|ZOOM|INTERCUT|LATER|MEANWHILE|CONTINUOUS)/i.test(trimmed)) {
+    return true;
+  }
+  
+  // Accept "beat", "pause", "silence" type directions
+  if (/^(beat|pause|silence|a\s+moment|a\s+beat)/i.test(trimmed)) {
+    return true;
+  }
+  
+  // If none of the above, be conservative and reject
+  // It's better to skip dubious context than show dialogue fragments
+  // Only accept if it has clear action verbs with third-person subjects
+  const hasThirdPersonAction = /\b(he|she|they|it)\s+[a-z]+s\b/i.test(trimmed) && 
+    !/\b(and|but|or)\s+(he|she|they|I|we)\b/i.test(trimmed);
+  
+  return hasThirdPersonAction;
+}
+
 // Clean a line by removing scene numbers from margins and revision marks
 function cleanScriptLine(line: string): string {
   let cleaned = line;
@@ -871,7 +939,7 @@ export function parseScript(rawText: string): ParsedScript {
           roleName: pendingCharacter,
           text: cleanText,
           direction: direction || undefined,
-          context: contextText || undefined, // Include action context
+          context: isValidContext(contextText) ? contextText : undefined, // Only include valid action context
           isBookmarked: false,
           emotionHint: detectEmotion(cleanText, direction),
         };
