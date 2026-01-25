@@ -7,10 +7,69 @@ function generateId(): string {
 
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
 const PARENTHETICAL_REGEX = /\(([^)]+)\)/g;
-const SCENE_HEADING_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|SCENE\s*\d|ACT\s*[IVX\d]|FADE IN|FADE OUT|CUT TO|DISSOLVE TO|SMASH CUT|MATCH CUT|JUMP CUT)/i;
+
+// Scene headings - now includes INSERT shots
+const SCENE_HEADING_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|INSERT\s*[-–—]|SCENE\s*\d|ACT\s*[IVX\d]|FADE IN:|FADE OUT:|THE SCREEN)/i;
 
 // Common screenplay transitions that should be ignored
-const TRANSITION_REGEX = /^(FADE TO:|DISSOLVE TO:|CUT TO:|SMASH CUT TO:|MATCH CUT TO:|JUMP CUT TO:|FADE OUT\.|FADE IN\.|THE END|CONTINUED|MORE)$/i;
+const TRANSITION_REGEX = /^(FADE TO:|DISSOLVE TO:|CUT TO:|SMASH CUT TO:|MATCH CUT TO:|JUMP CUT TO:|FADE OUT\.|FADE IN\.|THE END|CONTINUED|MORE|\d+\.?\s*$)$/i;
+
+// Scene numbers in professional screenplays (e.g., "1", "1A", "13B", "215C-G")
+const SCENE_NUMBER_REGEX = /^\d+[A-Z]?(?:[\s\-–—]+\d*[A-Z]?)?\s*$/;
+
+// Lines to skip entirely
+const SKIP_LINE_PATTERNS = [
+  /^OMITTED\s*$/i,
+  /^\d+[A-Z]?\s+OMITTED\s+\d+[A-Z]?\s*$/i, // "10 OMITTED 10"
+  /^thru$/i,
+  /^THRO:$/i,
+  /^FOR EDUCATIONAL PURPOSES/i,
+  /^Script provided for educational/i,
+  /^http/i,
+  /^\*+\s*$/,  // Just asterisks
+  /^Page\s+\d+/i,
+  /^\s*\d+\.\s*$/, // Just page numbers like "2."
+];
+
+// Clean a line by removing scene numbers from margins and revision marks
+function cleanScriptLine(line: string): string {
+  let cleaned = line;
+  
+  // Remove revision asterisks at end (can be multiple)
+  cleaned = cleaned.replace(/\s*\*+\s*$/, '');
+  
+  // Remove scene numbers from START of line (e.g., "1   EXT." -> "EXT.")
+  // Match: digits + optional letter + whitespace at start
+  cleaned = cleaned.replace(/^\d+[A-Z]?\s+/, '');
+  
+  // Remove scene numbers from END of line (e.g., "EXT. HOUSE - DAY   1" -> "EXT. HOUSE - DAY")
+  // Match: whitespace + digits + optional letter at end
+  cleaned = cleaned.replace(/\s+\d+[A-Z]?\s*$/, '');
+  
+  // Handle dual scene numbers like "1A  EXT. HOUSE - DAY  1A"
+  // After removing start, we might still have end number
+  cleaned = cleaned.replace(/\s+\d+[A-Z]?\s*$/, '');
+  
+  return cleaned.trim();
+}
+
+// Check if a line should be skipped entirely
+function shouldSkipLine(line: string): boolean {
+  const trimmed = line.trim();
+  
+  // Check against skip patterns
+  for (const pattern of SKIP_LINE_PATTERNS) {
+    if (pattern.test(trimmed)) return true;
+  }
+  
+  // Scene numbers only (like "1", "1A", "13B")
+  if (SCENE_NUMBER_REGEX.test(trimmed)) return true;
+  
+  // Very short lines that are just punctuation or numbers
+  if (/^[\d\.\*\-–—\s]+$/.test(trimmed)) return true;
+  
+  return false;
+}
 
 const CHARACTER_EXTENSIONS = [
   "V.O.", "VO", "V/O", "VOICE OVER", "VOICEOVER", "VOICE-OVER",
@@ -54,32 +113,22 @@ const RESERVED_WORDS = new Set([
 const SOUND_CUE_REGEX = /^(MUSIC|SOUND|SFX|SCORE|SONG|AUDIO)\s*:/i;
 
 // Detect action description lines (third-person narrative describing what happens)
-// These are scene descriptions, not dialogue
+// BE CONSERVATIVE - only detect very obvious action lines to avoid filtering dialogue
 function isActionDescriptionLine(line: string): boolean {
   const trimmed = line.trim();
   
   // Skip if it looks like dialogue (starts with common dialogue patterns)
-  if (/^(I\s|I'm|I've|I'll|I'd|You\s|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't|Let's|Let me)/i.test(trimmed)) {
+  if (/^(I\s|I'm|I've|I'll|I'd|You\s|You're|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Hi|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't|Let's|Let me|That's|There's|It's|We're|They're)/i.test(trimmed)) {
     return false;
   }
   
-  // Action lines typically start with third-person subjects + verbs
-  // e.g., "Nancy and Robert are kissing", "They fall onto the bed", "He walks away"
+  // Only detect very obvious third-person action descriptions
+  // e.g., "He walks away", "She looks at him", "They exit"
   const actionPatterns = [
-    // Third person pronouns + verb
-    /^(He|She|They|It|We|Everyone|Everybody|Someone|Somebody|No one|Nobody)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|takes?|puts?|gets?|sees?|falls?|speaks?|kisses?|grabs?|picks?|drops?|holds?|starts?|stops?|opens?|closes?|continues?|begins?|appears?|disappears?)/i,
-    // Proper name + "and" + name (e.g., "Nancy and Robert are")
-    /^[A-Z][a-z]+\s+and\s+[A-Z][a-z]+\s+(is|are|was|were|walk|run|look|turn|move|stand|sit|enter|exit|come|go|take|put|get|see|fall|speak|kiss|grab|pick|drop|hold|start|stop|open|close|continue|begin|appear|disappear)/i,
-    // Name + verb (e.g., "Nancy walks", "Robert turns")
-    /^[A-Z][a-z]+\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|takes?|puts?|gets?|sees?|falls?|speaks?|kisses?|grabs?|picks?|drops?|holds?|starts?|stops?|opens?|closes?|continues?|begins?|appears?|disappears?)/i,
-    // "The" + noun + verb (e.g., "The door opens", "The band plays")
-    /^The\s+\w+\s+(is|are|was|were|opens?|closes?|plays?|starts?|stops?|begins?|ends?|continues?)/i,
-    // Present participle descriptions (e.g., "Looking at the door", "Walking away")
-    /^(Looking|Walking|Running|Moving|Standing|Sitting|Entering|Exiting|Coming|Going|Taking|Getting|Seeing|Falling|Speaking|Kissing|Grabbing|Picking|Dropping|Holding|Starting|Stopping|Opening|Closing|Continuing|Beginning|Appearing|Disappearing)/i,
-    // "We see/hear/push in" - narrative voice
-    /^We\s+(see|hear|push|pull|pan|zoom|track|follow|cut)/i,
-    // Page numbers at end
-    /\d+\.?\s*$/,
+    // Third person pronouns + verb (very reliable)
+    /^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|falls?|kisses?|grabs?|holds?|opens?|closes?)/i,
+    // "We see/hear" - narrative voice (very reliable)
+    /^We\s+(see|hear|push|pull|pan|zoom|track|follow)/i,
   ];
   
   for (const pattern of actionPatterns) {
@@ -158,15 +207,21 @@ function isValidCharacterName(name: string): boolean {
 function isStandaloneCharacterName(line: string): { isCharacter: boolean; name: string } {
   const trimmed = line.trim();
   
-  // Must be ALL CAPS (or mostly caps)
-  const capsRatio = (trimmed.match(/[A-Z]/g) || []).length / trimmed.replace(/\s/g, "").length;
-  if (capsRatio < 0.7) return { isCharacter: false, name: "" };
-  
-  // Remove extensions to get core name
+  // Remove extensions first to get core name
   let coreName = trimmed.replace(EXTENSION_PATTERN, "").trim();
   coreName = coreName.replace(/\([^)]*\)\s*$/, "").trim();
   
-  // Should be short (character names are typically 1-2 words)
+  // If no core name left, not a character
+  if (!coreName || coreName.length < 2) return { isCharacter: false, name: "" };
+  
+  // Check caps ratio on core name only (ignore extensions and punctuation)
+  const letters = coreName.match(/[A-Za-z]/g) || [];
+  const upperLetters = coreName.match(/[A-Z]/g) || [];
+  if (letters.length === 0) return { isCharacter: false, name: "" };
+  const capsRatio = upperLetters.length / letters.length;
+  if (capsRatio < 0.7) return { isCharacter: false, name: "" };
+  
+  // Should be short (character names are typically 1-3 words)
   const wordCount = coreName.split(/\s+/).length;
   if (wordCount > 3) return { isCharacter: false, name: "" };
   
@@ -327,12 +382,10 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
 }
 
 // Patterns that indicate camera/action directions (not dialogue)
+// BE CONSERVATIVE - only catch obvious camera/technical directions
 const CAMERA_ACTION_PATTERNS = [
-  /^(WE SEE|WE HEAR|CUT TO|SMASH CUT|MATCH CUT|DISSOLVE TO|FADE|PAN|ZOOM|CLOSE ON|ANGLE ON|BACK TO|FLASH|INSERT|INTERCUT|MONTAGE|SUPER|TITLE|CREDITS)/i,
-  /^(A |AN |THE |THEIR |HIS |HER |ITS )/i, // Action descriptions
+  /^(WE SEE|WE HEAR|SMASH CUT|MATCH CUT|DISSOLVE TO|ANGLE ON|CLOSE ON|BACK TO|FLASH TO|INTERCUT|MONTAGE|SERIES OF SHOTS|SUPER:|TITLE:|CREDITS)/i,
   /^\d+[A-Z]?\s+(WE|INT|EXT|SCENE|CUT|FADE)/i, // Scene numbers with directions
-  /^\d+[A-Z]?[\-\s]+\d+[A-Z]?\s/i, // Scene ranges like "215C-G"
-  /^[A-Z]+\s+(walks|runs|enters|exits|stands|sits|looks|turns|moves|picks|puts|takes|grabs|holds)/i, // Action lines
 ];
 
 // Check if line is a scene number (like "1A", "215C-G", etc.)
@@ -342,6 +395,7 @@ function isSceneNumber(line: string): boolean {
 }
 
 // Check if a line is likely dialogue continuation
+// BE CONSERVATIVE - assume text is dialogue unless it's obviously not
 function isDialogueContinuation(line: string, originalLine: string): boolean {
   const trimmed = line.trim();
   
@@ -349,54 +403,42 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   // === STOP PATTERNS: These definitely end dialogue ===
   
-  // Scene headings
+  // Scene headings (INT./EXT.)
   if (SCENE_HEADING_REGEX.test(trimmed)) return false;
   
-  // Transitions
+  // Transitions like "CUT TO:", "FADE TO:"
   if (TRANSITION_REGEX.test(trimmed)) return false;
   
-  // Scene numbers  
+  // Scene numbers only (like "1", "1A")
   if (isSceneNumber(trimmed)) return false;
   
-  // Camera/action directions
+  // Camera/action directions (WE SEE, ANGLE ON, etc.)
   for (const pattern of CAMERA_ACTION_PATTERNS) {
     if (pattern.test(trimmed)) return false;
   }
   
-  // Standalone character names (ALL CAPS, short, on own line)
+  // Standalone character names (ALL CAPS, short, on own line - not dialogue)
+  // But only if it looks like a proper character name format
   if (/^[A-Z][A-Z\s\-'\.]+$/.test(trimmed) && trimmed.length < 30) {
     const wordCount = trimmed.split(/\s+/).length;
-    if (wordCount <= 3) return false;
+    // Check if it could be a character name (1-3 words, all caps)
+    if (wordCount <= 3 && isValidCharacterName(trimmed)) {
+      return false;
+    }
   }
   
-  // Third-person action descriptions (He walks, She looks, They fall)
-  if (/^(He|She|They|It|We)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|ushers?)/i.test(trimmed)) {
+  // Third-person action descriptions (He walks, She looks) - very reliable
+  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|opens?|closes?|falls?|kisses?)\b/i.test(trimmed)) {
     return false;
   }
   
-  // "The [noun] [verb]" action descriptions
-  if (/^The\s+\w+\s+(is|are|was|were|opens?|closes?|falls?|begins?|starts?)/i.test(trimmed)) {
-    return false;
-  }
-  
-  // Character introductions (NAME, age)
-  if (/[A-Z]{2,}\s+[A-Z]+,\s*\d{1,2}/.test(trimmed)) {
-    return false;
-  }
-  
-  // Page numbers (just a number or "2." at start)
+  // Page numbers (just a number)
   if (/^\d+\.?\s*$/.test(trimmed)) return false;
   
   // MUSIC: cue lines
   if (/^MUSIC:/i.test(trimmed)) return false;
   
-  // Action lines starting with proper name + verb
-  if (/^[A-Z][a-z]+\s+(is|are|was|were|and\s+[A-Z][a-z]+\s+(is|are|was|were))/i.test(trimmed)) {
-    return false;
-  }
-  
   // === IF NONE OF THE STOP PATTERNS MATCHED, IT'S LIKELY DIALOGUE ===
-  // Dialogue can be anything that's not an action/heading/character name
   return true;
 }
 
@@ -491,12 +533,25 @@ export function parseScript(rawText: string): ParsedScript {
   };
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
+    const rawLine = lines[i];
+    const rawTrimmed = rawLine.trim();
     
     // Empty line - flush current dialogue
-    if (!trimmed) {
+    if (!rawTrimmed) {
       flushPendingDialogue();
+      continue;
+    }
+    
+    // Check if line should be skipped entirely (OMITTED, scene numbers only, etc.)
+    if (shouldSkipLine(rawTrimmed)) {
+      continue;
+    }
+    
+    // Clean the line (remove scene numbers from margins, revision asterisks)
+    const trimmed = cleanScriptLine(rawTrimmed);
+    
+    // Skip if cleaning left us with nothing
+    if (!trimmed) {
       continue;
     }
     
@@ -522,9 +577,17 @@ export function parseScript(rawText: string): ParsedScript {
       continue;
     }
     
-    // Skip title page / front matter until first scene heading
+    // Skip title page / front matter until first scene heading OR first dialogue
     if (!foundFirstScene) {
-      continue;
+      // Check if this line is dialogue - if so, start capturing
+      const earlyCheck = isLikelyCharacterLine(trimmed);
+      if (earlyCheck.isCharacter) {
+        foundFirstScene = true;
+        currentSceneName = "Scene 1";
+        // Fall through to process this line as dialogue
+      } else {
+        continue;
+      }
     }
     
     // Transition - skip
@@ -582,7 +645,7 @@ export function parseScript(rawText: string): ParsedScript {
     }
     // Check if this is dialogue continuation
     else if (pendingCharacter) {
-      if (isDialogueContinuation(trimmed, line)) {
+      if (isDialogueContinuation(trimmed, rawLine)) {
         pendingDialogue.push(trimmed);
       } else {
         // Could be a new standalone character or action line
