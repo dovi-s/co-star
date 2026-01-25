@@ -262,6 +262,21 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
   return { cleanText, directions };
 }
 
+// Patterns that indicate camera/action directions (not dialogue)
+const CAMERA_ACTION_PATTERNS = [
+  /^(WE SEE|WE HEAR|CUT TO|SMASH CUT|MATCH CUT|DISSOLVE TO|FADE|PAN|ZOOM|CLOSE ON|ANGLE ON|BACK TO|FLASH|INSERT|INTERCUT|MONTAGE|SUPER|TITLE|CREDITS)/i,
+  /^(A |AN |THE |THEIR |HIS |HER |ITS )/i, // Action descriptions
+  /^\d+[A-Z]?\s+(WE|INT|EXT|SCENE|CUT|FADE)/i, // Scene numbers with directions
+  /^\d+[A-Z]?[\-\s]+\d+[A-Z]?\s/i, // Scene ranges like "215C-G"
+  /^[A-Z]+\s+(walks|runs|enters|exits|stands|sits|looks|turns|moves|picks|puts|takes|grabs|holds)/i, // Action lines
+];
+
+// Check if line is a scene number (like "1A", "215C-G", etc.)
+function isSceneNumber(line: string): boolean {
+  const trimmed = line.trim();
+  return /^\d+[A-Z]?[\s\-]*[A-Z]?\s*$/.test(trimmed) || /^\d+[A-Z]?\s*$/.test(trimmed);
+}
+
 // Check if a line is likely dialogue continuation
 function isDialogueContinuation(line: string, originalLine: string): boolean {
   const trimmed = line.trim();
@@ -271,9 +286,15 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   // Skip clear non-dialogue patterns first
   if (SCENE_HEADING_REGEX.test(trimmed)) return false;
   if (TRANSITION_REGEX.test(trimmed)) return false;
+  if (isSceneNumber(trimmed)) return false;
   
-  // Parenthetical or bracketed direction
-  if (trimmed.startsWith("(") || trimmed.startsWith("[")) return true;
+  // Skip camera/action directions
+  for (const pattern of CAMERA_ACTION_PATTERNS) {
+    if (pattern.test(trimmed)) return false;
+  }
+  
+  // Parenthetical direction (like "(sighing)")
+  if (trimmed.startsWith("(") && trimmed.endsWith(")")) return true;
   
   // Starts with lowercase (definitely continuation)
   if (/^[a-z]/.test(trimmed)) return true;
@@ -287,8 +308,8 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   // Starts with quotation
   if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
   
-  // Short lines that start with "I " or common dialogue starters
-  if (/^(I\s|You\s|We\s|He\s|She\s|They\s|It\s|What|Why|How|When|Where|Who|No\s|Yes\s|Oh\s|Well\s|But\s|And\s|So\s|Just\s|Look\s|Listen\s|Hey\s|Wait\s|Please\s|Thank|Sorry|Okay|Ok\s|Alright)/i.test(trimmed)) {
+  // Common dialogue starters (but NOT "We" which often starts action lines)
+  if (/^(I\s|You\s|He\s|She\s|They\s|It\s|What|Why|How|When|Where|Who|No,?\s|Yes,?\s|Oh,?\s|Well,?\s|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey,?\s|Wait,?\s|Please\s|Thank|Sorry|Okay|Ok,?\s|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't)/i.test(trimmed)) {
     return true;
   }
   
