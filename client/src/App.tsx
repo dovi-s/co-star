@@ -28,9 +28,8 @@ function App() {
   });
 
   const [nextView, setNextView] = useState<View | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState<Direction>("forward");
-  const [showNext, setShowNext] = useState(false);
+  const [animationPhase, setAnimationPhase] = useState<"idle" | "ready" | "animating">("idle");
   const transitionLock = useRef(false);
 
   const transitionTo = useCallback((newView: View, dir: Direction) => {
@@ -39,30 +38,29 @@ function App() {
     transitionLock.current = true;
     setDirection(dir);
     setNextView(newView);
-    setIsTransitioning(true);
+    setAnimationPhase("ready");
     
-    // Small delay to ensure next view is mounted before animating
+    // Next frame: start animation
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        setShowNext(true);
+        setAnimationPhase("animating");
       });
     });
   }, [currentView]);
 
   // Handle transition completion
   useEffect(() => {
-    if (!showNext || !nextView) return;
+    if (animationPhase !== "animating" || !nextView) return;
     
     const timer = setTimeout(() => {
       setCurrentView(nextView);
       setNextView(null);
-      setIsTransitioning(false);
-      setShowNext(false);
+      setAnimationPhase("idle");
       transitionLock.current = false;
-    }, 350); // Match CSS transition duration
+    }, 350);
     
     return () => clearTimeout(timer);
-  }, [showNext, nextView]);
+  }, [animationPhase, nextView]);
 
   const handleSessionReady = useCallback(() => {
     transitionTo("rehearsal", "forward");
@@ -72,34 +70,32 @@ function App() {
     transitionTo("home", "back");
   }, [transitionTo]);
 
-  const renderView = (view: View, isOutgoing: boolean) => {
-    const ViewComponent = view === "home" 
-      ? <HomePage onSessionReady={handleSessionReady} />
-      : <RehearsalPage onBack={handleBackToHome} />;
-
-    return (
-      <div
-        className={cn(
-          "absolute inset-0 bg-background",
-          "transition-all duration-350 ease-smooth",
-          isOutgoing ? (
-            showNext 
-              ? direction === "forward"
-                ? "opacity-0 -translate-x-6 scale-[0.98] blur-[2px]"
-                : "opacity-0 translate-x-6 scale-[0.98] blur-[2px]"
-              : "opacity-100 translate-x-0 scale-100 blur-0"
-          ) : (
-            showNext
-              ? "opacity-100 translate-x-0 scale-100 blur-0"
-              : direction === "forward"
-                ? "opacity-0 translate-x-8 scale-[0.98] blur-[2px]"
-                : "opacity-0 -translate-x-8 scale-[0.98] blur-[2px]"
-          )
-        )}
-      >
-        {ViewComponent}
-      </div>
-    );
+  const getViewClasses = (isCurrentView: boolean) => {
+    // Not transitioning - show current view normally
+    if (animationPhase === "idle") {
+      return isCurrentView 
+        ? "opacity-100 translate-x-0 scale-100" 
+        : "opacity-0 pointer-events-none";
+    }
+    
+    // Transitioning
+    if (isCurrentView) {
+      // Current view exits
+      if (animationPhase === "animating") {
+        return direction === "forward"
+          ? "opacity-0 -translate-x-8 scale-[0.98]"
+          : "opacity-0 translate-x-8 scale-[0.98]";
+      }
+      return "opacity-100 translate-x-0 scale-100";
+    } else {
+      // Next view enters
+      if (animationPhase === "animating") {
+        return "opacity-100 translate-x-0 scale-100";
+      }
+      return direction === "forward"
+        ? "opacity-0 translate-x-8 scale-[0.98]"
+        : "opacity-0 -translate-x-8 scale-[0.98]";
+    }
   };
 
   return (
@@ -108,10 +104,34 @@ function App() {
         <TooltipProvider>
           <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
             {/* Current view */}
-            {renderView(currentView, isTransitioning)}
+            <div
+              className={cn(
+                "absolute inset-0 bg-background",
+                "transition-all duration-300 ease-out",
+                getViewClasses(true)
+              )}
+            >
+              {currentView === "home" 
+                ? <HomePage onSessionReady={handleSessionReady} />
+                : <RehearsalPage onBack={handleBackToHome} />
+              }
+            </div>
             
             {/* Next view (during transition) */}
-            {nextView && renderView(nextView, false)}
+            {nextView && (
+              <div
+                className={cn(
+                  "absolute inset-0 bg-background",
+                  "transition-all duration-300 ease-out",
+                  getViewClasses(false)
+                )}
+              >
+                {nextView === "home" 
+                  ? <HomePage onSessionReady={handleSessionReady} />
+                  : <RehearsalPage onBack={handleBackToHome} />
+                }
+              </div>
+            )}
           </div>
           <Toaster />
         </TooltipProvider>
