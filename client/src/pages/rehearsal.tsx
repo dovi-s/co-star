@@ -38,6 +38,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     getPreviousLine,
     getNextLine,
     getTotalLines,
+    getTotalScriptLines,
+    getGlobalLineNumber,
     getRoleById,
     isUserLine,
     nextLine,
@@ -97,7 +99,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
   const nextLineData = getNextLine();
-  const totalLines = getTotalLines();
+  const totalLines = getTotalScriptLines(); // Total lines across ALL scenes
+  const globalLineNumber = getGlobalLineNumber(); // Current position in entire script
   const userRole = session?.userRoleId ? getRoleById(session.userRoleId) : null;
   const currentIsUserLine = isUserLine(currentLine);
 
@@ -1127,7 +1130,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             isPlaying={session.isPlaying}
             canGoBack={canGoBack}
             canGoNext={canGoNext}
-            currentLine={session.currentLineIndex}
+            currentLine={globalLineNumber}
             totalLines={totalLines}
             onBack={handleBack}
             onPlayPause={handlePlayPause}

@@ -291,6 +291,22 @@ export function useSession() {
     return scene?.lines.length ?? 0;
   }, [session]);
 
+  // Get total lines across ALL scenes
+  const getTotalScriptLines = useCallback((): number => {
+    if (!session) return 0;
+    return session.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+  }, [session]);
+
+  // Get the global line number (across all scenes)
+  const getGlobalLineNumber = useCallback((): number => {
+    if (!session) return 0;
+    let globalIndex = 0;
+    for (let i = 0; i < session.currentSceneIndex; i++) {
+      globalIndex += session.scenes[i]?.lines.length ?? 0;
+    }
+    return globalIndex + session.currentLineIndex;
+  }, [session]);
+
   const getRoleById = useCallback((roleId: string): Role | undefined => {
     return session?.roles.find(r => r.id === roleId);
   }, [session]);
@@ -326,6 +342,8 @@ export function useSession() {
     getPreviousLine,
     getNextLine,
     getTotalLines,
+    getTotalScriptLines,
+    getGlobalLineNumber,
     getRoleById,
     isUserLine,
   };
