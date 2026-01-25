@@ -1,9 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Clipboard, X, Loader2, Check } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface ParsedScript {
   roles: any[];
@@ -388,6 +395,70 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
       >
+        {/* Format help icon */}
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 text-muted-foreground/50"
+              data-testid="button-format-help"
+            >
+              <HelpCircle className="w-4 h-4" />
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-base font-medium">Script Formatting</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 text-sm">
+              <p className="text-muted-foreground">
+                We accept most standard script formats. Here are the main ones:
+              </p>
+              
+              {/* Screenplay format */}
+              <div className="space-y-1.5">
+                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Screenplay Format</p>
+                <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
+                  <div className="text-center mb-1">SARAH</div>
+                  <div className="text-muted-foreground mb-2">I can't believe you're leaving.</div>
+                  <div className="text-center mb-1">MICHAEL</div>
+                  <div className="text-muted-foreground">(softly)</div>
+                  <div className="text-muted-foreground">Neither can I.</div>
+                </div>
+              </div>
+              
+              {/* Stage play format */}
+              <div className="space-y-1.5">
+                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Stage Play Format</p>
+                <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
+                  <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
+                  <div className="text-muted-foreground">MICHAEL: [softly] Neither can I.</div>
+                </div>
+              </div>
+              
+              {/* Tips */}
+              <div className="space-y-2 pt-1">
+                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Tips</p>
+                <ul className="space-y-1.5 text-muted-foreground text-xs">
+                  <li className="flex gap-2">
+                    <span className="text-foreground">PDF</span>
+                    <span>Upload directly or copy-paste text</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-foreground">Names</span>
+                    <span>ALL CAPS or followed by colon</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="text-foreground">Directions</span>
+                    <span>Use [brackets] or (parentheses)</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
         <Textarea
           ref={textareaRef}
           id="script-text"
