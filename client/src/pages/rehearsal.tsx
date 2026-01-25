@@ -78,7 +78,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [completedRunStats, setCompletedRunStats] = useState<{
     averageAccuracy: number;
     perfectLines: number;
-    totalUserLines: number;
+    totalUserLines: number; // Lines where user spoke
+    expectedUserLines: number; // Total user lines in scene
     hintsUsed: number;
     skippedLines: number;
     duration: number;
@@ -293,13 +294,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const totalUserLines = allPerfs.length;
     const avgAccuracy = totalUserLines > 0 
       ? allPerfs.reduce((sum, p) => sum + p.accuracy, 0) / totalUserLines 
-      : 100;
+      : 0;
     const perfectLines = allPerfs.filter(p => p.accuracy >= 95).length;
     const hintsUsed = allPerfs.filter(p => p.usedHint).length;
     const skippedLines = allPerfs.filter(p => p.skipped).length;
     const duration = Math.round((Date.now() - runPerformanceRef.current.startTime) / 1000);
     
-    console.log("[Performance] Run complete. Total lines:", totalUserLines, "Avg accuracy:", avgAccuracy);
+    // Count how many lines the user SHOULD have spoken in this scene
+    const currentScene = session?.scenes?.[session?.currentSceneIndex ?? 0];
+    const expectedUserLines = currentScene?.lines?.filter(
+      (line) => line.roleId === session?.userRoleId
+    ).length ?? 0;
+    
+    console.log("[Performance] Run complete. Spoken:", totalUserLines, "/", expectedUserLines, "Avg accuracy:", avgAccuracy);
     console.log("[Performance] Line accuracies:", allPerfs.map(p => Math.round(p.accuracy)));
     
     // Set completed stats
@@ -307,6 +314,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       averageAccuracy: avgAccuracy,
       perfectLines,
       totalUserLines,
+      expectedUserLines,
       hintsUsed,
       skippedLines,
       duration,
@@ -317,7 +325,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     recordRehearsal(0, 1);
     setShowCelebration(true);
     setSceneCompleted(true);
-  }, [incrementRunsCompleted, recordRehearsal, setPlaying]);
+  }, [incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
 
   // Reset run performance for a new run
   const resetRunPerformance = useCallback(() => {
@@ -797,47 +805,52 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   // Generate performance feedback message
   const getPerformanceFeedback = () => {
-    // Always show feedback when stats exist
     if (!completedRunStats) {
-      // No stats yet, show default
       return { 
         type: "good" as const, 
-        icon: Check,
         message: "Run complete", 
         detail: "Ready for another take."
       };
     }
     
-    const { averageAccuracy, perfectLines, totalUserLines, skippedLines } = completedRunStats;
+    const { averageAccuracy, perfectLines, totalUserLines, expectedUserLines, skippedLines } = completedRunStats;
     
-    // No user lines recorded (all skipped or no lines to say)
+    // No lines spoken at all
     if (totalUserLines === 0) {
+      if (expectedUserLines === 0) {
+        return { 
+          type: "good" as const, 
+          message: "Scene complete", 
+          detail: "No speaking lines in this scene."
+        };
+      }
       return { 
-        type: "good" as const, 
-        icon: Check,
-        message: "Listened through", 
-        detail: "Run again and speak your lines."
+        type: "learning" as const, 
+        message: "Listen mode", 
+        detail: `Speak your ${expectedUserLines} lines next time.`
       };
     }
     
-    // Perfect run
-    if (averageAccuracy >= 95 && skippedLines === 0) {
+    // Compare spoken lines to expected
+    const spokenRatio = expectedUserLines > 0 ? totalUserLines / expectedUserLines : 1;
+    
+    // Perfect run - high accuracy AND spoke all lines
+    if (averageAccuracy >= 95 && spokenRatio >= 0.9 && skippedLines === 0) {
       return { 
         type: "perfect" as const, 
-        icon: Star,
         message: "Flawless delivery", 
-        detail: "Every line nailed."
+        detail: perfectLines === totalUserLines 
+          ? `All ${perfectLines} lines perfect.`
+          : `${perfectLines}/${totalUserLines} lines perfect.`
       };
     }
     
-    // Great run
+    // Great run - good accuracy
     if (averageAccuracy >= 80) {
-      const pct = perfectLines > 0 ? `${perfectLines}/${totalUserLines} lines perfect.` : "";
       return { 
         type: "great" as const, 
-        icon: TrendingUp,
         message: "Strong run", 
-        detail: pct || `${Math.round(averageAccuracy)}% accuracy.`
+        detail: `${Math.round(averageAccuracy)}% accuracy. ${perfectLines}/${totalUserLines} perfect.`
       };
     }
     
@@ -845,20 +858,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (averageAccuracy >= 60) {
       return { 
         type: "good" as const, 
-        icon: Target,
         message: "Solid progress", 
-        detail: `${Math.round(averageAccuracy)}% accuracy. Keep practicing.`
+        detail: `${Math.round(averageAccuracy)}% accuracy. Keep at it.`
       };
     }
     
-    // Needs work
+    // Needs work - low accuracy or many skipped
+    if (skippedLines > totalUserLines / 2) {
+      return { 
+        type: "learning" as const, 
+        message: "Getting there", 
+        detail: `${skippedLines} lines skipped. Take your time.`
+      };
+    }
+    
     return { 
       type: "learning" as const, 
-      icon: RefreshCcw,
-      message: "Getting there", 
-      detail: skippedLines > 0 
-        ? `${skippedLines} lines skipped. Try speaking each one.`
-        : "Run it again to build confidence."
+      message: "Keep practicing", 
+      detail: `${Math.round(averageAccuracy)}% accuracy. You'll get it.`
     };
   };
 
@@ -898,7 +915,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
       {showCelebration && (() => {
         const feedback = getPerformanceFeedback();
-        const FeedbackIcon = feedback?.icon || Check;
         
         // Deterministic confetti particles for perfect runs (seeded by position)
         const confettiParticles = feedback?.type === "perfect" 
@@ -974,18 +990,36 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 </p>
               )}
               
-              {/* Compact stats row */}
-              {completedRunStats && completedRunStats.totalUserLines > 0 && (
+              {/* Stats row - always show if we have expected lines */}
+              {completedRunStats && completedRunStats.expectedUserLines > 0 && (
                 <div className="flex items-center justify-center gap-6 py-3 px-4 bg-muted/30 rounded-lg mb-4">
-                  <div className="text-center">
-                    <span className="text-xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">accuracy</p>
-                  </div>
-                  <div className="w-px h-6 bg-border" />
-                  <div className="text-center">
-                    <span className="text-xl font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">perfect</p>
-                  </div>
+                  {completedRunStats.totalUserLines > 0 ? (
+                    <>
+                      <div className="text-center">
+                        <span className="text-xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">accuracy</p>
+                      </div>
+                      <div className="w-px h-6 bg-border" />
+                      <div className="text-center">
+                        <span className="text-xl font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">perfect</p>
+                      </div>
+                      {completedRunStats.totalUserLines < completedRunStats.expectedUserLines && (
+                        <>
+                          <div className="w-px h-6 bg-border" />
+                          <div className="text-center">
+                            <span className="text-xl font-bold text-foreground">{completedRunStats.totalUserLines}/{completedRunStats.expectedUserLines}</span>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">spoken</p>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <span className="text-xl font-bold text-foreground">0/{completedRunStats.expectedUserLines}</span>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">lines spoken</p>
+                    </div>
+                  )}
                 </div>
               )}
               
