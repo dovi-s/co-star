@@ -27,9 +27,30 @@ const SKIP_LINE_PATTERNS = [
   /^Script provided for educational/i,
   /^http/i,
   /^\*+\s*$/,  // Just asterisks
+  /^=+\s*$/,  // Just equals signs
+  /^-+\s*$/,  // Just dashes
+  /^\\+\s*$/,  // Just backslashes (OCR artifact)
+  /^[^\w\s]+$/,  // Lines with only punctuation/symbols
+  /^===\s*\[PAGE\s+\d+\]\s*===$/i, // Page markers like "=== [PAGE 1] ==="
   /^Page\s+\d+/i,
   /^\s*\d+\.\s*$/, // Just page numbers like "2."
+  /^\d+\s*$/,  // Just numbers
+  // Publisher/legal content
+  /^DRAMATISTS\s+PLAY\s+SERVICE/i,
+  /^PLAY\s+SE/i,  // OCR partial of "PLAY SERVICE"
+  /^INC\.?\s*$/i,
+  /^www\./i,
+  /^CAUTION:/i,
+  /^Professionals and amateurs/i,
+  /^All rights/i,
+  /^No person, firm/i,
+  /^Inquiries concerning/i,
+  /^SPECIAL NOTE/i,
+  /^Anyone receiving permission/i,
+  /^The billing must appear/i,
+  /^The following acknowledgment/i,
   // Title page content
+  /^BY\s+[A-Z]/i, // "BY MO GAFFNEY" etc.
   /^Written by\b/i,
   /^Revisions? by\b/i,
   /^Screenplay by\b/i,
@@ -38,6 +59,9 @@ const SKIP_LINE_PATTERNS = [
   /^Original screenplay/i,
   /^Teleplay by\b/i,
   /^Created by\b/i,
+  /^Conceived by\b/i,
+  /^Directed by\b/i,
+  /^Produced by\b/i,
   /^\d{1,2}(st|nd|rd|th)?\s+(Draft|Revision)/i, // "1st Draft", "2nd Revision"
   /^(First|Second|Third|Final)\s+(Draft|Revision)/i,
   /^(White|Blue|Pink|Yellow|Green|Goldenrod|Buff|Salmon|Cherry)\s+(Revised?|Draft|Pages?)/i, // Production draft colors
@@ -45,7 +69,7 @@ const SKIP_LINE_PATTERNS = [
   /^(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{0,2}/i, // Date patterns - "May", "April 20"
   /^\d{1,2}\/\d{1,2}\/\d{2,4}/i, // Date patterns like 04/20/2000
   /^-\s*(January|February|March|April|May|June|July|August|September|October|November|December)/i, // "- May", "- April"
-  /^Copyright\s*[©]?/i,
+  /^Copyright\s*[©@]?/i,
   /^All rights reserved/i,
   /^Registered\s+WGA/i,
   /^Contact:/i,
@@ -59,6 +83,14 @@ const SKIP_LINE_PATTERNS = [
   /^-\s*\d{4}\s*$/i, // "- 2000" year alone
   /^-\s*\w+\s*$/i, // "- May" fragment alone
   /^\d{4}\s*$/i, // Just a year "2000"
+  // Stage play specific
+  /^CONTENTS\s*$/i,
+  /^End of Play\s*$/i,
+  /^CHARACTERS?\s*$/i,
+  /^SETTING\s*$/i,
+  /^TIME\s*$/i,
+  /^PLACE\s*$/i,
+  /^CAST\s*(OF CHARACTERS)?\s*$/i,
 ];
 
 // Patterns that indicate a line is definitely NOT a character name
@@ -213,6 +245,10 @@ function normalizeCharacterName(name: string): string {
   normalized = normalized.replace(/\([^)]*\)\s*$/, "");
   // Remove leading numbers (e.g., "1. MARY")
   normalized = normalized.replace(/^\d+[\.\)\-\s]+/, "");
+  // Remove trailing periods, commas, colons, semicolons (OCR/PDF artifacts)
+  normalized = normalized.replace(/[.,;:!?\-]+$/, "");
+  // Remove leading punctuation
+  normalized = normalized.replace(/^[.,;:!?\-\s]+/, "");
   // Normalize whitespace
   normalized = normalized.replace(/\s+/g, " ");
   normalized = normalized.trim();
