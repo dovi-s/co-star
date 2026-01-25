@@ -356,6 +356,15 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\s*SCENES?\s+\d+(-\d+)?[A-Z]?\s*OMITTED\s*/gi, ' ');
   cleaned = cleaned.replace(/\s*OMITTED\s*/gi, ' ');
   
+  // Remove copyright notices and special notes embedded in text
+  cleaned = cleaned.replace(/\*See Special Note[^*]*\./gi, '');
+  cleaned = cleaned.replace(/\*[^*]*copyright[^*]*\./gi, '');
+  cleaned = cleaned.replace(/\*[^*]*page\s*\d*\./gi, '');
+  
+  // Remove embedded character names with periods mid-dialogue: "SARA. You're Callie. CALLIE. Yes."
+  // Pattern: NAME. (where NAME is 2+ caps followed by period and space)
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}(?:\s+[A-Z]{2,})?\.\s+/g, ' ');
+  
   // Remove embedded character names with extensions mid-text
   // e.g., "...please? JOHN passes his" or "OFFICER HUDSON (CONT'D) Have you"
   // These are other character lines that got merged in
