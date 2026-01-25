@@ -385,27 +385,18 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
-      <div
-        className={cn(
-          "relative rounded-xl transition-all duration-200 bg-muted/30 textarea-glow",
-          isDragging && "ring-2 ring-foreground/20",
-          script && "bg-muted/20"
-        )}
-        onDrop={handleDrop}
-        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-        onDragLeave={() => setIsDragging(false)}
-      >
-        {/* Format help icon */}
+      {/* Header row with label and help icon */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-sm text-muted-foreground">Paste your script</span>
         <Dialog>
           <DialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="absolute top-2 right-2 z-10 text-muted-foreground/50"
+            <button
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
               data-testid="button-format-help"
             >
-              <HelpCircle className="w-4 h-4" />
-            </Button>
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span>Format tips</span>
+            </button>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -458,11 +449,22 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
             </div>
           </DialogContent>
         </Dialog>
-        
+      </div>
+      
+      <div
+        className={cn(
+          "relative rounded-xl transition-all duration-200 bg-muted/30 textarea-glow",
+          isDragging && "ring-2 ring-foreground/20",
+          script && "bg-muted/20"
+        )}
+        onDrop={handleDrop}
+        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+        onDragLeave={() => setIsDragging(false)}
+      >
         <Textarea
           ref={textareaRef}
           id="script-text"
-          placeholder="Paste your script here..."
+          placeholder="SARAH: I can't believe you're leaving..."
           value={script}
           onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
           className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50 font-mono"
