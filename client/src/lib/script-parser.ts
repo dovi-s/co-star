@@ -101,8 +101,8 @@ const ACTION_PATTERNS = [
   /\s(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH|AND|OR)\s/i,
   // Common phrases that aren't names
   /^(THE|THIS|THAT|THESE|THOSE|A|AN)\s+/i,
-  // 3+ words is likely a phrase (real names are 1-2 words max, maybe 3 with title)
-  /^\S+\s+\S+\s+\S+/,
+  // 4+ words is likely a phrase (real names can be up to 3 words with title like "DR. ROBERT DOBACK")
+  /^\S+\s+\S+\s+\S+\s+\S+/,
 ];
 
 function normalizeCharacterName(name: string): string {
