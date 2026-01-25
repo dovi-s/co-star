@@ -449,6 +449,36 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
     return false;
   }
   
+  // Character name's possession + body part/action (e.g., "Jordan's head bobs", "Naomi's eyes narrow")
+  if (/^[A-Z][a-z]+'s\s+(head|eyes|face|hand|hands|arm|arms|body|voice|mouth|jaw|fist|foot|feet)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // "The [something]" - descriptive action lines
+  if (/^The\s+(camera|helicopter|car|boat|plane|screen|door|phone|lights?|sound|music)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // "Down below", "Up above", "Nearby", "Behind them" - scene description
+  if (/^(Down below|Up above|Nearby|Behind|In front|Across|Through|Inside|Outside|Overhead|Below)/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Camera/POV directions
+  if (/\b(POV|VISIONED|DOUBLE VISION|BLURRED|HAZY)\b/.test(trimmed)) {
+    return false;
+  }
+  
+  // "We see" patterns
+  if (/\bwe\s+see\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Lines that are entirely about describing what we see (common in screenplays)
+  if (/^(A|An|The)\s+.*(sits?|stands?|walks?|runs?|looks?|enters?|exits?|appears?|rises?|falls?|moves?|opens?|closes?|lands?|hovers?|flies?|crashes?)\b/i.test(trimmed)) {
+    return false;
+  }
+  
   // Page numbers (just a number)
   if (/^\d+\.?\s*$/.test(trimmed)) return false;
   
