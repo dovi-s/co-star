@@ -21,7 +21,6 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
   const [showPromptInput, setShowPromptInput] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
   const [isCleaning, setIsCleaning] = useState(false);
-  const [showAllRoles, setShowAllRoles] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -351,43 +350,12 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
         }}
       />
 
-      {/* Character preview or cleanup hint */}
+      {/* Character preview */}
       {script && characters.length > 0 && (
-        <div className="px-1 mt-2 mb-4 animate-fade-in">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="text-xs text-muted-foreground shrink-0">{characters.length} roles:</span>
-              <div className="flex flex-wrap gap-1 min-w-0">
-                {(showAllRoles ? characters : characters.slice(0, 4)).map((char) => (
-                  <span key={char} className="text-xs text-foreground/80">{char}</span>
-                ))}
-                {!showAllRoles && characters.length > 4 && (
-                  <button
-                    onClick={() => setShowAllRoles(true)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    data-testid="button-show-all-roles"
-                  >
-                    +{characters.length - 4}
-                  </button>
-                )}
-                {showAllRoles && characters.length > 4 && (
-                  <button
-                    onClick={() => setShowAllRoles(false)}
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    data-testid="button-collapse-roles"
-                  >
-                    less
-                  </button>
-                )}
-              </div>
-            </div>
-            {sceneTime && (
-              <span className="text-xs text-muted-foreground shrink-0" data-testid="text-scene-time">
-                {sceneTime} scene
-              </span>
-            )}
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground text-center mt-2 mb-4">
+          {characters.length} roles detected
+          {sceneTime && <span> · {sceneTime} scene</span>}
+        </p>
       )}
       
       {script && characters.length === 0 && script.trim().length > 50 && (

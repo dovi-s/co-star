@@ -54,6 +54,10 @@ const ACTION_PATTERNS = [
   /^(MEANWHILE|SUDDENLY|LATER|EARLIER|OUTSIDE|INSIDE|NEARBY|ABOVE|BELOW|BEHIND|BEFORE|AFTER)/i,
   // Preposition in middle (e.g., "PRIORITY IN THIS JOB")
   /^[A-Z]+\s+(IN|ON|AT|TO|FOR|WITH|FROM|BY|OF|ABOUT|INTO|ONTO|OVER|UNDER|THROUGH)\s+/i,
+  // Common phrases that aren't names
+  /^(THE|THIS|THAT|THESE|THOSE|A|AN)\s+/i,
+  // 4+ words is likely a phrase, not a name
+  /^[A-Z]+\s+[A-Z]+\s+[A-Z]+\s+[A-Z]+/i,
 ];
 
 function normalizeCharacterName(name: string): string {
