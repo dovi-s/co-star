@@ -38,6 +38,8 @@ const RESERVED_WORDS = new Set([
   "BEGIN", "END", "BACK TO", "INTERCUT", "SPLIT SCREEN",
   // Common scene direction starters
   "CUT TO", "FADE TO", "SMASH CUT", "JUMP CUT", "MATCH CUT", "DISSOLVE TO",
+  // Sound/music cues (NOT characters!)
+  "MUSIC", "SOUND", "SFX", "SCORE", "SONG", "AUDIO",
   // Generic words that aren't names
   "THINGS", "STUFF", "SOMETHING", "NOTHING", "EVERYTHING", "ANYTHING",
   "PRIORITY", "IMPORTANT", "NOTE", "NOTES", "COMMENT", "COMMENTS",
@@ -47,6 +49,47 @@ const RESERVED_WORDS = new Set([
   // Known false positives
   "PRIORITY IN THIS JOB", "WE SEE", "WE HEAR",
 ]);
+
+// Pattern to detect sound/music cue lines (e.g., "MUSIC: Jazz tune plays")
+const SOUND_CUE_REGEX = /^(MUSIC|SOUND|SFX|SCORE|SONG|AUDIO)\s*:/i;
+
+// Detect action description lines (third-person narrative describing what happens)
+// These are scene descriptions, not dialogue
+function isActionDescriptionLine(line: string): boolean {
+  const trimmed = line.trim();
+  
+  // Skip if it looks like dialogue (starts with common dialogue patterns)
+  if (/^(I\s|I'm|I've|I'll|I'd|You\s|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't|Let's|Let me)/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Action lines typically start with third-person subjects + verbs
+  // e.g., "Nancy and Robert are kissing", "They fall onto the bed", "He walks away"
+  const actionPatterns = [
+    // Third person pronouns + verb
+    /^(He|She|They|It|We|Everyone|Everybody|Someone|Somebody|No one|Nobody)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|takes?|puts?|gets?|sees?|falls?|speaks?|kisses?|grabs?|picks?|drops?|holds?|starts?|stops?|opens?|closes?|continues?|begins?|appears?|disappears?)/i,
+    // Proper name + "and" + name (e.g., "Nancy and Robert are")
+    /^[A-Z][a-z]+\s+and\s+[A-Z][a-z]+\s+(is|are|was|were|walk|run|look|turn|move|stand|sit|enter|exit|come|go|take|put|get|see|fall|speak|kiss|grab|pick|drop|hold|start|stop|open|close|continue|begin|appear|disappear)/i,
+    // Name + verb (e.g., "Nancy walks", "Robert turns")
+    /^[A-Z][a-z]+\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|takes?|puts?|gets?|sees?|falls?|speaks?|kisses?|grabs?|picks?|drops?|holds?|starts?|stops?|opens?|closes?|continues?|begins?|appears?|disappears?)/i,
+    // "The" + noun + verb (e.g., "The door opens", "The band plays")
+    /^The\s+\w+\s+(is|are|was|were|opens?|closes?|plays?|starts?|stops?|begins?|ends?|continues?)/i,
+    // Present participle descriptions (e.g., "Looking at the door", "Walking away")
+    /^(Looking|Walking|Running|Moving|Standing|Sitting|Entering|Exiting|Coming|Going|Taking|Getting|Seeing|Falling|Speaking|Kissing|Grabbing|Picking|Dropping|Holding|Starting|Stopping|Opening|Closing|Continuing|Beginning|Appearing|Disappearing)/i,
+    // "We see/hear/push in" - narrative voice
+    /^We\s+(see|hear|push|pull|pan|zoom|track|follow|cut)/i,
+    // Page numbers at end
+    /\d+\.?\s*$/,
+  ];
+  
+  for (const pattern of actionPatterns) {
+    if (pattern.test(trimmed)) {
+      return true;
+    }
+  }
+  
+  return false;
+}
 
 // Patterns that indicate action/direction lines, not character dialogue
 const ACTION_PATTERNS = [
@@ -417,6 +460,18 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Pure stage direction on its own line - skip
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
+      continue;
+    }
+    
+    // Skip sound/music cue lines (e.g., "MUSIC: Jazz tune plays")
+    if (SOUND_CUE_REGEX.test(trimmed)) {
+      continue;
+    }
+    
+    // Skip action description lines (third-person narrative)
+    // These describe what's happening, not dialogue
+    if (isActionDescriptionLine(trimmed)) {
+      flushPendingDialogue();
       continue;
     }
     
