@@ -268,7 +268,7 @@ export function ThreeLineReader({
             {/* Memory mode hint */}
             {isCurrent && isUser && isPlaying && shouldMask && (
               <div className="mt-3 text-xs text-background/70">
-                Speak, then tap Next
+                Say your line from memory
               </div>
             )}
             
