@@ -342,6 +342,15 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\|/g, 'I'); // Pipe often OCR'd instead of I
   cleaned = cleaned.replace(/\s+\|\s+/g, ' '); // Stray pipes
   cleaned = cleaned.replace(/`/g, "'"); // Backtick to apostrophe
+  cleaned = cleaned.replace(/\\([A-Za-z])/g, '$1'); // Backslash before letters: \What -> What
+  cleaned = cleaned.replace(/\\/g, ''); // Remove stray backslashes
+  
+  // Fix hyphenated line breaks from PDF extraction: "sar- castic" -> "sarcastic"
+  cleaned = cleaned.replace(/(\w+)-\s+(\w+)/g, '$1$2');
+  
+  // Fix common OCR letter substitutions (conservative - avoid false positives)
+  // Note: Many OCR errors like "rosses" for "crosses" require spell-checking which we avoid
+  // to prevent introducing new errors. Users should use cleaner source PDFs when possible.
   
   // Clean up excessive punctuation
   cleaned = cleaned.replace(/\.{4,}/g, '...'); // Too many dots
