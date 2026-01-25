@@ -4,24 +4,16 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { SessionProvider, useSessionContext } from "@/context/session-context";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
 
 type View = "home" | "rehearsal";
 
-function App() {
+function AppContent() {
+  const { session } = useSessionContext();
   const [view, setView] = useState<View>(() => {
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem("castmate-session");
-      if (stored) {
-        try {
-          const session = JSON.parse(stored);
-          if (session && session.userRoleId) {
-            return "rehearsal";
-          }
-        } catch {}
-      }
-    }
+    // Start at home - session context will have the data
     return "home";
   });
 
@@ -33,16 +25,30 @@ function App() {
     setView("home");
   }, []);
 
+  // Auto-navigate to rehearsal if session is ready with a user role
+  // This handles page refresh (though session won't persist for large scripts)
+  if (view === "home" && session?.userRoleId) {
+    setView("rehearsal");
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {view === "home" 
+        ? <HomePage key="home" onSessionReady={handleSessionReady} />
+        : <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
+      }
+    </div>
+  );
+}
+
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <div className="min-h-screen bg-background text-foreground">
-            {view === "home" 
-              ? <HomePage key="home" onSessionReady={handleSessionReady} />
-              : <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
-            }
-          </div>
+          <SessionProvider>
+            <AppContent />
+          </SessionProvider>
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>

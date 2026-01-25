@@ -3,7 +3,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { Logo } from "@/components/logo";
-import { useSession } from "@/hooks/use-session";
+import { useSessionContext } from "@/context/session-context";
 
 type Step = "import" | "role-select";
 
@@ -12,21 +12,18 @@ interface HomePageProps {
 }
 
 export function HomePage({ onSessionReady }: HomePageProps) {
-  const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error } = useSession();
+  const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error } = useSessionContext();
   const [step, setStep] = useState<Step>(() => {
-    if (typeof window !== "undefined") {
-      const stored = sessionStorage.getItem("castmate-session");
-      if (stored) {
-        try {
-          const s = JSON.parse(stored);
-          if (s && s.scenes?.length > 0 && !s.userRoleId) {
-            return "role-select";
-          }
-        } catch {}
-      }
-    }
+    // Start at import - context will have the session if it exists
     return "import";
   });
+
+  // Auto-advance to role-select if we have scenes but no role selected
+  useEffect(() => {
+    if (session && session.scenes?.length > 0 && !session.userRoleId) {
+      setStep("role-select");
+    }
+  }, [session]);
 
   useEffect(() => {
     if (session && session.userRoleId) {
@@ -44,6 +41,7 @@ export function HomePage({ onSessionReady }: HomePageProps) {
   const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }) => {
     const newSession = createSessionFromParsed(name, parsed);
     if (newSession) {
+      console.log('[Home] Session created, advancing to role-select');
       setStep("role-select");
     }
   };

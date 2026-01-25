@@ -87,7 +87,7 @@ export const insertSessionSchema = z.object({
 export type InsertSession = z.infer<typeof insertSessionSchema>;
 
 export const updateSessionSchema = z.object({
-  userRoleId: z.string().optional(),
+  userRoleId: z.string().nullable().optional(),
   currentLineIndex: z.number().optional(),
   currentSceneIndex: z.number().optional(),
   isPlaying: z.boolean().optional(),
@@ -96,6 +96,7 @@ export const updateSessionSchema = z.object({
   runsCompleted: z.number().optional(),
   linesRehearsed: z.number().optional(),
   name: z.string().optional(),
+  roles: z.array(roleSchema).optional(),
 });
 export type UpdateSession = z.infer<typeof updateSessionSchema>;
 
