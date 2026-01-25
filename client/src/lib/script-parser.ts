@@ -129,6 +129,14 @@ function isActionDescriptionLine(line: string): boolean {
     /^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|moves?|stands?|sits?|enters?|exits?|comes?|goes?|falls?|kisses?|grabs?|holds?|opens?|closes?)/i,
     // "We see/hear" - narrative voice (very reliable)
     /^We\s+(see|hear|push|pull|pan|zoom|track|follow)/i,
+    // Music/sound cues: "CLASSICAL MUSIC kicks in", "The SCORE swells"
+    /\b(MUSIC|SCORE|SOUNDTRACK|SONG|AUDIO|SFX)\s+(kicks?\s+in|fades?\s+(in|out)|plays?|starts?|begins?|ends?|swells?|builds?)/i,
+    // "Pretentious CLASSICAL MUSIC kicks in"
+    /^(Pretentious|Dramatic|Soft|Loud|Orchestral|Classical)\s+(MUSIC|SCORE|SOUNDTRACK)/i,
+    // Camera directions: "VARIOUS SHOTS", "QUICK CUTS"
+    /^(VARIOUS|QUICK|RAPID|SLOW|FAST)\s+(SHOTS?|CUTS?|ANGLES?|IMAGES?|FLASHES?)/i,
+    // "-- a MAN does something" style description
+    /^--\s+[a-z]/i,
   ];
   
   for (const pattern of actionPatterns) {
@@ -386,6 +394,9 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
 const CAMERA_ACTION_PATTERNS = [
   /^(WE SEE|WE HEAR|SMASH CUT|MATCH CUT|DISSOLVE TO|ANGLE ON|CLOSE ON|BACK TO|FLASH TO|INTERCUT|MONTAGE|SERIES OF SHOTS|SUPER:|TITLE:|CREDITS)/i,
   /^\d+[A-Z]?\s+(WE|INT|EXT|SCENE|CUT|FADE)/i, // Scene numbers with directions
+  /^(VARIOUS|QUICK|RAPID|SLOW|FAST)\s+(SHOTS?|CUTS?|ANGLES?|IMAGES?|FLASHES?)/i, // VARIOUS SHOTS, QUICK CUTS, etc.
+  /\b(MUSIC|SCORE|SOUNDTRACK|SONG|AUDIO|SFX)\s+(kicks?\s+in|fades?\s+(in|out)|plays?|starts?|begins?|ends?|swells?|builds?)/i, // "MUSIC kicks in", "SCORE fades in"
+  /^(Pretentious|Dramatic|Soft|Loud|Orchestral|Classical)\s+(MUSIC|SCORE|SOUNDTRACK)/i, // "Pretentious CLASSICAL MUSIC"
 ];
 
 // Check if line is a scene number (like "1A", "215C-G", etc.)
@@ -579,12 +590,13 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Skip title page / front matter until first scene heading OR first dialogue
     if (!foundFirstScene) {
-      // Check if this line is dialogue - if so, start capturing
+      // Check if this line is dialogue (inline format) or standalone character name
       const earlyCheck = isLikelyCharacterLine(trimmed);
-      if (earlyCheck.isCharacter) {
+      const standaloneCheck = isStandaloneCharacterName(trimmed);
+      if (earlyCheck.isCharacter || standaloneCheck.isCharacter) {
         foundFirstScene = true;
         currentSceneName = "Scene 1";
-        // Fall through to process this line as dialogue
+        // Fall through to process this line as dialogue/character
       } else {
         continue;
       }
