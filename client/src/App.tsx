@@ -9,6 +9,8 @@ import { RehearsalPage } from "@/pages/rehearsal";
 import { cn } from "@/lib/utils";
 
 type View = "home" | "rehearsal";
+type Direction = "forward" | "back";
+type TransitionPhase = "idle" | "exiting" | "entering";
 
 function App() {
   const [view, setView] = useState<View>(() => {
@@ -26,44 +28,62 @@ function App() {
     return "home";
   });
 
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  const [showContent, setShowContent] = useState(true);
+  const [phase, setPhase] = useState<TransitionPhase>("idle");
+  const [direction, setDirection] = useState<Direction>("forward");
   const pendingViewRef = useRef<View | null>(null);
 
-  const transitionTo = useCallback((newView: View) => {
-    if (isTransitioning) return;
+  const transitionTo = useCallback((newView: View, dir: Direction) => {
+    if (phase !== "idle") return;
     
     pendingViewRef.current = newView;
-    setIsTransitioning(true);
-    setShowContent(false);
+    setDirection(dir);
+    setPhase("exiting");
     
-    // Quick fade out, then switch and fade in
+    // Exit animation
     setTimeout(() => {
       setView(newView);
-      setShowContent(true);
+      setPhase("entering");
       
+      // Enter animation complete
       setTimeout(() => {
-        setIsTransitioning(false);
+        setPhase("idle");
         pendingViewRef.current = null;
-      }, 200);
-    }, 150);
-  }, [isTransitioning]);
+      }, 180);
+    }, 120);
+  }, [phase]);
 
   const handleSessionReady = useCallback(() => {
-    transitionTo("rehearsal");
+    transitionTo("rehearsal", "forward");
   }, [transitionTo]);
 
   const handleBackToHome = useCallback(() => {
-    transitionTo("home");
+    transitionTo("home", "back");
   }, [transitionTo]);
+
+  // Transition styles based on phase and direction
+  const getTransitionClass = () => {
+    if (phase === "idle") return "opacity-100 translate-x-0";
+    
+    if (phase === "exiting") {
+      return direction === "forward" 
+        ? "opacity-0 -translate-x-3" 
+        : "opacity-0 translate-x-3";
+    }
+    
+    if (phase === "entering") {
+      return "opacity-100 translate-x-0";
+    }
+    
+    return "";
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
           <div className={cn(
-            "min-h-screen bg-background text-foreground transition-all duration-200",
-            showContent ? "opacity-100 scale-100" : "opacity-0 scale-[0.99]"
+            "min-h-screen bg-background text-foreground transition-all duration-150 ease-out",
+            getTransitionClass()
           )}>
             {view === "home" ? (
               <HomePage onSessionReady={handleSessionReady} />
