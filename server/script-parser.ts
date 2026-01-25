@@ -45,9 +45,10 @@ const SKIP_LINE_PATTERNS = [
   /^\d{1,2}(st|nd|rd|th)?\s+(Draft|Revision)/i, // "1st Draft", "2nd Revision"
   /^(First|Second|Third|Final)\s+(Draft|Revision)/i,
   /^(White|Blue|Pink|Yellow|Green|Goldenrod|Buff|Salmon|Cherry)\s+(Revised?|Draft|Pages?)/i, // Production draft colors
-  /^D\.A\.\s+(First|Blue|Pink|White)/i, // "D.A. First Draft"
-  /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/i, // Date patterns
+  /^D\.A\.\s/i, // "D.A. First Draft", "D.A. Blue", etc.
+  /^(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{0,2}/i, // Date patterns - "May", "April 20"
   /^\d{1,2}\/\d{1,2}\/\d{2,4}/i, // Date patterns like 04/20/2000
+  /^-\s*(January|February|March|April|May|June|July|August|September|October|November|December)/i, // "- May", "- April"
   /^Copyright\s*[©]?/i,
   /^All rights reserved/i,
   /^Registered\s+WGA/i,
@@ -57,6 +58,23 @@ const SKIP_LINE_PATTERNS = [
   /^SHOOTING SCRIPT/i,
   /^PRODUCTION DRAFT/i,
   /^WORKING TITLE/i,
+  /^AKA\s/i, // "AKA RACER X" - alternate title
+  /^A\.?K\.?A\.?\s/i,
+  /^-\s*\d{4}\s*$/i, // "- 2000" year alone
+  /^-\s*\w+\s*$/i, // "- May" fragment alone
+  /^\d{4}\s*$/i, // Just a year "2000"
+];
+
+// Patterns that indicate a line is definitely NOT a character name
+const NOT_CHARACTER_PATTERNS = [
+  /^D\.A\.$/i, // Writer initials
+  /^AKA$/i,
+  /^-$/,
+  /^\d+$/,
+  /^(January|February|March|April|May|June|July|August|September|October|November|December)$/i,
+  /^(First|Second|Third|Final)$/i,
+  /^(Draft|Revision|Revised)$/i,
+  /^(Blue|Pink|White|Yellow|Green)$/i,
 ];
 
 // Clean a line by removing scene numbers from margins and revision marks
@@ -214,6 +232,11 @@ function isValidCharacterName(name: string): boolean {
   
   // Must start with a letter
   if (!/^[A-Z]/.test(normalized)) return false;
+  
+  // Must not match NOT_CHARACTER_PATTERNS (title page fragments, dates, etc.)
+  for (const pattern of NOT_CHARACTER_PATTERNS) {
+    if (pattern.test(normalized)) return false;
+  }
   
   // Must not be a reserved word
   if (RESERVED_WORDS.has(normalized)) return false;
