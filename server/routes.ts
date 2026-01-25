@@ -489,7 +489,7 @@ JOHN: We got the contract.`;
 
       // Handle different file types
       if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
-        // Parse PDF using pdfjs-dist
+        // Parse PDF using pdfjs-dist with line preservation
         try {
           const data = new Uint8Array(file.buffer);
           const pdf = await pdfjsLib.getDocument({ data }).promise;
@@ -498,13 +498,47 @@ JOHN: We got the contract.`;
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
-            const pageText = content.items
-              .map((item: any) => item.str)
-              .join(" ");
-            textParts.push(pageText);
+            
+            // Sort items by vertical position (y), then horizontal (x)
+            // to preserve reading order and detect line breaks
+            const items = content.items as any[];
+            if (items.length === 0) continue;
+            
+            // Group items by approximate y position to form lines
+            const lines: { y: number; items: any[] }[] = [];
+            const yThreshold = 5; // Items within 5 units are on same line
+            
+            for (const item of items) {
+              if (!item.str || item.str.trim() === '') continue;
+              const y = item.transform?.[5] || 0;
+              
+              // Find or create a line for this y position
+              let line = lines.find(l => Math.abs(l.y - y) < yThreshold);
+              if (!line) {
+                line = { y, items: [] };
+                lines.push(line);
+              }
+              line.items.push(item);
+            }
+            
+            // Sort lines by y position (descending - PDF y goes bottom to top)
+            lines.sort((a, b) => b.y - a.y);
+            
+            // Sort items within each line by x position
+            for (const line of lines) {
+              line.items.sort((a: any, b: any) => 
+                (a.transform?.[4] || 0) - (b.transform?.[4] || 0)
+              );
+            }
+            
+            // Build text with proper line breaks
+            const pageLines = lines.map(line => 
+              line.items.map((item: any) => item.str).join(' ')
+            );
+            textParts.push(pageLines.join('\n'));
           }
           
-          text = textParts.join("\n\n");
+          text = textParts.join('\n\n');
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
           return res.status(400).json({ error: "Failed to parse PDF file" });
