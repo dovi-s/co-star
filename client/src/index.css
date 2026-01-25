@@ -836,6 +836,115 @@
   50% { opacity: 1; transform: scale(1.03); }
 }
 
+/* Breathing animation for user turn indicator */
+@keyframes breathe {
+  0%, 100% { 
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% { 
+    transform: scale(1.02);
+    opacity: 1;
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2.5s ease-in-out infinite;
+}
+
+/* Pulse ring for listening state */
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 1.5px solid hsl(var(--primary) / 0.4);
+  animation: pulse-ring-expand 1.5s ease-out infinite;
+}
+
+@keyframes pulse-ring-expand {
+  0% { 
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% { 
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+/* Bounce in animation for modals */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in 400ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Star burst for perfect runs */
+@keyframes star-burst {
+  0% {
+    transform: scale(0.5) rotate(-15deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.animate-star-burst {
+  animation: star-burst 500ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Confetti particles */
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.confetti-particle {
+  position: absolute;
+  top: -10px;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confetti-fall 2.5s ease-out forwards;
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
 /* Curtain transition effect */
 .curtain-enter {
   animation: curtain-reveal 600ms ease-out forwards;
@@ -1327,6 +1436,14 @@
     0 0 40px -10px hsl(var(--primary) / 0.1);
 }
 
+/* Enhanced glow for dark mode */
+.dark .textarea-glow:focus-within {
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary) / 0.35),
+    0 0 24px -4px hsl(var(--primary) / 0.25),
+    0 0 48px -8px hsl(var(--primary) / 0.15);
+}
+
 /* Clean page transitions */
 .page-exit {
   opacity: 0;
@@ -1347,22 +1464,6 @@
     opacity: 1;
     transform: scale(1);
   }
-}
-
-/* Breathing animation for user turn */
-@keyframes breathe {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.02);
-    opacity: 0.9;
-  }
-}
-
-.animate-breathe {
-  animation: breathe 3s ease-in-out infinite;
 }
 
 /* Subtle pulse ring for listening state */
