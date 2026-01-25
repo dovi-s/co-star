@@ -504,6 +504,12 @@ JOHN: We got the contract.`;
             // Sort items by vertical position (y), then horizontal (x)
             // to preserve reading order and detect line breaks
             const items = content.items as any[];
+            if (i === 1) {
+              console.log(`[PDF] Page 1 has ${items.length} text items`);
+              if (items.length > 0) {
+                console.log(`[PDF] Sample item:`, JSON.stringify(items[0]).slice(0, 200));
+              }
+            }
             if (items.length === 0) continue;
             
             // Group items by approximate y position to form lines
