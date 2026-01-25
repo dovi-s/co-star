@@ -33,6 +33,7 @@ const FEMALE_NAMES = new Set([
   "kim", "katherine", "claire", "clara", "diana", "eleanor",
   "eve", "fiona", "gwen", "iris", "jane", "julia", "laura", "lucy", "maria", "natalie",
   "nina", "paula", "rachel", "rebecca", "rose", "sara", "susan", "wendy", "alice",
+  "callie", "cali", "calista", "callista", "caroline", "carolyn", "cassie", "cassandra",
   "lois", "meg", "bonnie", "jackie", "marge", "maggie", "patty", "selma",
   "peggy", "luanne", "connie", "minh", "francine", "hayley",
   "wilma", "pebbles", "daphne", "velma", "hermione", "ginny", "luna", "molly",
