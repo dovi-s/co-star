@@ -335,6 +335,14 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     /\.\.\.\s*then\s+[A-Z]{4,}/i,
     // Character name's body part doing something (mid-text)
     /\.\s+([A-Z][a-z]+'s\s+(?:head|eyes|face|hand|hands|body|voice)\s+(?:bobs?|turns?|moves?|drops?|rises?))/i,
+    // ALL CAPS CHARACTER NAME + enters/exits/walks etc. (e.g., "KEVIN McCALLISTER enters")
+    /\.\s+([A-Z][A-Z\s]+(?:[A-Z][a-z]+)?\s+(?:enters?|exits?|walks?|runs?|appears?|leaves?|crosses?|stands?|sits?|looks?|turns?|moves?|comes?|goes?))/,
+    // "He's/She's [age/description]" pattern (e.g., "He's seven.")
+    /\.\s+(He's|She's|It's|They're)\s+[a-z]/i,
+    // Third person starts after period (He/She/They + verb)
+    /\.\s+(He|She|They|It)\s+(is|are|was|were|has|have|had|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?)\b/i,
+    // "A/An/The [noun]" starting a new descriptive sentence
+    /\.\s+(A|An|The)\s+[a-z]+\s+(man|woman|boy|girl|child|kid|person|figure|voice|sound|noise)\b/i,
   ];
   
   let earliestMatch = text.length;
@@ -344,7 +352,8 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     const match = text.match(pattern);
     if (match && match.index !== undefined) {
       // Find where the action actually starts (after the period/ellipsis)
-      const actionStart = match.index + (match[0].indexOf(match[1] || match[0]));
+      const capturedGroup = match[1] || match[0];
+      const actionStart = match.index + match[0].indexOf(capturedGroup);
       if (actionStart < earliestMatch && actionStart > 10) { // Ensure we keep at least some dialogue
         earliestMatch = actionStart;
         actionPart = text.substring(actionStart).trim();
