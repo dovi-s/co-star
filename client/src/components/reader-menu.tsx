@@ -52,20 +52,33 @@ export function ReaderMenu({
     }
   }, [jumpDialogOpen]);
 
-  // Filter lines based on search
+  // Filter lines based on search - searches across ALL scenes
   const filteredLines = useMemo(() => {
-    if (!currentScene?.lines) return [];
+    // Flatten all lines from all scenes with scene index tracking
+    const allLines: { line: ScriptLine; lineIndex: number; sceneIndex: number; sceneName: string }[] = [];
+    scenes.forEach((scene, sceneIdx) => {
+      scene.lines.forEach((line, lineIdx) => {
+        allLines.push({ line, lineIndex: lineIdx, sceneIndex: sceneIdx, sceneName: scene.name });
+      });
+    });
+    
     if (!searchQuery.trim()) {
-      return currentScene.lines.map((line, index) => ({ line, index }));
+      // When no search, just show current scene lines
+      if (!currentScene?.lines) return [];
+      return currentScene.lines.map((line, index) => ({ 
+        line, 
+        lineIndex: index, 
+        sceneIndex: currentSceneIndex,
+        sceneName: currentScene.name 
+      }));
     }
+    
     const query = searchQuery.toLowerCase();
-    return currentScene.lines
-      .map((line, index) => ({ line, index }))
-      .filter(({ line }) => 
-        line.text.toLowerCase().includes(query) ||
-        line.roleName.toLowerCase().includes(query)
-      );
-  }, [currentScene?.lines, searchQuery]);
+    return allLines.filter(({ line }) => 
+      line.text.toLowerCase().includes(query) ||
+      line.roleName.toLowerCase().includes(query)
+    );
+  }, [scenes, currentScene?.lines, currentSceneIndex, searchQuery]);
 
   const bookmarkedLines = currentScene?.lines
     .map((line, index) => ({ line, index }))
@@ -207,24 +220,27 @@ export function ReaderMenu({
                   No lines match your search
                 </p>
               ) : (
-                filteredLines.map(({ line, index }) => (
+                filteredLines.map(({ line, lineIndex, sceneIndex, sceneName }) => (
                   <button
-                    key={line.id}
+                    key={`${sceneIndex}-${line.id}`}
                     onClick={() => {
-                      onJumpToLine(index);
+                      onJumpToLine(lineIndex, sceneIndex);
                       setJumpDialogOpen(false);
                     }}
                     className={cn(
                       "w-full text-left px-4 py-3 rounded-xl text-sm transition-all duration-200",
                       "hover:bg-muted flex items-start gap-3"
                     )}
-                    data-testid={`jump-line-${index}`}
+                    data-testid={`jump-line-${sceneIndex}-${lineIndex}`}
                   >
                     <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0 w-7 h-7 rounded-lg bg-muted flex items-center justify-center font-medium">
-                      {index + 1}
+                      {lineIndex + 1}
                     </span>
                     <div className="flex-1 min-w-0">
                       <span className="font-semibold text-accent">{line.roleName}</span>
+                      {searchQuery.trim() && sceneIndex !== currentSceneIndex && (
+                        <span className="text-xs text-muted-foreground ml-2">({sceneName})</span>
+                      )}
                       <p className="text-muted-foreground mt-0.5 line-clamp-2">
                         {line.text}
                       </p>
