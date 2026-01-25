@@ -295,6 +295,12 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
     if (pattern.test(trimmed)) return false;
   }
   
+  // Skip if it looks like a new standalone character name (ALL CAPS, short)
+  if (/^[A-Z][A-Z\s\-'\.]+$/.test(trimmed) && trimmed.length < 30) {
+    const wordCount = trimmed.split(/\s+/).length;
+    if (wordCount <= 3) return false; // Likely a character name
+  }
+  
   // Parenthetical direction (like "(sighing)")
   if (trimmed.startsWith("(") && trimmed.endsWith(")")) return true;
   
@@ -305,15 +311,13 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   if (/^[\t]|^[ ]{2,}/.test(originalLine)) return true;
   
   // Starts with ellipsis, dash, or punctuation (continuation)
-  if (/^[…—–\-"']/.test(trimmed)) return true;
+  if (/^[…—–\-"'.!?]/.test(trimmed)) return true;
   
   // Starts with quotation
   if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
   
-  // Common dialogue starters (but NOT "We" which often starts action lines)
-  if (/^(I\s|You\s|He\s|She\s|They\s|It\s|What|Why|How|When|Where|Who|No,?\s|Yes,?\s|Oh,?\s|Well,?\s|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey,?\s|Wait,?\s|Please\s|Thank|Sorry|Okay|Ok,?\s|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't)/i.test(trimmed)) {
-    return true;
-  }
+  // If it's mixed case (has lowercase letters), it's likely dialogue, not a heading
+  if (/[a-z]/.test(trimmed)) return true;
   
   return false;
 }
@@ -331,6 +335,9 @@ export function parseScript(rawText: string): ParsedScript {
   
   let pendingCharacter: string | null = null;
   let pendingDialogue: string[] = [];
+  
+  // Skip title page / front matter until first scene heading
+  let foundFirstScene = false;
 
   const flushPendingDialogue = () => {
     if (pendingCharacter && pendingDialogue.length > 0) {
@@ -382,6 +389,7 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Scene heading - start new scene
     if (SCENE_HEADING_REGEX.test(trimmed)) {
+      foundFirstScene = true;
       flushPendingDialogue();
       
       if (currentSceneLines.length > 0) {
@@ -394,6 +402,11 @@ export function parseScript(rawText: string): ParsedScript {
       }
       sceneCount++;
       currentSceneName = trimmed.length > 60 ? trimmed.substring(0, 60) + "..." : trimmed;
+      continue;
+    }
+    
+    // Skip title page / front matter until first scene heading
+    if (!foundFirstScene) {
       continue;
     }
     
