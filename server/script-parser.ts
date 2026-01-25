@@ -405,6 +405,18 @@ const RESERVED_WORDS = new Set([
   "IN THE", "ON THE", "AT THE", "TO THE", "FOR THE", "WITH THE",
   // Known false positives
   "PRIORITY IN THIS JOB", "WE SEE", "WE HEAR",
+  // Common English words that are NOT character names (articles, conjunctions, etc.)
+  "THE", "A", "AN", "AND", "OR", "BUT", "FOR", "NOR", "SO", "YET",
+  "THIS", "THAT", "THESE", "THOSE", "THERE", "HERE", "WHERE", "WHEN",
+  "ALL", "SOME", "MANY", "FEW", "MOST", "ANY", "EACH", "EVERY", "OTHER",
+  "NEW", "OLD", "BIG", "SMALL", "FIRST", "LAST", "NEXT", "SAME", "ONLY",
+  "THEN", "NOW", "JUST", "ALSO", "VERY", "STILL", "ALREADY", "ALMOST",
+  "BACK", "DOWN", "OFF", "OUT", "OVER", "UNDER", "UP", "AWAY", "AROUND",
+  "ABOUT", "AFTER", "BEFORE", "BETWEEN", "DURING", "FROM", "INTO", "ONTO",
+  "THROUGH", "UNTIL", "WITHIN", "WITHOUT", "ALONG", "ACROSS", "BEHIND",
+  // Production/script terms
+  "OMITTED", "REVISED", "DRAFT", "FINAL", "REVISION",
+  "PAGE", "PAGES", "SCRIPT", "SCREENPLAY", "TELEPLAY",
 ]);
 
 // Pattern to detect sound/music cue lines (e.g., "MUSIC: Jazz tune plays")
