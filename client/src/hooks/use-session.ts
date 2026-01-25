@@ -7,6 +7,53 @@ function generateId(): string {
 }
 
 const STORAGE_KEY = "castmate-session";
+const MAX_STORAGE_SIZE = 200000; // Keep under 225KB limit with safety margin
+
+// Compress session for storage by removing empty/default values
+function compressSessionForStorage(session: Session): any {
+  return {
+    ...session,
+    scenes: session.scenes.map(scene => ({
+      ...scene,
+      lines: scene.lines.map(line => {
+        // Only include non-empty optional fields
+        const compressedLine: any = {
+          id: line.id,
+          ln: line.lineNumber,
+          rId: line.roleId,
+          rN: line.roleName,
+          t: line.text,
+        };
+        if (line.isBookmarked) compressedLine.b = true;
+        if (line.context) compressedLine.c = line.context;
+        if (line.direction) compressedLine.d = line.direction;
+        if (line.emotionHint && line.emotionHint !== "neutral") compressedLine.e = line.emotionHint;
+        return compressedLine;
+      })
+    }))
+  };
+}
+
+// Decompress session from storage by restoring default values
+function decompressSessionFromStorage(stored: any): Session {
+  return {
+    ...stored,
+    scenes: stored.scenes.map((scene: any) => ({
+      ...scene,
+      lines: scene.lines.map((line: any) => ({
+        id: line.id,
+        lineNumber: line.ln ?? line.lineNumber ?? 0,
+        roleId: line.rId ?? line.roleId,
+        roleName: line.rN ?? line.roleName,
+        text: line.t ?? line.text,
+        isBookmarked: line.b ?? line.isBookmarked ?? false,
+        context: line.c ?? line.context ?? undefined,
+        direction: line.d ?? line.direction ?? undefined,
+        emotionHint: line.e ?? line.emotionHint ?? "neutral",
+      }))
+    }))
+  };
+}
 
 export function useSession() {
   // Use sessionStorage so closing the app starts fresh, but refreshing keeps your place
@@ -15,7 +62,7 @@ export function useSession() {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
         try {
-          return JSON.parse(stored);
+          return decompressSessionFromStorage(JSON.parse(stored));
         } catch {
           return null;
         }
@@ -29,7 +76,20 @@ export function useSession() {
 
   useEffect(() => {
     if (session) {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      try {
+        const compressed = compressSessionForStorage(session);
+        const jsonStr = JSON.stringify(compressed);
+        
+        if (jsonStr.length > MAX_STORAGE_SIZE) {
+          console.warn(`[Storage] Session size ${jsonStr.length} exceeds limit. Keeping in memory only.`);
+          // Session is too large - keep it in memory but don't persist
+          // User will lose progress on refresh, but at least it works
+        } else {
+          sessionStorage.setItem(STORAGE_KEY, jsonStr);
+        }
+      } catch (e) {
+        console.error('[Storage] Failed to save session:', e);
+      }
     } else {
       sessionStorage.removeItem(STORAGE_KEY);
     }
