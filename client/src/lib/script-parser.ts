@@ -694,6 +694,19 @@ function preprocessScript(rawText: string): string {
       return `${name1}\n${name2}\n${startLower}`;
     });
   
+  // Split on stage directions in parentheses that appear mid-dialogue followed by character name
+  // e.g., "...empatheric. (Beuerly starts to lose her composure.) BEVERLY. Itt what" 
+  // -> "...empatheric.\n(Beuerly starts to lose her composure.)\nBEVERLY\nItt what"
+  text = text.replace(/(\([^)]+\))\s*([A-Z]{2,}(?:\s+[A-Z]{2,})?)[.\s]+([A-Z][a-z])/g, '$1\n$2\n$3');
+  
+  // Split when character name with period appears after closing paren or lowercase text
+  // e.g., "...composure.) BEVERLY. Itt" -> "...composure.)\nBEVERLY\nItt"
+  text = text.replace(/([)a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z][a-z])/g, '$1\n$2\n$3');
+  
+  // Split on parenthetical stage direction appearing mid-line (not at start)
+  // e.g., "...to you. (Beverly cries.) She..." -> "...to you.\n(Beverly cries.)\nShe..."
+  text = text.replace(/([.!?])\s*(\([^)]+\))\s*([A-Z])/g, '$1\n$2\n$3');
+  
   return text;
 }
 
