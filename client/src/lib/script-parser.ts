@@ -459,8 +459,29 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   return true;
 }
 
+// Preprocess script text to handle PDF copy-paste issues
+function preprocessScript(rawText: string): string {
+  let text = rawText;
+  
+  // Fix common PDF copy-paste issues where character names run into dialogue
+  // e.g., "GENE HACKMAN(V.O.)That's why" -> "GENE HACKMAN (V.O.)\nThat's why"
+  text = text.replace(/([A-Z]{2,}(?:\s+[A-Z]{2,})?)\s*\(([A-Z.\s]+)\)([A-Za-z])/g, '$1 ($2)\n$3');
+  
+  // Fix character name running directly into dialogue without space
+  // e.g., "JORDANWhat do you mean" -> "JORDAN\nWhat do you mean"
+  text = text.replace(/([A-Z]{2,}(?:\s+[A-Z]{2,})?)([A-Z][a-z])/g, '$1\n$2');
+  
+  // Split on character names that appear mid-line (common in PDF extraction)
+  // e.g., "...the best. GENE HACKMAN Trained professionals" -> "...the best.\nGENE HACKMAN\nTrained professionals"
+  text = text.replace(/([.!?])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([A-Z.\s]+\))?)\s+([A-Z][a-z])/g, '$1\n$2\n$3');
+  
+  return text;
+}
+
 export function parseScript(rawText: string): ParsedScript {
-  const lines = rawText.split(/\r?\n/);
+  // Preprocess to fix PDF copy-paste issues
+  const preprocessed = preprocessScript(rawText);
+  const lines = preprocessed.split(/\r?\n/);
   
   const roles: Map<string, Role> = new Map();
   const scenes: Scene[] = [];
