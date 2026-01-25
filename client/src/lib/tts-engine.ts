@@ -1,5 +1,13 @@
 import type { EmotionStyle, ProsodyParams, VoicePreset } from "@shared/schema";
 
+// Strip emphasis markers from text for TTS (we don't want to read them literally)
+// Removes _underscores_ and *asterisks* but keeps the text inside
+export function stripEmphasisMarkers(text: string): string {
+  return text
+    .replace(/_([^_]+)_/g, '$1')  // Remove _underscores_
+    .replace(/\*([^*]+)\*/g, '$1'); // Remove *asterisks*
+}
+
 const emotionToProsody: Record<EmotionStyle, Partial<ProsodyParams>> = {
   neutral: { rate: 1, pitch: 0, volume: 0.9 },
   happy: { rate: 1.05, pitch: 0.15, volume: 0.9 },
@@ -153,6 +161,9 @@ class TTSEngine {
     try {
       console.log("[TTS] Fetching audio for:", options.characterName);
       
+      // Strip emphasis markers before sending to TTS
+      const cleanText = stripEmphasisMarkers(text);
+      
       // Set a timeout for the fetch itself
       const controller = new AbortController();
       const fetchTimeout = setTimeout(() => controller.abort(), 15000);
@@ -161,7 +172,7 @@ class TTSEngine {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text,
+          text: cleanText,
           characterName: options.characterName || "Character",
           characterIndex: options.characterIndex || 0,
           emotion: "neutral",

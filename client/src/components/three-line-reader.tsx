@@ -5,6 +5,59 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { matchWords } from "@/lib/word-matcher";
 
+// Parse and render text with emphasis formatting
+// Supports _underlined_, *bold*, and ALL CAPS for emphasis
+function renderFormattedText(text: string): React.ReactNode[] {
+  const parts: React.ReactNode[] = [];
+  
+  // Regex to match _underlined_ or *bold* text
+  // Also handles ALL CAPS words (4+ letters) as emphasis
+  const emphasisRegex = /(_([^_]+)_|\*([^*]+)\*|\b([A-Z]{4,})\b)/g;
+  
+  let lastIndex = 0;
+  let match;
+  let key = 0;
+  
+  while ((match = emphasisRegex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push(text.substring(lastIndex, match.index));
+    }
+    
+    if (match[2]) {
+      // _underlined_ text - render as italic
+      parts.push(
+        <em key={key++} className="italic">
+          {match[2]}
+        </em>
+      );
+    } else if (match[3]) {
+      // *bold* text - render as semibold
+      parts.push(
+        <strong key={key++} className="font-semibold">
+          {match[3]}
+        </strong>
+      );
+    } else if (match[4]) {
+      // ALL CAPS - render with slight emphasis
+      parts.push(
+        <span key={key++} className="font-medium tracking-wide">
+          {match[4]}
+        </span>
+      );
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    parts.push(text.substring(lastIndex));
+  }
+  
+  return parts.length > 0 ? parts : [text];
+}
+
 interface ThreeLineReaderProps {
   previousLine: ScriptLine | null;
   currentLine: ScriptLine | null;
@@ -198,7 +251,7 @@ export function ThreeLineReader({
                       {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
                     </span>
                   ))
-                ) : line.text
+                ) : renderFormattedText(line.text)
               )}
             </p>
             
