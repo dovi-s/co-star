@@ -797,11 +797,28 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   // Generate performance feedback message
   const getPerformanceFeedback = () => {
-    if (!completedRunStats || completedRunStats.totalUserLines === 0) {
-      return null;
+    // Always show feedback when stats exist
+    if (!completedRunStats) {
+      // No stats yet, show default
+      return { 
+        type: "good" as const, 
+        icon: Check,
+        message: "Run complete", 
+        detail: "Ready for another take."
+      };
     }
     
     const { averageAccuracy, perfectLines, totalUserLines, skippedLines } = completedRunStats;
+    
+    // No user lines recorded (all skipped or no lines to say)
+    if (totalUserLines === 0) {
+      return { 
+        type: "good" as const, 
+        icon: Check,
+        message: "Listened through", 
+        detail: "Run again and speak your lines."
+      };
+    }
     
     // Perfect run
     if (averageAccuracy >= 95 && skippedLines === 0) {
