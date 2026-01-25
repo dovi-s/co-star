@@ -188,9 +188,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
         
         // Store the parsed data - we'll use it directly when starting rehearsal
         setServerParsedData(data.parsed);
-        // Show a preview in the text area
-        const preview = data.parsed.roles.map((r: any) => `${r.name} (${r.lineCount} lines)`).join('\n');
-        setScript(`[Parsed ${data.parsed.scenes.length} scenes with ${data.parsed.roles.length} characters]\n\n${preview}`);
+        // Show the actual script text (not a summary)
+        setScript(data.rawText || "");
       } catch (e: any) {
         console.error("File parse error:", e);
         setFileError(e.message || "Failed to parse file");

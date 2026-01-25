@@ -748,9 +748,10 @@ JOHN: We got the contract.`;
         });
       }
 
-      // Return the parsed result (much smaller than raw text)
+      // Return the parsed result AND the raw text for display
       res.json({ 
         parsed,
+        rawText: text,
         fileName: file.originalname 
       });
     } catch (error: any) {
