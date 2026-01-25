@@ -446,18 +446,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
           </div>
         )}
         
-        {/* Clear button - only show when has content */}
-        {script && (
-          <button
-            type="button"
-            onClick={() => setScript("")}
-            className="absolute top-3 right-3 p-2 rounded-full bg-foreground/10 hover:bg-foreground/20 text-foreground/70 hover:text-foreground transition-colors icon-btn-press z-10 touch-manipulation"
-            style={{ minWidth: 36, minHeight: 36 }}
-            data-testid="button-clear-script"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        )}
       </div>
 
       <input
@@ -472,11 +460,20 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
         }}
       />
 
-      {/* Character preview */}
+      {/* Character preview with clear option */}
       {script && characters.length > 0 && (
         <p className="text-xs text-muted-foreground text-center mt-2 mb-4">
           {characters.length} roles detected
           {sceneTime && <span> · {sceneTime} scene</span>}
+          {" · "}
+          <button
+            type="button"
+            onClick={() => setScript("")}
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+            data-testid="button-clear-script"
+          >
+            Clear
+          </button>
         </p>
       )}
       
@@ -507,6 +504,14 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
                 data-testid="button-cleanup-script"
               >
                 Auto-format
+              </button>
+              {" · "}
+              <button
+                onClick={() => setScript("")}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                data-testid="button-clear-script-alt"
+              >
+                Clear
               </button>
             </>
           )}
