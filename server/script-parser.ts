@@ -33,6 +33,30 @@ const SKIP_LINE_PATTERNS = [
   /^\*+\s*$/,  // Just asterisks
   /^Page\s+\d+/i,
   /^\s*\d+\.\s*$/, // Just page numbers like "2."
+  // Title page content
+  /^Written by\b/i,
+  /^Revisions? by\b/i,
+  /^Screenplay by\b/i,
+  /^Story by\b/i,
+  /^Based on\b/i,
+  /^Original screenplay/i,
+  /^Teleplay by\b/i,
+  /^Created by\b/i,
+  /^\d{1,2}(st|nd|rd|th)?\s+(Draft|Revision)/i, // "1st Draft", "2nd Revision"
+  /^(First|Second|Third|Final)\s+(Draft|Revision)/i,
+  /^(White|Blue|Pink|Yellow|Green|Goldenrod|Buff|Salmon|Cherry)\s+(Revised?|Draft|Pages?)/i, // Production draft colors
+  /^D\.A\.\s+(First|Blue|Pink|White)/i, // "D.A. First Draft"
+  /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/i, // Date patterns
+  /^\d{1,2}\/\d{1,2}\/\d{2,4}/i, // Date patterns like 04/20/2000
+  /^Copyright\s*[©]?/i,
+  /^All rights reserved/i,
+  /^Registered\s+WGA/i,
+  /^Contact:/i,
+  /^Property of\b/i,
+  /^CONFIDENTIAL/i,
+  /^SHOOTING SCRIPT/i,
+  /^PRODUCTION DRAFT/i,
+  /^WORKING TITLE/i,
 ];
 
 // Clean a line by removing scene numbers from margins and revision marks
@@ -555,6 +579,13 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
 // Preprocess script text to handle PDF copy-paste issues
 function preprocessScript(rawText: string): string {
   let text = rawText;
+  
+  // Split title page content that got merged into single lines
+  // e.g., "TITLE Written by Author Revisions by..." -> separate lines
+  text = text.replace(/\s+(Written by|Screenplay by|Story by|Teleplay by|Created by|Based on|Revisions? by)\s+/gi, '\n$1 ');
+  
+  // Split on draft/revision markers mid-line
+  text = text.replace(/\s+(First Draft|Second Draft|Final Draft|Blue Revised?|Pink Revised?|D\.A\.\s+\w+\s+Draft)\s*/gi, '\n$1\n');
   
   // Fix common PDF copy-paste issues where character names run into dialogue
   // e.g., "GENE HACKMAN(V.O.)That's why" -> "GENE HACKMAN (V.O.)\nThat's why"
