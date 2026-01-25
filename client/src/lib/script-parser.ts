@@ -582,11 +582,32 @@ function normalizeCharacterName(name: string): string {
   return normalized.toUpperCase();
 }
 
+// Valid short names (2-3 chars) - real names only
+const VALID_SHORT_NAMES = new Set([
+  // 2-letter names
+  "AL", "BO", "ED", "JO", "KY", "LU", "TY", "VI",
+  // 3-letter names (common)
+  "ABI", "ACE", "ADA", "AMY", "ANA", "ANN", "ASH", "AVA", "BEA", "BEN", "BOB", "CAL", "CAM", "DAN", 
+  "DEE", "DOC", "DOM", "DON", "DOT", "DRU", "ELI", "EVA", "EVE", "FLO", "GAB", "GUS", "GUY", "HAL", 
+  "HAN", "IAN", "IDA", "IKE", "INA", "IRA", "IVY", "JAX", "JAY", "JEB", "JED", "JEN", "JIM", "JOE", 
+  "JON", "JOY", "KAI", "KAT", "KAY", "KEN", "KIM", "KIP", "KIT", "LEA", "LEE", "LEN", "LEO", "LES", 
+  "LEX", "LIZ", "LOU", "LUC", "LYN", "MAC", "MAE", "MAX", "MAY", "MEG", "MEL", "MIA", "NAT", "NED", 
+  "NIK", "ORA", "PAM", "PAT", "PEG", "RAE", "RAY", "REX", "ROB", "ROD", "RON", "ROY", "RUE", "SAL", 
+  "SAM", "SID", "SIS", "SKY", "SLY", "STU", "SUE", "TAD", "TED", "TIM", "TOM", "VIC", "ZAC", "ZAK", "ZOE",
+  // Common role descriptors that are valid
+  "MOM", "DAD", "SIS", "BRO", "DOC", "COP", "REF",
+]);
+
 function isValidCharacterName(name: string): boolean {
   const normalized = normalizeCharacterName(name);
   
   // Must be reasonable length
   if (normalized.length < 2 || normalized.length > 35) return false;
+  
+  // Very short names (2-3 chars) must be in the valid short names list
+  if (normalized.length <= 3) {
+    if (!VALID_SHORT_NAMES.has(normalized)) return false;
+  }
   
   // Must start with a letter
   if (!/^[A-Z]/.test(normalized)) return false;
