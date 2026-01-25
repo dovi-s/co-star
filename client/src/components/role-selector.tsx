@@ -71,11 +71,13 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-5 pt-6 pb-4 animate-fade-in-up">
-          <h2 className="text-lg font-semibold text-foreground">
+        <div className="px-5 pt-6 pb-4 animate-fade-in-up relative">
+          {/* Subtle gradient accent */}
+          <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+          <h2 className="text-lg font-semibold text-foreground relative">
             Select your role
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1 relative">
             AI will read the other parts.
           </p>
         </div>

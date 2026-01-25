@@ -1020,8 +1020,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         );
       })()}
 
-      <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in">
-        <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full">
+      <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative">
+        {/* Subtle gradient accent at top */}
+        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
+        <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full relative">
           <ThreeLineReader
             previousLine={previousLine}
             currentLine={currentLine}
