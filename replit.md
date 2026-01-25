@@ -131,6 +131,22 @@ Currently uses localStorage for session persistence. All data stays on-device.
 
 ## Recent Changes
 
+### January 2026 - Multi-Format Script Parser Improvements
+- **Professional Screenplay Format Support**: Parser now handles industry-standard scripts
+  - Strips scene numbers from left/right margins (e.g., "1A", "23", "42A")
+  - Removes revision asterisks (*) commonly found in production scripts
+  - Handles INSERT shots, OMITTED scenes, and ANGLE ON headings
+- **Character Extension Detection Fix**: Proper handling of V.O., O.S., CONT'D suffixes
+  - Caps ratio calculation now based on letters only (not punctuation)
+  - Character names like "JORDAN (V.O.)" now detected correctly
+- **Conservative Action Line Detection**: Reduced false positives that were filtering dialogue
+  - Removed overly aggressive "A", "AN", "THE" sentence patterns
+  - Better preservation of all dialogue lines
+- **Stage Play Format Support**: Scripts without INT./EXT. headings now work
+  - Parser starts on first valid "Character: dialogue" line
+  - Mixed-case character names (e.g., "Simba:") automatically uppercased
+- **Tested Formats**: Home Alone, Step Brothers, Wolf of Wall Street, Fast & Furious, Lion King
+
 ### January 2026 - Context & Scene Awareness Features
 - **Script Context Capture**: Parser now captures action/stage directions preceding dialogue
   - Action lines between dialogues are attached as `context` field to the next dialogue
