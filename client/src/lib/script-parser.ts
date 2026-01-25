@@ -314,6 +314,40 @@ function cleanScriptLine(line: string): string {
 }
 
 // Clean dialogue text to remove OCR artifacts and production notes
+// Detect merged lines from PDF extraction and split them
+// e.g., "OFFICER HUDSONGood evening" -> ["OFFICER HUDSON", "Good evening"]
+function splitMergedLines(text: string): string[] {
+  // Pattern: ALL CAPS word immediately followed by mixed/lowercase word
+  // This indicates a line break was lost: "HUDSONGood" should be "HUDSON" + newline + "Good"
+  
+  // First, add space where uppercase character name runs into lowercase dialogue
+  // Match: 2+ uppercase letters followed immediately by uppercase+lowercase (start of word)
+  let fixed = text.replace(/([A-Z]{2,})([A-Z][a-z])/g, '$1 $2');
+  
+  // Split on character names with extensions that appear mid-text
+  // Pattern: [ALLCAPS NAME] or [NAME (CONT'D)] appearing after punctuation or lowercase
+  const charNameMidText = /([.!?]\s*)([A-Z][A-Z\s]+(?:\s*\([^)]+\))?)\s+([A-Z][a-z])/g;
+  fixed = fixed.replace(charNameMidText, '$1\n$2\n$3');
+  
+  // Split on "NAME." or "NAME:" patterns mid-text (merged PDF lines)
+  // e.g., "...sarcastic sometimes. OLIVER. Unbelievable. SHANE. What?" 
+  // Should split into separate character lines
+  // Pattern: punctuation + space + ALLCAPS + period/colon
+  fixed = fixed.replace(/([.!?])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)[.:]\s*/g, '$1\n$2: ');
+  
+  // Also handle "NAME:" appearing mid-text without preceding punctuation
+  // e.g., "blah blah OLIVER: Something"
+  fixed = fixed.replace(/\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, '\n$1: ');
+  
+  // Also handle action lines embedded in dialogue
+  // Pattern: after punctuation, NAME + action verb (passes, walks, looks, etc.)
+  const actionMidText = /([.!?]\s*)([A-Z][A-Z]+)\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves)/gi;
+  fixed = fixed.replace(actionMidText, '$1\n[$2 $3');
+  
+  // Return as array of lines
+  return fixed.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+}
+
 function cleanDialogueText(text: string): string {
   let cleaned = text;
   
