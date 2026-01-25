@@ -174,13 +174,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     speechRecognition.onEnd(() => {
       console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
-      // Speech recognition ended - only advance if user has made some progress
-      // Otherwise they can tap Next manually or try speaking again
+      // Speech recognition ended - auto-restart if still user's turn
       if (waitingForUserRef.current && isPlayingRef.current) {
-        // Don't auto-advance on speech end - let user control the pace
-        // They can tap Next when ready or speak again to resume listening
-        console.log("[Rehearsal] Speech ended, waiting for user to tap Next or speak again");
-        // Note: We're NOT auto-advancing here anymore - better user experience
+        console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting...");
+        // Brief delay then restart listening
+        setTimeout(() => {
+          if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
+            console.log("[Rehearsal] Restarting speech recognition");
+            speechRecognition.start();
+          }
+        }, 300);
       }
     });
 
@@ -1070,6 +1073,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             speakingWordIndex={speakingWordIndex}
             currentScene={currentScene}
             isFirstLineOfScene={session.currentLineIndex === 0}
+            onRestartListening={() => {
+              if (!speechRecognition.listening && waitingForUserRef.current) {
+                speechRecognition.start();
+              }
+            }}
           />
           
           {showUserTurnIndicator && (

@@ -76,6 +76,7 @@ interface ThreeLineReaderProps {
   speakingWordIndex?: number;
   currentScene?: Scene;
   isFirstLineOfScene?: boolean;
+  onRestartListening?: () => void;
 }
 
 function maskText(text: string, mode: MemorizationMode): { display: string; hint?: string } {
@@ -129,6 +130,7 @@ export function ThreeLineReader({
   speakingWordIndex = -1,
   currentScene,
   isFirstLineOfScene = false,
+  onRestartListening,
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
@@ -332,12 +334,16 @@ export function ThreeLineReader({
                       </span>
                     </>
                   ) : (
-                    <>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); onRestartListening?.(); }}
+                      className="flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded hover:bg-background/10 transition-colors"
+                      data-testid="button-restart-listening"
+                    >
                       <Mic className="w-3 h-3 text-background/60" />
                       <span className="text-xs text-background/70">
-                        Your turn to speak
+                        Tap to speak
                       </span>
-                    </>
+                    </button>
                   )}
                 </div>
                 
