@@ -259,6 +259,28 @@ function isValidContext(text: string): boolean {
   if (!trimmed) return false;
   if (trimmed.length < 5) return false; // Too short to be meaningful context
   
+  // CRITICAL: Reject context containing embedded character dialogue
+  // Pattern: "CHARACTER. dialogue" or "CHARACTER: dialogue" indicates merged text
+  // e.g., "CALLIE. 2:30." or "GEORGE. Kindergarten?"
+  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?\.\s+[A-Z]?[a-z]/i.test(trimmed)) {
+    return false; // Contains "NAME. word" pattern = embedded dialogue
+  }
+  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?:\s+/i.test(trimmed)) {
+    return false; // Contains "NAME: " pattern = embedded dialogue
+  }
+  
+  // Reject if contains multiple all-caps words that look like character names
+  const capsWords = trimmed.match(/\b[A-Z]{3,}\b/g) || [];
+  if (capsWords.length >= 2) {
+    // Multiple all-caps words might be character names from merged lines
+    return false;
+  }
+  
+  // Reject if too long - real stage directions are brief
+  if (trimmed.length > 200) {
+    return false;
+  }
+  
   // Context should NOT look like dialogue fragments
   // Dialogue fragments typically have:
   // - Personal pronouns in conversational patterns ("and he was", "but she said")
@@ -1159,13 +1181,15 @@ export function parseScript(rawText: string): ParsedScript {
         
         const direction = directions.join("; ");
         const contextText = pendingContext.join(" ").trim();
+        // Validate direction - reject if it contains embedded dialogue
+        const validDirection = direction && isValidContext(direction) ? direction : undefined;
         const scriptLine: ScriptLine = {
           id: generateId(),
           lineNumber: lineNumber++,
           roleId: role.id,
           roleName: pendingCharacter,
           text: cleanText,
-          direction: direction || undefined,
+          direction: validDirection,
           context: isValidContext(contextText) ? contextText : undefined, // Only include valid action context
           isBookmarked: false,
           emotionHint: detectEmotion(cleanText, direction),
