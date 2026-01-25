@@ -135,7 +135,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
         </div>
       </div>
 
-      <div className="sticky bottom-0 p-4 border-t border-border/40 bg-background safe-bottom animate-slide-up z-40">
+      <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background animate-slide-up z-40">
         <Button
           onClick={handleContinue}
           disabled={!selectedRoleId}
@@ -147,7 +147,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
         </Button>
         
         {selectedRole && (
-          <p className="text-center text-xs text-muted-foreground mt-2 animate-fade-in">
+          <p className="text-center text-xs text-muted-foreground mt-1.5 animate-fade-in">
             Playing as <span className="font-medium text-foreground">{selectedRole.name}</span>
           </p>
         )}
