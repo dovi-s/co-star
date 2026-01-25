@@ -82,7 +82,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           </p>
         </div>
 
-        <div className="flex-1 px-4 pb-4 space-y-2 overflow-y-auto">
+        <div className="flex-1 px-4 pt-2 pb-4 space-y-2 overflow-y-auto">
           {sortedRoles.map((role, index) => {
             const isSelected = selectedRoleId === role.id;
             const linePercentage = Math.round((role.lineCount / totalLines) * 100);
