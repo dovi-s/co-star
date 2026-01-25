@@ -92,11 +92,11 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
                 onClick={() => handleCardClick(role.id)}
                 className={cn(
                   "w-full flex items-center gap-3 p-4 text-left cursor-pointer",
-                  "transition-all duration-200 hover-elevate active:scale-[0.98]",
+                  "transition-all duration-150 hover-elevate press-effect",
                   "animate-fade-in-up",
-                  isSelected && "ring-2 ring-primary shadow-sm",
+                  isSelected && "ring-2 ring-primary shadow-sm bg-primary/[0.03]",
                 )}
-                style={{ animationDelay: `${index * 50}ms` }}
+                style={{ animationDelay: `${index * 40}ms` }}
                 data-testid={`card-role-${role.name}`}
               >
                 <div

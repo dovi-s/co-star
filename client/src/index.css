@@ -130,81 +130,81 @@
 
 /* DARK MODE - CastMate Studio */
 .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255,255,255, .12);
+  --badge-outline: rgba(255,255,255, .06);
 
   --opaque-button-border-intensity: 9;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255,255,255, .05);
+  --elevate-2: rgba(255,255,255, .10);
 
-  /* Paper dark: #0E1218 */
-  --background: 220 20% 8%;
+  /* Paper dark: deeper, richer #0A0D12 */
+  --background: 220 25% 6%;
 
-  /* Ink light: #E6EDF3 */
-  --foreground: 210 25% 93%;
+  /* Ink light: brighter for better contrast #F0F6FC */
+  --foreground: 210 40% 98%;
 
-  /* Line dark: #1E2635 */
-  --border: 220 26% 16%;
+  /* Line dark: more visible #2D3748 */
+  --border: 220 20% 22%;
 
-  /* Panel dark: #0F1624 */
-  --card: 222 35% 10%;
+  /* Panel dark: slightly elevated #12171F */
+  --card: 220 30% 9%;
 
-  --card-foreground: 210 25% 93%;
+  --card-foreground: 210 40% 98%;
 
-  --card-border: 220 26% 18%;
+  --card-border: 220 20% 20%;
 
-  --sidebar: 222 30% 9%;
+  --sidebar: 220 28% 7%;
 
-  --sidebar-foreground: 210 25% 93%;
+  --sidebar-foreground: 210 40% 98%;
 
-  --sidebar-border: 220 26% 16%;
+  --sidebar-border: 220 20% 20%;
 
-  /* Brand dark: #59A4FF */
-  --sidebar-primary: 214 100% 67%;
+  /* Brand dark: vibrant blue #5BA3FF */
+  --sidebar-primary: 214 100% 68%;
 
-  --sidebar-primary-foreground: 222 47% 11%;
+  --sidebar-primary-foreground: 222 47% 8%;
 
   /* Accent: warm bronze */
-  --sidebar-accent: 28 40% 50%;
+  --sidebar-accent: 28 45% 52%;
 
   --sidebar-accent-foreground: 0 0% 100%;
 
-  --sidebar-ring: 214 100% 67%;
+  --sidebar-ring: 214 100% 68%;
 
-  --popover: 222 35% 10%;
+  --popover: 220 30% 9%;
 
-  --popover-foreground: 210 25% 93%;
+  --popover-foreground: 210 40% 98%;
 
-  --popover-border: 220 26% 18%;
+  --popover-border: 220 20% 20%;
 
-  /* Brand dark: #59A4FF */
-  --primary: 214 100% 67%;
+  /* Brand dark: vibrant blue #5BA3FF */
+  --primary: 214 100% 68%;
 
-  --primary-foreground: 222 47% 11%;
+  --primary-foreground: 222 47% 8%;
 
-  --secondary: 220 20% 14%;
+  --secondary: 220 18% 16%;
 
-  --secondary-foreground: 210 20% 85%;
+  --secondary-foreground: 210 25% 90%;
 
-  --muted: 220 20% 12%;
+  --muted: 220 18% 14%;
 
-  --muted-foreground: 215 20% 55%;
+  --muted-foreground: 215 15% 60%;
 
   /* Accent bronze dark */
-  --accent: 28 40% 50%;
+  --accent: 28 45% 52%;
 
   --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 72% 55%;
+  --destructive: 0 72% 58%;
 
   --destructive-foreground: 0 0% 100%;
   
-  --success: 142 60% 50%;
+  --success: 142 65% 52%;
   --success-foreground: 0 0% 100%;
 
-  --input: 220 26% 20%;
-  --ring: 214 100% 67%;
+  --input: 220 20% 22%;
+  --ring: 214 100% 68%;
   
   --chart-1: 214 100% 67%;
   --chart-2: 28 40% 55%;
@@ -569,11 +569,11 @@
 
 /* Transport button press effect */
 .transport-btn {
-  transition: transform 100ms ease-out, box-shadow 100ms ease-out;
+  transition: transform 120ms cubic-bezier(0.2, 0, 0.4, 1), box-shadow 120ms ease-out;
 }
 
 .transport-btn:active {
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
 /* Premium transitions */
@@ -582,11 +582,73 @@
 }
 
 .transition-fast {
-  transition: all 120ms ease-out;
+  transition: all 100ms ease-out;
 }
 
 .transition-bounce {
-  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Ultra-smooth button press - for all interactive elements */
+.press-effect {
+  transition: transform 100ms cubic-bezier(0.2, 0, 0.4, 1), opacity 100ms ease-out;
+}
+
+.press-effect:active {
+  transform: scale(0.96);
+}
+
+/* Subtle pulse for playing state */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Card selection highlight */
+.card-selected {
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth spring for modals and overlays */
+@keyframes spring-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  60% {
+    transform: scale(1.01) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-spring-in {
+  animation: spring-in 350ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Smooth backdrop */
+@keyframes backdrop-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.animate-backdrop {
+  animation: backdrop-in 200ms ease-out forwards;
+}
+
+/* Better icon button press */
+.icon-btn-press {
+  transition: transform 80ms ease-out, background-color 150ms ease-out;
+}
+
+.icon-btn-press:active {
+  transform: scale(0.88);
 }
 
 /* Hover lift effect */

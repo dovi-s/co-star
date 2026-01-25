@@ -38,44 +38,42 @@ export function TransportBar({
           size="icon"
           onClick={onRepeat}
           title="Start Over (R)"
-          className="rounded-full transition-transform active:scale-90"
+          className="rounded-full icon-btn-press"
           data-testid="button-start-over"
         >
           <RotateCcw className="h-4 w-4" />
         </Button>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             type="button"
             disabled={!canGoBack}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("[Transport] Back clicked, canGoBack:", canGoBack);
               if (canGoBack) onBack();
             }}
             onTouchEnd={(e) => {
               if (canGoBack) {
                 e.preventDefault();
-                console.log("[Transport] Back touch");
                 onBack();
               }
             }}
             title="Previous"
             className={cn(
-              "p-3 rounded-full transition-all active:scale-90 touch-manipulation select-none",
-              "hover:bg-accent/80 active:bg-accent",
-              !canGoBack && "opacity-40"
+              "p-3 rounded-full touch-manipulation select-none icon-btn-press",
+              "hover:bg-muted active:bg-muted/80",
+              canGoBack ? "text-foreground" : "text-muted-foreground/40 pointer-events-none"
             )}
-            style={{ minWidth: 44, minHeight: 44, touchAction: 'manipulation' }}
+            style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-prev-line"
           >
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="relative mx-2">
+          <div className="relative mx-1">
             <svg 
-              className="w-16 h-16 -rotate-90"
+              className="w-[68px] h-[68px] -rotate-90"
               viewBox="0 0 64 64"
             >
               <circle
@@ -85,7 +83,7 @@ export function TransportBar({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="text-muted/30"
+                className="text-border"
               />
               <circle
                 cx="32"
@@ -93,13 +91,13 @@ export function TransportBar({
                 r="28"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="3"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
                 className={cn(
-                  "transition-all duration-300 ease-out",
-                  isComplete ? "text-green-500" : "text-primary"
+                  "transition-all duration-500 ease-out",
+                  isComplete ? "text-success" : "text-primary"
                 )}
               />
             </svg>
@@ -111,16 +109,20 @@ export function TransportBar({
               variant={isPlaying ? "secondary" : "default"}
               data-testid="button-play-pause"
               className={cn(
-                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
-                "transition-all duration-150 active:scale-90",
-                isPlaying && "animate-pulse-subtle"
+                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full w-11 h-11",
+                "transition-transform duration-100 active:scale-90"
               )}
             >
-              {isPlaying ? (
-                <Pause className="h-5 w-5" />
-              ) : (
-                <Play className="h-5 w-5 ml-0.5" />
-              )}
+              <div className={cn(
+                "transition-all duration-200",
+                isPlaying ? "scale-100" : "scale-100"
+              )}>
+                {isPlaying ? (
+                  <Pause className="h-5 w-5" />
+                ) : (
+                  <Play className="h-5 w-5 ml-0.5" />
+                )}
+              </div>
             </Button>
           </div>
 
@@ -130,23 +132,21 @@ export function TransportBar({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("[Transport] Next clicked, canGoNext:", canGoNext);
               if (canGoNext) onNext();
             }}
             onTouchEnd={(e) => {
               if (canGoNext) {
                 e.preventDefault();
-                console.log("[Transport] Next touch");
                 onNext();
               }
             }}
             title="Next"
             className={cn(
-              "p-3 rounded-full transition-all active:scale-90 touch-manipulation select-none",
-              "hover:bg-accent/80 active:bg-accent",
-              !canGoNext && "opacity-40"
+              "p-3 rounded-full touch-manipulation select-none icon-btn-press",
+              "hover:bg-muted active:bg-muted/80",
+              canGoNext ? "text-foreground" : "text-muted-foreground/40 pointer-events-none"
             )}
-            style={{ minWidth: 44, minHeight: 44, touchAction: 'manipulation' }}
+            style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-next-line"
           >
             <ChevronRight className="h-5 w-5" />

@@ -44,10 +44,9 @@ export function Header({
             variant="ghost"
             size="icon"
             onClick={() => {
-              console.log("[Header] Back button clicked");
               onBack();
             }}
-            className="shrink-0 -ml-1"
+            className="shrink-0 -ml-1 icon-btn-press"
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />

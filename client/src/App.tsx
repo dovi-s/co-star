@@ -39,7 +39,7 @@ function App() {
     setDirection(dir);
     setPhase("exiting");
     
-    // Exit animation
+    // Exit animation - quick and subtle
     setTimeout(() => {
       setView(newView);
       setPhase("entering");
@@ -48,8 +48,8 @@ function App() {
       setTimeout(() => {
         setPhase("idle");
         pendingViewRef.current = null;
-      }, 180);
-    }, 120);
+      }, 200);
+    }, 100);
   }, [phase]);
 
   const handleSessionReady = useCallback(() => {
@@ -62,16 +62,16 @@ function App() {
 
   // Transition styles based on phase and direction
   const getTransitionClass = () => {
-    if (phase === "idle") return "opacity-100 translate-x-0";
+    if (phase === "idle") return "opacity-100 translate-x-0 scale-100";
     
     if (phase === "exiting") {
       return direction === "forward" 
-        ? "opacity-0 -translate-x-3" 
-        : "opacity-0 translate-x-3";
+        ? "opacity-0 -translate-x-4 scale-[0.99]" 
+        : "opacity-0 translate-x-4 scale-[0.99]";
     }
     
     if (phase === "entering") {
-      return "opacity-100 translate-x-0";
+      return "opacity-100 translate-x-0 scale-100";
     }
     
     return "";

@@ -249,9 +249,9 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
             <button
               onClick={handlePaste}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all",
+                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
                 pasteSuccess 
-                  ? "bg-green-500/15 text-green-600 dark:text-green-400" 
+                  ? "bg-success/15 text-success" 
                   : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
               )}
               data-testid="button-paste"
@@ -261,7 +261,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background press-effect"
               data-testid="button-upload-file"
             >
               <Upload className="h-3 w-3" />
@@ -275,7 +275,7 @@ export function ScriptImport({ onImport, isLoading, error, initialScript = "" }:
           <button
             type="button"
             onClick={() => setScript("")}
-            className="absolute top-2 right-2 p-2 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-background hover:border-border active:scale-95 transition-all z-10 touch-manipulation"
+            className="absolute top-2 right-2 p-2 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 text-muted-foreground hover:text-foreground hover:bg-background hover:border-border icon-btn-press z-10 touch-manipulation"
             style={{ minWidth: 36, minHeight: 36 }}
             data-testid="button-clear-script"
           >

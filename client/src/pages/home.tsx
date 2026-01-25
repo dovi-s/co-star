@@ -86,13 +86,13 @@ export function HomePage({ onSessionReady }: HomePageProps) {
       </header>
 
       <main className="flex-1 flex flex-col">
-        <div className="px-5 pt-8 pb-4 animate-fade-in-up relative">
-          {/* Subtle gradient accent */}
-          <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.03] to-transparent pointer-events-none" />
-          <h1 className="text-xl font-medium text-foreground relative">
+        <div className="px-5 pt-10 pb-5 animate-fade-in-up relative">
+          {/* Refined gradient accent */}
+          <div className="absolute -top-6 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.07] via-primary/[0.03] to-transparent pointer-events-none" />
+          <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             Rehearse with AI
           </h1>
-          <p className="text-muted-foreground text-sm mt-1 relative">
+          <p className="text-muted-foreground text-sm mt-2 relative leading-relaxed">
             Paste a script. Pick your role. Start rehearsing.
           </p>
         </div>
