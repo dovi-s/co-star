@@ -313,6 +313,37 @@ function cleanScriptLine(line: string): string {
   return cleaned.trim();
 }
 
+// Clean dialogue text to remove OCR artifacts and production notes
+function cleanDialogueText(text: string): string {
+  let cleaned = text;
+  
+  // Remove production notes like "4 OMITTED", "SCENES 5-7 OMITTED", "12A OMITTED"
+  cleaned = cleaned.replace(/\s*\d+[A-Z]?\s*OMITTED\s*/gi, ' ');
+  cleaned = cleaned.replace(/\s*SCENES?\s+\d+(-\d+)?[A-Z]?\s*OMITTED\s*/gi, ' ');
+  cleaned = cleaned.replace(/\s*OMITTED\s*/gi, ' ');
+  
+  // Replace bullet characters with proper ellipsis
+  cleaned = cleaned.replace(/•{2,}/g, '...'); // Multiple bullets -> ellipsis
+  cleaned = cleaned.replace(/•/g, '.'); // Single bullet -> period
+  
+  // Fix OCR tilde artifacts (I~ -> I, word~ -> word)
+  cleaned = cleaned.replace(/~+/g, '');
+  
+  // Fix common OCR artifacts
+  cleaned = cleaned.replace(/\|/g, 'I'); // Pipe often OCR'd instead of I
+  cleaned = cleaned.replace(/\s+\|\s+/g, ' '); // Stray pipes
+  cleaned = cleaned.replace(/`/g, "'"); // Backtick to apostrophe
+  
+  // Clean up excessive punctuation
+  cleaned = cleaned.replace(/\.{4,}/g, '...'); // Too many dots
+  cleaned = cleaned.replace(/\s*\.\s*\.\s*\.\s*/g, '... '); // Spaced dots
+  
+  // Fix spacing issues
+  cleaned = cleaned.replace(/\s{2,}/g, ' '); // Multiple spaces
+  
+  return cleaned.trim();
+}
+
 // Check if a line should be skipped entirely
 function shouldSkipLine(line: string): boolean {
   const trimmed = line.trim();
@@ -919,7 +950,9 @@ export function parseScript(rawText: string): ParsedScript {
   const flushPendingDialogue = () => {
     if (pendingCharacter && pendingDialogue.length > 0) {
       const fullDialogue = pendingDialogue.join(" ");
-      const { cleanText, directions } = extractDirectionsFromDialogue(fullDialogue);
+      // Clean OCR artifacts and production notes from dialogue
+      const cleanedDialogue = cleanDialogueText(fullDialogue);
+      const { cleanText, directions } = extractDirectionsFromDialogue(cleanedDialogue);
       
       // Validate dialogue - reject garbage like single letters "r", OCR artifacts
       if (cleanText && isValidDialogue(cleanText)) {
