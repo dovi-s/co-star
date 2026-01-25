@@ -132,6 +132,12 @@ const NOT_CHARACTER_PATTERNS = [
   /^(MINUTES?|HOURS?|DAYS?|WEEKS?|MONTHS?|YEARS?|SECONDS?|MOMENTS?)\s+(LATER|EARLIER|AGO|BEFORE|AFTER)$/i,
   /^(LATER|EARLIER|NEXT|PREVIOUS|SAME)\s+(DAY|NIGHT|MORNING|EVENING|AFTERNOON|TIME)$/i,
   /^(ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN)\s+(MINUTES?|HOURS?|DAYS?|WEEKS?|MONTHS?|YEARS?)(\s+LATER)?$/i,
+  // "ALMOST X" patterns (not names)
+  /^ALMOST\s+\d+$/i,
+  /^ALMOST\s+(ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN)$/i,
+  // Phrase patterns that get parsed as names
+  /^LET\s+ME(\s+\w+)?$/i,
+  /^GUESS\s+WHAT$/i,
   // Common location words that appear as standalone lines in PDFs
   /^(BACKYARD|FRONTYARD|DRIVEWAY|GARAGE|BASEMENT|ATTIC|HALLWAY|STAIRWAY|STAIRCASE|ROOFTOP|BALCONY|PATIO|PORCH|DECK|GARDEN|KITCHEN|BEDROOM|BATHROOM|LIVING\s*ROOM|DINING\s*ROOM|OFFICE|LOBBY|ELEVATOR|CORRIDOR|ALLEY|SIDEWALK|STREET|ROAD|HIGHWAY|PARKING\s*LOT|WAREHOUSE|FACTORY|BUILDING|APARTMENT|HOUSE|MANSION|CABIN|HOTEL|MOTEL|HOSPITAL|SCHOOL|CHURCH|STORE|SHOP|RESTAURANT|BAR|CLUB|STADIUM|ARENA|BEACH|FOREST|WOODS|MOUNTAIN|DESERT|OCEAN|LAKE|RIVER|BRIDGE|TUNNEL|SUBWAY|AIRPORT|STATION|PRISON|JAIL|COURT|COURTROOM|CEMETERY|MORGUE)$/i,
 ];
@@ -510,6 +516,15 @@ const RESERVED_WORDS = new Set([
   // Common verbs/actions that aren't names
   "STOP", "KISS", "RUN", "WALK", "TALK", "LOOK", "SEE", "HEAR", "WAIT", "HELP",
   "COME", "GO", "STAY", "LEAVE", "TAKE", "GIVE", "GET", "MAKE", "FIND", "TELL",
+  "LET", "GUESS", "ALMOST", "WHILE", "WHEN", "WHERE", "WHAT", "WHICH", "WHO",
+  "BEFORE", "AFTER", "DURING", "UNTIL", "SINCE", "BECAUSE", "ALTHOUGH", "THOUGH",
+  "HOWEVER", "THEREFORE", "MEANWHILE", "OTHERWISE", "INSTEAD", "BESIDES",
+  "MAYBE", "PERHAPS", "PROBABLY", "CERTAINLY", "DEFINITELY", "OBVIOUSLY",
+  "ACTUALLY", "REALLY", "TRULY", "SIMPLY", "JUST", "ONLY", "EVEN", "STILL",
+  // Common phrases that get parsed as names
+  "LET ME", "LET ME GUESS", "ALMOST", "GUESS WHAT",
+  // Stage direction words
+  "WINSLEY", "COLE", // Partial names that should be caught by full name matching
   "PRIORITY", "IMPORTANT", "NOTE", "NOTES", "COMMENT", "COMMENTS",
   "SCENE", "SCENES", "ACT", "ACTS", "PART", "PARTS", "CHAPTER", "CHAPTERS",
   // Preposition phrases
@@ -1349,10 +1364,109 @@ export function parseScript(rawText: string): ParsedScript {
     });
   }
 
+  // Consolidate and deduplicate roles
+  const consolidatedRoles = consolidateRoles(Array.from(roles.values()), scenes);
+
   return {
-    roles: Array.from(roles.values()),
+    roles: consolidatedRoles,
     scenes,
   };
+}
+
+// Consolidate roles that are variations of the same character
+// e.g., "DET COLE", "DETECTIVE COLE", "COLE" -> "DETECTIVE COLE"
+function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
+  // Title abbreviation map
+  const titleExpansions: Record<string, string> = {
+    "DET": "DETECTIVE",
+    "SGT": "SERGEANT", 
+    "LT": "LIEUTENANT",
+    "CAPT": "CAPTAIN",
+    "DR": "DOCTOR",
+    "MR": "MISTER",
+    "MS": "MS",
+    "PROF": "PROFESSOR",
+    "REV": "REVEREND",
+    "SEN": "SENATOR",
+    "REP": "REPRESENTATIVE",
+    "GOV": "GOVERNOR",
+    "GEN": "GENERAL",
+    "COL": "COLONEL",
+    "MAJ": "MAJOR",
+  };
+  
+  // Build a map of normalized names to canonical names
+  const nameMap = new Map<string, string>(); // normalized -> canonical
+  const rolesByCanonical = new Map<string, Role>(); // canonical -> merged role
+  
+  // First pass: identify the longest/most complete version of each name
+  for (const role of roles) {
+    const name = role.name;
+    const words = name.split(/\s+/);
+    
+    // Expand abbreviations for comparison
+    const expandedWords = words.map(w => titleExpansions[w] || w);
+    const expandedName = expandedWords.join(" ");
+    
+    // Get the last word (likely the surname)
+    const lastName = words[words.length - 1];
+    
+    // Check if this name is a substring of or contains another role
+    let canonical = name;
+    let foundMatch = false;
+    
+    for (const [existingNorm, existingCanon] of nameMap) {
+      const existingRole = rolesByCanonical.get(existingCanon);
+      if (!existingRole) continue;
+      
+      const existingWords = existingCanon.split(/\s+/);
+      const existingLastName = existingWords[existingWords.length - 1];
+      
+      // Same last name? Likely the same character
+      if (lastName === existingLastName && lastName.length >= 4) {
+        // Use the longer name as canonical
+        if (name.length > existingCanon.length) {
+          // This name is longer, make it canonical
+          nameMap.set(existingNorm, name);
+          nameMap.set(name, name);
+          const mergedRole = {
+            ...role,
+            lineCount: role.lineCount + existingRole.lineCount,
+          };
+          rolesByCanonical.delete(existingCanon);
+          rolesByCanonical.set(name, mergedRole);
+          canonical = name;
+        } else {
+          // Existing is longer, merge into it
+          nameMap.set(name, existingCanon);
+          existingRole.lineCount += role.lineCount;
+          canonical = existingCanon;
+        }
+        foundMatch = true;
+        break;
+      }
+    }
+    
+    if (!foundMatch) {
+      nameMap.set(name, name);
+      rolesByCanonical.set(name, { ...role });
+    }
+  }
+  
+  // Update scene lines to use canonical names
+  for (const scene of scenes) {
+    for (const line of scene.lines) {
+      const canonical = nameMap.get(line.character);
+      if (canonical && canonical !== line.character) {
+        line.character = canonical;
+        line.roleId = rolesByCanonical.get(canonical)?.id || line.roleId;
+      }
+    }
+  }
+  
+  // Return deduplicated roles sorted by line count
+  return Array.from(rolesByCanonical.values())
+    .sort((a, b) => b.lineCount - a.lineCount);
 }
 
 export function normalizeScript(rawText: string): string {
