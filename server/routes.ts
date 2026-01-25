@@ -6,7 +6,8 @@ import OpenAI from "openai";
 import multer from "multer";
 import { createRequire } from "module";
 const require = createRequire(import.meta.url);
-const pdf = require("pdf-parse");
+const pdfParse = require("pdf-parse");
+const { PDFParse } = pdfParse;
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -491,10 +492,11 @@ JOHN: We got the contract.`;
 
       // Handle different file types
       if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
-        // Parse PDF
+        // Parse PDF using PDFParse class
         try {
-          const data = await pdf(file.buffer);
-          text = data.text;
+          const parser = new PDFParse();
+          const result = await parser.parseBuffer(file.buffer);
+          text = result.text || "";
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
           return res.status(400).json({ error: "Failed to parse PDF file" });
