@@ -731,7 +731,13 @@ JOHN: We got the contract.`;
         .trim();
 
       if (!text || text.length < 10) {
-        return res.status(400).json({ error: "Could not extract text from file" });
+        // Check if it was a PDF with no text (likely scanned/image-based)
+        if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
+          return res.status(400).json({ 
+            error: "This PDF appears to be scanned or image-based. Please use a text-based PDF, or copy and paste the script text directly." 
+          });
+        }
+        return res.status(400).json({ error: "Could not extract text from file. Try copying and pasting the script text directly." });
       }
 
       // Parse the script on the server
