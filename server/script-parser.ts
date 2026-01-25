@@ -619,6 +619,24 @@ function preprocessScript(rawText: string): string {
   // Also handles names like "McCALLISTER" with mixed case
   text = text.replace(/([A-Z]{2,}(?:\s+(?:[A-Z]{2,}|Mc[A-Z][a-z]+))?)([A-Z][a-z])/g, '$1\n$2');
   
+  // Fix ALL-CAPS name directly followed by lowercase dialogue (no space)
+  // e.g., "OLIVERwill be happier" -> "OLIVER\nwill be happier"
+  text = text.replace(/\b([A-Z]{2,})([a-z]{2,})/g, (match, name, rest) => {
+    // Only split if name looks like a character name (2-15 chars)
+    if (name.length >= 2 && name.length <= 15) {
+      return `${name}\n${rest}`;
+    }
+    return match;
+  });
+  
+  // Fix character name appearing after a dash mid-line
+  // e.g., "too - BEVERLY. This is" -> "too -\nBEVERLY\nThis is"
+  text = text.replace(/\s+-\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)[.\s]+([A-Z][a-z])/g, ' -\n$1\n$2');
+  
+  // Fix character name appearing after punctuation and space, followed by period then dialogue
+  // e.g., "you will be, too - BEVERLY. This" -> split properly
+  text = text.replace(/([,;:!?])\s*-?\s*([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z])/g, '$1\n$2\n$3');
+  
   // Split on character names that appear mid-line (common in PDF extraction)
   // e.g., "...the best. GENE HACKMAN Trained professionals" -> "...the best.\nGENE HACKMAN\nTrained professionals"
   // Handle names with optional extensions (V.O., CONT'D, etc.)
