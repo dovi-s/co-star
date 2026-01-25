@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -9,10 +9,9 @@ import { RehearsalPage } from "@/pages/rehearsal";
 import { cn } from "@/lib/utils";
 
 type View = "home" | "rehearsal";
-type Direction = "forward" | "back";
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>(() => {
+  const [view, setView] = useState<View>(() => {
     if (typeof window !== "undefined") {
       const stored = sessionStorage.getItem("castmate-session");
       if (stored) {
@@ -27,111 +26,53 @@ function App() {
     return "home";
   });
 
-  const [nextView, setNextView] = useState<View | null>(null);
-  const [direction, setDirection] = useState<Direction>("forward");
-  const [animationPhase, setAnimationPhase] = useState<"idle" | "ready" | "animating">("idle");
-  const transitionLock = useRef(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [exitDirection, setExitDirection] = useState<"left" | "right">("left");
+  const pendingView = useRef<View | null>(null);
 
-  const transitionTo = useCallback((newView: View, dir: Direction) => {
-    if (transitionLock.current || newView === currentView) return;
+  const navigate = useCallback((to: View, direction: "forward" | "back" = "forward") => {
+    if (isTransitioning || to === view) return;
     
-    transitionLock.current = true;
-    setDirection(dir);
-    setNextView(newView);
-    setAnimationPhase("ready");
-    
-    // Next frame: start animation
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        setAnimationPhase("animating");
-      });
-    });
-  }, [currentView]);
+    pendingView.current = to;
+    setExitDirection(direction === "forward" ? "left" : "right");
+    setIsTransitioning(true);
+  }, [isTransitioning, view]);
 
-  // Handle transition completion
-  useEffect(() => {
-    if (animationPhase !== "animating" || !nextView) return;
-    
-    const timer = setTimeout(() => {
-      setCurrentView(nextView);
-      setNextView(null);
-      setAnimationPhase("idle");
-      transitionLock.current = false;
-    }, 350);
-    
-    return () => clearTimeout(timer);
-  }, [animationPhase, nextView]);
+  const handleTransitionEnd = useCallback(() => {
+    if (pendingView.current) {
+      setView(pendingView.current);
+      pendingView.current = null;
+    }
+    setIsTransitioning(false);
+  }, []);
 
   const handleSessionReady = useCallback(() => {
-    transitionTo("rehearsal", "forward");
-  }, [transitionTo]);
+    navigate("rehearsal", "forward");
+  }, [navigate]);
 
   const handleBackToHome = useCallback(() => {
-    transitionTo("home", "back");
-  }, [transitionTo]);
-
-  const getViewClasses = (isCurrentView: boolean) => {
-    // Not transitioning - show current view normally
-    if (animationPhase === "idle") {
-      return isCurrentView 
-        ? "opacity-100 translate-x-0 scale-100" 
-        : "opacity-0 pointer-events-none";
-    }
-    
-    // Transitioning
-    if (isCurrentView) {
-      // Current view exits
-      if (animationPhase === "animating") {
-        return direction === "forward"
-          ? "opacity-0 -translate-x-8 scale-[0.98]"
-          : "opacity-0 translate-x-8 scale-[0.98]";
-      }
-      return "opacity-100 translate-x-0 scale-100";
-    } else {
-      // Next view enters
-      if (animationPhase === "animating") {
-        return "opacity-100 translate-x-0 scale-100";
-      }
-      return direction === "forward"
-        ? "opacity-0 translate-x-8 scale-[0.98]"
-        : "opacity-0 -translate-x-8 scale-[0.98]";
-    }
-  };
+    navigate("home", "back");
+  }, [navigate]);
 
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <div className="relative min-h-screen bg-background text-foreground overflow-hidden">
-            {/* Current view */}
+          <div className="min-h-screen bg-background text-foreground overflow-hidden">
             <div
               className={cn(
-                "absolute inset-0 bg-background",
-                "transition-all duration-300 ease-out",
-                getViewClasses(true)
+                "min-h-screen will-change-transform",
+                isTransitioning && exitDirection === "left" && "animate-exit-left",
+                isTransitioning && exitDirection === "right" && "animate-exit-right",
+                !isTransitioning && "animate-enter"
               )}
+              onAnimationEnd={handleTransitionEnd}
             >
-              {currentView === "home" 
+              {view === "home" 
                 ? <HomePage onSessionReady={handleSessionReady} />
                 : <RehearsalPage onBack={handleBackToHome} />
               }
             </div>
-            
-            {/* Next view (during transition) */}
-            {nextView && (
-              <div
-                className={cn(
-                  "absolute inset-0 bg-background",
-                  "transition-all duration-300 ease-out",
-                  getViewClasses(false)
-                )}
-              >
-                {nextView === "home" 
-                  ? <HomePage onSessionReady={handleSessionReady} />
-                  : <RehearsalPage onBack={handleBackToHome} />
-                }
-              </div>
-            )}
           </div>
           <Toaster />
         </TooltipProvider>
