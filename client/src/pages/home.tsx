@@ -31,8 +31,8 @@ export function HomePage({ onSessionReady }: HomePageProps) {
     }
   }, [session, onSessionReady]);
 
-  const handleImport = (name: string, rawScript: string) => {
-    const newSession = createSession(name, rawScript);
+  const handleImport = async (name: string, rawScript: string) => {
+    const newSession = await createSession(name, rawScript);
     if (newSession) {
       setStep("role-select");
     }

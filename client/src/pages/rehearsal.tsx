@@ -757,11 +757,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     updateRolePreset({ roleId, voicePreset: preset });
   };
 
-  const handleNewScript = (name: string, rawScript: string) => {
+  const handleNewScript = async (name: string, rawScript: string) => {
     ttsEngine.stop();
     speechRecognition.abort();
     setPlaying(false);
-    createSession(name, rawScript);
+    await createSession(name, rawScript);
   };
 
   const handleBackToHome = useCallback(() => {

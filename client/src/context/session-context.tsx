@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
-import type { Session, Role, Scene, UpdateSession, MemorizationMode } from "@shared/schema";
-import { parseScript } from "@/lib/script-parser";
+import type { Session, Role, Scene, UpdateSession, MemorizationMode, ParsedScript } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 11);
@@ -10,7 +10,7 @@ interface SessionContextType {
   session: Session | null;
   isLoading: boolean;
   error: string | null;
-  createSession: (name: string, rawScript: string) => Session | null;
+  createSession: (name: string, rawScript: string) => Promise<Session | null>;
   createSessionFromParsed: (name: string, parsed: { roles: Role[], scenes: Scene[] }) => Session | null;
   setUserRole: (roleId: string) => void;
   updateSession: (updates: UpdateSession) => void;
@@ -32,15 +32,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createSession = useCallback((name: string, rawScript: string) => {
+  const createSession = useCallback(async (name: string, rawScript: string): Promise<Session | null> => {
     setIsLoading(true);
     setError(null);
 
     try {
-      console.log('[Session] Parsing script:', rawScript.length, 'chars');
-      const parsed = parseScript(rawScript);
+      console.log('[Session] Sending script to server for parsing:', rawScript.length, 'chars');
       
-      console.log('[Session] Parsed result:', {
+      const response = await apiRequest("POST", "/api/parse-script", { script: rawScript });
+      const data = await response.json() as { parsed: ParsedScript; error?: string };
+      
+      if (data.error || !data.parsed) {
+        setError(data.error || "Failed to parse script");
+        setIsLoading(false);
+        return null;
+      }
+      
+      const parsed = data.parsed;
+      
+      console.log('[Session] Parsed result (with AI cleanup):', {
         roles: parsed.roles.map(r => `${r.name}(${r.lineCount})`),
         scenes: parsed.scenes.length,
         totalLines: parsed.scenes.reduce((s, sc) => s + sc.lines.length, 0)
@@ -74,6 +84,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
       return newSession;
     } catch (e) {
+      console.error('[Session] Parse error:', e);
       setError("Failed to parse script. Please check the format.");
       setIsLoading(false);
       return null;
