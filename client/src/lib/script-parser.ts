@@ -258,7 +258,7 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
   return { cleanText, directions };
 }
 
-// Check if a line is likely dialogue continuation (indented or lowercase start)
+// Check if a line is likely dialogue continuation
 function isDialogueContinuation(line: string, originalLine: string): boolean {
   const trimmed = line.trim();
   
@@ -278,6 +278,16 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   // Starts with quotation continuation
   if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
+  
+  // If line doesn't look like a new character name or scene heading, treat as continuation
+  // This is more permissive for professional screenplay PDFs where indentation is lost
+  if (!SCENE_HEADING_REGEX.test(trimmed) && 
+      !TRANSITION_REGEX.test(trimmed) &&
+      !/^[A-Z][A-Z\s\-'\.]+(?:\s*\([^)]*\))?\s*$/.test(trimmed) && // Not a standalone character name
+      !trimmed.includes(":") && // No colon (not NAME: dialogue format)
+      trimmed.length < 200) { // Reasonable line length
+    return true;
+  }
   
   return false;
 }
