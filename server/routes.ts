@@ -495,7 +495,14 @@ JOHN: We got the contract.`;
         try {
           const data = new Uint8Array(file.buffer);
           console.log(`[PDF] Parsing ${file.originalname}, size: ${data.length} bytes`);
-          const pdf = await pdfjsLib.getDocument({ data }).promise;
+          
+          // Use options for better compatibility with various PDFs
+          const pdf = await pdfjsLib.getDocument({ 
+            data,
+            useSystemFonts: true,
+            disableFontFace: true,
+            verbosity: 0
+          }).promise;
           console.log(`[PDF] Document loaded, ${pdf.numPages} pages`);
           const textParts: string[] = [];
           
@@ -548,7 +555,30 @@ JOHN: We got the contract.`;
             textParts.push(pageLines.join('\n'));
           }
           
-          text = textParts.join('\n\n');
+          // If no text extracted, try simpler fallback
+          let extractedText = textParts.join('\n\n');
+          if (extractedText.length < 50) {
+            console.log(`[PDF] Trying simple extraction fallback...`);
+            const simpleTextParts: string[] = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items
+                .filter((item: any) => item.str)
+                .map((item: any) => item.str)
+                .join(' ');
+              if (pageText.trim()) {
+                simpleTextParts.push(pageText);
+              }
+            }
+            const simpleText = simpleTextParts.join('\n\n');
+            if (simpleText.length > extractedText.length) {
+              extractedText = simpleText;
+              console.log(`[PDF] Simple extraction got ${extractedText.length} characters`);
+            }
+          }
+          
+          text = extractedText;
           console.log(`[PDF] Extracted ${text.length} characters`);
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
@@ -679,7 +709,14 @@ JOHN: We got the contract.`;
         try {
           const data = new Uint8Array(file.buffer);
           console.log(`[PDF->Session] Parsing ${file.originalname}, size: ${data.length} bytes`);
-          const pdf = await pdfjsLib.getDocument({ data }).promise;
+          
+          // Try with different options for better compatibility
+          const pdf = await pdfjsLib.getDocument({ 
+            data,
+            useSystemFonts: true,
+            disableFontFace: true,
+            verbosity: 0
+          }).promise;
           console.log(`[PDF->Session] Document loaded, ${pdf.numPages} pages`);
           const textParts: string[] = [];
           
@@ -687,6 +724,12 @@ JOHN: We got the contract.`;
             const page = await pdf.getPage(i);
             const content = await page.getTextContent();
             const items = content.items as any[];
+            
+            // Log first page details for debugging
+            if (i === 1) {
+              console.log(`[PDF->Session] Page 1: ${items.length} text items`);
+            }
+            
             if (items.length === 0) continue;
             
             const lines: { y: number; items: any[] }[] = [];
@@ -718,6 +761,28 @@ JOHN: We got the contract.`;
           
           text = textParts.join('\n\n');
           console.log(`[PDF->Session] Extracted ${text.length} characters`);
+          
+          // If still no text, try simpler extraction as fallback
+          if (text.length < 50) {
+            console.log(`[PDF->Session] Trying simple extraction fallback...`);
+            const simpleTextParts: string[] = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+              const page = await pdf.getPage(i);
+              const content = await page.getTextContent();
+              const pageText = content.items
+                .filter((item: any) => item.str)
+                .map((item: any) => item.str)
+                .join(' ');
+              if (pageText.trim()) {
+                simpleTextParts.push(pageText);
+              }
+            }
+            const simpleText = simpleTextParts.join('\n\n');
+            if (simpleText.length > text.length) {
+              text = simpleText;
+              console.log(`[PDF->Session] Simple extraction got ${text.length} characters`);
+            }
+          }
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
           return res.status(400).json({ error: "Failed to parse PDF file" });
