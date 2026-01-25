@@ -616,10 +616,13 @@ JOHN: We got the contract.`;
       const { script } = req.body;
       
       if (!script || typeof script !== "string") {
+        console.log(`[Parse Script] ERROR: No script or invalid type`);
         return res.status(400).json({ error: "No script text provided" });
       }
 
       console.log(`[Parse Script] Received ${script.length} characters`);
+      console.log(`[Parse Script] First 200 chars:`, script.substring(0, 200));
+      console.log(`[Parse Script] Last 200 chars:`, script.substring(script.length - 200));
       
       const text = script
         .replace(/\r\n/g, "\n")

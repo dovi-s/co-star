@@ -281,16 +281,21 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     // Use uploaded filename if available, otherwise detect from content
     const sessionName = uploadedFileName || detectSceneName(script, characters);
     
+    console.log('[Submit] Script length:', script.length, 'chars');
+    console.log('[Submit] Has serverParsedData:', !!serverParsedData);
+    
     // If we have server-parsed data (from PDF), use it directly
     if (serverParsedData && onImportParsed) {
-      console.log('[Import] Using server-parsed data');
+      console.log('[Submit] Using server-parsed data with', serverParsedData.scenes.length, 'scenes');
+      const totalLines = serverParsedData.scenes.reduce((sum: number, s: any) => sum + s.lines.length, 0);
+      console.log('[Submit] Total lines in parsed data:', totalLines);
       onImportParsed(sessionName, serverParsedData);
       return;
     }
     
-    // For pasted scripts, also parse on server to avoid truncation
-    if (onImportParsed && script.length > 50000) {
-      console.log('[Import] Large script - parsing on server');
+    // ALWAYS parse scripts over 10KB on the server to avoid any truncation
+    if (onImportParsed && script.length > 10000) {
+      console.log('[Submit] Parsing on server - script length:', script.length);
       setIsSubmitting(true);
       try {
         const response = await fetch("/api/parse-script", {
@@ -299,20 +304,25 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
           body: JSON.stringify({ script }),
         });
         
+        console.log('[Submit] Server response status:', response.status);
+        
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || "Failed to parse script");
         }
         
         const data = await response.json();
-        console.log('[Import] Server parsed:', {
+        const totalLines = data.parsed.scenes.reduce((sum: number, s: any) => sum + s.lines.length, 0);
+        console.log('[Submit] Server parsed:', {
           roles: data.parsed.roles.length,
           scenes: data.parsed.scenes.length,
+          totalLines: totalLines,
         });
         onImportParsed(sessionName, data.parsed);
       } catch (e: any) {
-        console.error("Server parse error:", e);
+        console.error("[Submit] Server parse error:", e);
         // Fall back to client-side parsing
+        console.log('[Submit] Falling back to client-side parsing');
         onImport(sessionName, script);
       } finally {
         setIsSubmitting(false);
@@ -321,6 +331,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     }
     
     // Small scripts can be parsed on client
+    console.log('[Submit] Client-side parsing for small script');
     onImport(sessionName, script);
   };
 
