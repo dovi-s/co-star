@@ -118,9 +118,23 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
     if (MALE_NAMES.has(word)) isFemale = false; // Male takes precedence if both
   }
   
-  // Title/keyword checks
-  const femaleIndicators = ["lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl", "mother", "sister", "daughter", "wife", "aunt", "waitress", "actress"];
-  const maleIndicators = ["lord", "king", "mr", "sir", "duke", "prince", "baron", "captain", "dr", "man", "guy", "father", "brother", "son", "waiter", "actor", "uncle"];
+  // Title/keyword checks (includes common profession stereotypes for voice assignment)
+  const femaleIndicators = [
+    // Titles
+    "lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl",
+    // Family roles
+    "mother", "mom", "sister", "daughter", "wife", "aunt", "grandmother", "grandma", "nana",
+    // Professions (statistically female-dominated for voice assignment)
+    "nurse", "waitress", "actress", "hostess", "stewardess", "maid", "nanny", "midwife", "receptionist"
+  ];
+  const maleIndicators = [
+    // Titles
+    "lord", "king", "mr", "sir", "duke", "prince", "baron", "man", "guy", "boy",
+    // Family roles  
+    "father", "dad", "brother", "son", "husband", "uncle", "grandfather", "grandpa",
+    // Professions
+    "waiter", "actor", "captain", "officer", "detective", "soldier", "guard", "driver", "pilot"
+  ];
   
   if (femaleIndicators.some(ind => name.includes(ind))) isFemale = true;
   if (maleIndicators.some(ind => name.includes(ind))) isFemale = false;
