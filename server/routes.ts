@@ -492,7 +492,9 @@ JOHN: We got the contract.`;
         // Parse PDF using pdfjs-dist with line preservation
         try {
           const data = new Uint8Array(file.buffer);
+          console.log(`[PDF] Parsing ${file.originalname}, size: ${data.length} bytes`);
           const pdf = await pdfjsLib.getDocument({ data }).promise;
+          console.log(`[PDF] Document loaded, ${pdf.numPages} pages`);
           const textParts: string[] = [];
           
           for (let i = 1; i <= pdf.numPages; i++) {
@@ -539,6 +541,7 @@ JOHN: We got the contract.`;
           }
           
           text = textParts.join('\n\n');
+          console.log(`[PDF] Extracted ${text.length} characters`);
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
           return res.status(400).json({ error: "Failed to parse PDF file" });
