@@ -462,48 +462,28 @@ export function parseScript(rawText: string): ParsedScript {
   };
   
   // Check if a line is action/description (not dialogue, not character, not heading)
+  // BE CONSERVATIVE - it's better to keep dialogue than accidentally filter it out
   const isActionLine = (trimmed: string): boolean => {
     // Skip if it's a scene heading, transition, or character name
     if (SCENE_HEADING_REGEX.test(trimmed)) return false;
     if (TRANSITION_REGEX.test(trimmed)) return false;
     if (SOUND_CUE_REGEX.test(trimmed)) return false;
     
-    // Skip common dialogue starters - NOT action lines
-    if (/^(I\s|I'm|I've|I'd|I'll|You\s|You're|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Let's|Let me|That's)/i.test(trimmed)) {
-      return false;
-    }
+    // Only consider as action if we're NOT in the middle of collecting dialogue
+    // This is handled by the caller - here we just detect obvious action patterns
     
-    // Action lines typically:
-    // - Start with third person pronouns + verb (He/She/They/It)
-    // - Start with "The [noun]" describing something
-    // - Describe physical actions with proper names (Robert walks...)
-    if (/^(He|She|They|It|We)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|ushers?)/i.test(trimmed)) {
+    // Third person pronouns + action verb (very reliable indicator of action)
+    if (/^(He|She|They|It)\s+(is|are|was|were|looks?|walks?|runs?|turns?|enters?|exits?|stands?|sits?|moves?|picks?|grabs?|holds?|opens?|closes?|falls?|kisses?|hugs?)\b/i.test(trimmed)) {
       return true;
     }
     
-    // "The [noun] [verb]" patterns
-    if (/^The\s+\w+\s+(is|are|was|were|opens?|closes?|falls?|begins?|starts?)/i.test(trimmed)) {
-      return true;
-    }
-    
-    // Two proper names + action (e.g., "Robert and Nancy walk...")
-    if (/^[A-Z][a-z]+\s+and\s+[A-Z][a-z]+\s+(is|are|was|were|walks?|runs?|enters?|exits?|looks?|falls?|kisses?)/i.test(trimmed)) {
-      return true;
-    }
-    
-    // Single proper name + action verb (e.g., "Mary sits on the couch")
-    // Must have lowercase continuation (to distinguish from CHARACTER NAME)
-    if (/^[A-Z][a-z]+\s+(sits?|stands?|walks?|runs?|looks?|enters?|exits?|turns?|moves?|picks?|grabs?|holds?|opens?|closes?|falls?|reads?|watches?|waits?|stares?|smiles?|laughs?|cries?|speaks?|whispers?|screams?|yells?|sighs?|nods?|shakes?)\b/i.test(trimmed)) {
-      return true;
-    }
-    
-    // "There is/are..." scene descriptions
+    // "There is/are..." scene descriptions (very reliable)
     if (/^There\s+(is|are|was|were)\s+/i.test(trimmed)) {
       return true;
     }
     
-    // Camera/visual descriptions
-    if (/^(Roughly|A |An |The room|The scene|The camera|Cut to|Angle on|Close on|Wide on)/i.test(trimmed)) {
+    // Camera directions (very reliable)
+    if (/^(CUT TO|FADE TO|DISSOLVE TO|ANGLE ON|CLOSE ON|WIDE ON|PAN TO|ZOOM|BACK TO|INTERCUT)/i.test(trimmed)) {
       return true;
     }
     
