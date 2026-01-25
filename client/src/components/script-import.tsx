@@ -274,7 +274,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     return "Untitled Scene";
   };
   
-  const handleSubmit = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
     if (!script.trim()) return;
     // Use uploaded filename if available, otherwise detect from content
     const sessionName = uploadedFileName || detectSceneName(script, characters);
@@ -283,13 +285,46 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     if (serverParsedData && onImportParsed) {
       console.log('[Import] Using server-parsed data');
       onImportParsed(sessionName, serverParsedData);
-    } else {
-      // Otherwise parse on client
-      onImport(sessionName, script);
+      return;
     }
+    
+    // For pasted scripts, also parse on server to avoid truncation
+    if (onImportParsed && script.length > 50000) {
+      console.log('[Import] Large script - parsing on server');
+      setIsSubmitting(true);
+      try {
+        const response = await fetch("/api/parse-script", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ script }),
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to parse script");
+        }
+        
+        const data = await response.json();
+        console.log('[Import] Server parsed:', {
+          roles: data.parsed.roles.length,
+          scenes: data.parsed.scenes.length,
+        });
+        onImportParsed(sessionName, data.parsed);
+      } catch (e: any) {
+        console.error("Server parse error:", e);
+        // Fall back to client-side parsing
+        onImport(sessionName, script);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+    
+    // Small scripts can be parsed on client
+    onImport(sessionName, script);
   };
 
-  const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning;
+  const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning && !isSubmitting;
   
   const detectCharacters = (text: string): string[] => {
     const lines = text.split('\n');

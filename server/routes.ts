@@ -609,6 +609,44 @@ JOHN: We got the contract.`;
     }
   });
 
+  // New endpoint: Parse raw text and return parsed script
+  // This avoids data transfer limits for very long scripts
+  app.post("/api/parse-script", async (req: Request, res: Response) => {
+    try {
+      const { script } = req.body;
+      
+      if (!script || typeof script !== "string") {
+        return res.status(400).json({ error: "No script text provided" });
+      }
+
+      console.log(`[Parse Script] Received ${script.length} characters`);
+      
+      const text = script
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .replace(/\n{4,}/g, "\n\n\n")
+        .trim();
+
+      // Parse the script
+      const parsed = parseScript(text);
+      console.log(`[Parse Script] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
+      
+      const totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      console.log(`[Parse Script] Total dialogue lines: ${totalLines}`);
+
+      if (parsed.roles.length === 0) {
+        return res.status(400).json({ 
+          error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
+        });
+      }
+
+      res.json({ parsed });
+    } catch (error: any) {
+      console.error("Script parse error:", error.message || error);
+      res.status(500).json({ error: "Failed to parse script" });
+    }
+  });
+
   // New endpoint: Parse file and return parsed script (not raw text)
   // This avoids data transfer limits for very long scripts
   app.post("/api/parse-file-to-session", upload.single("file"), async (req: Request, res: Response) => {
