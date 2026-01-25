@@ -388,12 +388,19 @@ SCENE SETUP:
 
 REQUIREMENTS:
 1. Write 12-16 lines of natural dialogue between 2 characters
-2. Format each line as: CHARACTER: [emotion] Dialogue text.
+2. Format dialogue as: CHARACTER: [emotion] Dialogue text.
 3. Character names in ALL CAPS
-4. Keep stage directions brief - just the emotion in [brackets]
+4. Include 3-5 ACTION LINES throughout the scene to set atmosphere and blocking
+5. Format action lines in [brackets] on their own line, like: [The elevator doors close with a grinding screech.]
+
+ACTION LINES should describe:
+- Physical actions: [She sets down her coffee cup.]
+- Environment: [The lights flicker overhead.]
+- Blocking/movement: [He takes a step back toward the door.]
+- Tension beats: [A long silence. Neither moves.]
 
 CRITICAL - Make it feel REAL:
-- Short, punchy lines - 1-2 sentences each, never long speeches
+- Short, punchy dialogue - 1-2 sentences each, never long speeches
 - Every line must respond to what was just said - no random jumps
 - Use contractions (don't, can't, won't) - nobody talks formally
 - Every line must be a COMPLETE thought that makes sense on its own
@@ -406,14 +413,16 @@ BAD (don't write like this):
 - Incomplete sentences: "That's when the real." or "I thought maybe we could—"
 
 GOOD (write like this):
+- [The door slams shut behind them.]
 - "Wait, what? You can't be serious."
 - "I know. I know, okay? Just let me explain."
+- [She turns away, gripping the railing.]
 - "Don't look at me like that. I had no choice."
 - Short, complete sentences that actors can deliver
 
 This is for actors to practice with, so make the emotions clear but the dialogue natural.
 
-Output ONLY the dialogue. No scene titles or descriptions.`;
+Output the scene with dialogue AND action lines interspersed. No scene titles.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
