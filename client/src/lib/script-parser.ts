@@ -482,6 +482,11 @@ const RESERVED_WORDS = new Set([
   // Number words (often part of scene markers)
   "ONE", "TWO", "THREE", "FOUR", "FIVE", "SIX", "SEVEN", "EIGHT", "NINE", "TEN",
   "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN",
+  // Common play/movie titles that appear in scripts
+  "STOP KISS", "THE END", "BLACKOUT", "LIGHTS UP", "CURTAIN", "INTERMISSION",
+  // Common verbs/actions that aren't names
+  "STOP", "KISS", "RUN", "WALK", "TALK", "LOOK", "SEE", "HEAR", "WAIT", "HELP",
+  "COME", "GO", "STAY", "LEAVE", "TAKE", "GIVE", "GET", "MAKE", "FIND", "TELL",
   "PRIORITY", "IMPORTANT", "NOTE", "NOTES", "COMMENT", "COMMENTS",
   "SCENE", "SCENES", "ACT", "ACTS", "PART", "PARTS", "CHAPTER", "CHAPTERS",
   // Preposition phrases
