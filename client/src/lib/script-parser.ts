@@ -389,14 +389,17 @@ export function parseScript(rawText: string): ParsedScript {
   
   let currentSceneLines: ScriptLine[] = [];
   let currentSceneName = "Scene 1";
+  let currentSceneDescription = "";
   let sceneCount = 1;
   let lineNumber = 0;
   
   let pendingCharacter: string | null = null;
   let pendingDialogue: string[] = [];
+  let pendingContext: string[] = []; // Action lines before dialogue
   
   // Skip title page / front matter until first scene heading
   let foundFirstScene = false;
+  let collectingSceneDescription = false;
 
   const flushPendingDialogue = () => {
     if (pendingCharacter && pendingDialogue.length > 0) {
@@ -418,6 +421,7 @@ export function parseScript(rawText: string): ParsedScript {
         role.lineCount++;
         
         const direction = directions.join("; ");
+        const contextText = pendingContext.join(" ").trim();
         const scriptLine: ScriptLine = {
           id: generateId(),
           lineNumber: lineNumber++,
@@ -425,6 +429,7 @@ export function parseScript(rawText: string): ParsedScript {
           roleName: pendingCharacter,
           text: cleanText,
           direction: direction || undefined,
+          context: contextText || undefined, // Include action context
           isBookmarked: false,
           emotionHint: detectEmotion(cleanText, direction),
         };
@@ -434,6 +439,50 @@ export function parseScript(rawText: string): ParsedScript {
     }
     pendingCharacter = null;
     pendingDialogue = [];
+    pendingContext = []; // Clear context after attaching to dialogue
+  };
+  
+  // Check if a line is action/description (not dialogue, not character, not heading)
+  const isActionLine = (trimmed: string): boolean => {
+    // Skip if it's a scene heading, transition, or character name
+    if (SCENE_HEADING_REGEX.test(trimmed)) return false;
+    if (TRANSITION_REGEX.test(trimmed)) return false;
+    if (SOUND_CUE_REGEX.test(trimmed)) return false;
+    
+    // Skip common dialogue starters - NOT action lines
+    if (/^(I\s|I'm|I've|I'd|I'll|You\s|You're|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Let's|Let me|That's)/i.test(trimmed)) {
+      return false;
+    }
+    
+    // Action lines typically:
+    // - Start with third person pronouns + verb (He/She/They/It)
+    // - Start with "The [noun]" describing something
+    // - Describe physical actions with proper names (Robert walks...)
+    if (/^(He|She|They|It|We)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|ushers?)/i.test(trimmed)) {
+      return true;
+    }
+    
+    // "The [noun] [verb]" patterns
+    if (/^The\s+\w+\s+(is|are|was|were|opens?|closes?|falls?|begins?|starts?)/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Two proper names + action (e.g., "Robert and Nancy walk...")
+    if (/^[A-Z][a-z]+\s+and\s+[A-Z][a-z]+\s+(is|are|was|were|walks?|runs?|enters?|exits?|looks?|falls?|kisses?)/i.test(trimmed)) {
+      return true;
+    }
+    
+    // "There is/are..." scene descriptions
+    if (/^There\s+(is|are|was|were)\s+/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Camera/visual descriptions
+    if (/^(Roughly|A |An |The room|The scene|The camera|Cut to|Angle on|Close on|Wide on)/i.test(trimmed)) {
+      return true;
+    }
+    
+    return false;
   };
 
   for (let i = 0; i < lines.length; i++) {
@@ -455,12 +504,16 @@ export function parseScript(rawText: string): ParsedScript {
         scenes.push({
           id: generateId(),
           name: currentSceneName,
+          description: currentSceneDescription || undefined,
           lines: [...currentSceneLines],
         });
         currentSceneLines = [];
       }
       sceneCount++;
       currentSceneName = trimmed.length > 60 ? trimmed.substring(0, 60) + "..." : trimmed;
+      currentSceneDescription = "";
+      collectingSceneDescription = true; // Start collecting scene description
+      pendingContext = []; // Reset context for new scene
       continue;
     }
     
@@ -471,11 +524,16 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Transition - skip
     if (TRANSITION_REGEX.test(trimmed)) {
+      collectingSceneDescription = false;
       continue;
     }
     
-    // Pure stage direction on its own line - skip
+    // Pure stage direction on its own line - add to context
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
+      const cleaned = trimmed.replace(/^\[|\]$|^\(|\)$/g, '').trim();
+      if (cleaned) {
+        pendingContext.push(cleaned);
+      }
       continue;
     }
     
@@ -483,6 +541,22 @@ export function parseScript(rawText: string): ParsedScript {
     if (SOUND_CUE_REGEX.test(trimmed)) {
       continue;
     }
+    
+    // Check if this is an action/description line
+    if (isActionLine(trimmed)) {
+      if (collectingSceneDescription && !currentSceneDescription) {
+        // First action after scene heading becomes scene description
+        currentSceneDescription = trimmed;
+      } else {
+        // Otherwise add to pending context for next dialogue
+        pendingContext.push(trimmed);
+      }
+      collectingSceneDescription = false;
+      continue;
+    }
+    
+    // Stop collecting scene description once we hit dialogue
+    collectingSceneDescription = false;
     
     // Check for inline character: dialogue format
     const characterCheck = isLikelyCharacterLine(trimmed);
@@ -531,6 +605,7 @@ export function parseScript(rawText: string): ParsedScript {
     scenes.push({
       id: generateId(),
       name: currentSceneName,
+      description: currentSceneDescription || undefined,
       lines: currentSceneLines,
     });
   }

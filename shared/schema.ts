@@ -32,6 +32,7 @@ export const scriptLineSchema = z.object({
   roleName: z.string(),
   text: z.string(),
   direction: z.string().optional(),
+  context: z.string().optional(), // Action/stage direction preceding this line
   isBookmarked: z.boolean().default(false),
   emotionHint: emotionStyleSchema.optional(),
 });
@@ -40,6 +41,7 @@ export type ScriptLine = z.infer<typeof scriptLineSchema>;
 export const sceneSchema = z.object({
   id: z.string(),
   name: z.string(),
+  description: z.string().optional(), // Scene setting/action after the heading
   lines: z.array(scriptLineSchema),
 });
 export type Scene = z.infer<typeof sceneSchema>;
