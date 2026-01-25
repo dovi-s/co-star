@@ -4,10 +4,7 @@ import { storage } from "./storage";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
 import multer from "multer";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const pdfParse = require("pdf-parse");
-const { PDFParse } = pdfParse;
+import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -492,11 +489,22 @@ JOHN: We got the contract.`;
 
       // Handle different file types
       if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
-        // Parse PDF using PDFParse class
+        // Parse PDF using pdfjs-dist
         try {
-          const parser = new PDFParse();
-          const result = await parser.parseBuffer(file.buffer);
-          text = result.text || "";
+          const data = new Uint8Array(file.buffer);
+          const pdf = await pdfjsLib.getDocument({ data }).promise;
+          const textParts: string[] = [];
+          
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const content = await page.getTextContent();
+            const pageText = content.items
+              .map((item: any) => item.str)
+              .join(" ");
+            textParts.push(pageText);
+          }
+          
+          text = textParts.join("\n\n");
         } catch (pdfError) {
           console.error("PDF parse error:", pdfError);
           return res.status(400).json({ error: "Failed to parse PDF file" });
