@@ -87,6 +87,15 @@ export default {
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
+      transitionDuration: {
+        '350': '350ms',
+        '400': '400ms',
+      },
+      transitionTimingFunction: {
+        'smooth': 'cubic-bezier(0.4, 0, 0.1, 1)',
+        'smooth-out': 'cubic-bezier(0, 0, 0.2, 1)',
+        'smooth-in': 'cubic-bezier(0.4, 0, 1, 1)',
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
