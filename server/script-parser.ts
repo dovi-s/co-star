@@ -39,6 +39,22 @@ const SKIP_LINE_PATTERNS = [
   /^Page\s+\d+/i,
   /^\s*\d+\.\s*$/, // Just page numbers like "2."
   /^\d+\s*$/,  // Just numbers
+  // Cast list patterns (actor name after character)
+  /^[A-Z][A-Z\s\.]+\.{3,}\s*[A-Z]/i, // "SARA....... Actor Name"
+  /^\.\s*[A-Z]/i, // ". Sandra Oh" (OCR fragment)
+  /^[A-Z]+\.{3,}\s*$/i, // "SARA..." alone
+  // Photo/design credits
+  /^Set design by\b/i,
+  /^Photo by\b/i,
+  /^Lighting design/i,
+  /^Sound design/i,
+  /^Costume design/i,
+  /^Production\s+(dramaturg|stage\s+manager)/i,
+  /^The cast was as follows/i,
+  // Play service/publisher
+  /^DRAMATISTS\s*$/i,
+  /^SERVICE\s*$/i,
+  /^PLAY\s*$/i,
   // Publisher/legal content
   /^DRAMATISTS\s+PLAY\s+SERVICE/i,
   /^PLAY\s+SE/i,  // OCR partial of "PLAY SERVICE"
@@ -327,6 +343,13 @@ function splitMergedLines(text: string): string[] {
   // First, add space where uppercase character name runs into lowercase dialogue
   // Match: 2+ uppercase letters followed immediately by uppercase+lowercase (start of word)
   let fixed = text.replace(/([A-Z]{2,})([A-Z][a-z])/g, '$1 $2');
+  
+  // Handle merged dialogue: "sitSARA." -> split before the character name
+  // Pattern: lowercase followed immediately by ALLCAPS NAME with period/colon
+  fixed = fixed.replace(/([a-z])([A-Z]{2,}(?:\s+[A-Z]{2,})?)[.:](\s|$)/g, '$1\n$2:$3');
+  
+  // Handle "word! NAME." patterns: "Coffee! SARA." -> split before NAME
+  fixed = fixed.replace(/([.!?])\s*([A-Z]{3,}(?:\s+[A-Z]{2,})?)[.:]\s*/g, '$1\n$2: ');
   
   // Split on character names with extensions that appear mid-text
   // Pattern: [ALLCAPS NAME] or [NAME (CONT'D)] appearing after punctuation or lowercase
