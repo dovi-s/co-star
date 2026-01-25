@@ -344,6 +344,23 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
     if (wordCount <= 3) return false; // Likely a character name
   }
   
+  // CRITICAL: Stop dialogue when we hit third-person action descriptions
+  // These describe what characters DO, not what they SAY
+  // e.g., "He meets eyes with a woman", "She looks away", "They fall onto the bed"
+  if (/^(He|She|They|It|We|The\s+\w+)\s+(is|are|was|were|meets?|looks?|walks?|runs?|turns?|falls?|speaks?|sees?|hears?|enters?|exits?|picks?|grabs?|holds?|takes?|gives?|opens?|closes?|stands?|sits?|moves?|comes?|goes?|gets?|puts?|starts?|stops?|begins?|ends?|pushes?|pulls?|kisses?|hugs?|hits?|kicks?|throws?)/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Skip lines that describe character introduction (e.g., "She is NANCY HUFF, 60.")
+  if (/^(He|She|They|It)\s+(is|are)\s+[A-Z]/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Skip lines with character introductions (NAME, age pattern)
+  if (/[A-Z]{2,}\s+[A-Z]+,\s*\d{1,2}/.test(trimmed)) {
+    return false;
+  }
+  
   // Parenthetical direction (like "(sighing)")
   if (trimmed.startsWith("(") && trimmed.endsWith(")")) return true;
   
@@ -359,8 +376,10 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   // Starts with quotation
   if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
   
-  // If it's mixed case (has lowercase letters), it's likely dialogue, not a heading
-  if (/[a-z]/.test(trimmed)) return true;
+  // Check for common dialogue starters (first-person speech patterns)
+  if (/^(I\s|I'm|I've|I'll|I'd|You\s|You're|You've|My\s|What|Why|How|When|Where|Who|No,|Yes,|Oh,|Well,|But\s|And\s|So\s|Just\s|Look,|Listen,|Hey|Wait|Please|Thank|Sorry|Okay|Ok,|Alright|Don't|Can't|Won't|Didn't|Isn't|Aren't|Let's|Let me)/i.test(trimmed)) {
+    return true;
+  }
   
   return false;
 }
