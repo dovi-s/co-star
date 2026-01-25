@@ -7,16 +7,20 @@ function generateId(): string {
 
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
 const PARENTHETICAL_REGEX = /\(([^)]+)\)/g;
-const SCENE_HEADING_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|SCENE|ACT|FADE IN|FADE OUT|CUT TO|DISSOLVE TO)/i;
+const SCENE_HEADING_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|SCENE\s*\d|ACT\s*[IVX\d]|FADE IN|FADE OUT|CUT TO|DISSOLVE TO|SMASH CUT|MATCH CUT|JUMP CUT)/i;
+
+// Common screenplay transitions that should be ignored
+const TRANSITION_REGEX = /^(FADE TO:|DISSOLVE TO:|CUT TO:|SMASH CUT TO:|MATCH CUT TO:|JUMP CUT TO:|FADE OUT\.|FADE IN\.|THE END|CONTINUED|MORE)$/i;
 
 const CHARACTER_EXTENSIONS = [
-  "V.O.", "VO", "V/O", "VOICE OVER", "VOICEOVER",
+  "V.O.", "VO", "V/O", "VOICE OVER", "VOICEOVER", "VOICE-OVER",
   "O.S.", "OS", "O/S", "OFF SCREEN", "OFFSCREEN", "OFF-SCREEN",
   "O.C.", "OC", "OFF CAMERA", "OFF-CAMERA",
   "CONT'D", "CONT", "CONTINUED", "CONTINUING",
-  "PRE-LAP", "PRELAP",
-  "FILTER", "ON PHONE", "ON TV", "ON RADIO",
-  "SUBTITLE", "SUBTITLED", "TRANSLATED"
+  "PRE-LAP", "PRELAP", "PRE LAP",
+  "FILTER", "ON PHONE", "ON TV", "ON RADIO", "OVER PHONE",
+  "SUBTITLE", "SUBTITLED", "TRANSLATED",
+  "INTO PHONE", "INTO RADIO", "INTO MIC"
 ];
 
 const EXTENSION_PATTERN = new RegExp(
@@ -24,16 +28,76 @@ const EXTENSION_PATTERN = new RegExp(
   "gi"
 );
 
+// Reserved words that should NOT be character names
+const RESERVED_WORDS = new Set([
+  "INT", "EXT", "INTERIOR", "EXTERIOR", "DAY", "NIGHT", "DAWN", "DUSK",
+  "CONTINUOUS", "LATER", "MOMENTS LATER", "SAME", "FLASHBACK",
+  "FADE", "CUT", "DISSOLVE", "SMASH", "MATCH", "JUMP", "THE END",
+  "CONTINUED", "MORE", "ANGLE ON", "CLOSE ON", "WIDE ON", "INSERT",
+  "POV", "SUPER", "TITLE", "SUBTITLE", "CHYRON", "MONTAGE", "SERIES OF SHOTS",
+  "BEGIN", "END", "BACK TO", "INTERCUT", "SPLIT SCREEN"
+]);
+
 function normalizeCharacterName(name: string): string {
   let normalized = name.trim();
   
+  // Remove character extensions like (V.O.), (CONT'D), etc.
   normalized = normalized.replace(EXTENSION_PATTERN, "");
+  // Remove any remaining parenthetical at end
   normalized = normalized.replace(/\([^)]*\)\s*$/, "");
+  // Remove leading numbers (e.g., "1. MARY")
   normalized = normalized.replace(/^\d+[\.\)\-\s]+/, "");
+  // Normalize whitespace
   normalized = normalized.replace(/\s+/g, " ");
   normalized = normalized.trim();
   
   return normalized.toUpperCase();
+}
+
+function isValidCharacterName(name: string): boolean {
+  const normalized = normalizeCharacterName(name);
+  
+  // Must be reasonable length
+  if (normalized.length < 1 || normalized.length > 35) return false;
+  
+  // Must start with a letter
+  if (!/^[A-Z]/.test(normalized)) return false;
+  
+  // Must not be a reserved word
+  if (RESERVED_WORDS.has(normalized)) return false;
+  
+  // Must not look like a scene heading
+  if (SCENE_HEADING_REGEX.test(normalized)) return false;
+  
+  // Must not be a transition
+  if (TRANSITION_REGEX.test(normalized)) return false;
+  
+  // Should be mostly letters (allow spaces, hyphens, apostrophes, periods for titles)
+  if (!/^[A-Z][A-Z0-9\s\-'\.#]+$/.test(normalized)) return false;
+  
+  return true;
+}
+
+// Check if a line is JUST a character name (professional screenplay format)
+function isStandaloneCharacterName(line: string): { isCharacter: boolean; name: string } {
+  const trimmed = line.trim();
+  
+  // Must be ALL CAPS (or mostly caps)
+  const capsRatio = (trimmed.match(/[A-Z]/g) || []).length / trimmed.replace(/\s/g, "").length;
+  if (capsRatio < 0.7) return { isCharacter: false, name: "" };
+  
+  // Remove extensions to get core name
+  let coreName = trimmed.replace(EXTENSION_PATTERN, "").trim();
+  coreName = coreName.replace(/\([^)]*\)\s*$/, "").trim();
+  
+  // Should be short (character names are typically 1-3 words)
+  const wordCount = coreName.split(/\s+/).length;
+  if (wordCount > 4) return { isCharacter: false, name: "" };
+  
+  // Validate as character name
+  if (!isValidCharacterName(coreName)) return { isCharacter: false, name: "" };
+  
+  return { isCharacter: true, name: normalizeCharacterName(trimmed) };
 }
 
 function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: string; dialogue: string } {
@@ -43,19 +107,33 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     return { isCharacter: false, name: "", dialogue: "" };
   }
   
+  // Skip scene headings
   if (SCENE_HEADING_REGEX.test(trimmed)) {
     return { isCharacter: false, name: "", dialogue: "" };
   }
   
+  // Skip transitions
+  if (TRANSITION_REGEX.test(trimmed)) {
+    return { isCharacter: false, name: "", dialogue: "" };
+  }
+  
+  // Skip pure stage directions
   if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
     return { isCharacter: false, name: "", dialogue: "" };
   }
   
+  // Pattern 1: CHARACTER: dialogue (most common for pasted scripts)
   const colonPatterns = [
+    // Basic: NAME: dialogue
     /^([A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
+    // ALL CAPS: NAME: dialogue  
     /^([A-Z][A-Z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
-    /^((?:DR|MR|MRS|MS|MISS|PROF|REV|SIR|LADY|LORD|CAPTAIN|COLONEL|GENERAL|SERGEANT|OFFICER|DETECTIVE|INSPECTOR|AGENT|NURSE|CHEF|WAITER|WAITRESS)\.?\s+[A-Za-z][A-Za-z\-'\.]+)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/i,
+    // With title: DR. SMITH: dialogue
+    /^((?:DR|MR|MRS|MS|MISS|PROF|REV|SIR|LADY|LORD|CAPTAIN|COLONEL|GENERAL|SERGEANT|OFFICER|DETECTIVE|INSPECTOR|AGENT|NURSE|CHEF|WAITER|WAITRESS|FATHER|MOTHER|SISTER|BROTHER|UNCLE|AUNT|GRANDMA|GRANDPA)\.?\s+[A-Za-z][A-Za-z\-'\.]+)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/i,
+    // Numbered: 1. NAME: dialogue
     /^(\d+[\.\)]\s*[A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
+    // With extension: NAME (V.O.): dialogue
+    /^([A-Z][A-Z0-9\s\-'\.]+\s*\([^)]+\))\s*[:：]\s*(.+)$/,
   ];
   
   for (const pattern of colonPatterns) {
@@ -66,13 +144,14 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
       
       if (potentialName.length <= 40 && dialogue.length > 0) {
         const normalizedName = normalizeCharacterName(potentialName);
-        if (normalizedName.length >= 1 && normalizedName.length <= 35) {
+        if (isValidCharacterName(potentialName)) {
           return { isCharacter: true, name: normalizedName, dialogue };
         }
       }
     }
   }
   
+  // Pattern 2: CHARACTER - dialogue (sometimes used)
   const dashPattern = /^([A-Z][A-Z\s\-'\.]+?)\s*[-–—]\s*(.+)$/;
   const dashMatch = trimmed.match(dashPattern);
   if (dashMatch) {
@@ -80,10 +159,21 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     const dialogue = dashMatch[2].trim();
     
     if (potentialName.length <= 30 && dialogue.length > 0 && !dialogue.startsWith("-")) {
-      const normalizedName = normalizeCharacterName(potentialName);
-      if (normalizedName.length >= 2 && normalizedName.length <= 25) {
-        return { isCharacter: true, name: normalizedName, dialogue };
+      if (isValidCharacterName(potentialName)) {
+        return { isCharacter: true, name: normalizeCharacterName(potentialName), dialogue };
       }
+    }
+  }
+  
+  // Pattern 3: CHARACTER> dialogue (rare but happens)
+  const arrowPattern = /^([A-Z][A-Z\s\-'\.]+?)\s*[>»]\s*(.+)$/;
+  const arrowMatch = trimmed.match(arrowPattern);
+  if (arrowMatch) {
+    const potentialName = arrowMatch[1].trim();
+    const dialogue = arrowMatch[2].trim();
+    
+    if (isValidCharacterName(potentialName)) {
+      return { isCharacter: true, name: normalizeCharacterName(potentialName), dialogue };
     }
   }
   
@@ -93,19 +183,37 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
 function extractDirectionsFromDialogue(text: string): { cleanText: string; directions: string[] } {
   const directions: string[] = [];
   
+  // Extract [bracketed directions]
   let cleanText = text.replace(DIRECTION_REGEX, (_, dir) => {
     directions.push(dir.trim());
     return "";
   });
   
+  // Extract (parenthetical directions) that contain emotion/action keywords
   cleanText = cleanText.replace(PARENTHETICAL_REGEX, (match, content) => {
     const lower = content.toLowerCase();
     const emotionKeywords = [
-      "angry", "sad", "happy", "excited", "nervous", "scared", "whispering",
-      "shouting", "crying", "laughing", "sarcastic", "quietly", "loudly",
-      "hesitant", "confident", "desperate", "pleading", "threatening",
-      "mockingly", "tenderly", "coldly", "warmly", "bitterly", "softly",
-      "firmly", "gently", "harshly", "pause", "beat", "sighing", "trembling"
+      "angry", "angrily", "sad", "sadly", "happy", "happily", "excited", "excitedly",
+      "nervous", "nervously", "scared", "whispering", "whispers", "whispered",
+      "shouting", "shouts", "shouted", "yelling", "yells", "yelled",
+      "crying", "cries", "cried", "sobbing", "sobs", "sobbed",
+      "laughing", "laughs", "laughed", "chuckling", "chuckles",
+      "sarcastic", "sarcastically", "ironic", "ironically",
+      "quiet", "quietly", "loud", "loudly", "soft", "softly",
+      "hesitant", "hesitantly", "confident", "confidently",
+      "desperate", "desperately", "pleading", "pleads", "begging", "begs",
+      "threatening", "threateningly", "menacing", "menacingly",
+      "mocking", "mockingly", "tender", "tenderly", "cold", "coldly",
+      "warm", "warmly", "bitter", "bitterly", "gentle", "gently",
+      "harsh", "harshly", "firm", "firmly",
+      "pause", "pauses", "pausing", "beat", "a beat",
+      "sighing", "sighs", "sighed", "trembling", "trembles", "trembled",
+      "to self", "to himself", "to herself", "aside", "under breath",
+      "continuing", "interrupting", "overlapping", "cutting off",
+      "reading", "quoting", "imitating", "mimicking",
+      "re:", "regarding", "about", "pointing", "gesturing", "nodding",
+      "shaking head", "looking", "turning", "moving", "walking",
+      "sitting", "standing", "entering", "exiting", "crossing"
     ];
     
     if (emotionKeywords.some(kw => lower.includes(kw))) {
@@ -113,12 +221,38 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
       return "";
     }
     
+    // Keep other parentheticals (they might be part of the dialogue)
     return match;
   });
   
+  // Clean up multiple spaces
   cleanText = cleanText.replace(/\s+/g, " ").trim();
   
   return { cleanText, directions };
+}
+
+// Check if a line is likely dialogue continuation (indented or lowercase start)
+function isDialogueContinuation(line: string, originalLine: string): boolean {
+  const trimmed = line.trim();
+  
+  if (!trimmed) return false;
+  
+  // Parenthetical or bracketed direction
+  if (trimmed.startsWith("(") || trimmed.startsWith("[")) return true;
+  
+  // Starts with lowercase (likely continuation)
+  if (/^[a-z]/.test(trimmed)) return true;
+  
+  // Original line was indented (tabs or multiple spaces)
+  if (/^[\t]|^[ ]{2,}/.test(originalLine)) return true;
+  
+  // Starts with ellipsis or dash (continuation)
+  if (/^[…—–\-]/.test(trimmed)) return true;
+  
+  // Starts with quotation continuation
+  if (/^['""']/.test(trimmed) && !/[:：]/.test(trimmed)) return true;
+  
+  return false;
 }
 
 export function parseScript(rawText: string): ParsedScript {
@@ -177,11 +311,13 @@ export function parseScript(rawText: string): ParsedScript {
     const line = lines[i];
     const trimmed = line.trim();
     
+    // Empty line - flush current dialogue
     if (!trimmed) {
       flushPendingDialogue();
       continue;
     }
     
+    // Scene heading - start new scene
     if (SCENE_HEADING_REGEX.test(trimmed)) {
       flushPendingDialogue();
       
@@ -198,29 +334,59 @@ export function parseScript(rawText: string): ParsedScript {
       continue;
     }
     
+    // Transition - skip
+    if (TRANSITION_REGEX.test(trimmed)) {
+      continue;
+    }
+    
+    // Pure stage direction on its own line - skip
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
       continue;
     }
     
+    // Check for inline character: dialogue format
     const characterCheck = isLikelyCharacterLine(trimmed);
     
     if (characterCheck.isCharacter) {
       flushPendingDialogue();
       pendingCharacter = characterCheck.name;
       pendingDialogue = [characterCheck.dialogue];
-    } else if (pendingCharacter) {
-      if (trimmed.startsWith("(") || trimmed.startsWith("[")) {
-        pendingDialogue.push(trimmed);
-      } else if (/^[a-z]/.test(trimmed) || line.startsWith("  ") || line.startsWith("\t")) {
+    } 
+    // Check for standalone character name (professional screenplay format)
+    else if (!pendingCharacter) {
+      const standaloneCheck = isStandaloneCharacterName(trimmed);
+      if (standaloneCheck.isCharacter) {
+        flushPendingDialogue();
+        pendingCharacter = standaloneCheck.name;
+        pendingDialogue = [];
+      }
+    }
+    // Check if this is dialogue continuation
+    else if (pendingCharacter) {
+      if (isDialogueContinuation(trimmed, line)) {
         pendingDialogue.push(trimmed);
       } else {
-        flushPendingDialogue();
+        // Could be a new standalone character or action line
+        const standaloneCheck = isStandaloneCharacterName(trimmed);
+        if (standaloneCheck.isCharacter) {
+          flushPendingDialogue();
+          pendingCharacter = standaloneCheck.name;
+          pendingDialogue = [];
+        } else {
+          // Might be dialogue if we have an empty pending dialogue (character on prev line)
+          if (pendingDialogue.length === 0) {
+            pendingDialogue.push(trimmed);
+          } else {
+            flushPendingDialogue();
+          }
+        }
       }
     }
   }
   
   flushPendingDialogue();
   
+  // Add final scene
   if (currentSceneLines.length > 0) {
     scenes.push({
       id: generateId(),
@@ -229,6 +395,7 @@ export function parseScript(rawText: string): ParsedScript {
     });
   }
   
+  // Ensure at least one scene exists
   if (scenes.length === 0) {
     scenes.push({
       id: generateId(),
@@ -271,7 +438,17 @@ export function normalizeScript(rawText: string): string {
     } else if (currentRole) {
       currentDialogue.push(trimmed);
     } else {
-      normalized.push(trimmed);
+      // Check for standalone character name
+      const standaloneCheck = isStandaloneCharacterName(trimmed);
+      if (standaloneCheck.isCharacter) {
+        if (currentRole && currentDialogue.length > 0) {
+          normalized.push(`${currentRole}: ${currentDialogue.join(" ")}`);
+        }
+        currentRole = standaloneCheck.name;
+        currentDialogue = [];
+      } else {
+        normalized.push(trimmed);
+      }
     }
   }
   
