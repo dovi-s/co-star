@@ -1082,7 +1082,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               }
             }}
             onLineClick={(line) => {
-              const lineIndex = sceneLines.findIndex(l => l.id === line.id);
+              const lineIndex = currentScene?.lines?.findIndex(l => l.id === line.id) ?? -1;
               if (lineIndex !== -1 && lineIndex !== session.currentLineIndex) {
                 if (session.isPlaying) {
                   ttsEngine.stop();
