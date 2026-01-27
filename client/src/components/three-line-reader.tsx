@@ -6,25 +6,36 @@ import { cn } from "@/lib/utils";
 import { matchWords } from "@/lib/word-matcher";
 
 // Parse and render text with emphasis formatting
-// Supports _underlined_, *bold*, and ALL CAPS for emphasis
+// Supports _underlined_, *bold*, ALL CAPS, and {stage directions} / (parentheticals)
 function renderFormattedText(text: string): React.ReactNode[] {
   const parts: React.ReactNode[] = [];
   
-  // Regex to match _underlined_ or *bold* text
-  // Also handles ALL CAPS words (4+ letters) as emphasis
-  const emphasisRegex = /(_([^_]+)_|\*([^*]+)\*|\b([A-Z]{4,})\b)/g;
+  // Regex to match various formatting patterns:
+  // - {stage directions} or (parentheticals) - italic, muted
+  // - _underlined_ or *bold* text
+  // - ALL CAPS words (4+ letters) as emphasis
+  const formattingRegex = /(\{[^}]+\}|\([^)]+\)|_([^_]+)_|\*([^*]+)\*|\b([A-Z]{4,})\b)/g;
   
   let lastIndex = 0;
   let match;
   let key = 0;
   
-  while ((match = emphasisRegex.exec(text)) !== null) {
+  while ((match = formattingRegex.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
       parts.push(text.substring(lastIndex, match.index));
     }
     
-    if (match[2]) {
+    const fullMatch = match[0];
+    
+    if (fullMatch.startsWith("{") || fullMatch.startsWith("(")) {
+      // Stage direction in {braces} or (parentheses) - render as italic, smaller, muted
+      parts.push(
+        <span key={key++} className="italic text-[0.9em] opacity-70">
+          {fullMatch}
+        </span>
+      );
+    } else if (match[2]) {
       // _underlined_ text - render as italic
       parts.push(
         <em key={key++} className="italic">
