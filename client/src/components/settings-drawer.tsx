@@ -166,11 +166,11 @@ export function SettingsDrawer({
                           setIsOpen(false);
                         }}
                         variant={index === currentSceneIndex ? "default" : "ghost"}
-                        className="w-full"
+                        className="w-full h-auto py-2.5 px-3 justify-start text-left"
                         data-testid={`button-scene-${index}`}
                       >
-                        <div>
-                          <div className="text-sm font-medium">{scene.name}</div>
+                        <div className="flex flex-col items-start gap-0.5 min-w-0">
+                          <div className="text-sm font-medium truncate max-w-full">{scene.name}</div>
                           <div className="text-[10px] opacity-70">
                             {scene.lines.length} lines
                           </div>
