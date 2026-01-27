@@ -139,12 +139,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             autoAdvanceTimeoutRef.current = null;
           }
           
-          // Quick pause then advance
+          // Quick pause then advance (150ms for snappy response)
           autoAdvanceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 400);
+          }, 150);
           return;
         }
       }
@@ -161,11 +161,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             autoAdvanceTimeoutRef.current = null;
           }
           
+          // Quick transition (200ms for snappy response)
           autoAdvanceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 600);
+          }, 200);
         } else {
           console.log("[Rehearsal] Low match on final result, waiting for manual advance");
         }
