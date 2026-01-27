@@ -53,6 +53,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     incrementRunsCompleted,
     toggleBookmark,
     updateRolePreset,
+    updateSession,
     createSession,
     clearSession,
     clearUserRole,

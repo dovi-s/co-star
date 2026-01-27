@@ -25,6 +25,7 @@ type VoiceType = keyof typeof ELEVENLABS_VOICES;
 const FEMALE_NAMES = new Set([
   "maya", "juliet", "ophelia", "emma", "sophia", "olivia", "ava", "isabella", 
   "mia", "charlotte", "amelia", "harper", "evelyn", "abigail", "emily", "elizabeth",
+  "jess", "jessie", "jen", "jenny", "kate", "katie", "beth", "liz", "lizzie", "maggie", "meg",
   "sofia", "avery", "ella", "scarlett", "grace", "chloe", "victoria", "riley",
   "aria", "lily", "aurora", "zoey", "nora", "camila", "hannah", "lillian",
   "sarah", "jessica", "jennifer", "amanda", "ashley", "stephanie", "nicole", "melissa",

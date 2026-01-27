@@ -191,5 +191,6 @@ export function useSession() {
     incrementRunsCompleted,
     toggleBookmark,
     updateRolePreset,
+    updateSession,
   };
 }
