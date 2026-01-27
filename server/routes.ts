@@ -28,7 +28,7 @@ const FEMALE_NAMES = new Set([
   "sofia", "avery", "ella", "scarlett", "grace", "chloe", "victoria", "riley",
   "aria", "lily", "aurora", "zoey", "nora", "camila", "hannah", "lillian",
   "sarah", "jessica", "jennifer", "amanda", "ashley", "stephanie", "nicole", "melissa",
-  "michelle", "lisa", "nancy", "karen", "betty", "helen", "sandra", "donna", "carol",
+  "michelle", "lisa", "nancy", "karen", "betty", "helen", "sandra", "donna", "carol", "linda",
   "ruth", "sharon", "patricia", "catherine", "kate", "anna", "mary", "margaret",
   "kim", "katherine", "claire", "clara", "diana", "eleanor",
   "eve", "fiona", "gwen", "iris", "jane", "julia", "laura", "lucy", "maria", "natalie",
