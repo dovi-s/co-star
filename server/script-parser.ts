@@ -1269,8 +1269,8 @@ export function parseScript(rawText: string): ParsedScript {
         
         const direction = directions.join("; ");
         const contextText = pendingContext.join(" ").trim();
-        // Validate direction - reject if it contains embedded dialogue
-        const validDirection = direction && isValidContext(direction) ? direction : undefined;
+        // Direction is already validated during extraction - just check it's not empty
+        const validDirection = direction && direction.length > 0 ? direction : undefined;
         const scriptLine: ScriptLine = {
           id: generateId(),
           lineNumber: lineNumber++,
