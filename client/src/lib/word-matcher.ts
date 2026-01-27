@@ -89,6 +89,16 @@ const CONTRACTIONS: Record<string, string[]> = {
   "ya": ["you", "your"],
   "bout": ["about"],
   "'bout": ["about"],
+  // Filler words and hesitations - speech recognition often transcribes these differently
+  "uh": ["um", "ah", "eh", "er", "hmm", "hm"],
+  "um": ["uh", "ah", "eh", "er", "hmm", "hm"],
+  "ah": ["uh", "um", "oh", "aah"],
+  "oh": ["ah", "ooh", "oo"],
+  "hmm": ["hm", "mm", "mhm", "uh", "um"],
+  "huh": ["uh", "hm", "what"],
+  "er": ["uh", "um", "ah"],
+  "erm": ["um", "er", "uh"],
+  "well": ["uh", "um", "so"],
 };
 
 function normalizeWord(word: string): string {
