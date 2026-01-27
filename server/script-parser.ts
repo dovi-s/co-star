@@ -285,8 +285,8 @@ function isValidContext(text: string): boolean {
     return false;
   }
   
-  // Reject if too long - real stage directions are brief
-  if (trimmed.length > 200) {
+  // Reject if too long - but allow up to 500 for detailed scene descriptions
+  if (trimmed.length > 500) {
     return false;
   }
   
