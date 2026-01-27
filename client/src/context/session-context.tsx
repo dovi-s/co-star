@@ -83,9 +83,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       setIsLoading(false);
       return newSession;
-    } catch (e) {
+    } catch (e: any) {
       console.error('[Session] Parse error:', e);
-      setError("Failed to parse script. Please check the format.");
+      // Try to get the actual error message from the response
+      let errorMsg = "Failed to parse script. Please check the format.";
+      if (e?.message) {
+        errorMsg = e.message;
+      }
+      setError(errorMsg);
       setIsLoading(false);
       return null;
     }

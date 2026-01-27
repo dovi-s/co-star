@@ -846,11 +846,15 @@ function isStandaloneCharacterName(line: string): { isCharacter: boolean; name: 
 }
 
 function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: string; dialogue: string } {
-  const trimmed = line.trim();
+  let trimmed = line.trim();
   
   if (!trimmed || trimmed.length < 2) {
     return { isCharacter: false, name: "", dialogue: "" };
   }
+  
+  // Strip leading dashes/bullets (common in generated or formatted scripts)
+  // e.g., "- JOHN: Hello" -> "JOHN: Hello"
+  trimmed = trimmed.replace(/^[-–—•]\s*/, '');
   
   // Skip scene headings
   if (SCENE_HEADING_REGEX.test(trimmed)) {
