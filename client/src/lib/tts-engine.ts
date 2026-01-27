@@ -69,6 +69,7 @@ interface SpeakOptions {
   characterIndex?: number;
   emotion?: EmotionStyle;
   preset?: VoicePreset;
+  playbackSpeed?: number; // 0.5 to 1.5
   onStart?: (duration: number, wordCount: number) => void;
 }
 
@@ -177,6 +178,7 @@ class TTSEngine {
           characterIndex: options.characterIndex || 0,
           emotion: "neutral",
           preset: "natural",
+          playbackSpeed: options.playbackSpeed ?? 1.0,
         }),
         signal: controller.signal,
       });
@@ -204,6 +206,7 @@ class TTSEngine {
       // Create audio element
       const audio = new Audio();
       audio.preload = "auto";
+      audio.playbackRate = options.playbackSpeed ?? 1.0; // Apply pace setting
       this.currentAudio = audio;
 
       // Start watchdog timer

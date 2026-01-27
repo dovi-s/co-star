@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Sheet,
@@ -32,7 +33,9 @@ interface SettingsDrawerProps {
   currentSceneIndex: number;
   userRoleId: string | null;
   ambientEnabled: boolean;
+  playbackSpeed: number;
   onAmbientToggle: (enabled: boolean) => void;
+  onPlaybackSpeedChange: (speed: number) => void;
   onSceneChange: (index: number) => void;
   onRolePresetChange: (roleId: string, preset: VoicePreset) => void;
   onNewScript: (name: string, rawScript: string) => void;
@@ -47,7 +50,9 @@ export function SettingsDrawer({
   currentSceneIndex,
   userRoleId,
   ambientEnabled,
+  playbackSpeed,
   onAmbientToggle,
+  onPlaybackSpeedChange,
   onSceneChange,
   onRolePresetChange,
   onNewScript,
@@ -112,6 +117,37 @@ export function SettingsDrawer({
                   onCheckedChange={onAmbientToggle}
                   data-testid="switch-ambient"
                 />
+              </div>
+
+              {/* Playback Speed */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                    <Gauge className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">
+                      Pace
+                    </label>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      {playbackSpeed < 0.9 ? "Slower" : playbackSpeed > 1.1 ? "Faster" : "Normal"} ({playbackSpeed.toFixed(1)}x)
+                    </p>
+                  </div>
+                </div>
+                <Slider
+                  value={[playbackSpeed]}
+                  onValueChange={([value]) => onPlaybackSpeedChange(value)}
+                  min={0.5}
+                  max={1.5}
+                  step={0.1}
+                  className="w-full"
+                  data-testid="slider-playback-speed"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                  <span>0.5x</span>
+                  <span>1.0x</span>
+                  <span>1.5x</span>
+                </div>
               </div>
 
               {/* Scenes */}

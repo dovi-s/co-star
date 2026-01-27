@@ -556,6 +556,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         characterIndex: roleIndex >= 0 ? roleIndex : 0,
         emotion,
         preset,
+        playbackSpeed: session.playbackSpeed ?? 1.0,
         onStart: (duration: number, wordCount: number) => {
           // Set up word-by-word highlighting timer
           if (wordCount > 0 && duration > 0) {
@@ -1156,7 +1157,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           currentSceneIndex={session.currentSceneIndex}
           userRoleId={session.userRoleId}
           ambientEnabled={session.ambientEnabled}
+          playbackSpeed={session.playbackSpeed ?? 1.0}
           onAmbientToggle={setAmbient}
+          onPlaybackSpeedChange={(speed) => updateSession({ playbackSpeed: speed })}
           onSceneChange={goToScene}
           onRolePresetChange={handleRolePresetChange}
           onNewScript={handleNewScript}

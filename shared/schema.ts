@@ -60,6 +60,7 @@ export const sessionSchema = z.object({
   isPlaying: z.boolean().default(false),
   ambientEnabled: z.boolean().default(false),
   memorizationMode: memorizationModeSchema.default("off"),
+  playbackSpeed: z.number().min(0.5).max(1.5).default(1.0), // 0.5x to 1.5x speed
   runsCompleted: z.number().default(0),
   linesRehearsed: z.number().default(0),
   createdAt: z.string(),
@@ -93,6 +94,7 @@ export const updateSessionSchema = z.object({
   isPlaying: z.boolean().optional(),
   ambientEnabled: z.boolean().optional(),
   memorizationMode: memorizationModeSchema.optional(),
+  playbackSpeed: z.number().min(0.5).max(1.5).optional(),
   runsCompleted: z.number().optional(),
   linesRehearsed: z.number().optional(),
   name: z.string().optional(),
