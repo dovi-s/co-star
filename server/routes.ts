@@ -225,6 +225,13 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Text is required" });
       }
 
+      // Clean text before TTS - fix common parsing artifacts
+      const cleanedText = text
+        .replace(/\s+/g, ' ')           // Normalize multiple spaces to single
+        .replace(/\s+([.,!?;:])/g, '$1') // Remove space before punctuation
+        .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ') // Add space after punctuation if missing
+        .trim();
+
       const apiKey = process.env.ELEVENLABS_API_KEY;
       if (!apiKey) {
         return res.status(503).json({ 
@@ -240,7 +247,7 @@ export async function registerRoutes(
       const voiceSettings = getVoiceSettings(emotion || "neutral", preset || "natural");
 
       const audioStream = await client.textToSpeech.convert(voiceId, {
-        text,
+        text: cleanedText,
         modelId: "eleven_turbo_v2_5",
         voiceSettings: voiceSettings,
       });
