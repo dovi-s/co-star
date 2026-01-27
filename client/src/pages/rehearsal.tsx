@@ -1081,6 +1081,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 speechRecognition.start();
               }
             }}
+            onLineClick={(line) => {
+              const lineIndex = sceneLines.findIndex(l => l.id === line.id);
+              if (lineIndex !== -1 && lineIndex !== session.currentLineIndex) {
+                if (session.isPlaying) {
+                  ttsEngine.stop();
+                  speechRecognition.stop();
+                }
+                updateSession({ currentLineIndex: lineIndex, isPlaying: false });
+              }
+            }}
           />
           
           {showUserTurnIndicator && (
