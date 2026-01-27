@@ -206,8 +206,10 @@ class TTSEngine {
       // Create audio element
       const audio = new Audio();
       audio.preload = "auto";
-      audio.playbackRate = options.playbackSpeed ?? 1.0; // Apply pace setting
       this.currentAudio = audio;
+      
+      const targetSpeed = options.playbackSpeed ?? 1.0;
+      console.log("[TTS] Target playback speed:", targetSpeed);
 
       // Start watchdog timer
       this.startWatchdog(text, onEnd);
@@ -249,12 +251,20 @@ class TTSEngine {
           cleanup();
           // Don't fire callback on abort - let watchdog handle it
         };
+        
+        // Apply playback speed after audio is ready to play
+        audio.oncanplaythrough = () => {
+          audio.playbackRate = targetSpeed;
+          console.log("[TTS] Applied playback speed:", audio.playbackRate);
+        };
 
         // Set source and play
         audio.src = audioUrl;
         audio.volume = 1;
         
         audio.play().then(() => {
+          // Also set after play starts (belt and suspenders)
+          audio.playbackRate = targetSpeed;
           const duration = audio.duration || text.length * 0.08; // Estimate ~80ms per char
           const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
           console.log("[TTS] Playing audio, duration:", duration, "words:", wordCount);
