@@ -751,8 +751,23 @@ JOHN: We got the contract.`;
       }
 
       if (cleanedScript.roles.length === 0) {
+        // Provide helpful diagnostic info about why parsing failed
+        const lines = text.split('\n').slice(0, 10);
+        const sampleLines = lines.filter(l => l.trim()).slice(0, 3).map(l => l.substring(0, 60));
+        const hasColons = text.includes(':');
+        const hasAllCaps = /^[A-Z]{2,}/.test(text);
+        
+        let hint = "Use format: CHARACTER: dialogue";
+        if (!hasColons) {
+          hint = "No colons found. Try: JOHN: Hello there.";
+        } else if (!hasAllCaps) {
+          hint = "Names should be UPPERCASE: JOHN: Hello.";
+        }
+        
+        console.log(`[Parse Script] Failed - hint: ${hint}, sample:`, sampleLines);
         return res.status(400).json({ 
-          error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
+          error: `Could not find character names. ${hint}`,
+          sample: sampleLines
         });
       }
 
@@ -907,8 +922,13 @@ JOHN: We got the contract.`;
       }
 
       if (cleanedScript.roles.length === 0) {
+        const hasColons = text.includes(':');
+        let hint = "Use format: CHARACTER: dialogue";
+        if (!hasColons) {
+          hint = "No colons found. Try: JOHN: Hello there.";
+        }
         return res.status(400).json({ 
-          error: "No roles detected. Make sure your script uses 'CHARACTER: dialogue' format." 
+          error: `Could not find character names. ${hint}` 
         });
       }
 
