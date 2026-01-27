@@ -736,8 +736,15 @@ function isValidCharacterName(name: string): boolean {
   // Reject "SOUND" anything
   if (/^SOUND\b/i.test(normalized)) return false;
   
-  // Reject names ending with numbers (e.g., "DET. COLE. 4")
-  if (/\d+$/.test(normalized)) return false;
+  // Reject names with bare numbers at end that look like page numbers (e.g., "DET. COLE. 4")
+  // But ALLOW character designations like "ACTOR 1", "COP 2", "WOMAN #3"
+  if (/\.\s*\d+$/.test(normalized)) return false; // "NAME. 4" = page number
+  if (/^\d+$/.test(normalized.split(/\s+/).pop() || "")) {
+    // Name ends with a number - only allow if preceded by a word (ACTOR 1, COP 2)
+    const parts = normalized.split(/\s+/);
+    if (parts.length < 2) return false; // Just "1" is not valid
+    // Allow patterns like "ACTOR 1", "COP 2", "MAN #1"
+  }
   
   // Reject names with duplicate words (e.g., "CALLIE CALLIE" or "CALLIE. CALLIE")
   const words = normalized.replace(/\./g, '').split(/\s+/).filter(w => w.length > 0);
