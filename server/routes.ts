@@ -165,15 +165,21 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   if (femaleIndicators.some(ind => name.includes(ind))) isFemale = true;
   if (maleIndicators.some(ind => name.includes(ind))) isFemale = false;
   
-  // Deterministic voice selection based on character index (ensures different characters get different voices)
+  // Deterministic voice selection based on character NAME hash (not index)
+  // This ensures the same character always gets the same voice, even after server restarts
+  const nameHash = name.split('').reduce((hash, char) => {
+    return ((hash << 5) - hash) + char.charCodeAt(0);
+  }, 0);
+  const voiceIndex = Math.abs(nameHash) % 3;
+  
   let voiceType: VoiceType;
   
   if (isFemale) {
     const femaleVoices: VoiceType[] = ["female_1", "female_2", "female_3"];
-    voiceType = femaleVoices[characterIndex % femaleVoices.length];
+    voiceType = femaleVoices[voiceIndex];
   } else {
     const maleVoices: VoiceType[] = ["male_1", "male_2", "male_3"];
-    voiceType = maleVoices[characterIndex % maleVoices.length];
+    voiceType = maleVoices[voiceIndex];
   }
   
   voiceAssignmentCache.set(name, voiceType);
