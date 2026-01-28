@@ -292,19 +292,22 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled }: Us
 
   useEffect(() => {
     if (enabled && !localStreamRef.current) {
-      startMedia().then(stream => {
-        if (stream && participants.length > 1) {
-          participants.forEach(p => {
-            if (p.id !== myParticipantId && !peerConnectionsRef.current.has(p.id)) {
-              createPeerConnection(p.id, true);
-            }
-          });
-        }
-      });
+      startMedia();
     } else if (!enabled) {
       stopMedia();
     }
-  }, [enabled, participants, myParticipantId, startMedia, stopMedia, createPeerConnection]);
+  }, [enabled, startMedia, stopMedia]);
+
+  useEffect(() => {
+    if (!enabled || !localStreamRef.current || !myParticipantId) return;
+    
+    participants.forEach(p => {
+      if (p.id !== myParticipantId && !peerConnectionsRef.current.has(p.id)) {
+        console.log('[WebRTC] Creating connection to existing participant:', p.id, p.name);
+        createPeerConnection(p.id, true);
+      }
+    });
+  }, [enabled, participants, myParticipantId, createPeerConnection]);
 
   useEffect(() => {
     return () => {
