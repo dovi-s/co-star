@@ -1236,6 +1236,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             onPlayPause={handlePlayPause}
             onNext={handleNext}
             onRepeat={handleRepeat}
+            cameraMode={camera.isEnabled}
           />
         </div>
 

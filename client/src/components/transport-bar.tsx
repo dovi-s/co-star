@@ -12,6 +12,7 @@ interface TransportBarProps {
   onPlayPause: () => void;
   onNext: () => void;
   onRepeat: () => void;
+  cameraMode?: boolean;
 }
 
 export function TransportBar({
@@ -24,6 +25,7 @@ export function TransportBar({
   onPlayPause,
   onNext,
   onRepeat,
+  cameraMode = false,
 }: TransportBarProps) {
   const progress = totalLines > 0 ? ((currentLine + 1) / totalLines) * 100 : 0;
   const circumference = 2 * Math.PI * 28;
@@ -38,7 +40,10 @@ export function TransportBar({
           size="icon"
           onClick={onRepeat}
           title="Start Over (R)"
-          className="rounded-full icon-btn-press"
+          className={cn(
+            "rounded-full icon-btn-press",
+            cameraMode && "text-white/80 hover:text-white hover:bg-white/10"
+          )}
           data-testid="button-start-over"
         >
           <RotateCcw className="h-4 w-4" />
@@ -62,8 +67,12 @@ export function TransportBar({
             title="Previous"
             className={cn(
               "p-3 rounded-full touch-manipulation select-none icon-btn-press",
-              "hover:bg-muted active:bg-muted/80",
-              canGoBack ? "text-foreground" : "text-muted-foreground/40 pointer-events-none"
+              cameraMode 
+                ? "hover:bg-white/10 active:bg-white/20" 
+                : "hover:bg-muted active:bg-muted/80",
+              canGoBack 
+                ? (cameraMode ? "text-white" : "text-foreground") 
+                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-prev-line"
@@ -83,7 +92,7 @@ export function TransportBar({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className="text-border"
+                className={cameraMode ? "text-white/20" : "text-border"}
               />
               <circle
                 cx="32"
@@ -143,8 +152,12 @@ export function TransportBar({
             title="Next"
             className={cn(
               "p-3 rounded-full touch-manipulation select-none icon-btn-press",
-              "hover:bg-muted active:bg-muted/80",
-              canGoNext ? "text-foreground" : "text-muted-foreground/40 pointer-events-none"
+              cameraMode 
+                ? "hover:bg-white/10 active:bg-white/20" 
+                : "hover:bg-muted active:bg-muted/80",
+              canGoNext 
+                ? (cameraMode ? "text-white" : "text-foreground") 
+                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-next-line"
@@ -157,23 +170,32 @@ export function TransportBar({
           <span 
             className={cn(
               "text-sm font-medium tabular-nums transition-colors",
-              isComplete ? "text-green-500" : "text-foreground"
+              isComplete ? "text-green-500" : (cameraMode ? "text-white" : "text-foreground")
             )}
             data-testid="text-line-counter"
           >
             {currentLine + 1}
           </span>
-          <span className="text-[10px] text-muted-foreground">
+          <span className={cn(
+            "text-[10px]",
+            cameraMode ? "text-white/60" : "text-muted-foreground"
+          )}>
             of {totalLines}
           </span>
         </div>
       </div>
       
       <div className="flex items-center justify-center gap-4 mt-3">
-        <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground/70">
+        <kbd className={cn(
+          "px-2 py-0.5 rounded text-[9px] font-medium",
+          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground/70"
+        )}>
           Space
         </kbd>
-        <kbd className="px-2 py-0.5 rounded text-[9px] font-medium bg-muted text-muted-foreground/70">
+        <kbd className={cn(
+          "px-2 py-0.5 rounded text-[9px] font-medium",
+          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground/70"
+        )}>
           Arrows
         </kbd>
       </div>
