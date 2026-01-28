@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
+import { useWebRTC } from '@/hooks/use-webrtc';
+import { VideoGrid } from '@/components/video-grid';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react';
+import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type View = 'menu' | 'create' | 'join' | 'lobby';
@@ -45,6 +47,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
       toast({ title: 'Room closed' });
       setView('menu');
     },
+  });
+
+  const isInRoom = !!multiplayer.room && (view === 'lobby' || multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
+  
+  const webrtc = useWebRTC({
+    socket: multiplayer.socket,
+    myParticipantId: multiplayer.currentParticipant?.id ?? null,
+    participants: multiplayer.room?.participants ?? [],
+    enabled: isInRoom,
   });
 
   const handleCreateRoom = () => {
@@ -261,7 +272,27 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
             </Button>
             <Badge variant="outline" className="font-mono">{room.code}</Badge>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={webrtc.toggleAudio}
+                className={!webrtc.isAudioEnabled ? "text-red-500" : ""}
+                data-testid="button-toggle-audio-rehearsal"
+              >
+                {webrtc.isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={webrtc.toggleVideo}
+                className={!webrtc.isVideoEnabled ? "text-red-500" : ""}
+                data-testid="button-toggle-video-rehearsal"
+              >
+                {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+              </Button>
+            </div>
             <Badge variant={room.state === 'paused' ? 'secondary' : 'default'}>
               {room.state === 'paused' ? 'Paused' : 'Live'}
             </Badge>
@@ -325,60 +356,76 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
           </div>
         </div>
 
-        <footer className="border-t p-4">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-muted-foreground">
-                {currentScene?.name || `Scene ${room.currentSceneIndex + 1}`}
-              </span>
-              <span className="text-sm text-muted-foreground">
-                Line {room.currentLineIndex + 1} of {currentScene?.lines.length ?? 0}
-              </span>
+        <footer className="border-t">
+          <div className="bg-muted/30 border-b px-4 py-2 overflow-x-auto">
+            <div className="flex gap-2">
+              <VideoGrid
+                localStream={webrtc.localStream}
+                peerStreams={webrtc.peerStreams}
+                participants={room.participants}
+                myParticipantId={multiplayer.participantId}
+                isAudioEnabled={webrtc.isAudioEnabled}
+                isVideoEnabled={webrtc.isVideoEnabled}
+                currentSpeakerId={currentSpeaker?.id}
+                className="flex-nowrap grid-flow-col auto-cols-[120px] grid-cols-none"
+              />
             </div>
-            
-            <div className="flex items-center justify-center gap-2">
-              {multiplayer.isHost && (
-                <>
+          </div>
+          <div className="p-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground">
+                  {currentScene?.name || `Scene ${room.currentSceneIndex + 1}`}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  Line {room.currentLineIndex + 1} of {currentScene?.lines.length ?? 0}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-center gap-2">
+                {multiplayer.isHost && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => multiplayer.prevLine()}
+                      data-testid="button-prev-line"
+                    >
+                      <SkipBack className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
+                      data-testid="button-play-pause"
+                    >
+                      {room.state === 'paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => multiplayer.nextLine()}
+                      data-testid="button-next-line"
+                    >
+                      <SkipForward className="h-4 w-4" />
+                    </Button>
+                  </>
+                )}
+                
+                {!multiplayer.isHost && isMyTurn && (
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => multiplayer.prevLine()}
-                    data-testid="button-prev-line"
-                  >
-                    <SkipBack className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="icon"
-                    onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
-                    data-testid="button-play-pause"
-                  >
-                    {room.state === 'paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
                     onClick={() => multiplayer.nextLine()}
-                    data-testid="button-next-line"
+                    data-testid="button-done-speaking"
                   >
-                    <SkipForward className="h-4 w-4" />
+                    Done Speaking
                   </Button>
-                </>
-              )}
-              
-              {!multiplayer.isHost && isMyTurn && (
-                <Button
-                  onClick={() => multiplayer.nextLine()}
-                  data-testid="button-done-speaking"
-                >
-                  Done Speaking
-                </Button>
-              )}
-              
-              {!multiplayer.isHost && !isMyTurn && (
-                <p className="text-sm text-muted-foreground">
-                  {currentSpeaker ? `${currentSpeaker.name} is speaking...` : 'Waiting...'}
-                </p>
-              )}
+                )}
+                
+                {!multiplayer.isHost && !isMyTurn && (
+                  <p className="text-sm text-muted-foreground">
+                    {currentSpeaker ? `${currentSpeaker.name} is speaking...` : 'Waiting...'}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </footer>
@@ -418,6 +465,47 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
               {room.participants.length} participant{room.participants.length !== 1 ? 's' : ''}
             </p>
           </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center justify-between">
+                <span>Video Call</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={webrtc.toggleAudio}
+                    data-testid="button-toggle-audio"
+                    className={!webrtc.isAudioEnabled ? "text-red-500" : ""}
+                  >
+                    {webrtc.isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={webrtc.toggleVideo}
+                    data-testid="button-toggle-video"
+                    className={!webrtc.isVideoEnabled ? "text-red-500" : ""}
+                  >
+                    {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </CardTitle>
+              {webrtc.error && (
+                <CardDescription className="text-red-500">{webrtc.error}</CardDescription>
+              )}
+            </CardHeader>
+            <CardContent>
+              <VideoGrid
+                localStream={webrtc.localStream}
+                peerStreams={webrtc.peerStreams}
+                participants={room.participants}
+                myParticipantId={multiplayer.participantId}
+                isAudioEnabled={webrtc.isAudioEnabled}
+                isVideoEnabled={webrtc.isVideoEnabled}
+              />
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>

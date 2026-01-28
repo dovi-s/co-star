@@ -45,6 +45,7 @@ The design philosophy is sophisticated and minimal, inspired by premium companie
 - **Keyboard Shortcuts**: Space (play/pause), Arrow keys (navigate), R (repeat), Escape (stop).
 - **PWA Ready**: Includes service worker, manifest, and offline support.
 - **Multiplayer Table Read**: Real-time remote rehearsals with multiple actors via WebSocket (socket.io). Includes room creation with 6-character codes, role selection, ready states, host controls (start/pause/resume/navigation), and synchronized line progression. Server validates all events with Zod schemas and enforces authorization (host or current speaker for line advancement).
+- **WebRTC Video Calls**: Peer-to-peer video and audio streaming during table reads using WebRTC. Features include mute/unmute audio, enable/disable video, current speaker highlighting, and a compact video strip during rehearsals. Server acts as signaling relay for ICE candidates and SDP offer/answer exchange.
 
 ### Feature Specifications
 - **Script Context Capture**: Action lines between dialogues and scene descriptions are attached to the next dialogue.

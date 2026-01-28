@@ -2,7 +2,7 @@ import { Server as SocketIOServer, Socket } from "socket.io";
 import { Server as HTTPServer } from "http";
 import { nanoid } from "nanoid";
 import type { Room, Participant, RoomUpdate, Role, Scene } from "@shared/schema";
-import { roomEventSchema } from "@shared/schema";
+import { roomEventSchema, rtcOfferSchema, rtcAnswerSchema, rtcIceCandidateSchema } from "@shared/schema";
 
 const rooms = new Map<string, Room>();
 const socketToRoom = new Map<string, { roomId: string; participantId: string }>();
@@ -100,6 +100,10 @@ function handleJoinRoom(
   socketToRoom.set(socket.id, { roomId: room.id, participantId });
   socket.join(room.id);
 
+  // Notify existing participants about new joiner (for WebRTC peer setup)
+  const joinNotify: RoomUpdate = { type: "participant_joined", participantId };
+  socket.to(room.id).emit("room_update", joinNotify);
+
   const response: RoomUpdate = { type: "room_joined", room, participantId };
   socket.emit("room_update", response);
   broadcastRoomUpdate(io, room);
@@ -116,6 +120,10 @@ function handleLeaveRoom(socket: Socket, io: SocketIOServer) {
   const leavingParticipant = room.participants.find((p) => p.id === info.participantId);
   room.participants = room.participants.filter((p) => p.id !== info.participantId);
   room.updatedAt = new Date().toISOString();
+
+  // Notify others about participant leaving (for WebRTC cleanup)
+  const leaveNotify: RoomUpdate = { type: "participant_left", participantId: info.participantId };
+  socket.to(room.id).emit("room_update", leaveNotify);
 
   socketToRoom.delete(socket.id);
   socket.leave(room.id);
@@ -380,6 +388,106 @@ function handleTransferHost(socket: Socket, io: SocketIOServer, data: { newHostI
   console.log(`[Multiplayer] Host transferred to ${newHost.name}`);
 }
 
+// WebRTC signaling handlers
+function handleRtcOffer(socket: Socket, io: SocketIOServer, data: { targetId: string; offer: unknown }) {
+  const info = socketToRoom.get(socket.id);
+  if (!info) return;
+
+  const offerResult = rtcOfferSchema.safeParse(data.offer);
+  if (!offerResult.success) {
+    console.warn(`[Multiplayer] Invalid RTC offer from ${socket.id}`);
+    return;
+  }
+
+  const room = rooms.get(info.roomId);
+  if (!room) return;
+
+  const targetExists = room.participants.some((p) => p.id === data.targetId);
+  if (!targetExists) {
+    console.warn(`[Multiplayer] RTC offer target ${data.targetId} not in room`);
+    return;
+  }
+
+  const targetSocket = Array.from(socketToRoom.entries()).find(
+    ([, v]) => v.roomId === info.roomId && v.participantId === data.targetId
+  );
+
+  if (targetSocket) {
+    const update: RoomUpdate = {
+      type: "rtc_offer",
+      fromId: info.participantId,
+      offer: offerResult.data,
+    };
+    io.to(targetSocket[0]).emit("room_update", update);
+  }
+}
+
+function handleRtcAnswer(socket: Socket, io: SocketIOServer, data: { targetId: string; answer: unknown }) {
+  const info = socketToRoom.get(socket.id);
+  if (!info) return;
+
+  const answerResult = rtcAnswerSchema.safeParse(data.answer);
+  if (!answerResult.success) {
+    console.warn(`[Multiplayer] Invalid RTC answer from ${socket.id}`);
+    return;
+  }
+
+  const room = rooms.get(info.roomId);
+  if (!room) return;
+
+  const targetExists = room.participants.some((p) => p.id === data.targetId);
+  if (!targetExists) {
+    console.warn(`[Multiplayer] RTC answer target ${data.targetId} not in room`);
+    return;
+  }
+
+  const targetSocket = Array.from(socketToRoom.entries()).find(
+    ([, v]) => v.roomId === info.roomId && v.participantId === data.targetId
+  );
+
+  if (targetSocket) {
+    const update: RoomUpdate = {
+      type: "rtc_answer",
+      fromId: info.participantId,
+      answer: answerResult.data,
+    };
+    io.to(targetSocket[0]).emit("room_update", update);
+  }
+}
+
+function handleRtcIceCandidate(socket: Socket, io: SocketIOServer, data: { targetId: string; candidate: unknown }) {
+  const info = socketToRoom.get(socket.id);
+  if (!info) return;
+
+  const candidateResult = rtcIceCandidateSchema.safeParse(data.candidate);
+  if (!candidateResult.success) {
+    console.warn(`[Multiplayer] Invalid RTC ICE candidate from ${socket.id}`);
+    return;
+  }
+
+  const room = rooms.get(info.roomId);
+  if (!room) return;
+
+  const targetExists = room.participants.some((p) => p.id === data.targetId);
+  if (!targetExists) {
+    console.warn(`[Multiplayer] RTC ICE target ${data.targetId} not in room`);
+    return;
+  }
+
+  const targetSocket = Array.from(socketToRoom.entries()).find(
+    ([, v]) => v.roomId === info.roomId && v.participantId === data.targetId
+  );
+
+  if (targetSocket) {
+    const update: RoomUpdate = {
+      type: "rtc_ice_candidate",
+      fromId: info.participantId,
+      candidate: candidateResult.data,
+    };
+    io.to(targetSocket[0]).emit("room_update", update);
+  }
+}
+
 export function setupMultiplayer(httpServer: HTTPServer): SocketIOServer {
   const io = new SocketIOServer(httpServer, {
     cors: {
@@ -444,6 +552,15 @@ export function setupMultiplayer(httpServer: HTTPServer): SocketIOServer {
           break;
         case "transfer_host":
           handleTransferHost(socket, io, event);
+          break;
+        case "rtc_offer":
+          handleRtcOffer(socket, io, event);
+          break;
+        case "rtc_answer":
+          handleRtcAnswer(socket, io, event);
+          break;
+        case "rtc_ice_candidate":
+          handleRtcIceCandidate(socket, io, event);
           break;
       }
     });

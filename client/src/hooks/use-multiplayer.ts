@@ -152,6 +152,7 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
     currentParticipant,
     isHost,
     error,
+    socket: socketRef.current,
     createRoom,
     joinRoom,
     leaveRoom,

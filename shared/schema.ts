@@ -163,6 +163,23 @@ export const roomSchema = z.object({
 });
 export type Room = z.infer<typeof roomSchema>;
 
+// WebRTC signaling types
+export const rtcOfferSchema = z.object({
+  type: z.literal("offer"),
+  sdp: z.string(),
+});
+
+export const rtcAnswerSchema = z.object({
+  type: z.literal("answer"),
+  sdp: z.string(),
+});
+
+export const rtcIceCandidateSchema = z.object({
+  candidate: z.string(),
+  sdpMid: z.string().nullable(),
+  sdpMLineIndex: z.number().nullable(),
+});
+
 // Client -> Server events
 export const roomEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("create_room"), scriptName: z.string(), roles: z.array(roleSchema), scenes: z.array(sceneSchema), hostName: z.string() }),
@@ -180,6 +197,10 @@ export const roomEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("line_complete"), lineId: z.string() }), // Current speaker signals done
   z.object({ type: z.literal("kick_participant"), participantId: z.string() }), // Host only
   z.object({ type: z.literal("transfer_host"), newHostId: z.string() }), // Host only
+  // WebRTC signaling events
+  z.object({ type: z.literal("rtc_offer"), targetId: z.string(), offer: rtcOfferSchema }),
+  z.object({ type: z.literal("rtc_answer"), targetId: z.string(), answer: rtcAnswerSchema }),
+  z.object({ type: z.literal("rtc_ice_candidate"), targetId: z.string(), candidate: rtcIceCandidateSchema }),
 ]);
 export type RoomEvent = z.infer<typeof roomEventSchema>;
 
@@ -191,6 +212,12 @@ export const roomUpdateSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("room_error"), message: z.string() }),
   z.object({ type: z.literal("kicked") }),
   z.object({ type: z.literal("room_closed") }),
+  // WebRTC signaling events (relayed from other participants)
+  z.object({ type: z.literal("rtc_offer"), fromId: z.string(), offer: rtcOfferSchema }),
+  z.object({ type: z.literal("rtc_answer"), fromId: z.string(), answer: rtcAnswerSchema }),
+  z.object({ type: z.literal("rtc_ice_candidate"), fromId: z.string(), candidate: rtcIceCandidateSchema }),
+  z.object({ type: z.literal("participant_joined"), participantId: z.string() }), // Trigger peer connection
+  z.object({ type: z.literal("participant_left"), participantId: z.string() }), // Close peer connection
 ]);
 export type RoomUpdate = z.infer<typeof roomUpdateSchema>;
 
