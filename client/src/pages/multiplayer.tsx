@@ -372,28 +372,35 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           isMyTurn={isMyTurn}
         />
 
-        <header className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-30 bg-black/40 backdrop-blur-sm safe-top">
-          <div className="flex items-center gap-2">
+        <header className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-sm safe-top">
+          <div className="flex items-center justify-between px-3 py-2 gap-2">
             <Button 
               variant="ghost" 
-              size="sm" 
+              size="icon"
               onClick={handleLeave} 
-              className="text-white hover:text-white hover:bg-white/20"
+              className="text-white hover:text-white hover:bg-white/20 shrink-0"
               data-testid="button-leave-rehearsal"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Leave
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <Badge variant="outline" className="font-mono bg-black/40 text-white border-white/30">{room.code}</Badge>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
+            
+            <div className="flex items-center gap-1 flex-wrap justify-center min-w-0">
+              <Badge className={cn(
+                "bg-black/40 border-white/30 text-xs shrink-0",
+                room.state === 'paused' ? 'text-white/70' : 'text-green-400'
+              )}>
+                {room.state === 'paused' ? 'Paused' : 'Live'}
+              </Badge>
+              {myRole && <Badge className="bg-primary/80 text-white text-xs truncate max-w-[100px]">{myRole.name}</Badge>}
+            </div>
+            
+            <div className="flex items-center gap-0.5 shrink-0">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={webrtc.toggleAudio}
                 className={cn(
-                  "text-white hover:text-white hover:bg-white/20",
+                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
                   !webrtc.isAudioEnabled && "text-red-400"
                 )}
                 data-testid="button-toggle-audio-rehearsal"
@@ -405,34 +412,14 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 size="icon"
                 onClick={webrtc.toggleVideo}
                 className={cn(
-                  "text-white hover:text-white hover:bg-white/20",
+                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
                   !webrtc.isVideoEnabled && "text-red-400"
                 )}
                 data-testid="button-toggle-video-rehearsal"
               >
                 {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => multiplayer.setRecordingOptOut(!multiplayer.currentParticipant?.recordingOptOut)}
-                className={cn(
-                  "text-white hover:text-white hover:bg-white/20",
-                  multiplayer.currentParticipant?.recordingOptOut && "text-amber-400"
-                )}
-                data-testid="button-toggle-recording-opt-out-rehearsal"
-                title={multiplayer.currentParticipant?.recordingOptOut ? "Recording excluded" : "Exclude from recording"}
-              >
-                <Circle className={`h-4 w-4 ${multiplayer.currentParticipant?.recordingOptOut ? "" : "fill-red-500 text-red-500"}`} />
-              </Button>
             </div>
-            <Badge className={cn(
-              "bg-black/40 border-white/30",
-              room.state === 'paused' ? 'text-white/70' : 'text-green-400'
-            )}>
-              {room.state === 'paused' ? 'Paused' : 'Live'}
-            </Badge>
-            {myRole && <Badge className="bg-primary/80 text-white">{myRole.name}</Badge>}
           </div>
         </header>
 
