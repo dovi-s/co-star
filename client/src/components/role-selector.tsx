@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, User, ChevronLeft } from "lucide-react";
+import { Check, User, ChevronLeft, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/logo";
@@ -11,10 +11,11 @@ interface RoleSelectorProps {
   roles: Role[];
   onRoleSelect: (roleId: string) => void;
   onBack: () => void;
+  onTableRead?: () => void;
   scriptName?: string;
 }
 
-export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSelectorProps) {
+export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptName }: RoleSelectorProps) {
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     roles.length === 1 ? roles[0].id : null
   );
@@ -137,7 +138,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
         </div>
       </div>
 
-      <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background animate-slide-up z-40">
+      <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background animate-slide-up z-40 space-y-2">
         <Button
           onClick={handleContinue}
           disabled={!selectedRoleId}
@@ -145,8 +146,21 @@ export function RoleSelector({ roles, onRoleSelect, onBack, scriptName }: RoleSe
           className="w-full"
           data-testid="button-start-rehearsal"
         >
-          {selectedRoleId ? "Start" : "Select a role"}
+          {selectedRoleId ? "Start Solo" : "Select a role"}
         </Button>
+        
+        {onTableRead && (
+          <Button
+            onClick={onTableRead}
+            variant="outline"
+            size="lg"
+            className="w-full"
+            data-testid="button-table-read"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Table Read with Friends
+          </Button>
+        )}
         
         {selectedRole && (
           <p className="text-center text-xs text-muted-foreground mt-1.5 animate-fade-in">

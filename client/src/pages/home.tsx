@@ -63,6 +63,7 @@ export function HomePage({ onSessionReady, onMultiplayer }: HomePageProps) {
         roles={session.roles}
         onRoleSelect={handleRoleSelect}
         onBack={handleBackToImport}
+        onTableRead={onMultiplayer}
         scriptName={session.name}
       />
     );
