@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { useMultiplayer } from '@/hooks/use-multiplayer';
 import { useWebRTC } from '@/hooks/use-webrtc';
 import { VideoGrid } from '@/components/video-grid';
+import { MultiplayerVideoBackground } from '@/components/multiplayer-video-background';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle } from 'lucide-react';
@@ -346,14 +347,44 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const myRole = room.roles.find(r => r.id === multiplayer.currentParticipant?.roleId);
     
     return (
-      <div className="min-h-screen bg-background flex flex-col">
-        <header className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="min-h-screen relative" data-testid="multiplayer-rehearsal">
+        <MultiplayerVideoBackground
+          localStream={webrtc.localStream}
+          peerStreams={webrtc.peerStreams}
+          participants={room.participants}
+          myParticipantId={multiplayer.participantId}
+          currentSpeakerId={currentSpeaker?.id ?? null}
+          isAudioEnabled={webrtc.isAudioEnabled}
+          isVideoEnabled={webrtc.isVideoEnabled}
+          currentLine={currentLine ? {
+            text: currentLine.text,
+            roleName: currentLine.roleName,
+            direction: currentLine.direction,
+          } : undefined}
+          previousLine={prevLine ? {
+            text: prevLine.text,
+            roleName: prevLine.roleName,
+          } : undefined}
+          nextLine={nextLine ? {
+            text: nextLine.text,
+            roleName: nextLine.roleName,
+          } : undefined}
+          isMyTurn={isMyTurn}
+        />
+
+        <header className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 py-3 z-30 bg-black/40 backdrop-blur-sm safe-top">
           <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" onClick={handleLeave} data-testid="button-leave-rehearsal">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLeave} 
+              className="text-white hover:text-white hover:bg-white/20"
+              data-testid="button-leave-rehearsal"
+            >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Leave
             </Button>
-            <Badge variant="outline" className="font-mono">{room.code}</Badge>
+            <Badge variant="outline" className="font-mono bg-black/40 text-white border-white/30">{room.code}</Badge>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1">
@@ -361,7 +392,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 variant="ghost"
                 size="icon"
                 onClick={webrtc.toggleAudio}
-                className={!webrtc.isAudioEnabled ? "text-red-500" : ""}
+                className={cn(
+                  "text-white hover:text-white hover:bg-white/20",
+                  !webrtc.isAudioEnabled && "text-red-400"
+                )}
                 data-testid="button-toggle-audio-rehearsal"
               >
                 {webrtc.isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
@@ -370,7 +404,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 variant="ghost"
                 size="icon"
                 onClick={webrtc.toggleVideo}
-                className={!webrtc.isVideoEnabled ? "text-red-500" : ""}
+                className={cn(
+                  "text-white hover:text-white hover:bg-white/20",
+                  !webrtc.isVideoEnabled && "text-red-400"
+                )}
                 data-testid="button-toggle-video-rehearsal"
               >
                 {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
@@ -379,98 +416,34 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 variant="ghost"
                 size="icon"
                 onClick={() => multiplayer.setRecordingOptOut(!multiplayer.currentParticipant?.recordingOptOut)}
-                className={multiplayer.currentParticipant?.recordingOptOut ? "text-amber-500" : ""}
+                className={cn(
+                  "text-white hover:text-white hover:bg-white/20",
+                  multiplayer.currentParticipant?.recordingOptOut && "text-amber-400"
+                )}
                 data-testid="button-toggle-recording-opt-out-rehearsal"
                 title={multiplayer.currentParticipant?.recordingOptOut ? "Recording excluded" : "Exclude from recording"}
               >
                 <Circle className={`h-4 w-4 ${multiplayer.currentParticipant?.recordingOptOut ? "" : "fill-red-500 text-red-500"}`} />
               </Button>
             </div>
-            <Badge variant={room.state === 'paused' ? 'secondary' : 'default'}>
+            <Badge className={cn(
+              "bg-black/40 border-white/30",
+              room.state === 'paused' ? 'text-white/70' : 'text-green-400'
+            )}>
               {room.state === 'paused' ? 'Paused' : 'Live'}
             </Badge>
-            {myRole && <Badge>{myRole.name}</Badge>}
+            {myRole && <Badge className="bg-primary/80 text-white">{myRole.name}</Badge>}
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="w-full max-w-2xl space-y-4">
-            {prevLine && (
-              <div className="text-center opacity-40">
-                <span className="text-xs font-medium">{prevLine.roleName}</span>
-                <p className="text-sm">{prevLine.text}</p>
-              </div>
-            )}
-            
-            <div className={cn(
-              "p-6 rounded-lg text-center transition-all",
-              isMyTurn 
-                ? "bg-primary/10 border-2 border-primary" 
-                : "bg-muted"
-            )}>
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Badge 
-                  variant={isMyTurn ? "default" : "secondary"}
-                  className="text-sm"
-                >
-                  {currentLine?.roleName}
-                </Badge>
-                {currentSpeaker && (
-                  <span className="text-xs text-muted-foreground">
-                    ({currentSpeaker.name})
-                  </span>
-                )}
-                {isMyTurn && (
-                  <Volume2 className="h-4 w-4 text-primary animate-pulse" />
-                )}
-              </div>
-              {currentLine?.direction && (
-                <p className="text-sm text-muted-foreground italic mb-2">
-                  ({currentLine.direction})
-                </p>
-              )}
-              <p className={cn(
-                "text-xl leading-relaxed",
-                isMyTurn ? "font-medium" : ""
-              )}>
-                {currentLine?.text}
-              </p>
-              {isMyTurn && (
-                <p className="text-sm text-primary mt-4">Your line - speak now</p>
-              )}
-            </div>
-            
-            {nextLine && (
-              <div className="text-center opacity-30">
-                <span className="text-xs font-medium">{nextLine.roleName}</span>
-                <p className="text-sm">{nextLine.text}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <footer className="border-t">
-          <div className="bg-muted/30 border-b px-4 py-2 overflow-x-auto">
-            <div className="flex gap-2">
-              <VideoGrid
-                localStream={webrtc.localStream}
-                peerStreams={webrtc.peerStreams}
-                participants={room.participants}
-                myParticipantId={multiplayer.participantId}
-                isAudioEnabled={webrtc.isAudioEnabled}
-                isVideoEnabled={webrtc.isVideoEnabled}
-                currentSpeakerId={currentSpeaker?.id}
-                className="flex-nowrap grid-flow-col auto-cols-[120px] grid-cols-none"
-              />
-            </div>
-          </div>
+        <footer className="absolute bottom-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-sm safe-bottom">
           <div className="p-4">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-white/70">
                   {currentScene?.name || `Scene ${room.currentSceneIndex + 1}`}
                 </span>
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-white/70">
                   Line {room.currentLineIndex + 1} of {currentScene?.lines.length ?? 0}
                 </span>
               </div>
@@ -482,6 +455,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       variant="outline"
                       size="icon"
                       onClick={() => multiplayer.prevLine()}
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
                       data-testid="button-prev-line"
                     >
                       <SkipBack className="h-4 w-4" />
@@ -489,6 +463,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       size="icon"
                       onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
+                      className="bg-white text-black hover:bg-white/90"
                       data-testid="button-play-pause"
                     >
                       {room.state === 'paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
@@ -497,6 +472,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       variant="outline"
                       size="icon"
                       onClick={() => multiplayer.nextLine()}
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
                       data-testid="button-next-line"
                     >
                       <SkipForward className="h-4 w-4" />
@@ -507,6 +483,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 {!multiplayer.isHost && isMyTurn && (
                   <Button
                     onClick={() => multiplayer.nextLine()}
+                    className="bg-white text-black hover:bg-white/90"
                     data-testid="button-done-speaking"
                   >
                     Done Speaking
@@ -514,7 +491,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 )}
                 
                 {!multiplayer.isHost && !isMyTurn && (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-white/70">
                     {currentSpeaker ? `${currentSpeaker.name} is speaking...` : 'Waiting...'}
                   </p>
                 )}
