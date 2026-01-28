@@ -22,10 +22,11 @@ interface ScriptImportProps {
   onImportParsed?: (name: string, parsed: ParsedScript) => void;
   isLoading?: boolean;
   error?: string | null;
+  onClearError?: () => void;
   initialScript?: string;
 }
 
-export function ScriptImport({ onImport, onImportParsed, isLoading, error, initialScript = "" }: ScriptImportProps) {
+export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "" }: ScriptImportProps) {
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
@@ -44,6 +45,17 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
     const timer = setTimeout(() => setShowTip(true), 800);
     return () => clearTimeout(timer);
   }, []);
+
+  // Clear errors when script changes (user is editing)
+  useEffect(() => {
+    if (script && error && onClearError) {
+      onClearError();
+    }
+    // Also clear local file errors
+    if (script && fileError) {
+      setFileError(null);
+    }
+  }, [script]);
 
   const generateRandomScript = async () => {
     setIsGenerating(true);

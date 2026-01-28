@@ -15,6 +15,7 @@ interface SessionContextType {
   setUserRole: (roleId: string) => void;
   updateSession: (updates: UpdateSession) => void;
   clearSession: () => void;
+  clearError: () => void;
   advanceLine: () => void;
   previousLine: () => void;
   jumpToScene: (sceneIndex: number) => void;
@@ -164,6 +165,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
   const advanceLine = useCallback(() => {
     setSession(prev => {
       if (!prev) return null;
@@ -259,6 +264,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       setUserRole,
       updateSession,
       clearSession,
+      clearError,
       advanceLine,
       previousLine,
       jumpToScene,

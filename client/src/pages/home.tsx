@@ -12,7 +12,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ onSessionReady }: HomePageProps) {
-  const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error } = useSessionContext();
+  const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const [step, setStep] = useState<Step>(() => {
     // Start at import - context will have the session if it exists
     return "import";
@@ -89,6 +89,7 @@ export function HomePage({ onSessionReady }: HomePageProps) {
             onImportParsed={handleImportParsed}
             isLoading={isLoading} 
             error={error}
+            onClearError={clearError}
             initialScript={session?.scenes.map(s => 
               s.lines.map(l => `${l.roleName}: ${l.direction ? `[${l.direction}] ` : ''}${l.text}`).join('\n')
             ).join('\n\n') || ''}
