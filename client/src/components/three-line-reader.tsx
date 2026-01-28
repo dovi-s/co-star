@@ -88,6 +88,7 @@ interface ThreeLineReaderProps {
   currentScene?: Scene;
   isFirstLineOfScene?: boolean;
   onRestartListening?: () => void;
+  cameraMode?: boolean;
 }
 
 function maskText(text: string, mode: MemorizationMode): { display: string; hint?: string } {
@@ -142,6 +143,7 @@ export function ThreeLineReader({
   currentScene,
   isFirstLineOfScene = false,
   onRestartListening,
+  cameraMode = false,
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
@@ -190,8 +192,10 @@ export function ThreeLineReader({
           "relative py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer",
           type === "previous" && "opacity-30 scale-[0.98]",
           type === "next" && "opacity-35 scale-[0.98]",
-          isCurrent && isUser && "bg-foreground text-background",
-          isCurrent && !isUser && "bg-card border border-border/60"
+          isCurrent && isUser && !cameraMode && "bg-foreground text-background",
+          isCurrent && isUser && cameraMode && "bg-black/70 backdrop-blur-xl text-white border border-white/20",
+          isCurrent && !isUser && !cameraMode && "bg-card border border-border/60",
+          isCurrent && !isUser && cameraMode && "bg-black/60 backdrop-blur-xl text-white border border-white/15"
         )}
         data-testid={`line-${type}`}
       >
@@ -200,15 +204,16 @@ export function ThreeLineReader({
             <div
               className={cn(
                 "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center",
-                isUser 
-                  ? "bg-background/20" 
-                  : "bg-muted/60"
+                isUser && !cameraMode && "bg-background/20",
+                isUser && cameraMode && "bg-white/20",
+                !isUser && !cameraMode && "bg-muted/60",
+                !isUser && cameraMode && "bg-white/10"
               )}
             >
               {isUser ? (
-                <Mic className={cn("h-4 w-4", isUser ? "text-background" : "text-foreground")} />
+                <Mic className={cn("h-4 w-4", cameraMode ? "text-white" : isUser ? "text-background" : "text-foreground")} />
               ) : (
-                <Volume2 className="h-4 w-4 text-muted-foreground" />
+                <Volume2 className={cn("h-4 w-4", cameraMode ? "text-white/70" : "text-muted-foreground")} />
               )}
             </div>
           )}
@@ -218,22 +223,30 @@ export function ThreeLineReader({
               <span
                 className={cn(
                   "font-medium text-xs uppercase tracking-wide",
-                  isCurrent && isUser && "text-background/80",
-                  isCurrent && !isUser && "text-muted-foreground",
+                  isCurrent && isUser && !cameraMode && "text-background/80",
+                  isCurrent && isUser && cameraMode && "text-white/80",
+                  isCurrent && !isUser && !cameraMode && "text-muted-foreground",
+                  isCurrent && !isUser && cameraMode && "text-white/70",
                   !isCurrent && "text-muted-foreground/50"
                 )}
               >
                 {line.roleName}
               </span>
               {isUser && isCurrent && (
-                <span className="px-1.5 py-0.5 rounded text-[9px] font-medium bg-background/20 text-background/90">
+                <span className={cn(
+                  "px-1.5 py-0.5 rounded text-[9px] font-medium",
+                  cameraMode ? "bg-white/20 text-white/90" : "bg-background/20 text-background/90"
+                )}>
                   You
                 </span>
               )}
               {showDirections && line.direction && (
                 <span className={cn(
                   "text-[10px] italic px-1.5 py-0.5 rounded",
-                  isCurrent && isUser ? "bg-background/10 text-background/70" : "bg-muted/50 text-muted-foreground/70"
+                  isCurrent && isUser && !cameraMode && "bg-background/10 text-background/70",
+                  isCurrent && isUser && cameraMode && "bg-white/10 text-white/70",
+                  isCurrent && !isUser && !cameraMode && "bg-muted/50 text-muted-foreground/70",
+                  isCurrent && !isUser && cameraMode && "bg-white/10 text-white/60"
                 )}>
                   {line.direction}
                 </span>
@@ -244,9 +257,12 @@ export function ThreeLineReader({
               className={cn(
                 fontSizeClass,
                 "leading-[1.8] transition-all duration-300",
-                isCurrent && isUser && "text-background",
-                isCurrent && !isUser && "text-foreground",
-                !isCurrent && "text-muted-foreground",
+                isCurrent && isUser && !cameraMode && "text-background",
+                isCurrent && isUser && cameraMode && "text-white",
+                isCurrent && !isUser && !cameraMode && "text-foreground",
+                isCurrent && !isUser && cameraMode && "text-white",
+                !isCurrent && !cameraMode && "text-muted-foreground",
+                !isCurrent && cameraMode && "text-white/50",
                 shouldMask && !showHint && "italic opacity-70",
                 isCurrent && "max-h-[45vh] overflow-y-auto pr-1"
               )}

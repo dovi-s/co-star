@@ -3,14 +3,17 @@ import { Header } from "@/components/header";
 import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
-import { MemorizationToggle } from "@/components/memorization-toggle";
+import { PracticeToolbar } from "@/components/practice-toolbar";
+import { VideoBackground } from "@/components/video-background";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
+import { useCamera } from "@/hooks/use-camera";
+import { useToast } from "@/hooks/use-toast";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import { matchWords } from "@/lib/word-matcher";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -62,6 +65,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   } = useSession();
 
   const { stats, recordRehearsal } = useUserStats();
+  const camera = useCamera();
+  const { toast } = useToast();
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -108,6 +113,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   useEffect(() => {
     isPlayingRef.current = session?.isPlaying ?? false;
   }, [session?.isPlaying]);
+
+  useEffect(() => {
+    if (camera.error) {
+      toast({
+        title: "Camera Issue",
+        description: camera.error,
+        variant: "destructive",
+      });
+    }
+  }, [camera.error, toast]);
 
   useEffect(() => {
     speechRecognition.onStateChange((state) => {
@@ -924,7 +939,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const showUserTurnIndicator = currentIsUserLine && session.isPlaying;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background" data-testid="rehearsal-page">
+    <div className={cn(
+      "min-h-screen flex flex-col",
+      camera.isEnabled ? "bg-transparent" : "bg-background"
+    )} data-testid="rehearsal-page">
+      {camera.isEnabled && (
+        <VideoBackground
+          stream={camera.stream}
+          videoRef={camera.videoRef}
+          canvasRef={camera.canvasRef}
+          isRecording={camera.isRecording}
+        />
+      )}
+      
       <Header
         sessionName={session.name}
         userRole={userRole ?? null}
@@ -940,6 +967,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onFontSizeChange={setFontSize}
         onToggleDirections={() => setShowDirections(!showDirections)}
         onJumpToLine={handleJumpToLine}
+        cameraMode={camera.isEnabled}
       />
 
       {showCelebration && (() => {
@@ -1052,7 +1080,20 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 </div>
               )}
               
-              {/* Single primary action */}
+              {/* Download recording if available */}
+              {camera.hasRecording && (
+                <Button
+                  variant="outline"
+                  className="w-full mb-2"
+                  onClick={() => camera.downloadRecording(`castmate-${session.name || 'rehearsal'}`)}
+                  data-testid="button-download-recording"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Recording
+                </Button>
+              )}
+              
+              {/* Primary action */}
               <Button
                 className="w-full"
                 onClick={handleTryAgain}
@@ -1075,9 +1116,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         );
       })()}
 
-      <main className="flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative">
-        {/* Subtle gradient accent at top */}
-        <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
+      <main className={cn(
+        "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10",
+        camera.isEnabled && "text-white"
+      )}>
+        {/* Subtle gradient accent at top - hide when camera is on */}
+        {!camera.isEnabled && (
+          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
+        )}
         <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full relative">
           <ThreeLineReader
             previousLine={previousLine}
@@ -1096,6 +1142,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             speakingWordIndex={speakingWordIndex}
             currentScene={currentScene}
             isFirstLineOfScene={session.currentLineIndex === 0}
+            cameraMode={camera.isEnabled}
             onRestartListening={() => {
               if (!speechRecognition.listening && waitingForUserRef.current) {
                 speechRecognition.start();
@@ -1160,11 +1207,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         </div>
       )}
 
-      <footer className="sticky bottom-0 glass border-t safe-bottom z-40">
+      <footer className={cn(
+        "sticky bottom-0 border-t safe-bottom z-40",
+        camera.isEnabled 
+          ? "bg-black/60 backdrop-blur-xl border-white/10" 
+          : "glass"
+      )}>
         <div className="px-4 py-2">
-          <MemorizationToggle 
-            mode={session.memorizationMode || "off"}
-            onChange={handleMemorizationChange}
+          <PracticeToolbar
+            memorizationMode={session.memorizationMode || "off"}
+            onMemorizationChange={handleMemorizationChange}
+            cameraEnabled={camera.isEnabled}
+            onCameraToggle={camera.toggleCamera}
+            isRecording={camera.isRecording}
+            onRecordToggle={camera.toggleRecording}
+            recordingTime={camera.recordingTime}
           />
         </div>
         

@@ -20,6 +20,7 @@ interface HeaderProps {
   onFontSizeChange?: (size: number) => void;
   onToggleDirections?: () => void;
   onJumpToLine?: (lineIndex: number) => void;
+  cameraMode?: boolean;
 }
 
 export function Header({
@@ -34,9 +35,14 @@ export function Header({
   onFontSizeChange,
   onToggleDirections,
   onJumpToLine,
+  cameraMode = false,
 }: HeaderProps) {
   return (
-    <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50 safe-top">
+    <header className={`flex items-center justify-between gap-3 px-4 py-3 border-b sticky top-0 z-50 safe-top ${
+      cameraMode 
+        ? "bg-black/60 backdrop-blur-xl border-white/10" 
+        : "border-border/40 bg-background/95 backdrop-blur-sm"
+    }`}>
       <div className="flex items-center gap-3 min-w-0">
         {onBack && (
           <Button
@@ -46,7 +52,7 @@ export function Header({
             onClick={() => {
               onBack();
             }}
-            className="shrink-0 -ml-1 icon-btn-press"
+            className={`shrink-0 -ml-1 icon-btn-press ${cameraMode ? "text-white hover:bg-white/10" : ""}`}
             data-testid="button-back-home"
           >
             <ChevronLeft className="h-5 w-5" />
@@ -54,7 +60,7 @@ export function Header({
         )}
         
         <div className="min-w-0">
-          <h1 className="font-medium text-sm truncate text-foreground" data-testid="text-session-name">
+          <h1 className={`font-medium text-sm truncate ${cameraMode ? "text-white" : "text-foreground"}`} data-testid="text-session-name">
             {sessionName}
           </h1>
         </div>
