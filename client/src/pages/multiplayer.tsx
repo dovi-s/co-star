@@ -10,6 +10,7 @@ import { MultiplayerVideoBackground } from '@/components/multiplayer-video-backg
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
+import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -217,6 +218,159 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       ttsEngine.stop();
       if (aiSpeakTimeoutRef.current) {
         clearTimeout(aiSpeakTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const [listeningState, setListeningState] = useState<SpeechRecognitionState>("idle");
+  const waitingForUserRef = useRef(false);
+  const userTurnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [micBlocked, setMicBlocked] = useState(false);
+  const isActivelyRehearsalRef = useRef(false);
+  const multiplayerRef = useRef(multiplayer);
+
+  useEffect(() => {
+    isActivelyRehearsalRef.current = isActivelyRehearing;
+  }, [isActivelyRehearing]);
+
+  useEffect(() => {
+    multiplayerRef.current = multiplayer;
+  }, [multiplayer]);
+
+  useEffect(() => {
+    if (isAiSpeaking) {
+      waitingForUserRef.current = false;
+      speechRecognition.abort();
+      if (userTurnTimeoutRef.current) {
+        clearTimeout(userTurnTimeoutRef.current);
+        userTurnTimeoutRef.current = null;
+      }
+    }
+  }, [isAiSpeaking]);
+
+  const startListeningForUser = useCallback(() => {
+    if (isAiSpeaking) {
+      console.log("[Multiplayer] Cannot start listening while AI is speaking");
+      return;
+    }
+    
+    console.log("[Multiplayer] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
+    
+    waitingForUserRef.current = true;
+
+    if (speechRecognition.available && !micBlocked) {
+      setTimeout(() => {
+        if (waitingForUserRef.current && !isAiSpeaking) {
+          const started = speechRecognition.start();
+          if (!started) {
+            console.log("[Multiplayer] Speech recognition failed to start");
+          }
+        }
+      }, 200);
+    }
+
+    if (userTurnTimeoutRef.current) {
+      clearTimeout(userTurnTimeoutRef.current);
+    }
+    userTurnTimeoutRef.current = setTimeout(() => {
+      if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        console.log("[Multiplayer] User turn timeout, auto-advancing");
+        waitingForUserRef.current = false;
+        speechRecognition.abort();
+        multiplayerRef.current.nextLine();
+      }
+    }, 20000);
+  }, [micBlocked, isAiSpeaking]);
+
+  useEffect(() => {
+    const handleResult = (result: { transcript: string; isFinal: boolean }) => {
+      if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        console.log("[Multiplayer] User spoke:", result.transcript.substring(0, 30));
+        waitingForUserRef.current = false;
+        if (userTurnTimeoutRef.current) {
+          clearTimeout(userTurnTimeoutRef.current);
+          userTurnTimeoutRef.current = null;
+        }
+        speechRecognition.stop();
+        
+        setTimeout(() => {
+          multiplayerRef.current.nextLine();
+        }, 300);
+      }
+    };
+
+    const handleStateChange = (state: SpeechRecognitionState) => {
+      setListeningState(state);
+    };
+
+    const handleEnd = () => {
+      if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        console.log("[Multiplayer] Speech ended but still user's turn, auto-restarting...");
+        setTimeout(() => {
+          if (waitingForUserRef.current && !speechRecognition.listening) {
+            speechRecognition.start();
+          }
+        }, 300);
+      }
+    };
+
+    const handleError = (error: string) => {
+      console.log("[Multiplayer] Speech error:", error);
+      if (error === "not-allowed") {
+        setMicBlocked(true);
+      }
+    };
+
+    speechRecognition.onResult(handleResult);
+    speechRecognition.onStateChange(handleStateChange);
+    speechRecognition.onEnd(handleEnd);
+    speechRecognition.onError(handleError);
+
+    return () => {
+      speechRecognition.onResult(() => {});
+      speechRecognition.onStateChange(() => {});
+      speechRecognition.onEnd(() => {});
+      speechRecognition.onError(() => {});
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isActivelyRehearing || !multiplayer.room) {
+      waitingForUserRef.current = false;
+      speechRecognition.abort();
+      if (userTurnTimeoutRef.current) {
+        clearTimeout(userTurnTimeoutRef.current);
+        userTurnTimeoutRef.current = null;
+      }
+      return;
+    }
+
+    const room = multiplayer.room;
+    const currentScene = room.scenes[room.currentSceneIndex];
+    const currentLine = currentScene?.lines[room.currentLineIndex];
+    
+    if (!currentLine) return;
+    
+    const assignedParticipant = room.participants.find(p => p.roleId === currentLine.roleId);
+    const isMyTurn = assignedParticipant?.id === multiplayer.participantId;
+    
+    if (isMyTurn && !isAiSpeaking) {
+      startListeningForUser();
+    } else {
+      waitingForUserRef.current = false;
+      speechRecognition.abort();
+      if (userTurnTimeoutRef.current) {
+        clearTimeout(userTurnTimeoutRef.current);
+        userTurnTimeoutRef.current = null;
+      }
+    }
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.participantId, isAiSpeaking, startListeningForUser]);
+
+  useEffect(() => {
+    return () => {
+      speechRecognition.abort();
+      if (userTurnTimeoutRef.current) {
+        clearTimeout(userTurnTimeoutRef.current);
       }
     };
   }, []);
