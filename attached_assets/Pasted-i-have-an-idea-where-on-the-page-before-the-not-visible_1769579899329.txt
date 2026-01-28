@@ -1,0 +1,1376 @@
+i have an idea where on the page before the not visible to you when im selecting who i am reading is, i toggle video on, which basically turns the camera on so user can record themself same time. the way im thinking is, on this page, the full thing maybe is like an opaque you think facetime like the whole page is your face or whatever being recorded and then the script and all that same exact as we have it just an overlay. you get me?
+Thought for 8s
+
+Yes. Do it as a single “Video Rehearsal” mode that turns the entire page into a live camera feed with the reader UI overlaid. You read while the app records you, hands-free.
+
+Below is a working browser prototype (one file). It:
+
+Fills the page with your camera, FaceTime-style.
+
+Overlays the three-line reader and transport.
+
+Records a composite of camera + overlay to a single WebM file.
+
+Records your mic (so coaches hear you).
+Note: standard browsers cannot reliably capture Web Speech (TTS) audio into the same recording. In native apps we’ll mix partner audio; on the web you get your voice + video + overlay. Everything else behaves the same.
+
+Copy-paste as video-rehearsal.html and open in Chrome (desktop or Android). iOS Safari works for live mode; recording requires user gesture permissions.
+
+video-rehearsal.html
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CastMate Studio — Video Rehearsal Mode</title>
+<style>
+  :root{
+    --ink:#0F172A; --paper:#F7F4EE; --panel:#FFFFFF;
+    --brand:#1A73E8; --accent:#B08763;
+    --line:#E9E2D5; --ink-dark:#E6EDF3; --paper-dark:#0E1218; --panel-dark:#0F1624; --line-dark:#1E2635;
+  }
+  html,body{height:100%;margin:0;background:var(--paper);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+  /* Full-bleed camera layer (drawn into a canvas we record) */
+  #stageWrap{position:fixed;inset:0;overflow:hidden;background:#000;}
+  #stageCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  /* Overlay UI (also painted into canvas each frame for baked-in recording) */
+  .overlay{position:absolute;inset:0;pointer-events:none;}
+  header, .controls, .chipbar {pointer-events:auto;} /* allow taps */
+  header{
+    position:absolute; left:16px; right:16px; top:12px;
+    display:flex; align-items:center; gap:8px; justify-content:space-between;
+    color:#fff;
+  }
+  .title{display:flex;align-items:center;gap:8px;}
+  .role{background:#111a; color:#fff; border:1px solid #fff2; padding:4px 10px; border-radius:999px; font-weight:600; font-size:12px; letter-spacing:.2px;}
+  .badge{background:#1a73e880; color:#fff; border:1px solid #ffffff22; padding:4px 8px; border-radius:999px; font-size:12px;}
+  .ghostbtn{background:#111a; border:1px solid #ffffff22; color:#fff; padding:8px 10px; border-radius:12px; font-size:14px;}
+  /* Reader card */
+  .reader{
+    position:absolute; left:16px; right:16px; bottom:160px;
+    background:#0B1222cc; border:1px solid #ffffff25; border-radius:16px; color:#fff;
+    box-shadow:0 8px 24px #0008; padding:16px 18px; backdrop-filter: blur(8px);
+  }
+  .line-prev{opacity:.45; font-size:16px}
+  .line-active{font-size:22px; line-height:1.35; font-weight:700; margin:8px 0}
+  .line-next{opacity:.6; font-size:16px}
+  .tags{display:flex; gap:8px; margin-bottom:8px; align-items:center}
+  .tag{background:#15213bcc; border:1px solid #ffffff20; padding:4px 8px; border-radius:10px; font-size:12px}
+  .bookmark{margin-left:auto; opacity:.8; cursor:pointer}
+  /* Transport */
+  .controls{
+    position:absolute; left:0; right:0; bottom:28px; display:flex; flex-direction:column; align-items:center; gap:14px;
+  }
+  .btnrow{display:flex; gap:16px; align-items:center; justify-content:center}
+  .pill{display:inline-flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--line); color:var(--ink);
+        padding:10px 14px; border-radius:999px; font-weight:600; cursor:pointer; user-select:none}
+  .pill:disabled{opacity:.5; cursor:not-allowed}
+  .primary{background:var(--brand); color:#fff; border-color:transparent; box-shadow:0 6px 16px rgba(26,115,232,.35)}
+  .danger{background:#DC2626; color:#fff; border-color:transparent}
+  .tiny{font-size:12px; color:#fffB}
+  .meter{height:6px; width:min(520px,80vw); background:#ffffff40; border-radius:999px; overflow:hidden}
+  .meter > span{display:block; height:100%; background:#59A4FF; width:0%}
+  /* Top-left camera / mic status chips */
+  .chipbar{position:absolute; left:16px; bottom:calc(160px + 118px); display:flex; gap:8px;}
+  .chip{background:#111a; color:#fff; border:1px solid #ffffff22; padding:6px 10px; border-radius:999px; font-size:12px}
+  /* Hidden elements */
+  #camVideo{display:none}
+  /* Responsive tweaks */
+  @media (max-width:480px){
+    .reader{bottom:152px}
+    .line-active{font-size:20px}
+  }
+</style>
+</head>
+<body>
+<div id="stageWrap">
+  <!-- Camera is drawn into canvas; we record the canvas stream -->
+  <video id="camVideo" playsinline muted></video>
+  <canvas id="stageCanvas"></canvas>
+
+  <!-- Overlay (interactive) -->
+  <div class="overlay" aria-hidden="false">
+    <header>
+      <div class="title">
+        <button class="ghostbtn" id="toggleVideo">Video On</button>
+        <span class="role" id="roleChip">You • FRANK</span>
+        <span class="badge">Smart Cast</span>
+      </div>
+      <div class="title">
+        <button class="ghostbtn" id="swapCam">Flip</button>
+        <button class="ghostbtn" id="toggleDark">Theme</button>
+      </div>
+    </header>
+
+    <div class="chipbar">
+      <span class="chip" id="camChip">Camera • off</span>
+      <span class="chip" id="micChip">Mic • off</span>
+      <span class="chip" id="recChip">Not recording</span>
+    </div>
+
+    <section class="reader" id="reader">
+      <div class="tags">
+        <span class="tag">FRANK</span>
+        <span class="tag">You</span>
+        <span class="tag" id="moodTag">bitter</span>
+        <svg class="bookmark" id="bookmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M5 3h14a2 2 0 0 1 2 2v16l-9-5-9 5V5a2 2 0 0 1 2-2z"/></svg>
+      </div>
+      <div class="line-prev" id="prevLine">LINDA (weakly): No… no, Frank.</div>
+      <div class="line-active" id="activeLine">FRANK: Why’d you even come here? To gloat?</div>
+      <div class="line-next" id="nextLine">LINDA: I came to— to fix it.</div>
+    </section>
+
+    <div class="controls">
+      <div class="btnrow">
+        <button class="pill" id="rewind">⟲</button>
+        <button class="pill primary" id="playPause">▶ Start</button>
+        <button class="pill" id="next">›</button>
+      </div>
+      <div class="btnrow">
+        <button class="pill" id="recordBtn">● Record</button>
+        <button class="pill" id="stopBtn" disabled>■ Stop</button>
+        <button class="pill" id="downloadBtn" disabled>⬇ Download</button>
+      </div>
+      <div class="meter" aria-label="progress"><span id="progress"></span></div>
+      <div class="tiny">Space = Start/Pause • ← → = Back/Next</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Script state (toy demo) ---------- */
+const script = [
+  {who:"FRANK", text:"Why’d you even come here? To gloat?", mood:"bitter"},
+  {who:"LINDA", text:"No… no, Frank. I came to— to fix it.", mood:"weakly"},
+  {who:"FRANK", text:"Fix what you broke.", mood:"cold"},
+  {who:"LINDA", text:"Both of us. If you’ll let me.", mood:"soft"},
+  {who:"FRANK", text:"Say it like you mean it.", mood:"sharp"},
+  {who:"LINDA", text:"I mean it.", mood:"firm"}
+];
+let idx = 0, playing = false;
+
+/* ---------- Camera + canvas compositor ---------- */
+const videoEl = document.getElementById('camVideo');
+const canvas = document.getElementById('stageCanvas');
+const ctx = canvas.getContext('2d', {alpha:false});
+let camStream = null, useFront = true;
+
+async function startCamera(){
+  try{
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: {facingMode: useFront ? "user" : "environment"},
+      audio: true
+    });
+    videoEl.srcObject = camStream;
+    await videoEl.play();
+    document.getElementById('camChip').textContent = "Camera • on";
+    document.getElementById('micChip').textContent = "Mic • on";
+    drawLoop();
+  }catch(e){
+    alert("Camera/Mic permission denied.");
+  }
+}
+function stopCamera(){
+  camStream?.getTracks().forEach(t=>t.stop());
+  camStream = null;
+  document.getElementById('camChip').textContent = "Camera • off";
+  document.getElementById('micChip').textContent = "Mic • off";
+}
+function resizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const {clientWidth:w, clientHeight:h} = document.getElementById('stageWrap');
+  canvas.width = Math.floor(w*dpr); canvas.height = Math.floor(h*dpr);
+  canvas.style.width = w+"px"; canvas.style.height = h+"px";
+}
+window.addEventListener('resize', resizeCanvas); resizeCanvas();
+
+function drawLoop(){
+  if(!videoEl.videoWidth){ requestAnimationFrame(drawLoop); return; }
+  // fill canvas with camera, cover mode
+  const cw = canvas.width, ch = canvas.height;
+  const vw = videoEl.videoWidth, vh = videoEl.videoHeight;
+  const scale = Math.max(cw/vw, ch/vh);
+  const dw = vw*scale, dh = vh*scale;
+  const dx = (cw - dw)/2, dy = (ch - dh)/2;
+  ctx.drawImage(videoEl, dx, dy, dw, dh);
+  // subtle vignette
+  const grd = ctx.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)/3, cw/2,ch/2, Math.max(cw,ch)/1.05);
+  grd.addColorStop(0, "rgba(0,0,0,0)"); grd.addColorStop(1, "rgba(0,0,0,.35)");
+  ctx.fillStyle = grd; ctx.fillRect(0,0,cw,ch);
+  // draw overlay text (active line baked into recording)
+  drawOverlayIntoCanvas();
+  requestAnimationFrame(drawLoop);
+}
+
+function drawOverlayIntoCanvas(){
+  const pad = 24, w = canvas.width, h = canvas.height;
+  const cardW = Math.min(w - pad*2, w*0.92);
+  const cardH = 150 * Math.min(window.devicePixelRatio||1,2);
+  const y = h - cardH - 220;
+  // Card
+  roundRect(ctx, (w-cardW)/2, y, cardW, cardH, 16, "#0B1222cc");
+  ctx.strokeStyle = "rgba(255,255,255,.15)"; ctx.lineWidth = 1; ctx.stroke();
+  // Active line text
+  ctx.fillStyle = "#fff";
+  ctx.font = "700 " + (22*(window.devicePixelRatio||1)) + "px Inter, system-ui, sans-serif";
+  wrapText(ctx, script[idx].who + ": " + script[idx].text, (w-cardW)/2+18, y+44, cardW-36, 30);
+}
+
+function roundRect(ctx,x,y,w,h,r,fill){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+}
+function wrapText(ctx, text, x, y, maxWidth, lineHeight){
+  const words = text.split(' '); let line = '';
+  for (let n=0; n<words.length; n++){
+    const test = line + words[n] + ' ';
+    const w = ctx.measureText(test).width;
+    if (w > maxWidth && n>0){ ctx.fillText(line, x, y); line = words[n] + ' '; y += lineHeight; }
+    else line = test;
+  }
+  ctx.fillText(line, x, y);
+}
+
+/* ---------- Reader DOM overlay (for live reading) ---------- */
+const prevEl = document.getElementById('prevLine');
+const activeEl = document.getElementById('activeLine');
+const nextEl = document.getElementById('nextLine');
+const moodTag = document.getElementById('moodTag');
+function render(){
+  const prev = script[idx-1]?.text ? `${script[idx-1].who} (${script[idx-1].mood}): ${script[idx-1].text}` : " ";
+  const cur  = `${script[idx].who}: ${script[idx].text}`;
+  const next = script[idx+1]?.text ? `${script[idx+1].who}: ${script[idx+1].text}` : " ";
+  prevEl.textContent = prev; activeEl.textContent = cur; nextEl.textContent = next;
+  moodTag.textContent = script[idx].mood || "natural";
+  document.getElementById('progress').style.width = `${(idx+1)/script.length*100}%`;
+}
+render();
+
+/* ---------- Transport ---------- */
+const playBtn = document.getElementById('playPause');
+let ttsBusy = false;
+function speakPartnerIfNeeded(){
+  // Simple demo: speak when current line is NOT "You" (LINDA)
+  // Replace with full turn-taking and SSML planner.
+  const line = script[idx];
+  const isYou = (line.who === "FRANK"); // demo: you are FRANK
+  if(!isYou){
+    const u = new SpeechSynthesisUtterance(line.text);
+    u.rate = 1.0; u.pitch = 1.0;
+    u.onstart = ()=> ttsBusy = true;
+    u.onend = ()=> { ttsBusy=false; nextLine(); };
+    speechSynthesis.speak(u);
+  }
+}
+function nextLine(){
+  idx = Math.min(idx+1, script.length-1);
+  render();
+}
+function prevLine(){
+  idx = Math.max(idx-1, 0);
+  render();
+}
+
+document.getElementById('next').onclick = ()=>{ nextLine(); };
+document.getElementById('rewind').onclick = ()=>{ idx=0; render(); };
+playBtn.onclick = ()=>{
+  playing = !playing;
+  playBtn.textContent = playing ? "❚❚ Pause" : "▶ Start";
+  if(playing) speakPartnerIfNeeded();
+  else speechSynthesis.cancel();
+};
+window.addEventListener('keydown', (e)=>{
+  if(e.code==="Space"){ e.preventDefault(); playBtn.click(); }
+  if(e.code==="ArrowRight") document.getElementById('next').click();
+  if(e.code==="ArrowLeft") prevLine();
+});
+
+/* ---------- Video On/Off, Flip, Theme ---------- */
+const toggleVideo = document.getElementById('toggleVideo');
+toggleVideo.onclick = async ()=>{
+  if(camStream){ stopCamera(); toggleVideo.textContent="Video Off"; }
+  else { await startCamera(); toggleVideo.textContent="Video On"; }
+};
+document.getElementById('swapCam').onclick = async ()=>{
+  useFront = !useFront; if(camStream){ stopCamera(); await startCamera(); }
+};
+document.getElementById('toggleDark').onclick = ()=>{
+  document.body.classList.toggle('dark');
+  if(document.body.classList.contains('dark')){
+    document.body.style.background = "var(--paper-dark)";
+  }else{
+    document.body.style.background = "var(--paper)";
+  }
+};
+
+/* ---------- Recording (canvas + mic mixed) ---------- */
+let recorder, recordedBlobs=[], mixedStream=null, micSource=null, dest=null;
+async function startRecording(){
+  if(!camStream) await startCamera();
+  // 1) Canvas stream (video with overlay baked in)
+  const canvasStream = canvas.captureStream(30);
+  // 2) Mic stream (from getUserMedia)
+  const mic = camStream.getAudioTracks().length ? new MediaStream([camStream.getAudioTracks()[0]]) : null;
+
+  // 3) Combine video + mic into one MediaStream
+  mixedStream = new MediaStream();
+  canvasStream.getVideoTracks().forEach(t=>mixedStream.addTrack(t));
+  if(mic) mic.getAudioTracks().forEach(t=>mixedStream.addTrack(t));
+
+  recordedBlobs = [];
+  recorder = new MediaRecorder(mixedStream, {mimeType:'video/webm;codecs=vp9,opus'});
+  recorder.ondataavailable = e=>{ if(e.data && e.data.size) recordedBlobs.push(e.data); };
+  recorder.onstop = ()=>{
+    const blob = new Blob(recordedBlobs, {type:'video/webm'});
+    const url = URL.createObjectURL(blob);
+    dlBtn.disabled=false; dlBtn.href = url; dlBtn.download = `castmate-rehearsal-${Date.now()}.webm`;
+    document.getElementById('recChip').textContent = "Stopped";
+  };
+  recorder.start(1000);
+  document.getElementById('recChip').textContent = "Recording…";
+}
+function stopRecording(){
+  recorder?.stop();
+  mixedStream?.getTracks().forEach(t=>t.stop());
+}
+
+const recBtn = document.getElementById('recordBtn');
+const stopBtn = document.getElementById('stopBtn');
+const dlBtn  = document.getElementById('downloadBtn');
+
+recBtn.onclick = async ()=>{ recBtn.disabled=true; stopBtn.disabled=false; await startRecording(); };
+stopBtn.onclick = ()=>{ stopBtn.disabled=true; recBtn.disabled=false; stopRecording(); };
+dlBtn.onclick = ()=>{}; // anchor download
+
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Lazy; user must click to start camera for permissions.
+  document.getElementById('toggleVideo').click();
+});
+</script>
+</body>
+</html>
+
+Notes and next steps
+
+Browser limitation: mixing system TTS into the recording is unreliable. In native apps we’ll mix partner audio with your mic in the same file.
+
+For production, the overlay text should be rendered via the same prosody planner used for speaking (so what you see equals what you hear).
+
+Add a “Safe Mode” rule: if motion/Bluetooth car is detected, hide video controls and go audio-only; keep the same transport.
+
+Add a small “Preview frame” guide (framing grid, mic meter) before recording begins; this file already includes a progress meter and status chips.
+
+This achieves the FaceTime-style “full video with reader overlay while recording” you described, with minimal controls and the same Start/Pause/Next loop.
+
+i like this a lot its crazy good actually but its not beutiful and sleek and incredible and i think it looks ai and not humsn and the script should be the samwe had it like voerlay, rn you have it just at hte bottom  it seems. you get me? 
+
+Understood. Here’s a refined, FaceTime-style full-screen camera with a centered three-line overlay (prev/active/next) and a sleeker, human UI. It records a composite of camera + overlay + your mic into one WebM. Motion is subtle, typography balanced, and nothing feels “AI-y.”
+
+Save as castmate-video-rehearsal.html and open in Chrome (desktop/Android). iOS Safari supports live mode; recording depends on user gestures.
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CastMate Studio — Video Rehearsal</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+/* --------- Tokens --------- */
+:root{
+  --ink:#0F172A; --paper:#0B0F16; --line:#1E2635;
+  --brand:#1A73E8; --brand-2:#59A4FF; --accent:#B08763;
+  --card:#0B1222cc; --cardStroke:#ffffff25;
+  --glass:#0D1324b3; --chip:#11161Fcc;
+  --ok:#10B981; --warn:#EAB308; --danger:#DC2626;
+  --shadow: 0 10px 30px rgba(0,0,0,.35);
+  --radius: 16px;
+  --t: 120ms cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--paper);color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;}
+button{font-family:inherit}
+/* --------- Stage (camera into canvas) --------- */
+#stage{position:fixed;inset:0;overflow:hidden;background:#000}
+#cam{display:none}
+#canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vignette::after{
+  content:"";position:absolute;inset:-5%;
+  background:radial-gradient(60% 60% at 50% 50%, rgba(0,0,0,0) 0%, rgba(0,0,0,.36) 100%);
+  pointer-events:none;
+}
+/* --------- Header --------- */
+header{
+  position:absolute;left:20px;right:20px;top:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;pointer-events:none;
+}
+.h-left,.h-right{display:flex;align-items:center;gap:10px}
+.badge, .role{
+  pointer-events:auto;
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--chip); border:1px solid #ffffff20;color:#fff;
+  padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.2px;
+}
+.badge--brand{background:#1a73e878;border-color:#2b86ff2e}
+.ghost{
+  pointer-events:auto; background:var(--chip); border:1px solid #ffffff20;
+  color:#fff;padding:8px 12px;border-radius:12px;font-weight:600;transition:transform var(--t),opacity var(--t);
+}
+.ghost:active{transform:scale(.98);opacity:.8}
+/* --------- Center Reader Overlay --------- */
+#reader{
+  position:absolute;inset:auto 20px 0 20px;top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:14px;pointer-events:none;
+}
+.card{
+  width:min(840px,92vw);
+  background:var(--card);border:1px solid var(--cardStroke);border-radius:var(--radius);
+  box-shadow:var(--shadow);backdrop-filter:blur(10px);
+  padding:18px 22px;pointer-events:auto;
+}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tag{background:#15213bcc;border:1px solid #ffffff20;padding:4px 10px;border-radius:10px;font-size:12px;font-weight:600}
+.save{margin-left:auto;opacity:.9;cursor:pointer;transition:transform var(--t)}
+.save:active{transform:scale(.9)}
+/* Three-line stack */
+.prev{opacity:.55;font-size:16px;line-height:1.5}
+.active{font-size:28px;line-height:1.35;font-weight:800;margin:8px 0}
+.next{opacity:.70;font-size:16px;line-height:1.5}
+/* Dot timeline */
+.timeline{height:64px;display:flex;align-items:center;gap:10px}
+.dotWrap{display:flex;align-items:center;gap:10px}
+.dot{width:12px;height:12px;border-radius:999px;background:#ffffff30;border:1px solid #ffffff38}
+.dot.on{background:var(--brand-2);border-color:transparent;box-shadow:0 0 0 6px rgba(89,164,255,.12)}
+.count{margin-left:auto;font-weight:600;color:#c6d5ff}
+/* --------- Transport --------- */
+.controls{
+  position:absolute;left:0;right:0;bottom:28px;display:flex;flex-direction:column;align-items:center;gap:16px;pointer-events:none;
+}
+.btnrow{display:flex;gap:16px;align-items:center;justify-content:center}
+.pill{
+  pointer-events:auto;
+  display:inline-flex;align-items:center;gap:6px;padding:12px 16px;border-radius:999px;
+  font-weight:700;border:1px solid #ffffff20;background:#ffffff10;color:#fff;backdrop-filter:blur(6px);transition:transform var(--t),opacity var(--t),background var(--t)
+}
+.pill:active{transform:scale(.98);opacity:.85}
+.primary{background:var(--brand);border-color:transparent;box-shadow:0 8px 24px rgba(26,115,232,.35)}
+.danger{background:var(--danger);border-color:transparent}
+.meter{height:8px;width:min(620px,82vw);background:#ffffff24;border-radius:999px;overflow:hidden}
+.meter>span{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-2));width:0%}
+.hint{font-size:12px;color:#d6e2ff;opacity:.9}
+/* Status chips */
+.status{
+  position:absolute;left:20px;bottom:calc(28px + 120px);
+  display:flex;gap:8px;pointer-events:none
+}
+.chip{pointer-events:auto;background:var(--chip);border:1px solid #ffffff22;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+/* Responsive */
+@media (max-width:480px){
+  .active{font-size:24px}
+  .timeline{height:54px}
+}
+</style>
+</head>
+<body>
+<div id="stage" class="vignette">
+  <video id="cam" playsinline muted></video>
+  <canvas id="canvas"></canvas>
+
+  <header>
+    <div class="h-left">
+      <span class="role" id="roleChip">You • FRANK</span>
+      <span class="badge badge--brand">Smart Cast</span>
+    </div>
+    <div class="h-right">
+      <button class="ghost" id="toggleVideo">Video</button>
+      <button class="ghost" id="flip">Flip</button>
+      <button class="ghost" id="theme">Theme</button>
+    </div>
+  </header>
+
+  <!-- Centered three-line reader -->
+  <section id="reader" aria-live="polite">
+    <div class="card" aria-label="Reader">
+      <div class="row">
+        <span class="tag" id="tagWho">FRANK</span>
+        <span class="tag">You</span>
+        <span class="tag" id="tagMood">bitter</span>
+        <svg class="save" id="bookmark" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" aria-label="Bookmark"><path d="M5 3h14a2 2 0 0 1 2 2v16l-9-5-9 5V5a2 2 0 0 1 2-2z"/></svg>
+      </div>
+      <div class="prev" id="prevLine">LINDA (weakly): No… no, Frank.</div>
+      <div class="active" id="activeLine">FRANK: Why’d you even come here? To gloat?</div>
+      <div class="next" id="nextLine">LINDA: I came to— to fix it.</div>
+      <div class="timeline">
+        <div class="dotWrap" id="dots"></div>
+        <div class="count" id="count">1 of 6</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status -->
+  <div class="status">
+    <span class="chip" id="camChip">Camera • off</span>
+    <span class="chip" id="micChip">Mic • off</span>
+    <span class="chip" id="recChip">Not recording</span>
+  </div>
+
+  <!-- Transport -->
+  <div class="controls">
+    <div class="btnrow">
+      <button class="pill" id="prevBtn">‹</button>
+      <button class="pill primary" id="playPause">▶ Start</button>
+      <button class="pill" id="nextBtn">›</button>
+    </div>
+    <div class="btnrow">
+      <button class="pill" id="recBtn">● Record</button>
+      <button class="pill" id="stopBtn" disabled>■ Stop</button>
+      <a class="pill" id="dlBtn" download hidden>⬇ Download</a>
+    </div>
+    <div class="meter"><span id="progress"></span></div>
+    <div class="hint">Space = Start/Pause • ← → = Back/Next</div>
+  </div>
+</div>
+
+<script>
+/* ---------------- Demo script data ---------------- */
+const lines = [
+  {who:"FRANK", text:"Why’d you even come here? To gloat?", mood:"bitter"},
+  {who:"LINDA", text:"No… no, Frank. I came to— to fix it.", mood:"weakly"},
+  {who:"FRANK", text:"Fix what you broke.", mood:"cold"},
+  {who:"LINDA", text:"Both of us. If you’ll let me.", mood:"soft"},
+  {who:"FRANK", text:"Say it like you mean it.", mood:"sharp"},
+  {who:"LINDA", text:"I mean it.", mood:"firm"}
+];
+let i = 0;
+
+/* ---------------- DOM refs ---------------- */
+const prevEl = document.getElementById('prevLine');
+const activeEl = document.getElementById('activeLine');
+const nextEl = document.getElementById('nextLine');
+const tagWho = document.getElementById('tagWho');
+const tagMood = document.getElementById('tagMood');
+const countEl = document.getElementById('count');
+const progress = document.getElementById('progress');
+const dotsWrap = document.getElementById('dots');
+
+/* Build dot timeline once */
+dotsWrap.innerHTML = lines.map((_,k)=>`<span class="dot" data-k="${k}"></span>`).join("");
+
+function render(){
+  const prev = lines[i-1] ? `${lines[i-1].who} (${lines[i-1].mood}): ${lines[i-1].text}` : " ";
+  const cur  = `${lines[i].who}: ${lines[i].text}`;
+  const next = lines[i+1] ? `${lines[i+1].who}: ${lines[i+1].text}` : " ";
+  prevEl.textContent = prev; activeEl.textContent = cur; nextEl.textContent = next;
+  tagWho.textContent = lines[i].who; tagMood.textContent = lines[i].mood||"natural";
+  countEl.textContent = `${i+1} of ${lines.length}`;
+  progress.style.width = ((i+1)/lines.length*100).toFixed(1)+"%";
+  [...dotsWrap.children].forEach((d,idx)=>d.classList.toggle('on', idx<=i));
+}
+render();
+
+/* ---------------- Camera → Canvas compositor ---------------- */
+const wrap = document.getElementById('stage');
+const video = document.getElementById('cam');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d', {alpha:false});
+let stream = null, front=true;
+
+function sizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const w = wrap.clientWidth, h = wrap.clientHeight;
+  canvas.width = Math.floor(w*dpr); canvas.height = Math.floor(h*dpr);
+  canvas.style.width = w+"px"; canvas.style.height = h+"px";
+}
+window.addEventListener('resize', sizeCanvas); sizeCanvas();
+
+async function startCam(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode: front?"user":"environment"}, audio:true});
+    video.srcObject = stream; await video.play();
+    document.getElementById('camChip').textContent="Camera • on";
+    document.getElementById('micChip').textContent="Mic • on";
+    loop();
+  }catch(e){ alert("Camera/Mic permission was denied."); }
+}
+function stopCam(){ stream?.getTracks().forEach(t=>t.stop()); stream=null; }
+function loop(){
+  if(!video.videoWidth){ requestAnimationFrame(loop); return; }
+  const cw = canvas.width, ch = canvas.height;
+  const vw = video.videoWidth, vh = video.videoHeight;
+  const s = Math.max(cw/vw, ch/vh); const dw = vw*s, dh = vh*s;
+  const dx = (cw-dw)/2, dy = (ch-dh)/2;
+  ctx.drawImage(video, dx, dy, dw, dh);
+  // Vignette baked into recording
+  const g = ctx.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)/3, cw/2,ch/2, Math.max(cw,ch)/1.02);
+  g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,"rgba(0,0,0,.34)");
+  ctx.fillStyle=g; ctx.fillRect(0,0,cw,ch);
+  // Bake active line text into canvas (so it appears in the recording)
+  drawActiveLine();
+  requestAnimationFrame(loop);
+}
+function drawActiveLine(){
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const pad = 24*dpr, maxW = Math.min(canvas.width - pad*2, canvas.width*0.90);
+  const txt = `${lines[i].who}: ${lines[i].text}`;
+  ctx.font = `800 ${28*dpr}px Inter, system-ui, sans-serif`;
+  ctx.fillStyle = "#fff";
+  wrapText(ctx, txt, (canvas.width-maxW)/2 + 20*dpr, canvas.height/2 + 8*dpr, maxW - 40*dpr, 36*dpr);
+}
+function wrapText(ctx, text, x, y, maxWidth, lh){
+  const words = text.split(' '); let line = '';
+  for(let n=0;n<words.length;n++){
+    const test = line + words[n] + ' ';
+    if(ctx.measureText(test).width > maxWidth && n){ ctx.fillText(line,x,y); line = words[n] + ' '; y+=lh; }
+    else line = test;
+  }
+  ctx.fillText(line,x,y);
+}
+
+/* ---------------- Voice (partner lines only, simple demo) ---------------- */
+let playing=false;
+function isYourLine(){ return lines[i].who==="FRANK"; } // demo: you're FRANK
+function speakIfNeeded(){
+  if(isYourLine()) return;
+  const u = new SpeechSynthesisUtterance(lines[i].text);
+  u.rate = 1.0; u.pitch = 1.0;
+  u.onend = ()=> next();
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------------- Transport ---------------- */
+const playBtn = document.getElementById('playPause');
+const nextBtn = document.getElementById('nextBtn');
+const prevBtn = document.getElementById('prevBtn');
+
+function next(){ i = Math.min(i+1, lines.length-1); render(); if(playing) speakIfNeeded(); }
+function prev(){ i = Math.max(i-1, 0); render(); if(playing) speakIfNeeded(); }
+
+playBtn.onclick = ()=>{
+  playing = !playing;
+  playBtn.textContent = playing ? "❚❚ Pause" : "▶ Start";
+  if(playing) speakIfNeeded(); else speechSynthesis.cancel();
+};
+nextBtn.onclick = next; prevBtn.onclick = prev;
+
+window.addEventListener('keydown', e=>{
+  if(e.code==="Space"){ e.preventDefault(); playBtn.click(); }
+  if(e.code==="ArrowRight") next();
+  if(e.code==="ArrowLeft") prev();
+});
+
+/* ---------------- Controls ---------------- */
+document.getElementById('toggleVideo').onclick = async ()=>{
+  if(stream){ stopCam(); this.textContent="Video"; document.getElementById('camChip').textContent="Camera • off"; document.getElementById('micChip').textContent="Mic • off"; }
+  else { await startCam(); this.textContent="Video"; }
+};
+document.getElementById('flip').onclick = async ()=>{ front=!front; if(stream){ stopCam(); await startCam(); } };
+document.getElementById('theme').onclick = ()=>{
+  // Light/dark toggle (subtle)
+  document.body.classList.toggle('light');
+  if(document.body.classList.contains('light')){
+    document.documentElement.style.setProperty('--paper','#F7F4EE');
+    document.documentElement.style.setProperty('--card','#FFFFFFcc');
+    document.documentElement.style.setProperty('--cardStroke','#00000014');
+    document.documentElement.style.setProperty('--chip','#FFFFFFcc');
+    document.documentElement.style.setProperty('--line','#E9E2D5');
+  }else{
+    document.documentElement.style.setProperty('--paper','#0B0F16');
+    document.documentElement.style.setProperty('--card','#0B1222cc');
+    document.documentElement.style.setProperty('--cardStroke','#ffffff25');
+    document.documentElement.style.setProperty('--chip','#11161Fcc');
+    document.documentElement.style.setProperty('--line','#1E2635');
+  }
+};
+
+/* ---------------- Recording (canvas + mic) ---------------- */
+let rec, chunks=[], outStream=null;
+const recBtn = document.getElementById('recBtn');
+const stopBtn = document.getElementById('stopBtn');
+const dlBtn = document.getElementById('dlBtn');
+
+async function startRecording(){
+  if(!stream) await startCam();
+  const canvasStream = canvas.captureStream(30);
+  outStream = new MediaStream();
+  canvasStream.getVideoTracks().forEach(t=>outStream.addTrack(t));
+  const mic = stream.getAudioTracks()[0]; if(mic) outStream.addTrack(mic);
+  chunks=[]; rec = new MediaRecorder(outStream, {mimeType:'video/webm;codecs=vp9,opus'});
+  rec.ondataavailable = e=>{ if(e.data.size) chunks.push(e.data); };
+  rec.onstop = ()=>{
+    const blob = new Blob(chunks, {type:'video/webm'});
+    const url = URL.createObjectURL(blob);
+    dlBtn.hidden=false; dlBtn.href = url; dlBtn.download = `castmate-${Date.now()}.webm`;
+    document.getElementById('recChip').textContent = "Stopped";
+  };
+  rec.start(500);
+  document.getElementById('recChip').textContent = "Recording…";
+}
+function stopRecording(){ rec?.stop(); outStream?.getTracks().forEach(t=>t.stop()); }
+
+recBtn.onclick = async ()=>{ recBtn.disabled=true; stopBtn.disabled=false; await startRecording(); };
+stopBtn.onclick = ()=>{ stopBtn.disabled=true; recBtn.disabled=false; stopRecording(); };
+
+/* ---------------- Init ---------------- */
+(async()=>{ await startCam(); })();
+</script>
+</body>
+</html>
+
+
+What changed vs. your last build
+
+Reader is centered mid-screen with the familiar three-line stack, not stuck at the bottom.
+
+Reduced visual noise: glass card, subtle vignette, balanced type, quiet motion.
+
+Human feel: no neon gradients or heavy borders; soft chips; gentle dots timeline; micro shadows.
+
+Same one-screen flow, but brand-level polish: Inter 800 for the active line, carefully tuned sizes, and minimal, tactile controls.
+
+If you want the card to float slightly higher or the dots timeline replaced with a slim vertical progress rail, say so and I’ll adjust.
+
+, popup the face of whoever's line it is zoom style, if ai is talking everyone becomes even size , i think the the top left or somewhere convenient subtle sleek helpful thoughtful etc is where the frined(s) are and stuff maybe movable idk again think facetime probably or houseparty or whatever. you get me?
+Thought for 5s
+
+Here’s a one-file prototype that adds a FaceTime-style dock with tiles for You, AI partner, and Friends. It:
+
+Pops the current speaker as a large tile (zoom-style) with a soft scale/spotlight.
+
+Switches to equal tiles when the AI is speaking.
+
+Lets you drag the mini-dock anywhere (top-left by default).
+
+Keeps the center three-line reader overlay from your last build.
+
+Records a composite of camera + overlay + your mic.
+
+Save as castmate-video-grid.html and open in Chrome.
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CastMate Studio — Video + Speaker Dock</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0F172A; --paper:#0B0F16; --line:#1E2635;
+  --brand:#1A73E8; --brand2:#59A4FF; --chip:#11161Fcc;
+  --card:#0B1222cc; --stroke:#ffffff25; --shadow:0 10px 30px rgba(0,0,0,.35);
+  --t:140ms cubic-bezier(.2,.8,.2,1); --r:16px;
+}
+*{box-sizing:border-box} html,body{height:100%;margin:0;background:#000;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+#stage{position:fixed;inset:0}
+#cam{display:none}
+#canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+/* vignette baked into recording */
+.vignette::after{content:"";position:absolute;inset:-5%;pointer-events:none;
+  background:radial-gradient(60% 60% at 50% 50%,rgba(0,0,0,0) 0%,rgba(0,0,0,.36) 100%)}
+
+/* header */
+header{position:absolute;left:20px;right:20px;top:14px;display:flex;justify-content:space-between;gap:10px;pointer-events:none}
+.badge,.role,.ghost{pointer-events:auto;display:inline-flex;align-items:center;gap:8px;border-radius:999px;font-weight:600}
+.role{background:var(--chip);border:1px solid #ffffff20;padding:6px 12px;font-size:12px}
+.badge{background:#1a73e878;border:1px solid #2b86ff2e;padding:6px 12px;font-size:12px}
+.ghost{background:var(--chip);border:1px solid #ffffff20;padding:8px 12px;border-radius:12px}
+.ghost:active{transform:scale(.98);opacity:.85}
+
+/* centered reader (same structure, refined) */
+#reader{position:absolute;left:20px;right:20px;top:50%;transform:translateY(-50%);display:flex;justify-content:center}
+.card{width:min(860px,92vw);background:var(--card);border:1px solid var(--stroke);border-radius:var(--r);backdrop-filter:blur(10px);padding:18px 22px;box-shadow:var(--shadow)}
+.row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.tag{background:#15213bcc;border:1px solid #ffffff20;padding:4px 10px;border-radius:10px;font-size:12px;font-weight:600}
+.prev{opacity:.55;font-size:16px;line-height:1.5}
+.active{font-size:28px;line-height:1.35;font-weight:800;margin:8px 0}
+.next{opacity:.72;font-size:16px;line-height:1.5}
+.timeline{height:60px;display:flex;align-items:center;gap:10px}
+#dots .dot{width:12px;height:12px;border-radius:999px;background:#ffffff30;border:1px solid #ffffff38}
+#dots .dot.on{background:var(--brand2);border-color:transparent;box-shadow:0 0 0 6px rgba(89,164,255,.12)}
+.count{margin-left:auto;font-weight:600;color:#c6d5ff}
+
+/* transport */
+.controls{position:absolute;left:0;right:0;bottom:28px;display:flex;flex-direction:column;align-items:center;gap:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:12px 16px;border-radius:999px;font-weight:700;border:1px solid #ffffff20;background:#ffffff10;backdrop-filter:blur(6px)}
+.primary{background:var(--brand);border-color:transparent;box-shadow:0 8px 24px rgba(26,115,232,.35)}
+.meter{height:8px;width:min(620px,82vw);background:#ffffff24;border-radius:999px;overflow:hidden}
+.meter>span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.hint{font-size:12px;color:#d6e2ff;opacity:.9}
+
+/* status chips */
+.status{position:absolute;left:20px;bottom:160px;display:flex;gap:8px}
+.chip{background:var(--chip);border:1px solid #ffffff22;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:600}
+
+/* SPEAKER DOCK */
+#dock{position:absolute;left:20px;top:20px;display:grid;grid-auto-flow:column;gap:10px;padding:8px;background:rgba(12,18,32,.5);backdrop-filter:blur(8px);border:1px solid #ffffff1c;border-radius:18px;box-shadow:var(--shadow);cursor:grab;z-index:5}
+.tile{width:120px;height:72px;position:relative;border-radius:12px;overflow:hidden;border:1px solid #ffffff1f;background:#0E1628}
+.tile video,.tile canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.tile .label{position:absolute;left:6px;bottom:6px;background:#0008;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.tile.active{transform:scale(1.06);box-shadow:0 6px 20px rgba(0,0,0,.35);border-color:#84b6ff}
+.tile.equal{transform:scale(1.0)}
+.tile.ai::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 120% at 0% 0%,rgba(26,115,232,.20),transparent 40%),radial-gradient(120% 120% at 100% 100%,rgba(89,164,255,.18),transparent 40%)}
+
+/* BIG POP (current speaker) */
+#pop{position:absolute;right:20px;top:20px;width:min(38vw,520px);aspect-ratio:16/9;border-radius:18px;overflow:hidden;border:1px solid #ffffff28;background:#0E1628;box-shadow:var(--shadow);transition:transform var(--t),opacity var(--t)}
+#pop.hidden{opacity:0;transform:scale(.98)}
+#pop video,#pop canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#pop .label{position:absolute;left:10px;bottom:10px;background:#0008;padding:6px 10px;border-radius:999px;font-weight:700}
+
+/* responsive */
+@media (max-width:900px){ #pop{width:46vw} .tile{width:96px;height:58px} }
+@media (max-width:520px){ #dock{left:14px;top:14px} #pop{right:14px;top:14px;width:58vw} .active{font-size:24px} }
+</style>
+</head>
+<body>
+<div id="stage" class="vignette">
+  <video id="cam" playsinline muted></video>
+  <canvas id="canvas"></canvas>
+
+  <header>
+    <div>
+      <span class="role" id="roleChip">You • FRANK</span>
+      <span class="badge">Smart Cast</span>
+    </div>
+    <div>
+      <button class="ghost" id="btnVideo">Video</button>
+      <button class="ghost" id="btnFlip">Flip</button>
+      <button class="ghost" id="btnTheme">Theme</button>
+    </div>
+  </header>
+
+  <!-- Speaker Dock (draggable) -->
+  <div id="dock" aria-label="Speaker dock">
+    <div class="tile me" id="tileMe"><video id="tileMeVid" muted playsinline></video><div class="label">You</div></div>
+    <div class="tile ai" id="tileAI"><canvas id="aiCanvas"></canvas><div class="label">AI</div></div>
+    <div class="tile friend" id="tileF1"><canvas></canvas><div class="label">Alex</div></div>
+    <div class="tile friend" id="tileF2"><canvas></canvas><div class="label">Sam</div></div>
+  </div>
+
+  <!-- Big pop (current speaker) -->
+  <div id="pop" class="hidden">
+    <video id="popVid" muted playsinline></video>
+    <canvas id="popCanvas"></canvas>
+    <div class="label" id="popLabel">Speaker</div>
+  </div>
+
+  <!-- Reader -->
+  <section id="reader" aria-live="polite">
+    <div class="card">
+      <div class="row">
+        <span class="tag" id="tagWho">FRANK</span><span class="tag">You</span><span class="tag" id="tagMood">bitter</span>
+      </div>
+      <div class="prev" id="prevLine">LINDA (weakly): No… no, Frank.</div>
+      <div class="active" id="activeLine">FRANK: Why’d you even come here? To gloat?</div>
+      <div class="next" id="nextLine">LINDA: I came to— to fix it.</div>
+      <div class="timeline"><div id="dots"></div><div class="count" id="count">1 of 6</div></div>
+    </div>
+  </section>
+
+  <!-- Status + Transport -->
+  <div class="status">
+    <span class="chip" id="camChip">Camera • off</span>
+    <span class="chip" id="micChip">Mic • off</span>
+    <span class="chip" id="recChip">Not recording</span>
+  </div>
+
+  <div class="controls">
+    <div>
+      <button class="pill" id="prevBtn">‹</button>
+      <button class="pill primary" id="playPause">▶ Start</button>
+      <button class="pill" id="nextBtn">›</button>
+    </div>
+    <div>
+      <button class="pill" id="recBtn">● Record</button>
+      <button class="pill" id="stopBtn" disabled>■ Stop</button>
+      <a class="pill" id="dlBtn" hidden download>⬇ Download</a>
+    </div>
+    <div class="meter"><span id="progress"></span></div>
+    <div class="hint">Space = Start/Pause • ← → = Back/Next • Drag the dock anywhere</div>
+  </div>
+</div>
+
+<script>
+/* ---------- Script lines (demo) ---------- */
+const lines=[
+  {who:"FRANK", text:"Why’d you even come here? To gloat?", mood:"bitter"},
+  {who:"LINDA", text:"No… no, Frank. I came to— to fix it.", mood:"weakly"},
+  {who:"FRANK", text:"Fix what you broke.", mood:"cold"},
+  {who:"LINDA", text:"Both of us. If you’ll let me.", mood:"soft"},
+  {who:"FRANK", text:"Say it like you mean it.", mood:"sharp"},
+  {who:"LINDA", text:"I mean it.", mood:"firm"}
+];
+let i=0, playing=false;
+
+/* ---------- DOM ---------- */
+const prevEl = document.getElementById('prevLine');
+const actEl  = document.getElementById('activeLine');
+const nextEl = document.getElementById('nextLine');
+const tagWho = document.getElementById('tagWho');
+const tagMood= document.getElementById('tagMood');
+const countEl= document.getElementById('count');
+const progress = document.getElementById('progress');
+const dots = document.getElementById('dots');
+
+dots.innerHTML = lines.map((_,k)=>`<span class="dot"></span>`).join("");
+
+function render(){
+  prevEl.textContent = lines[i-1]?`${lines[i-1].who} (${lines[i-1].mood}): ${lines[i-1].text}`:" ";
+  actEl.textContent  = `${lines[i].who}: ${lines[i].text}`;
+  nextEl.textContent = lines[i+1]?`${lines[i+1].who}: ${lines[i+1].text}`:" ";
+  tagWho.textContent = lines[i].who; tagMood.textContent=lines[i].mood||"natural";
+  countEl.textContent= `${i+1} of ${lines.length}`;
+  progress.style.width=((i+1)/lines.length*100).toFixed(1)+"%";
+  [...dots.children].forEach((d,idx)=> d.classList.toggle('on', idx<=i));
+  updateDockState();
+}
+render();
+
+/* ---------- Camera → Canvas compositor ---------- */
+const wrap = document.getElementById('stage');
+const video=document.getElementById('cam'), canvas=document.getElementById('canvas');
+const ctx = canvas.getContext('2d',{alpha:false});
+let stream=null, front=true;
+
+function sizeCanvas(){
+  const dpr = Math.min(window.devicePixelRatio||1,2);
+  const w=wrap.clientWidth, h=wrap.clientHeight;
+  canvas.width=Math.floor(w*dpr); canvas.height=Math.floor(h*dpr);
+  canvas.style.width=w+"px"; canvas.style.height=h+"px";
+}
+window.addEventListener('resize', sizeCanvas); sizeCanvas();
+
+async function startCam(){
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:front?"user":"environment"},audio:true});
+    video.srcObject=stream; await video.play();
+    document.getElementById('tileMeVid').srcObject=stream;
+    document.getElementById('tileMeVid').play();
+    document.getElementById('camChip').textContent="Camera • on";
+    document.getElementById('micChip').textContent="Mic • on";
+    loop();
+  }catch(e){ alert("Camera/Mic permission denied."); }
+}
+function stopCam(){ stream?.getTracks().forEach(t=>t.stop()); stream=null; }
+
+function loop(){
+  if(!video.videoWidth){ requestAnimationFrame(loop); return; }
+  const cw=canvas.width, ch=canvas.height, vw=video.videoWidth, vh=video.videoHeight;
+  const s=Math.max(cw/vw, ch/vh), dw=vw*s, dh=vh*s, dx=(cw-dw)/2, dy=(ch-dh)/2;
+  ctx.drawImage(video,dx,dy,dw,dh);
+  const g=ctx.createRadialGradient(cw/2,ch/2,Math.min(cw,ch)/3, cw/2,ch/2,Math.max(cw,ch)/1.02);
+  g.addColorStop(0,"rgba(0,0,0,0)"); g.addColorStop(1,"rgba(0,0,0,.34)"); ctx.fillStyle=g; ctx.fillRect(0,0,cw,ch);
+  drawActiveIntoCanvas();
+  requestAnimationFrame(loop);
+}
+function drawActiveIntoCanvas(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const pad=24*dpr, maxW=Math.min(canvas.width - pad*2, canvas.width*.9);
+  const txt=`${lines[i].who}: ${lines[i].text}`;
+  ctx.font=`800 ${28*dpr}px Inter, system-ui, sans-serif`; ctx.fillStyle="#fff";
+  wrapText(ctx, txt, (canvas.width-maxW)/2 + 20*dpr, canvas.height/2 + 8*dpr, maxW-40*dpr, 36*dpr);
+}
+function wrapText(ctx, text, x, y, maxW, lh){
+  const words=text.split(' '); let line='';
+  for(let n=0;n<words.length;n++){
+    const t=line+words[n]+' ';
+    if(ctx.measureText(t).width>maxW && n){ ctx.fillText(line,x,y); line=words[n]+' '; y+=lh; }
+    else line=t;
+  } ctx.fillText(line,x,y);
+}
+
+/* ---------- Speaker Dock logic ---------- */
+const dock = document.getElementById('dock');
+const tileMe = document.getElementById('tileMe');
+const tileAI = document.getElementById('tileAI');
+const tileF1 = document.getElementById('tileF1');
+const tileF2 = document.getElementById('tileF2');
+
+const pop = document.getElementById('pop');
+const popVid = document.getElementById('popVid');
+const popCanvas = document.getElementById('popCanvas');
+const popCtx = popCanvas.getContext('2d'); // for AI/friend placeholder
+const popLabel = document.getElementById('popLabel');
+
+function updateDockState(){
+  const yourTurn = (lines[i].who==="FRANK"); // demo: You=FRANK
+  // active speaker style
+  [tileMe, tileAI, tileF1, tileF2].forEach(t=>t.classList.remove('active','equal'));
+  if(yourTurn){
+    tileMe.classList.add('active'); showPop('you');
+  }else{
+    // AI speaking → equalize all tiles
+    [tileMe, tileAI, tileF1, tileF2].forEach(t=>t.classList.add('equal'));
+    tileAI.classList.add('active'); showPop('ai');
+  }
+}
+
+/* Big pop handling */
+function showPop(kind){
+  pop.classList.remove('hidden');
+  if(kind==='you'){
+    // show your video large
+    popVid.srcObject=stream; popVid.style.display='block'; popCanvas.style.display='none'; popVid.play();
+    popLabel.textContent='You';
+  }else{
+    // draw animated gradient “AI” placeholder (or remote feed if available)
+    popVid.style.display='none'; popCanvas.style.display='block';
+    sizePopCanvas(); drawAIWave();
+    popLabel.textContent='AI';
+  }
+}
+function sizePopCanvas(){
+  const r=pop.getBoundingClientRect(); popCanvas.width=r.width*2; popCanvas.height=r.height*2; // HiDPI-ish
+}
+function drawAIWave(){
+  const c=popCanvas, x=popCtx, w=c.width, h=c.height, t=performance.now()/800;
+  const g=x.createLinearGradient(0,0,w,h); g.addColorStop(0,"#1A73E8"); g.addColorStop(1,"#59A4FF");
+  x.fillStyle="#0E1628"; x.fillRect(0,0,w,h);
+  x.globalAlpha=.22; x.fillStyle=g;
+  for(let k=0;k<4;k++){
+    x.beginPath();
+    for(let a=0;a<=w;a+=16){
+      const y=h/2 + Math.sin(a/140 + t + k)* (h/12);
+      if(a===0) x.moveTo(a,y); else x.lineTo(a,y);
+    }
+    x.lineTo(w,h); x.lineTo(0,h); x.closePath(); x.fill();
+  }
+  x.globalAlpha=1;
+  requestAnimationFrame(drawAIWave);
+}
+window.addEventListener('resize', sizePopCanvas);
+
+/* Draggable dock */
+let drag=null;
+dock.addEventListener('pointerdown', e=>{
+  drag={x:e.clientX, y:e.clientY, left:dock.offsetLeft, top:dock.offsetTop};
+  dock.setPointerCapture(e.pointerId); dock.style.cursor='grabbing';
+});
+dock.addEventListener('pointermove', e=>{
+  if(!drag) return;
+  const dx=e.clientX-drag.x, dy=e.clientY-drag.y;
+  dock.style.left = Math.max(8, Math.min(window.innerWidth - dock.offsetWidth - 8, drag.left + dx))+'px';
+  dock.style.top  = Math.max(8, Math.min(window.innerHeight - dock.offsetHeight - 8, drag.top + dy))+'px';
+});
+dock.addEventListener('pointerup', ()=>{ drag=null; dock.style.cursor='grab'; });
+
+/* ---------- TTS partner (simple) ---------- */
+function isYourLine(){ return lines[i].who==="FRANK"; }
+function speakIfNeeded(){
+  if(isYourLine()) return;
+  const u=new SpeechSynthesisUtterance(lines[i].text);
+  u.rate=1.0; u.pitch=1.0;
+  u.onstart=()=>updateDockState();
+  u.onend=()=>{ next(); };
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+
+/* ---------- Transport ---------- */
+const playBtn=document.getElementById('playPause'), nextBtn=document.getElementById('nextBtn'), prevBtn=document.getElementById('prevBtn');
+function next(){ i=Math.min(i+1,lines.length-1); render(); if(playing) speakIfNeeded(); }
+function prev(){ i=Math.max(i-1,0); render(); if(playing) speakIfNeeded(); }
+playBtn.onclick=()=>{ playing=!playing; playBtn.textContent=playing?"❚❚ Pause":"▶ Start"; if(playing) speakIfNeeded(); else speechSynthesis.cancel(); };
+nextBtn.onclick=next; prevBtn.onclick=prev;
+window.addEventListener('keydown',e=>{ if(e.code==="Space"){e.preventDefault();playBtn.click();} if(e.code==="ArrowRight")next(); if(e.code==="ArrowLeft")prev(); });
+
+/* ---------- Controls ---------- */
+document.getElementById('btnVideo').onclick=async()=>{ if(stream){stopCam();document.getElementById('camChip').textContent="Camera • off";document.getElementById('micChip').textContent="Mic • off";} else {await startCam();}};
+document.getElementById('btnFlip').onclick=async()=>{ front=!front; if(stream){stopCam(); await startCam();}};
+document.getElementById('btnTheme').onclick=()=>{
+  document.documentElement.style.setProperty('--paper', getComputedStyle(document.documentElement).getPropertyValue('--paper')==='#0B0F16' ? '#F7F4EE' : '#0B0F16');
+  document.documentElement.style.setProperty('--card', getComputedStyle(document.documentElement).getPropertyValue('--card')==='#0B1222cc' ? '#FFFFFFcc' : '#0B1222cc');
+  document.documentElement.style.setProperty('--stroke', getComputedStyle(document.documentElement).getPropertyValue('--stroke')==='#ffffff25' ? '#00000014' : '#ffffff25');
+};
+
+/* ---------- Recording (canvas + mic) ---------- */
+let rec, chunks=[], outStream=null;
+const recBtn=document.getElementById('recBtn'), stopBtn=document.getElementById('stopBtn'), dlBtn=document.getElementById('dlBtn');
+async function startRecording(){
+  if(!stream) await startCam();
+  const canvasStream=canvas.captureStream(30);
+  outStream=new MediaStream();
+  canvasStream.getVideoTracks().forEach(t=>outStream.addTrack(t));
+  const mic=stream.getAudioTracks()[0]; if(mic) outStream.addTrack(mic);
+  chunks=[]; rec=new MediaRecorder(outStream,{mimeType:'video/webm;codecs=vp9,opus'});
+  rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  rec.onstop=()=>{ const blob=new Blob(chunks,{type:'video/webm'}); const url=URL.createObjectURL(blob);
+    dlBtn.hidden=false; dlBtn.href=url; dlBtn.download=`castmate-${Date.now()}.webm`; document.getElementById('recChip').textContent="Stopped"; };
+  rec.start(500); document.getElementById('recChip').textContent="Recording…";
+}
+function stopRecording(){ rec?.stop(); outStream?.getTracks().forEach(t=>t.stop()); }
+
+recBtn.onclick=async()=>{ recBtn.disabled=true; stopBtn.disabled=false; await startRecording(); };
+stopBtn.onclick=()=>{ stopBtn.disabled=true; recBtn.disabled=false; stopRecording(); };
+
+/* ---------- Init ---------- */
+(async()=>{ await startCam(); updateDockState(); })();
+</script>
+</body>
+</html>
+
+
+How it maps to your ask
+
+Speaker pop: the large tile at top-right mirrors the active speaker; when it’s your line, your camera fills the pop; when AI speaks, the AI tile takes over and all dock tiles equalize.
+
+Friends area: the dock holds friends/guests; it’s draggable so users can park it top-left, top-right, etc. (WebRTC streams plug into the friend tiles later.)
+
+Human, minimal design: soft glass tiles, subtle shadows, quiet motion; the reader stays centered; no “AI” visual noise.
+
+Recording: outputs one file with camera, overlay, and your mic.
+
+Plug in WebRTC later by assigning remote streams to tileF1 > video/tileF2 > video and to the #popVid when a friend is the active speaker.
+
+the finished video the export can have option to expert with or without the script overlay you get me? im thinking we should add two mode for solo like user and ai and with friends like party mode with other people and ai if want. called "Audition" and "Table Read" if that makes sense as the two modes. also for now im thinking the way people do a read with friends  is maybe like kahoot style or something like that? do you get what i mean? 
+Thought for a few seconds
+
+Here’s a tight spec that adds exactly what you described, without bloating the UI.
+
+Modes
+
+Segmented toggle (top of the rehearsal screen):
+
+Audition — Solo + AI partner. Optimized for self-tapes and hands-free practice.
+
+Table Read — “Party mode” with friends + optional AI covers. Join via code or link.
+
+Export options
+
+On Stop → Export dialog with two primary presets:
+
+Self-Tape (no overlay)
+
+Video: clean camera feed only (no reader UI).
+
+Audio: your mic + partner/guests mixed.
+
+Optional: lower-third slate (name • role • scene • date).
+
+Coach Cut (with overlay)
+
+Video: camera + reader overlay + speaker dock.
+
+Audio: same mix.
+
+Optional: time-coded notes watermark, progress bar.
+
+Advanced (accordion):
+
+Resolution: 1080p / 720p.
+
+Frame rate: 30 fps.
+
+Audio ducking: on/off (AI/guests duck −12 dB when you speak).
+
+File split: full take + 15–45s Beat Clips.
+
+How to implement export cleanly on the web
+
+Keep two parallel recorders during a take:
+
+Clean recorder: record the raw camera stream + mixed audio.
+
+Overlay recorder: record the canvas stream (camera composited with UI) + mixed audio.
+
+Use MediaRecorder for both; present both blobs in the export dialog.
+
+For slates/Beat Clips, generate them with an offscreen canvas or run ffmpeg.wasm for trimming and concatenation (optional but nice).
+
+Minimal hook in your current code:
+
+// Existing: canvas capture + mic into mixedStream (overlay file)
+const overlayStream = canvas.captureStream(30);
+const micTrack = camStream.getAudioTracks()[0];
+const overlayOut = new MediaStream([...overlayStream.getVideoTracks(), micTrack]);
+
+// New: clean camera capture (no overlay) + mic
+const cleanOut = new MediaStream([ camStream.getVideoTracks()[0], micTrack ]);
+
+const recOverlay = new MediaRecorder(overlayOut, { mimeType: 'video/webm;codecs=vp9,opus' });
+const recClean   = new MediaRecorder(cleanOut,   { mimeType: 'video/webm;codecs=vp9,opus' });
+
+// Start/stop both in sync; store two blobs for the export sheet.
+
+Table Read (“party mode”)
+
+Join flow (Kahoot-style):
+
+Host taps Table Read → Create Room.
+
+System shows a 6-digit room code and a QR/link (e.g., castmate.studio/join/ABC123).
+
+Guests open the link → enter display name → pick or auto-assign characters.
+
+Ready ring UI: every participant has a ring that fills when they’re ready; host sees all green → 3-2-1 count-in.
+
+During read:
+
+Speaker Dock shows You, AI, and guests.
+
+Active speaker pop: whoever has the line zooms to the large tile; when the AI speaks, tiles equalize.
+
+Latency handling:
+
+Use an SFU (LiveKit/mediasoup) and send turn cues over a WebSocket (not via the media stream).
+
+Clients prebuffer TTS 300–500 ms and start on the cue timestamp.
+
+If a human lags, host can skip/hold; AI can cover missing roles after a 1-second grace.
+
+Controls visible to all:
+
+Play/Pause, Back/Next, “Line?” prompt, Mute/Unmute.
+
+Host-only: lock roles, reshuffle, drop-in AI cover, count-in, end take.
+
+Roles & casting:
+
+Role chips on the dock show assignment.
+
+Smart Cast can auto-assign voices by gender/age/style cues in the script; humans override by tap-hold.
+
+Safety:
+
+Private by default; room code expires on end.
+
+Optional passcode.
+
+Blur background toggle per participant.
+
+Audition (solo) refinements
+
+Safe Mode auto-switch to audio-only if driving/Bluetooth car active.
+
+Voice cueing: haptic tick + subtle chime at your cue; air-tap or wake word for “line,” “next,” “again.”
+
+UI placement that stays clean
+
+Mode toggle: top center segmented controller (Audition | Table Read).
+
+Speaker dock: draggable mini-strip defaulting top-left; snap to corners; double-tap to collapse into a single pill.
+
+Centered reader: three-line stack in a glass card.
+
+Transport: bottom center.
+
+Record state: small red dot + timecode near the dock; full controls in the bottom sheet.
+
+Data & sync model
+
+Script state: one authoritative index + timestamp broadcast.
+
+Cue protocol: {lineId, startAt: epochMs, actorId, mode}.
+
+AI side: pre-synthesize upcoming lines with SSML prosody; switch voices per role.
+
+Drift correction: clients snap on next line boundary; ±120 ms tolerance.
+
+Growth & share
+
+Beat Clips after every table read: auto-suggest the best 20–40 s moments (highest overlap, biggest laughs).
+
+Duet Link for non-logged-in friends: browser read with a temp voice; host still records full composite.
+
+Share card template exports with or without overlay.
+
+Edge cases to cover
+
+Guest drops: AI cover takes the role on the next line, announce quietly in chat (“Covering ALEX until rejoined”).
+
+Double-starts: only host emits the final “startAt” cue; clients ignore local taps if a cue is pending.
+
+Noisy rooms: voice activity detection mutes non-speakers; push-to-talk option for strict tables.
+
+What to build next in your current prototype
+
+Add the Audition/Table Read segmented control.
+
+Introduce dual recorders (clean + overlay) and swap your export prompt to show both files.
+
+Wrap “Table Read” with a fake join flow now (mock code + two simulated guests) so the UI is done; wire real SFU later.
+
+Add the count-in and ready rings to the speaker dock.
+
+Add the AI cover button in Table Read (fills any unassigned role).
+
+If you want, I can deliver the updated HTML/CSS/JS implementing: the segmented control, dual recording with the export sheet, the ready-ring dock, and a mocked join experience so you can click through the entire flow today.
+
+you get the simplicity and sleekneess and usefullness and ease and stuff? 
+
+Yes. That layout nails “simple, sleek, useful.” To lock it, here’s the exact spec so it ships clean and feels intentional.
+
+Core interaction
+
+Modes: segmented control in the top bar → Audition (solo + AI) / Table Read (friends + AI).
+
+Spotlight: active speaker fills the top half; others stack as minimal tiles below (or split 2×2 when >3). When AI speaks, all tiles equal weight.
+
+Three-line overlay: centered over the spotlight tile only. Previous/next lines ghosted behind; one tap toggles Invert to Black for high contrast.
+
+Controls row: compact eye/light/mute/latency icons centered under the overlay; single primary Play/Pause.
+
+Status chips: tiny “online” in each tile; top bar shows scene title, role pill, share, settings.
+
+Layout rules
+
+Top 60%: spotlight tile (camera or AI). Overlay sits here.
+
+Bottom 40%: grid of 2–4 thin tiles (friends/AI). Auto-scroll if >4.
+
+Tablet/desktop: option to split 50/25/25 (spotlight left; two friends stacked right).
+
+Drag & snap: mini-dock can detach and park at corners; double-tap to collapse to a pill.
+
+Export
+
+Stop → Export sheet:
+
+Self-Tape (clean) = camera + mixed audio, no overlay.
+
+Coach Cut (overlay) = canvas composite with overlay/dock.
+
+Optional slate toggle. Both files produced in parallel.
+
+Table Read (party) flow
+
+Host creates room → 6-digit code/QR.
+
+Guests join → pick role or Smart Cast assigns.
+
+Ready ring under each tile → host sees all green → 3-2-1 count-in.
+
+If someone drops, AI Cover takes lines after 1s grace.
+
+Micro-behaviors that sell it
+
+Speaker pop: smooth 140 ms scale + soft shadow; non-speakers dim to 85% and blur 1px.
+
+Line advance: 80 ms nudge + brief highlight; haptic tick on your cue.
+
+Invert to Black: only flips the overlay card; preview/next stay low-alpha.
+
+Latency hint: tiny “~90 ms” chip appears if drift >120 ms.
+
+Accessibility
+
+Captions on export; ARIA live region for active line; keyboard (Space/←/→); high-contrast theme remembers per user.
+
+Technical notes (web)
+
+Dual recorders: MediaRecorder of canvas+mic (overlay) and camera+mic (clean).
+
+Compositor: draw spotlight frame + vignette + active line into canvas; keep tiles DOM for interactivity.
+
+TTS: prebuffer partner lines; fire on host cue timestamp; equalize tiles during AI speech.
+
+Performance: cap canvas to 1080p, 30 fps; lazy render friend tiles when not visible.
