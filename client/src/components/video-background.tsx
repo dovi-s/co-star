@@ -1,11 +1,29 @@
 import { useEffect, useRef, RefObject } from 'react';
 import { cn } from '@/lib/utils';
 
+export interface OverlayData {
+  currentLine?: {
+    text: string;
+    roleName: string;
+    direction?: string;
+    isUserLine: boolean;
+  };
+  previousLine?: {
+    text: string;
+    roleName: string;
+  };
+  nextLine?: {
+    text: string;
+    roleName: string;
+  };
+}
+
 interface VideoBackgroundProps {
   stream: MediaStream | null;
   videoRef: RefObject<HTMLVideoElement>;
   canvasRef: RefObject<HTMLCanvasElement>;
   isRecording: boolean;
+  overlayData?: OverlayData;
   className?: string;
 }
 
@@ -14,8 +32,14 @@ export function VideoBackground({
   videoRef, 
   canvasRef,
   isRecording,
+  overlayData,
   className 
 }: VideoBackgroundProps) {
+  const overlayDataRef = useRef<OverlayData | undefined>(overlayData);
+  
+  useEffect(() => {
+    overlayDataRef.current = overlayData;
+  }, [overlayData]);
   const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -73,8 +97,94 @@ export function VideoBackground({
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+      // Draw script overlay when recording
+      const overlay = overlayDataRef.current;
+      if (overlay?.currentLine) {
+        const padding = 24;
+        const lineHeight = 28;
+        const boxWidth = Math.min(canvas.width - padding * 2, 600);
+        const boxX = (canvas.width - boxWidth) / 2;
+        
+        // Calculate box height based on content
+        let lines = 1; // current line
+        if (overlay.previousLine) lines++;
+        if (overlay.nextLine) lines++;
+        const boxHeight = lines * (lineHeight + 8) + padding * 2 + 30; // extra for role label
+        const boxY = canvas.height - boxHeight - 100; // position above bottom controls
+
+        // Draw semi-transparent backdrop
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
+        ctx.fill();
+        
+        // Draw subtle border
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        let textY = boxY + padding;
+
+        // Draw previous line (dimmed)
+        if (overlay.previousLine) {
+          ctx.font = '500 16px Inter, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          const prevText = `${overlay.previousLine.roleName}: ${overlay.previousLine.text}`;
+          ctx.fillText(truncateText(ctx, prevText, boxWidth - padding * 2), boxX + padding, textY + 16);
+          textY += lineHeight + 8;
+        }
+
+        // Draw current line (highlighted)
+        const current = overlay.currentLine;
+        
+        // Role badge
+        ctx.font = 'bold 12px Inter, system-ui, sans-serif';
+        const badgeColor = current.isUserLine ? 'rgba(255, 255, 255, 0.9)' : 'rgba(99, 102, 241, 0.9)';
+        ctx.fillStyle = badgeColor;
+        const roleWidth = ctx.measureText(current.roleName).width + 16;
+        ctx.beginPath();
+        ctx.roundRect(boxX + padding, textY, roleWidth, 22, 4);
+        ctx.fill();
+        
+        ctx.fillStyle = current.isUserLine ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.95)';
+        ctx.fillText(current.roleName, boxX + padding + 8, textY + 15);
+        
+        // Direction hint if present
+        if (current.direction) {
+          ctx.font = 'italic 12px Inter, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+          ctx.fillText(`(${current.direction})`, boxX + padding + roleWidth + 8, textY + 15);
+        }
+        
+        textY += 28;
+        
+        // Line text
+        ctx.font = '500 18px Inter, system-ui, sans-serif';
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillText(truncateText(ctx, current.text, boxWidth - padding * 2), boxX + padding, textY + 18);
+        textY += lineHeight + 12;
+
+        // Draw next line (ghost)
+        if (overlay.nextLine) {
+          ctx.font = '500 16px Inter, system-ui, sans-serif';
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+          const nextText = `${overlay.nextLine.roleName}: ${overlay.nextLine.text}`;
+          ctx.fillText(truncateText(ctx, nextText, boxWidth - padding * 2), boxX + padding, textY + 16);
+        }
+      }
+
       animationRef.current = requestAnimationFrame(drawFrame);
     };
+    
+    // Helper to truncate text that's too long
+    function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+      if (ctx.measureText(text).width <= maxWidth) return text;
+      let truncated = text;
+      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
+        truncated = truncated.slice(0, -1);
+      }
+      return truncated + '...';
+    }
 
     video.onloadedmetadata = () => {
       animationRef.current = requestAnimationFrame(drawFrame);

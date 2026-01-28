@@ -4,7 +4,7 @@ import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { PracticeToolbar } from "@/components/practice-toolbar";
-import { VideoBackground } from "@/components/video-background";
+import { VideoBackground, type OverlayData } from "@/components/video-background";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { useCamera } from "@/hooks/use-camera";
@@ -949,6 +949,22 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           videoRef={camera.videoRef}
           canvasRef={camera.canvasRef}
           isRecording={camera.isRecording}
+          overlayData={camera.isRecording ? {
+            currentLine: currentLine ? {
+              text: currentLine.text,
+              roleName: currentLine.roleName,
+              direction: currentLine.direction,
+              isUserLine: currentIsUserLine,
+            } : undefined,
+            previousLine: previousLine ? {
+              text: previousLine.text,
+              roleName: previousLine.roleName,
+            } : undefined,
+            nextLine: nextLineData ? {
+              text: nextLineData.text,
+              roleName: nextLineData.roleName,
+            } : undefined,
+          } : undefined}
         />
       )}
       
