@@ -312,6 +312,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   // Centralized run completion handler
   const completeRun = useCallback(() => {
+    // Stop recording if active so user can download
+    if (camera.isRecording) {
+      camera.toggleRecording();
+    }
+    
     // Calculate stats from the ref (always current)
     const allPerfs = runPerformanceRef.current.linePerformances;
     const totalUserLines = allPerfs.length;
@@ -348,7 +353,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     recordRehearsal(0, 1);
     setShowCelebration(true);
     setSceneCompleted(true);
-  }, [incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
+  }, [camera.isRecording, camera.toggleRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
 
   // Reset run performance for a new run
   const resetRunPerformance = useCallback(() => {
