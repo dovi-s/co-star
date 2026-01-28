@@ -10,7 +10,7 @@ import { MultiplayerVideoBackground } from '@/components/multiplayer-video-backg
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
-import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle } from 'lucide-react';
+import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type View = 'menu' | 'create' | 'join' | 'lobby';
@@ -61,6 +61,74 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     participants: multiplayer.room?.participants ?? [],
     enabled: isRehearsingOrPaused,
   });
+
+  const [lobbyVideoEnabled, setLobbyVideoEnabled] = useState(false);
+  const [lobbyStream, setLobbyStream] = useState<MediaStream | null>(null);
+  const lobbyVideoRef = useRef<HTMLVideoElement>(null);
+  const [cameraPreferenceForRehearsal, setCameraPreferenceForRehearsal] = useState(true);
+
+  const toggleLobbyCamera = useCallback(async () => {
+    if (lobbyVideoEnabled && lobbyStream) {
+      lobbyStream.getTracks().forEach(track => track.stop());
+      if (lobbyVideoRef.current) {
+        lobbyVideoRef.current.srcObject = null;
+      }
+      setLobbyStream(null);
+      setLobbyVideoEnabled(false);
+      setCameraPreferenceForRehearsal(false);
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false,
+        });
+        setLobbyStream(stream);
+        setLobbyVideoEnabled(true);
+        setCameraPreferenceForRehearsal(true);
+        if (lobbyVideoRef.current) {
+          lobbyVideoRef.current.srcObject = stream;
+          try {
+            await lobbyVideoRef.current.play();
+          } catch (playErr) {
+            console.warn('[Lobby] Video play warning:', playErr);
+          }
+        }
+      } catch (err) {
+        console.error('[Lobby] Camera error:', err);
+        toast({ title: 'Camera access denied', variant: 'destructive' });
+      }
+    }
+  }, [lobbyVideoEnabled, lobbyStream, toast]);
+
+  useEffect(() => {
+    if (lobbyStream && lobbyVideoRef.current) {
+      lobbyVideoRef.current.srcObject = lobbyStream;
+      lobbyVideoRef.current.play().catch(() => {});
+    }
+  }, [lobbyStream]);
+
+  useEffect(() => {
+    if (isRehearsingOrPaused && lobbyStream) {
+      lobbyStream.getTracks().forEach(track => track.stop());
+      if (lobbyVideoRef.current) {
+        lobbyVideoRef.current.srcObject = null;
+      }
+      setLobbyStream(null);
+      setLobbyVideoEnabled(false);
+      
+      if (!cameraPreferenceForRehearsal && webrtc.isVideoEnabled) {
+        webrtc.toggleVideo();
+      }
+    }
+  }, [isRehearsingOrPaused, lobbyStream, cameraPreferenceForRehearsal, webrtc]);
+
+  useEffect(() => {
+    return () => {
+      if (lobbyStream) {
+        lobbyStream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [lobbyStream]);
 
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const speakingLineRef = useRef<string | null>(null);
@@ -616,6 +684,55 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </p>
           </div>
 
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Camera Preview</CardTitle>
+                <Button
+                  variant={lobbyVideoEnabled ? "default" : "outline"}
+                  size="sm"
+                  onClick={toggleLobbyCamera}
+                  data-testid="button-toggle-lobby-camera"
+                >
+                  {lobbyVideoEnabled ? (
+                    <>
+                      <Camera className="h-4 w-4 mr-2" />
+                      Camera On
+                    </>
+                  ) : (
+                    <>
+                      <CameraOff className="h-4 w-4 mr-2" />
+                      Camera Off
+                    </>
+                  )}
+                </Button>
+              </div>
+              <CardDescription>
+                {lobbyVideoEnabled ? 'Your camera is active' : 'Enable camera to preview before rehearsal'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className={cn(
+                "relative aspect-video bg-muted rounded-md overflow-hidden flex items-center justify-center",
+                !lobbyVideoEnabled && "border border-dashed border-muted-foreground/30"
+              )}>
+                {lobbyVideoEnabled ? (
+                  <video
+                    ref={lobbyVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover scale-x-[-1]"
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground">
+                    <CameraOff className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Camera off</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader>
