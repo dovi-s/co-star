@@ -523,11 +523,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       }
       
       ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
-        console.log("[Rehearsal] TTS complete:", result);
+        console.log("[Rehearsal] TTS complete:", result, "for line:", lineKey);
         clearWordTimer();
         
-        // Always try to advance regardless of result (success or error)
-        if (isPlayingRef.current) {
+        // Only advance if still playing AND this is still the current line we started
+        // This prevents race conditions where callback fires after line already changed
+        if (isPlayingRef.current && speakingLineRef.current === lineKey) {
+          // Count this line as rehearsed
           incrementLinesRehearsed();
           
           // Brief conversational pause before next line
@@ -535,6 +537,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             if (!isPlayingRef.current) {
               console.log("[Rehearsal] Stopped during pause");
               speakingLineRef.current = null;
+              return;
+            }
+            
+            // Double-check we're still on the same line (prevents double-advance)
+            if (speakingLineRef.current !== lineKey) {
+              console.log("[Rehearsal] Line already changed, skipping advance");
               return;
             }
             
@@ -550,6 +558,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }
           }, 200);
         } else {
+          console.log("[Rehearsal] TTS callback ignored - state changed");
           speakingLineRef.current = null;
         }
       }, {
@@ -582,17 +591,28 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun]);
 
   useEffect(() => {
+    const lineKey = session ? `${session.currentSceneIndex}-${session.currentLineIndex}` : null;
+    
     if (session?.isPlaying && currentLine) {
+      // Check if we're already handling this exact line
+      // This prevents double-triggering when state updates rapidly
+      if (speakingLineRef.current === lineKey) {
+        console.log("[Rehearsal] Effect: Already handling line", lineKey);
+        return;
+      }
+      
       if (currentIsUserLine) {
         ttsEngine.stop();
         if (!waitingForUserRef.current) {
-          speakingLineRef.current = `${session.currentSceneIndex}-${session.currentLineIndex}`;
+          console.log("[Rehearsal] Effect: Starting user turn for", lineKey);
+          speakingLineRef.current = lineKey;
           startListeningForUser();
         }
       } else {
         speechRecognition.abort();
         waitingForUserRef.current = false;
         setIsUserTurn(false);
+        console.log("[Rehearsal] Effect: Speaking AI line", lineKey);
         speakLine();
       }
     } else {

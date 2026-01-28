@@ -96,11 +96,10 @@ export function useSession() {
     return targetLine?.roleId === session.userRoleId;
   }, [session, getCurrentLine]);
 
-  // Navigation: Next line
+  // Navigation: Next line (just advances, doesn't count as rehearsed - caller decides)
   const nextLine = useCallback(() => {
     advanceLine();
-    incrementLinesRehearsed();
-  }, [advanceLine, incrementLinesRehearsed]);
+  }, [advanceLine]);
 
   // Navigation: Previous line
   const prevLine = useCallback(() => {
