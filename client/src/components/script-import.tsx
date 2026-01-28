@@ -596,8 +596,34 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, initi
       )}
 
       {(error || fileError) && (
-        <div className="px-3 py-2 rounded-lg bg-destructive/10 text-destructive text-sm" data-testid="text-error">
-          {error || fileError}
+        <div className="px-3 py-3 rounded-lg bg-destructive/10 text-sm space-y-2" data-testid="text-error">
+          <p className="text-destructive font-medium">
+            {(() => {
+              const errText = error || fileError || "";
+              // Parse JSON error if present
+              const jsonMatch = errText.match(/\{.*"error"\s*:\s*"([^"]+)".*\}/);
+              if (jsonMatch) {
+                return jsonMatch[1];
+              }
+              // Remove status code prefix like "400: "
+              const cleaned = errText.replace(/^\d+:\s*/, "");
+              // If it's still JSON, try to parse it
+              try {
+                const parsed = JSON.parse(cleaned);
+                return parsed.error || cleaned;
+              } catch {
+                return cleaned;
+              }
+            })()}
+          </p>
+          <div className="text-muted-foreground text-xs space-y-1">
+            <p className="font-medium">Tips:</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              <li>Use format: <code className="bg-muted px-1 rounded">CHARACTER: dialogue</code></li>
+              <li>Character names should be in ALL CAPS</li>
+              <li>Each character should have a colon after their name</li>
+            </ul>
+          </div>
         </div>
       )}
 
