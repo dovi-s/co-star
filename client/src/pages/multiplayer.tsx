@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { VideoGrid } from '@/components/video-grid';
 import { MultiplayerVideoBackground } from '@/components/multiplayer-video-background';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
+import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +53,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   });
 
   const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
+  const isActivelyRehearing = !!multiplayer.room && multiplayer.room.state === 'rehearsing';
   
   const webrtc = useWebRTC({
     socket: multiplayer.socket,
@@ -59,6 +61,97 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     participants: multiplayer.room?.participants ?? [],
     enabled: isRehearsingOrPaused,
   });
+
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const speakingLineRef = useRef<string | null>(null);
+  const aiSpeakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number) => {
+    if (speakingLineRef.current === lineId) return;
+    
+    speakingLineRef.current = lineId;
+    setIsAiSpeaking(true);
+    
+    const prosody = calculateProsody('neutral', 'natural');
+    
+    ttsEngine.speak(
+      text, 
+      prosody, 
+      (result: SpeakResult) => {
+        console.log('[Multiplayer TTS] Complete:', result);
+        setIsAiSpeaking(false);
+        
+        const stillOnSameLine = speakingLineRef.current === lineId && currentLineIdRef.current === lineId;
+        
+        if (result === 'success' && stillOnSameLine) {
+          aiSpeakTimeoutRef.current = setTimeout(() => {
+            if (currentLineIdRef.current === lineId) {
+              multiplayer.nextLine();
+            }
+            speakingLineRef.current = null;
+          }, 300);
+        } else {
+          speakingLineRef.current = null;
+        }
+      },
+      {
+        characterName: roleName,
+        characterIndex,
+      }
+    );
+  }, [multiplayer]);
+
+  const currentLineIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isActivelyRehearing || !multiplayer.room) {
+      if (isAiSpeaking) {
+        ttsEngine.stop();
+        setIsAiSpeaking(false);
+        speakingLineRef.current = null;
+      }
+      currentLineIdRef.current = null;
+      return;
+    }
+    
+    const room = multiplayer.room;
+    const currentScene = room.scenes[room.currentSceneIndex];
+    const currentLine = currentScene?.lines[room.currentLineIndex];
+    
+    if (!currentLine) return;
+
+    if (currentLineIdRef.current !== currentLine.id) {
+      if (speakingLineRef.current && speakingLineRef.current !== currentLine.id) {
+        ttsEngine.stop();
+        setIsAiSpeaking(false);
+        speakingLineRef.current = null;
+      }
+      currentLineIdRef.current = currentLine.id;
+    }
+    
+    const lineRoleId = currentLine.roleId;
+    const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
+    
+    if (!isRoleAssignedToParticipant) {
+      const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
+      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0);
+    }
+    
+    return () => {
+      if (aiSpeakTimeoutRef.current) {
+        clearTimeout(aiSpeakTimeoutRef.current);
+      }
+    };
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine, isAiSpeaking]);
+
+  useEffect(() => {
+    return () => {
+      ttsEngine.stop();
+      if (aiSpeakTimeoutRef.current) {
+        clearTimeout(aiSpeakTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleCreateRoom = () => {
     if (!session || !playerName.trim()) return;
