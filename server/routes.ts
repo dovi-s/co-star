@@ -7,6 +7,7 @@ import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
 import { aiCleanupScript } from "./ai-script-cleanup";
+import { setupMultiplayer } from "./multiplayer";
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -205,6 +206,9 @@ export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  
+  // Initialize WebSocket server for multiplayer
+  setupMultiplayer(httpServer);
   
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", app: "CastMate Studio" });

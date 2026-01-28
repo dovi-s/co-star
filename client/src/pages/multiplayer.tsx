@@ -1,0 +1,530 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useMultiplayer } from '@/hooks/use-multiplayer';
+import { useSessionContext } from '@/context/session-context';
+import { useToast } from '@/hooks/use-toast';
+import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type View = 'menu' | 'create' | 'join' | 'lobby';
+
+interface MultiplayerPageProps {
+  onBack: () => void;
+  onStartRehearsal?: (room: any) => void;
+}
+
+export default function MultiplayerPage({ onBack, onStartRehearsal }: MultiplayerPageProps) {
+  const { session } = useSessionContext();
+  const { toast } = useToast();
+  
+  const [view, setView] = useState<View>('menu');
+  const [playerName, setPlayerName] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [copied, setCopied] = useState(false);
+
+  const multiplayer = useMultiplayer({
+    onRoomCreated: (room) => {
+      toast({ title: 'Room Created', description: `Share code: ${room.code}` });
+      setView('lobby');
+    },
+    onRoomJoined: () => {
+      toast({ title: 'Joined Room' });
+      setView('lobby');
+    },
+    onError: (message) => {
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    },
+    onKicked: () => {
+      toast({ title: 'Removed from room', variant: 'destructive' });
+      setView('menu');
+    },
+    onRoomClosed: () => {
+      toast({ title: 'Room closed' });
+      setView('menu');
+    },
+  });
+
+  const handleCreateRoom = () => {
+    if (!session || !playerName.trim()) return;
+    multiplayer.createRoom(
+      session.name,
+      session.roles,
+      session.scenes,
+      playerName.trim()
+    );
+  };
+
+  const handleJoinRoom = () => {
+    if (!joinCode.trim() || !playerName.trim()) return;
+    multiplayer.joinRoom(joinCode.trim().toUpperCase(), playerName.trim());
+  };
+
+  const handleCopyCode = async () => {
+    if (!multiplayer.room) return;
+    await navigator.clipboard.writeText(multiplayer.room.code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSelectRole = (roleId: string) => {
+    const currentRole = multiplayer.currentParticipant?.roleId;
+    multiplayer.selectRole(currentRole === roleId ? null : roleId);
+  };
+
+  const handleLeave = () => {
+    multiplayer.leaveRoom();
+    setView('menu');
+  };
+
+  const allReady = multiplayer.room?.participants.every(p => p.isReady) ?? false;
+  const canStart = multiplayer.isHost && allReady && (multiplayer.room?.participants.length ?? 0) >= 1;
+
+  if (view === 'menu') {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <div className="w-full max-w-md space-y-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className="mb-4"
+            data-testid="button-back-home"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back
+          </Button>
+          
+          <div className="text-center mb-8">
+            <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
+            <h1 className="text-2xl font-semibold">Table Read</h1>
+            <p className="text-muted-foreground mt-2">
+              Rehearse with friends in real-time
+            </p>
+          </div>
+
+          <Card className="hover-elevate cursor-pointer" onClick={() => setView('create')} data-testid="card-create-room">
+            <CardHeader>
+              <CardTitle className="text-lg">Create Room</CardTitle>
+              <CardDescription>Host a table read with your script</CardDescription>
+            </CardHeader>
+          </Card>
+
+          <Card className="hover-elevate cursor-pointer" onClick={() => setView('join')} data-testid="card-join-room">
+            <CardHeader>
+              <CardTitle className="text-lg">Join Room</CardTitle>
+              <CardDescription>Enter a room code to join</CardDescription>
+            </CardHeader>
+          </Card>
+
+          {!session && (
+            <p className="text-center text-sm text-muted-foreground">
+              Import a script first to create a room
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'create') {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setView('menu')}
+              className="w-fit -ml-2 mb-2"
+              data-testid="button-back-menu"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <CardTitle>Create Room</CardTitle>
+            <CardDescription>
+              {session ? `Script: ${session.name}` : 'No script loaded'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Your Name</label>
+              <Input
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                data-testid="input-player-name"
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleCreateRoom}
+              disabled={!session || !playerName.trim() || !multiplayer.isConnected}
+              data-testid="button-create-room"
+            >
+              {!multiplayer.isConnected ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                'Create Room'
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (view === 'join') {
+    return (
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setView('menu')}
+              className="w-fit -ml-2 mb-2"
+              data-testid="button-back-menu"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back
+            </Button>
+            <CardTitle>Join Room</CardTitle>
+            <CardDescription>Enter the 6-character room code</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Room Code</label>
+              <Input
+                placeholder="ABC123"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                maxLength={6}
+                className="text-center text-2xl tracking-widest font-mono"
+                data-testid="input-room-code"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-2 block">Your Name</label>
+              <Input
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                data-testid="input-player-name-join"
+              />
+            </div>
+            <Button
+              className="w-full"
+              onClick={handleJoinRoom}
+              disabled={joinCode.length !== 6 || !playerName.trim() || !multiplayer.isConnected}
+              data-testid="button-join-room"
+            >
+              {!multiplayer.isConnected ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                'Join Room'
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused')) {
+    const room = multiplayer.room;
+    const currentScene = room.scenes[room.currentSceneIndex];
+    const currentLine = currentScene?.lines[room.currentLineIndex];
+    const prevLine = room.currentLineIndex > 0 ? currentScene?.lines[room.currentLineIndex - 1] : null;
+    const nextLine = currentScene?.lines[room.currentLineIndex + 1] ?? null;
+    
+    const currentSpeaker = room.participants.find(p => p.roleId === currentLine?.roleId);
+    const isMyTurn = currentLine?.roleId === multiplayer.currentParticipant?.roleId;
+    const myRole = room.roles.find(r => r.id === multiplayer.currentParticipant?.roleId);
+    
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="flex items-center justify-between px-4 py-3 border-b">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleLeave} data-testid="button-leave-rehearsal">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Leave
+            </Button>
+            <Badge variant="outline" className="font-mono">{room.code}</Badge>
+          </div>
+          <div className="flex items-center gap-2">
+            <Badge variant={room.state === 'paused' ? 'secondary' : 'default'}>
+              {room.state === 'paused' ? 'Paused' : 'Live'}
+            </Badge>
+            {myRole && <Badge>{myRole.name}</Badge>}
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-full max-w-2xl space-y-4">
+            {prevLine && (
+              <div className="text-center opacity-40">
+                <span className="text-xs font-medium">{prevLine.roleName}</span>
+                <p className="text-sm">{prevLine.text}</p>
+              </div>
+            )}
+            
+            <div className={cn(
+              "p-6 rounded-lg text-center transition-all",
+              isMyTurn 
+                ? "bg-primary/10 border-2 border-primary" 
+                : "bg-muted"
+            )}>
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <Badge 
+                  variant={isMyTurn ? "default" : "secondary"}
+                  className="text-sm"
+                >
+                  {currentLine?.roleName}
+                </Badge>
+                {currentSpeaker && (
+                  <span className="text-xs text-muted-foreground">
+                    ({currentSpeaker.name})
+                  </span>
+                )}
+                {isMyTurn && (
+                  <Volume2 className="h-4 w-4 text-primary animate-pulse" />
+                )}
+              </div>
+              {currentLine?.direction && (
+                <p className="text-sm text-muted-foreground italic mb-2">
+                  ({currentLine.direction})
+                </p>
+              )}
+              <p className={cn(
+                "text-xl leading-relaxed",
+                isMyTurn ? "font-medium" : ""
+              )}>
+                {currentLine?.text}
+              </p>
+              {isMyTurn && (
+                <p className="text-sm text-primary mt-4">Your line - speak now</p>
+              )}
+            </div>
+            
+            {nextLine && (
+              <div className="text-center opacity-30">
+                <span className="text-xs font-medium">{nextLine.roleName}</span>
+                <p className="text-sm">{nextLine.text}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <footer className="border-t p-4">
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm text-muted-foreground">
+                {currentScene?.name || `Scene ${room.currentSceneIndex + 1}`}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                Line {room.currentLineIndex + 1} of {currentScene?.lines.length ?? 0}
+              </span>
+            </div>
+            
+            <div className="flex items-center justify-center gap-2">
+              {multiplayer.isHost && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => multiplayer.prevLine()}
+                    data-testid="button-prev-line"
+                  >
+                    <SkipBack className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
+                    data-testid="button-play-pause"
+                  >
+                    {room.state === 'paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => multiplayer.nextLine()}
+                    data-testid="button-next-line"
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                </>
+              )}
+              
+              {!multiplayer.isHost && isMyTurn && (
+                <Button
+                  onClick={() => multiplayer.nextLine()}
+                  data-testid="button-done-speaking"
+                >
+                  Done Speaking
+                </Button>
+              )}
+              
+              {!multiplayer.isHost && !isMyTurn && (
+                <p className="text-sm text-muted-foreground">
+                  {currentSpeaker ? `${currentSpeaker.name} is speaking...` : 'Waiting...'}
+                </p>
+              )}
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  if (view === 'lobby' && multiplayer.room) {
+    const room = multiplayer.room;
+    
+    return (
+      <div className="min-h-screen bg-background p-4">
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div className="flex items-center justify-between">
+            <Button variant="ghost" size="sm" onClick={handleLeave} data-testid="button-leave-room">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Leave
+            </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Room Code:</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyCode}
+                className="font-mono text-lg tracking-widest"
+                data-testid="button-copy-code"
+              >
+                {room.code}
+                {copied ? <Check className="h-4 w-4 ml-2" /> : <Copy className="h-4 w-4 ml-2" />}
+              </Button>
+            </div>
+          </div>
+
+          <div className="text-center">
+            <h1 className="text-xl font-semibold">{room.scriptName}</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {room.participants.length} participant{room.participants.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Participants</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {room.participants.map((p) => {
+                const role = room.roles.find(r => r.id === p.roleId);
+                return (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-md",
+                      p.id === multiplayer.participantId ? "bg-primary/10" : "bg-muted/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <UserCircle className="h-5 w-5 text-muted-foreground" />
+                      <span className="font-medium">{p.name}</span>
+                      {p.isHost && (
+                        <Crown className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {role && (
+                        <Badge variant="secondary">{role.name}</Badge>
+                      )}
+                      {p.isReady && (
+                        <Badge className="bg-green-500/20 text-green-600">Ready</Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Select Your Role</CardTitle>
+              <CardDescription>Choose the character you want to play</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-2">
+                {room.roles.map((role) => {
+                  const takenBy = room.participants.find(p => p.roleId === role.id);
+                  const isSelected = multiplayer.currentParticipant?.roleId === role.id;
+                  const isTakenByOther = takenBy && takenBy.id !== multiplayer.participantId;
+                  
+                  return (
+                    <Button
+                      key={role.id}
+                      variant={isSelected ? "default" : "outline"}
+                      className={cn(
+                        "justify-start h-auto py-3",
+                        isTakenByOther && "opacity-50"
+                      )}
+                      disabled={isTakenByOther}
+                      onClick={() => handleSelectRole(role.id)}
+                      data-testid={`button-select-role-${role.id}`}
+                    >
+                      <div className="text-left">
+                        <div className="font-medium">{role.name}</div>
+                        <div className="text-xs opacity-70">
+                          {role.lineCount} line{role.lineCount !== 1 ? 's' : ''}
+                          {isTakenByOther && ` - ${takenBy.name}`}
+                        </div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="flex gap-3">
+            <Button
+              variant={multiplayer.currentParticipant?.isReady ? "secondary" : "outline"}
+              className="flex-1"
+              onClick={() => multiplayer.setReady(!multiplayer.currentParticipant?.isReady)}
+              data-testid="button-toggle-ready"
+            >
+              {multiplayer.currentParticipant?.isReady ? 'Not Ready' : 'Ready'}
+            </Button>
+            
+            {multiplayer.isHost && (
+              <Button
+                className="flex-1"
+                disabled={!canStart}
+                onClick={() => multiplayer.startRehearsal()}
+                data-testid="button-start-rehearsal"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                Start Rehearsal
+              </Button>
+            )}
+          </div>
+
+          {!allReady && (
+            <p className="text-center text-sm text-muted-foreground">
+              Waiting for all participants to be ready...
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}

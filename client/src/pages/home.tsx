@@ -4,14 +4,17 @@ import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 type Step = "import" | "role-select";
 
 interface HomePageProps {
   onSessionReady: () => void;
+  onMultiplayer?: () => void;
 }
 
-export function HomePage({ onSessionReady }: HomePageProps) {
+export function HomePage({ onSessionReady, onMultiplayer }: HomePageProps) {
   const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const [step, setStep] = useState<Step>(() => {
     // Start at import - context will have the session if it exists
@@ -69,7 +72,20 @@ export function HomePage({ onSessionReady }: HomePageProps) {
     <div className="min-h-screen flex flex-col bg-background" data-testid="home-page">
       <header className="flex items-center justify-between px-5 py-4 sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/40 safe-top">
         <Logo size="sm" animated showWordmark />
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          {onMultiplayer && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMultiplayer}
+              title="Table Read"
+              data-testid="button-multiplayer"
+            >
+              <Users className="h-5 w-5" />
+            </Button>
+          )}
+          <ThemeToggle />
+        </div>
       </header>
 
       <main className="flex-1 flex flex-col">

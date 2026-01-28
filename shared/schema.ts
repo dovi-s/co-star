@@ -128,5 +128,71 @@ export const parsedScriptSchema = z.object({
 });
 export type ParsedScript = z.infer<typeof parsedScriptSchema>;
 
+// ============================================
+// MULTIPLAYER TABLE READ TYPES
+// ============================================
+
+export const participantSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  roleId: z.string().nullable(),
+  isHost: z.boolean().default(false),
+  isReady: z.boolean().default(false),
+  joinedAt: z.string(),
+});
+export type Participant = z.infer<typeof participantSchema>;
+
+export const roomStateSchema = z.enum(["lobby", "rehearsing", "paused", "completed"]);
+export type RoomState = z.infer<typeof roomStateSchema>;
+
+export const roomSchema = z.object({
+  id: z.string(),
+  code: z.string(), // Short 6-char code for joining
+  hostId: z.string(),
+  state: roomStateSchema.default("lobby"),
+  participants: z.array(participantSchema),
+  // Script data (copied from session so room is self-contained)
+  scriptName: z.string(),
+  roles: z.array(roleSchema),
+  scenes: z.array(sceneSchema),
+  // Playback state (synced across all participants)
+  currentSceneIndex: z.number().default(0),
+  currentLineIndex: z.number().default(0),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Room = z.infer<typeof roomSchema>;
+
+// Client -> Server events
+export const roomEventSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("create_room"), scriptName: z.string(), roles: z.array(roleSchema), scenes: z.array(sceneSchema), hostName: z.string() }),
+  z.object({ type: z.literal("join_room"), code: z.string(), participantName: z.string() }),
+  z.object({ type: z.literal("leave_room") }),
+  z.object({ type: z.literal("select_role"), roleId: z.string().nullable() }),
+  z.object({ type: z.literal("set_ready"), ready: z.boolean() }),
+  z.object({ type: z.literal("start_rehearsal") }), // Host only
+  z.object({ type: z.literal("pause_rehearsal") }), // Host only
+  z.object({ type: z.literal("resume_rehearsal") }), // Host only
+  z.object({ type: z.literal("next_line") }), // Host or current speaker
+  z.object({ type: z.literal("prev_line") }), // Host only
+  z.object({ type: z.literal("go_to_line"), lineIndex: z.number() }), // Host only
+  z.object({ type: z.literal("go_to_scene"), sceneIndex: z.number() }), // Host only
+  z.object({ type: z.literal("line_complete"), lineId: z.string() }), // Current speaker signals done
+  z.object({ type: z.literal("kick_participant"), participantId: z.string() }), // Host only
+  z.object({ type: z.literal("transfer_host"), newHostId: z.string() }), // Host only
+]);
+export type RoomEvent = z.infer<typeof roomEventSchema>;
+
+// Server -> Client events
+export const roomUpdateSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("room_created"), room: roomSchema, participantId: z.string() }),
+  z.object({ type: z.literal("room_joined"), room: roomSchema, participantId: z.string() }),
+  z.object({ type: z.literal("room_updated"), room: roomSchema }),
+  z.object({ type: z.literal("room_error"), message: z.string() }),
+  z.object({ type: z.literal("kicked") }),
+  z.object({ type: z.literal("room_closed") }),
+]);
+export type RoomUpdate = z.infer<typeof roomUpdateSchema>;
+
 export { users, insertUserSchema } from "./user-schema";
 export type { User, InsertUser } from "./user-schema";

@@ -7,8 +7,9 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { SessionProvider, useSessionContext } from "@/context/session-context";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
+import MultiplayerPage from "@/pages/multiplayer";
 
-type View = "home" | "rehearsal";
+type View = "home" | "rehearsal" | "multiplayer";
 
 function AppContent() {
   const { session } = useSessionContext();
@@ -25,6 +26,10 @@ function AppContent() {
     setView("home");
   }, []);
 
+  const handleMultiplayer = useCallback(() => {
+    setView("multiplayer");
+  }, []);
+
   // Auto-navigate to rehearsal if session is ready with a user role
   // This handles page refresh (though session won't persist for large scripts)
   if (view === "home" && session?.userRoleId) {
@@ -33,10 +38,15 @@ function AppContent() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {view === "home" 
-        ? <HomePage key="home" onSessionReady={handleSessionReady} />
-        : <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
-      }
+      {view === "home" && (
+        <HomePage key="home" onSessionReady={handleSessionReady} onMultiplayer={handleMultiplayer} />
+      )}
+      {view === "rehearsal" && (
+        <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
+      )}
+      {view === "multiplayer" && (
+        <MultiplayerPage key="multiplayer" onBack={handleBackToHome} />
+      )}
     </div>
   );
 }
