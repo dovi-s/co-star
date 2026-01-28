@@ -8,7 +8,7 @@ import { useWebRTC } from '@/hooks/use-webrtc';
 import { VideoGrid } from '@/components/video-grid';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type View = 'menu' | 'create' | 'join' | 'lobby';
@@ -292,6 +292,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
               >
                 {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
               </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => multiplayer.setRecordingOptOut(!multiplayer.currentParticipant?.recordingOptOut)}
+                className={multiplayer.currentParticipant?.recordingOptOut ? "text-amber-500" : ""}
+                data-testid="button-toggle-recording-opt-out-rehearsal"
+                title={multiplayer.currentParticipant?.recordingOptOut ? "Recording excluded" : "Exclude from recording"}
+              >
+                <Circle className={`h-4 w-4 ${multiplayer.currentParticipant?.recordingOptOut ? "" : "fill-red-500 text-red-500"}`} />
+              </Button>
             </div>
             <Badge variant={room.state === 'paused' ? 'secondary' : 'default'}>
               {room.state === 'paused' ? 'Paused' : 'Live'}
@@ -488,6 +498,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
                     className={!webrtc.isVideoEnabled ? "text-red-500" : ""}
                   >
                     {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => multiplayer.setRecordingOptOut(!multiplayer.currentParticipant?.recordingOptOut)}
+                    data-testid="button-toggle-recording-opt-out"
+                    className={multiplayer.currentParticipant?.recordingOptOut ? "text-amber-500" : ""}
+                    title={multiplayer.currentParticipant?.recordingOptOut ? "Recording excluded" : "Exclude from recording"}
+                  >
+                    <Circle className={`h-4 w-4 ${multiplayer.currentParticipant?.recordingOptOut ? "" : "fill-red-500 text-red-500"}`} />
                   </Button>
                 </div>
               </CardTitle>

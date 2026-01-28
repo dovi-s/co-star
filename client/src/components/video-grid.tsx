@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { PeerStream } from '@/hooks/use-webrtc';
 import type { Participant } from '@shared/schema';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff, Video, VideoOff, Crown } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Crown, VideoOff as RecordingOff } from 'lucide-react';
 
 interface VideoTileProps {
   stream: MediaStream | null;
@@ -11,10 +11,11 @@ interface VideoTileProps {
   isMuted?: boolean;
   isVideoOff?: boolean;
   isSpeaking?: boolean;
+  recordingOptOut?: boolean;
   className?: string;
 }
 
-function VideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaking, className }: VideoTileProps) {
+function VideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaking, recordingOptOut, className }: VideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -78,6 +79,16 @@ function VideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaki
           )}
         </div>
       </div>
+      
+      {recordingOptOut && (
+        <div 
+          className="absolute top-2 right-2 bg-amber-500/90 rounded px-1.5 py-0.5 flex items-center gap-1"
+          title="Not included in recordings"
+        >
+          <RecordingOff className="h-3 w-3 text-white" />
+          <span className="text-[10px] text-white font-medium">No Rec</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -120,6 +131,7 @@ export function VideoGrid({
         isMuted={!isAudioEnabled}
         isVideoOff={!isVideoEnabled}
         isSpeaking={currentSpeakerId === myParticipantId}
+        recordingOptOut={myParticipant?.recordingOptOut}
       />
       
       {participants
@@ -132,6 +144,7 @@ export function VideoGrid({
               stream={peerStream?.stream || null}
               participant={participant}
               isSpeaking={currentSpeakerId === participant.id}
+              recordingOptOut={participant.recordingOptOut}
             />
           );
         })}

@@ -142,6 +142,10 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
     sendEvent({ type: 'transfer_host', newHostId });
   }, [sendEvent]);
 
+  const setRecordingOptOut = useCallback((optOut: boolean) => {
+    sendEvent({ type: 'set_recording_opt_out', optOut });
+  }, [sendEvent]);
+
   const currentParticipant = room?.participants.find(p => p.id === participantId);
   const isHost = currentParticipant?.isHost ?? false;
 
@@ -167,5 +171,6 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
     goToScene,
     kickParticipant,
     transferHost,
+    setRecordingOptOut,
   };
 }

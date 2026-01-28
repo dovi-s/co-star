@@ -388,6 +388,22 @@ function handleTransferHost(socket: Socket, io: SocketIOServer, data: { newHostI
   console.log(`[Multiplayer] Host transferred to ${newHost.name}`);
 }
 
+function handleRecordingOptOut(socket: Socket, io: SocketIOServer, data: { optOut: boolean }) {
+  const info = socketToRoom.get(socket.id);
+  if (!info) return;
+
+  const room = rooms.get(info.roomId);
+  if (!room) return;
+
+  const participant = room.participants.find((p) => p.id === info.participantId);
+  if (!participant) return;
+
+  participant.recordingOptOut = data.optOut;
+  room.updatedAt = new Date().toISOString();
+  broadcastRoomUpdate(io, room);
+  console.log(`[Multiplayer] ${participant.name} ${data.optOut ? 'opted out of' : 'opted into'} recording`);
+}
+
 // WebRTC signaling handlers
 function handleRtcOffer(socket: Socket, io: SocketIOServer, data: { targetId: string; offer: unknown }) {
   const info = socketToRoom.get(socket.id);
@@ -552,6 +568,9 @@ export function setupMultiplayer(httpServer: HTTPServer): SocketIOServer {
           break;
         case "transfer_host":
           handleTransferHost(socket, io, event);
+          break;
+        case "set_recording_opt_out":
+          handleRecordingOptOut(socket, io, event);
           break;
         case "rtc_offer":
           handleRtcOffer(socket, io, event);

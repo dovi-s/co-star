@@ -138,6 +138,7 @@ export const participantSchema = z.object({
   roleId: z.string().nullable(),
   isHost: z.boolean().default(false),
   isReady: z.boolean().default(false),
+  recordingOptOut: z.boolean().default(false), // User opts out of being recorded
   joinedAt: z.string(),
 });
 export type Participant = z.infer<typeof participantSchema>;
@@ -197,6 +198,7 @@ export const roomEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("line_complete"), lineId: z.string() }), // Current speaker signals done
   z.object({ type: z.literal("kick_participant"), participantId: z.string() }), // Host only
   z.object({ type: z.literal("transfer_host"), newHostId: z.string() }), // Host only
+  z.object({ type: z.literal("set_recording_opt_out"), optOut: z.boolean() }), // Any participant
   // WebRTC signaling events
   z.object({ type: z.literal("rtc_offer"), targetId: z.string(), offer: rtcOfferSchema }),
   z.object({ type: z.literal("rtc_answer"), targetId: z.string(), answer: rtcAnswerSchema }),
