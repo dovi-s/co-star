@@ -95,158 +95,240 @@ export default function MultiplayerPage({ onBack, onStartRehearsal }: Multiplaye
 
   if (view === 'menu') {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <div className="w-full max-w-md space-y-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onBack}
-            className="mb-4"
-            data-testid="button-back-home"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back
-          </Button>
-          
-          <div className="text-center mb-8">
-            <Users className="h-12 w-12 mx-auto mb-4 text-primary" />
-            <h1 className="text-2xl font-semibold">Table Read</h1>
-            <p className="text-muted-foreground mt-2">
-              Rehearse with friends in real-time
+      <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-menu">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onBack}
+              className="shrink-0"
+              data-testid="button-back-home"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div className="min-w-0">
+              <h1 className="font-medium text-sm truncate text-foreground">Table Read</h1>
+              <p className="text-[11px] text-muted-foreground">Multiplayer</p>
+            </div>
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col">
+          <div className="px-5 pt-6 pb-4 relative">
+            <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+            <h2 className="text-lg font-semibold text-foreground relative">
+              Rehearse together
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1 relative">
+              Read through scripts with friends in real-time.
             </p>
           </div>
 
-          <Card className="hover-elevate cursor-pointer" onClick={() => setView('create')} data-testid="card-create-room">
-            <CardHeader>
-              <CardTitle className="text-lg">Create Room</CardTitle>
-              <CardDescription>Host a table read with your script</CardDescription>
-            </CardHeader>
-          </Card>
+          <div className="flex-1 px-4 pt-2 pb-6 space-y-3">
+            <Card 
+              className="hover-elevate cursor-pointer transition-all duration-150 press-effect" 
+              onClick={() => session ? setView('create') : undefined}
+              data-testid="card-create-room"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "flex items-center justify-center w-10 h-10 rounded-lg",
+                    session ? "bg-primary text-primary-foreground" : "bg-muted"
+                  )}>
+                    <Users className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base">Create Room</CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      {session ? `Host with "${session.name}"` : 'Import a script first'}
+                    </CardDescription>
+                  </div>
+                  {session && <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />}
+                </div>
+              </CardHeader>
+            </Card>
 
-          <Card className="hover-elevate cursor-pointer" onClick={() => setView('join')} data-testid="card-join-room">
-            <CardHeader>
-              <CardTitle className="text-lg">Join Room</CardTitle>
-              <CardDescription>Enter a room code to join</CardDescription>
-            </CardHeader>
-          </Card>
-
-          {!session && (
-            <p className="text-center text-sm text-muted-foreground">
-              Import a script first to create a room
-            </p>
-          )}
+            <Card 
+              className="hover-elevate cursor-pointer transition-all duration-150 press-effect" 
+              onClick={() => setView('join')}
+              data-testid="card-join-room"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted">
+                    <UserCircle className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base">Join Room</CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      Enter a 6-character room code
+                    </CardDescription>
+                  </div>
+                  <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
+
+        <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom">
+          <p className="text-[11px] text-muted-foreground/60 text-center">
+            Video and audio stay between participants.
+          </p>
+        </footer>
       </div>
     );
   }
 
   if (view === 'create') {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
+      <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-create">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setView('menu')}
-              className="w-fit -ml-2 mb-2"
+              className="shrink-0"
               data-testid="button-back-menu"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <CardTitle>Create Room</CardTitle>
-            <CardDescription>
-              {session ? `Script: ${session.name}` : 'No script loaded'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Your Name</label>
-              <Input
-                placeholder="Enter your name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                data-testid="input-player-name"
-              />
+            <div className="min-w-0">
+              <h1 className="font-medium text-sm truncate text-foreground">Create Room</h1>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {session?.name || 'No script'}
+              </p>
             </div>
-            <Button
-              className="w-full"
-              onClick={handleCreateRoom}
-              disabled={!session || !playerName.trim() || !multiplayer.isConnected}
-              data-testid="button-create-room"
-            >
-              {!multiplayer.isConnected ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                'Create Room'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col">
+          <div className="px-5 pt-6 pb-4 relative">
+            <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+            <h2 className="text-lg font-semibold text-foreground relative">
+              Host a table read
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1 relative">
+              Others will join using your room code.
+            </p>
+          </div>
+
+          <div className="flex-1 px-4 pt-2 pb-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Your Name</label>
+                <Input
+                  placeholder="Enter your name"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  data-testid="input-player-name"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background safe-bottom">
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={handleCreateRoom}
+            disabled={!session || !playerName.trim() || !multiplayer.isConnected}
+            data-testid="button-create-room"
+          >
+            {!multiplayer.isConnected ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              'Create Room'
+            )}
+          </Button>
+        </div>
       </div>
     );
   }
 
   if (view === 'join') {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardHeader>
+      <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-join">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setView('menu')}
-              className="w-fit -ml-2 mb-2"
+              className="shrink-0"
               data-testid="button-back-menu"
             >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              <ArrowLeft className="h-5 w-5" />
             </Button>
-            <CardTitle>Join Room</CardTitle>
-            <CardDescription>Enter the 6-character room code</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-2 block">Room Code</label>
-              <Input
-                placeholder="ABC123"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                maxLength={6}
-                className="text-center text-2xl tracking-widest font-mono"
-                data-testid="input-room-code"
-              />
+            <div className="min-w-0">
+              <h1 className="font-medium text-sm truncate text-foreground">Join Room</h1>
+              <p className="text-[11px] text-muted-foreground">Enter room code</p>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-2 block">Your Name</label>
-              <Input
-                placeholder="Enter your name"
-                value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                data-testid="input-player-name-join"
-              />
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col">
+          <div className="px-5 pt-6 pb-4 relative">
+            <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+            <h2 className="text-lg font-semibold text-foreground relative">
+              Join a table read
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1 relative">
+              Ask the host for their room code.
+            </p>
+          </div>
+
+          <div className="flex-1 px-4 pt-2 pb-6">
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium mb-2 block">Room Code</label>
+                <Input
+                  placeholder="ABC123"
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  maxLength={6}
+                  className="text-center text-xl tracking-widest font-mono"
+                  data-testid="input-room-code"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-2 block">Your Name</label>
+                <Input
+                  placeholder="Enter your name"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  data-testid="input-player-name-join"
+                />
+              </div>
             </div>
-            <Button
-              className="w-full"
-              onClick={handleJoinRoom}
-              disabled={joinCode.length !== 6 || !playerName.trim() || !multiplayer.isConnected}
-              data-testid="button-join-room"
-            >
-              {!multiplayer.isConnected ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                'Join Room'
-              )}
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background safe-bottom">
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={handleJoinRoom}
+            disabled={joinCode.length !== 6 || !playerName.trim() || !multiplayer.isConnected}
+            data-testid="button-join-room"
+          >
+            {!multiplayer.isConnected ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Connecting...
+              </>
+            ) : (
+              'Join Room'
+            )}
+          </Button>
+        </div>
       </div>
     );
   }
