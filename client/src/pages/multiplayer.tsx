@@ -51,13 +51,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     },
   });
 
-  const isInRoom = !!multiplayer.room && (view === 'lobby' || multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
+  const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
   
   const webrtc = useWebRTC({
     socket: multiplayer.socket,
     myParticipantId: multiplayer.currentParticipant?.id ?? null,
     participants: multiplayer.room?.participants ?? [],
-    enabled: isInRoom,
+    enabled: isRehearsingOrPaused,
   });
 
   const handleCreateRoom = () => {
@@ -523,56 +523,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center justify-between">
-                <span>Video Call</span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={webrtc.toggleAudio}
-                    data-testid="button-toggle-audio"
-                    className={!webrtc.isAudioEnabled ? "text-red-500" : ""}
-                  >
-                    {webrtc.isAudioEnabled ? <Mic className="h-4 w-4" /> : <MicOff className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={webrtc.toggleVideo}
-                    data-testid="button-toggle-video"
-                    className={!webrtc.isVideoEnabled ? "text-red-500" : ""}
-                  >
-                    {webrtc.isVideoEnabled ? <Video className="h-4 w-4" /> : <VideoOff className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => multiplayer.setRecordingOptOut(!multiplayer.currentParticipant?.recordingOptOut)}
-                    data-testid="button-toggle-recording-opt-out"
-                    className={multiplayer.currentParticipant?.recordingOptOut ? "text-amber-500" : ""}
-                    title={multiplayer.currentParticipant?.recordingOptOut ? "Recording excluded" : "Exclude from recording"}
-                  >
-                    <Circle className={`h-4 w-4 ${multiplayer.currentParticipant?.recordingOptOut ? "" : "fill-red-500 text-red-500"}`} />
-                  </Button>
-                </div>
-              </CardTitle>
-              {webrtc.error && (
-                <CardDescription className="text-red-500">{webrtc.error}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <VideoGrid
-                localStream={webrtc.localStream}
-                peerStreams={webrtc.peerStreams}
-                participants={room.participants}
-                myParticipantId={multiplayer.participantId}
-                isAudioEnabled={webrtc.isAudioEnabled}
-                isVideoEnabled={webrtc.isVideoEnabled}
-              />
-            </CardContent>
-          </Card>
 
           <Card>
             <CardHeader>
