@@ -442,20 +442,37 @@ export function ThreeLineReader({
       {/* Scene transition card - shows when entering a new scene */}
       {isFirstLineOfScene && currentScene && (
         <div 
-          className="px-4 py-3 rounded-lg bg-muted/30 border border-border/40 animate-in fade-in slide-in-from-top-2 duration-300"
+          className={cn(
+            "px-4 py-3 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300",
+            cameraMode 
+              ? "bg-black/50 backdrop-blur-xl border border-white/20" 
+              : "bg-muted/30 border border-border/40"
+          )}
           data-testid="scene-transition-card"
         >
           <div className="flex items-center gap-2 mb-1">
-            <Film className="w-3.5 h-3.5 text-muted-foreground/70" />
-            <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground/70">
+            <Film className={cn(
+              "w-3.5 h-3.5",
+              cameraMode ? "text-white/70" : "text-muted-foreground/70"
+            )} />
+            <span className={cn(
+              "text-[11px] font-medium uppercase tracking-wide",
+              cameraMode ? "text-white/70" : "text-muted-foreground/70"
+            )}>
               Scene
             </span>
           </div>
-          <p className="text-sm font-medium text-foreground/90 leading-snug">
+          <p className={cn(
+            "text-sm font-medium leading-snug",
+            cameraMode ? "text-white" : "text-foreground/90"
+          )}>
             {currentScene.name}
           </p>
           {currentScene.description && (
-            <p className="mt-1.5 text-xs text-muted-foreground/70 leading-relaxed italic">
+            <p className={cn(
+              "mt-1.5 text-xs leading-relaxed italic",
+              cameraMode ? "text-white/60" : "text-muted-foreground/70"
+            )}>
               {currentScene.description}
             </p>
           )}
@@ -468,26 +485,30 @@ export function ThreeLineReader({
           {/* Previous dot */}
           <div className={cn(
             "w-2 h-2 rounded-full transition-all duration-300",
-            previousLine ? "bg-muted-foreground/30" : "bg-transparent"
+            previousLine 
+              ? (cameraMode ? "bg-white/30" : "bg-muted-foreground/30") 
+              : "bg-transparent"
           )} />
           
           {/* Line connecting to current */}
           <div className={cn(
             "w-0.5 flex-1 transition-all duration-300",
-            previousLine ? "bg-muted-foreground/20" : "bg-transparent"
+            previousLine 
+              ? (cameraMode ? "bg-white/20" : "bg-muted-foreground/20") 
+              : "bg-transparent"
           )} />
           
           {/* Current dot - larger and highlighted */}
           <div className={cn(
             "w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all duration-300",
             isUserLine 
-              ? "bg-foreground ring-2 ring-foreground/20" 
+              ? (cameraMode ? "bg-white ring-2 ring-white/30" : "bg-foreground ring-2 ring-foreground/20")
               : "bg-primary ring-2 ring-primary/20"
           )}>
             {isPlaying && (
               <div className={cn(
                 "w-1.5 h-1.5 rounded-full animate-pulse",
-                isUserLine ? "bg-background" : "bg-primary-foreground"
+                isUserLine ? (cameraMode ? "bg-black" : "bg-background") : "bg-primary-foreground"
               )} />
             )}
           </div>
@@ -495,13 +516,17 @@ export function ThreeLineReader({
           {/* Line connecting to next */}
           <div className={cn(
             "w-0.5 flex-1 transition-all duration-300",
-            nextLine ? "bg-muted-foreground/20" : "bg-transparent"
+            nextLine 
+              ? (cameraMode ? "bg-white/20" : "bg-muted-foreground/20") 
+              : "bg-transparent"
           )} />
           
           {/* Next dot */}
           <div className={cn(
             "w-2 h-2 rounded-full transition-all duration-300",
-            nextLine ? "bg-muted-foreground/30" : "bg-transparent"
+            nextLine 
+              ? (cameraMode ? "bg-white/30" : "bg-muted-foreground/30") 
+              : "bg-transparent"
           )} />
         </div>
         
