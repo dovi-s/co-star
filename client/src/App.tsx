@@ -10,6 +10,7 @@ import { RehearsalPage } from "@/pages/rehearsal";
 import MultiplayerPage from "@/pages/multiplayer";
 
 type View = "home" | "rehearsal" | "multiplayer";
+type MultiplayerInitialView = "menu" | "create" | "join";
 
 function AppContent() {
   const { session } = useSessionContext();
@@ -17,6 +18,7 @@ function AppContent() {
     // Start at home - session context will have the data
     return "home";
   });
+  const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("menu");
 
   const handleSessionReady = useCallback(() => {
     setView("rehearsal");
@@ -26,9 +28,23 @@ function AppContent() {
     setView("home");
   }, []);
 
-  const handleMultiplayer = useCallback(() => {
+  // From role selector: go directly to create room
+  const handleTableReadFromRoleSelector = useCallback(() => {
+    setMultiplayerInitialView("create");
     setView("multiplayer");
   }, []);
+
+  // From home header: depends on whether we have a script
+  const handleMultiplayerFromHome = useCallback(() => {
+    if (session && session.scenes?.length > 0) {
+      // Has script - show menu with both options
+      setMultiplayerInitialView("menu");
+    } else {
+      // No script - go directly to join
+      setMultiplayerInitialView("join");
+    }
+    setView("multiplayer");
+  }, [session]);
 
   // Auto-navigate to rehearsal if session is ready with a user role
   // This handles page refresh (though session won't persist for large scripts)
@@ -39,13 +55,22 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {view === "home" && (
-        <HomePage key="home" onSessionReady={handleSessionReady} onMultiplayer={handleMultiplayer} />
+        <HomePage 
+          key="home" 
+          onSessionReady={handleSessionReady} 
+          onMultiplayer={handleMultiplayerFromHome}
+          onTableRead={handleTableReadFromRoleSelector}
+        />
       )}
       {view === "rehearsal" && (
         <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
       )}
       {view === "multiplayer" && (
-        <MultiplayerPage key="multiplayer" onBack={handleBackToHome} />
+        <MultiplayerPage 
+          key={`multiplayer-${multiplayerInitialView}`}
+          onBack={handleBackToHome}
+          initialView={multiplayerInitialView}
+        />
       )}
     </div>
   );

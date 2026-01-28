@@ -12,9 +12,10 @@ type Step = "import" | "role-select";
 interface HomePageProps {
   onSessionReady: () => void;
   onMultiplayer?: () => void;
+  onTableRead?: () => void;
 }
 
-export function HomePage({ onSessionReady, onMultiplayer }: HomePageProps) {
+export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePageProps) {
   const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const [step, setStep] = useState<Step>(() => {
     // Start at import - context will have the session if it exists
@@ -63,7 +64,7 @@ export function HomePage({ onSessionReady, onMultiplayer }: HomePageProps) {
         roles={session.roles}
         onRoleSelect={handleRoleSelect}
         onBack={handleBackToImport}
-        onTableRead={onMultiplayer}
+        onTableRead={onTableRead}
         scriptName={session.name}
       />
     );

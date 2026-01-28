@@ -16,13 +16,14 @@ type View = 'menu' | 'create' | 'join' | 'lobby';
 interface MultiplayerPageProps {
   onBack: () => void;
   onStartRehearsal?: (room: any) => void;
+  initialView?: View;
 }
 
-export default function MultiplayerPage({ onBack, onStartRehearsal }: MultiplayerPageProps) {
+export default function MultiplayerPage({ onBack, onStartRehearsal, initialView = 'menu' }: MultiplayerPageProps) {
   const { session } = useSessionContext();
   const { toast } = useToast();
   
-  const [view, setView] = useState<View>('menu');
+  const [view, setView] = useState<View>(initialView);
   const [playerName, setPlayerName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [copied, setCopied] = useState(false);
