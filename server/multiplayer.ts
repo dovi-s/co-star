@@ -36,6 +36,7 @@ function handleCreateRoom(
     roleId: null,
     isHost: true,
     isReady: false,
+    recordingOptOut: false,
     joinedAt: new Date().toISOString(),
   };
 
@@ -91,6 +92,7 @@ function handleJoinRoom(
     roleId: null,
     isHost: false,
     isReady: false,
+    recordingOptOut: false,
     joinedAt: new Date().toISOString(),
   };
 

@@ -84,6 +84,7 @@ function VideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaki
         <div 
           className="absolute top-2 right-2 bg-amber-500/90 rounded px-1.5 py-0.5 flex items-center gap-1"
           title="Not included in recordings"
+          data-testid={`badge-recording-opt-out-${participant?.id || 'local'}`}
         >
           <RecordingOff className="h-3 w-3 text-white" />
           <span className="text-[10px] text-white font-medium">No Rec</span>
