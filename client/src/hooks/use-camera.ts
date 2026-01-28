@@ -75,17 +75,7 @@ export function useCamera() {
     }
   }, [isEnabled, startCamera, stopCamera]);
 
-  const startRecording = useCallback(() => {
-    if (!isEnabled || !stream) {
-      setError('Enable camera before recording');
-      return false;
-    }
-    
-    if (!canvasRef.current) {
-      setError('Recording not ready. Try again.');
-      return false;
-    }
-
+  const startRecording = useCallback(async () => {
     try {
       setError(null);
       recordingChunksRef.current = [];
@@ -93,26 +83,42 @@ export function useCamera() {
       setHasRecording(false);
       setRecordingBlob(null);
 
-      const canvasStream = canvasRef.current.captureStream(30);
-      
-      if (stream) {
+      let recordingStream: MediaStream;
+      let isVideoRecording = false;
+
+      if (isEnabled && stream && canvasRef.current) {
+        // Video + audio recording (camera is on)
+        const canvasStream = canvasRef.current.captureStream(30);
         const audioTracks = stream.getAudioTracks();
         audioTracks.forEach(track => {
           canvasStream.addTrack(track);
         });
+        recordingStream = canvasStream;
+        isVideoRecording = true;
+        console.log('[Camera] Starting video + audio recording');
+      } else {
+        // Audio-only recording (camera is off)
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingStream = audioStream;
+        isVideoRecording = false;
+        console.log('[Camera] Starting audio-only recording');
       }
 
-      const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : MediaRecorder.isTypeSupported('video/webm')
-        ? 'video/webm'
-        : 'video/mp4';
+      const mimeType = isVideoRecording
+        ? (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+          ? 'video/webm;codecs=vp9'
+          : MediaRecorder.isTypeSupported('video/webm')
+          ? 'video/webm'
+          : 'video/mp4')
+        : (MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : 'audio/mp4');
 
       mimeTypeRef.current = mimeType;
 
-      const mediaRecorder = new MediaRecorder(canvasStream, {
+      const mediaRecorder = new MediaRecorder(recordingStream, {
         mimeType,
-        videoBitsPerSecond: 2500000,
+        ...(isVideoRecording ? { videoBitsPerSecond: 2500000 } : { audioBitsPerSecond: 128000 }),
       });
 
       mediaRecorder.ondataavailable = (event) => {
@@ -126,6 +132,11 @@ export function useCamera() {
         setRecordingBlob(blob);
         setHasRecording(true);
         console.log('[Camera] Recording saved, size:', blob.size);
+        
+        // Stop audio-only stream tracks when done
+        if (!isVideoRecording) {
+          recordingStream.getTracks().forEach(track => track.stop());
+        }
       };
 
       mediaRecorder.start(1000);
@@ -140,7 +151,11 @@ export function useCamera() {
       return true;
     } catch (err) {
       console.error('[Camera] Error starting recording:', err);
-      setError('Could not start recording.');
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        setError('Microphone permission denied.');
+      } else {
+        setError('Could not start recording.');
+      }
       return false;
     }
   }, [isEnabled, stream]);
@@ -171,7 +186,10 @@ export function useCamera() {
   const downloadRecording = useCallback((filename: string = 'castmate-recording') => {
     if (!recordingBlob) return;
 
-    const extension = mimeTypeRef.current.includes('mp4') ? 'mp4' : 'webm';
+    const isAudio = mimeTypeRef.current.startsWith('audio/');
+    const extension = mimeTypeRef.current.includes('mp4') 
+      ? (isAudio ? 'm4a' : 'mp4') 
+      : 'webm';
     const url = URL.createObjectURL(recordingBlob);
     const a = document.createElement('a');
     a.href = url;

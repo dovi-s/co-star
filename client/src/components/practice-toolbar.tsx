@@ -92,14 +92,12 @@ export function PracticeToolbar({
           variant={isRecording ? "destructive" : "ghost"}
           size="sm"
           onClick={onRecordToggle}
-          disabled={!cameraEnabled && !isRecording}
           className={cn(
             "gap-1.5 text-xs h-7 px-2 min-w-[70px]",
             isRecording && "animate-pulse",
-            !isRecording && cameraEnabled && "text-white/70 hover:text-white hover:bg-white/10",
-            !cameraEnabled && !isRecording && "opacity-50 cursor-not-allowed"
+            "text-white/70 hover:text-white hover:bg-white/10"
           )}
-          title={!cameraEnabled && !isRecording ? "Enable camera to record" : isRecording ? "Stop recording" : "Start recording"}
+          title={isRecording ? "Stop recording" : cameraEnabled ? "Record video and audio" : "Record audio only"}
           data-testid="button-record-toggle"
         >
           <Circle 
