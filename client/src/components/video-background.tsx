@@ -1,5 +1,31 @@
-import { useEffect, useRef, RefObject } from 'react';
+import { useEffect, useRef, RefObject, useMemo } from 'react';
 import { cn } from '@/lib/utils';
+
+// Polyfill for roundRect (Safari compatibility)
+function drawRoundRect(
+  ctx: CanvasRenderingContext2D, 
+  x: number, 
+  y: number, 
+  width: number, 
+  height: number, 
+  radius: number
+) {
+  if (ctx.roundRect) {
+    ctx.roundRect(x, y, width, height, radius);
+  } else {
+    // Fallback for browsers without roundRect
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.arcTo(x + width, y, x + width, y + radius, radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.arcTo(x + width, y + height, x + width - radius, y + height, radius);
+    ctx.lineTo(x + radius, y + height);
+    ctx.arcTo(x, y + height, x, y + height - radius, radius);
+    ctx.lineTo(x, y + radius);
+    ctx.arcTo(x, y, x + radius, y, radius);
+    ctx.closePath();
+  }
+}
 
 export interface OverlayData {
   currentLine?: {
@@ -115,7 +141,7 @@ export function VideoBackground({
         // Draw semi-transparent backdrop
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.beginPath();
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
+        drawRoundRect(ctx, boxX, boxY, boxWidth, boxHeight, 12);
         ctx.fill();
         
         // Draw subtle border
@@ -143,7 +169,7 @@ export function VideoBackground({
         ctx.fillStyle = badgeColor;
         const roleWidth = ctx.measureText(current.roleName).width + 16;
         ctx.beginPath();
-        ctx.roundRect(boxX + padding, textY, roleWidth, 22, 4);
+        drawRoundRect(ctx, boxX + padding, textY, roleWidth, 22, 4);
         ctx.fill();
         
         ctx.fillStyle = current.isUserLine ? 'rgba(0, 0, 0, 0.9)' : 'rgba(255, 255, 255, 0.95)';
@@ -176,14 +202,27 @@ export function VideoBackground({
       animationRef.current = requestAnimationFrame(drawFrame);
     };
     
-    // Helper to truncate text that's too long
+    // Helper to truncate text that's too long (optimized with binary search)
     function truncateText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string {
+      // Early return for short text
       if (ctx.measureText(text).width <= maxWidth) return text;
-      let truncated = text;
-      while (ctx.measureText(truncated + '...').width > maxWidth && truncated.length > 0) {
-        truncated = truncated.slice(0, -1);
+      
+      // Pre-truncate very long strings to avoid excessive iterations
+      const maxChars = Math.floor(maxWidth / 6); // rough estimate: ~6px per char
+      let truncated = text.length > maxChars * 2 ? text.slice(0, maxChars * 2) : text;
+      
+      // Binary search for optimal truncation point
+      let low = 0;
+      let high = truncated.length;
+      while (low < high) {
+        const mid = Math.floor((low + high + 1) / 2);
+        if (ctx.measureText(truncated.slice(0, mid) + '...').width <= maxWidth) {
+          low = mid;
+        } else {
+          high = mid - 1;
+        }
       }
-      return truncated + '...';
+      return truncated.slice(0, low) + '...';
     }
 
     video.onloadedmetadata = () => {

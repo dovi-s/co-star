@@ -1098,15 +1098,20 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               
               {/* Download recording if available */}
               {camera.hasRecording && (
-                <Button
-                  variant="outline"
-                  className="w-full mb-2"
-                  onClick={() => camera.downloadRecording(`castmate-${session.name || 'rehearsal'}`)}
-                  data-testid="button-download-recording"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Recording
-                </Button>
+                <div className="mb-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => camera.downloadRecording(`castmate-${session.name || 'rehearsal'}`)}
+                    data-testid="button-download-recording"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Recording
+                  </Button>
+                  <p className="text-xs text-muted-foreground text-center mt-1.5">
+                    Includes script overlay for review
+                  </p>
+                </div>
               )}
               
               {/* Primary action */}
