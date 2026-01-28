@@ -95,7 +95,7 @@ export function PracticeToolbar({
           className={cn(
             "gap-1.5 text-xs h-7 px-2 min-w-[70px]",
             isRecording && "animate-pulse",
-            "text-white/70 hover:text-white hover:bg-white/10"
+            cameraEnabled && "text-white/70 hover:text-white hover:bg-white/10"
           )}
           title={isRecording ? "Stop recording" : cameraEnabled ? "Record video and audio" : "Record audio only"}
           data-testid="button-record-toggle"
