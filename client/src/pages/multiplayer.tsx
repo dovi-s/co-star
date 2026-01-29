@@ -220,12 +220,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     if (!currentLine) return;
 
-    // When line changes, reset speaking ref so new line can play
+    // When line changes, ALWAYS stop current TTS immediately to prevent overlap
     if (currentLineIdRef.current !== currentLine.id) {
       console.log('[Multiplayer] Line changed from', currentLineIdRef.current, 'to', currentLine.id);
-      if (speakingLineRef.current && speakingLineRef.current !== currentLine.id) {
-        ttsEngine.stop();
-        setIsAiSpeaking(false);
+      // Stop any playing audio immediately
+      ttsEngine.stop();
+      setIsAiSpeaking(false);
+      // Clear any pending advance timeouts
+      if (aiSpeakTimeoutRef.current) {
+        clearTimeout(aiSpeakTimeoutRef.current);
+        aiSpeakTimeoutRef.current = null;
       }
       speakingLineRef.current = null; // Reset so new line can speak
       currentLineIdRef.current = currentLine.id;
