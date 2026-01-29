@@ -885,35 +885,14 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         }
       }
       
-      // On final result, auto-advance if we have at least some progress (35%+ like solo)
-      // Note: Don't call speechRecognition.stop() here - let it continue in case browser sent premature final
-      // Only stop on 80%+ match (handled above) - like solo mode
+      // On final result, DON'T advance unless we have 80%+ match (handled above)
+      // Browser sends premature "final" results after pauses - ignore them like solo mode does
+      // The recognition will restart automatically via handleEnd and we'll keep listening
       if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current && line) {
         const match = matchWords(line.text, result.transcript);
-        if (match.percentMatched >= 35) {
-          console.log("[Multiplayer] Final result with", Math.round(match.percentMatched), "% match, advancing");
-          waitingForUserRef.current = false;
-          // Don't stop speech recognition here - it will auto-end or continue
-          
-          if (userTurnTimeoutRef.current) {
-            clearTimeout(userTurnTimeoutRef.current);
-            userTurnTimeoutRef.current = null;
-          }
-          if (autoAdvanceTimeoutRef.current) {
-            clearTimeout(autoAdvanceTimeoutRef.current);
-            autoAdvanceTimeoutRef.current = null;
-          }
-          
-          // Quick transition (200ms for snappy response like solo)
-          autoAdvanceTimeoutRef.current = setTimeout(() => {
-            if (isActivelyRehearsalRef.current) {
-              advanceAfterUserLine();
-            }
-          }, 200);
-        } else {
-          console.log("[Multiplayer] Low match on final result, waiting for more speech");
-          // Don't advance yet, keep listening
-        }
+        console.log("[Multiplayer] Final result with", Math.round(match.percentMatched), "% match - ignoring, waiting for 80%+");
+        // Don't advance, don't stop - let speech recognition restart and continue listening
+        // The handleEnd callback will restart listening if still waiting
       }
     };
 
