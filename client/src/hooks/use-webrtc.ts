@@ -548,24 +548,51 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
   }, [socket, enabled, myParticipantId, createPeerConnection, closePeerConnection, handleRtcOffer, handleRtcAnswer, handleRtcIceCandidate]);
 
+  // Track if initialization is in progress to prevent double-init
+  const initializingRef = useRef(false);
+  
   useEffect(() => {
-    if (enabled && !localStreamRef.current) {
-      startMedia();
+    if (enabled && !localStreamRef.current && !initializingRef.current) {
+      console.log('[WebRTC] Triggering startMedia (enabled, no local stream)');
+      initializingRef.current = true;
+      startMedia().finally(() => {
+        initializingRef.current = false;
+      });
     } else if (!enabled) {
       stopMedia();
     }
   }, [enabled, startMedia, stopMedia]);
-
+  
+  // Retry media initialization if it failed
   useEffect(() => {
-    if (!enabled || !localStreamRef.current || !myParticipantId) return;
+    if (!enabled) return;
     
+    // If we're enabled but don't have a local stream after a delay, retry
+    const retryTimer = setTimeout(() => {
+      if (enabled && !localStreamRef.current && !initializingRef.current) {
+        console.log('[WebRTC] Retrying startMedia (no stream after delay)');
+        initializingRef.current = true;
+        startMedia().finally(() => {
+          initializingRef.current = false;
+        });
+      }
+    }, 2000);
+    
+    return () => clearTimeout(retryTimer);
+  }, [enabled, startMedia]);
+
+  // Use localStream state (not ref) to trigger peer connections when stream becomes available
+  useEffect(() => {
+    if (!enabled || !localStream || !myParticipantId) return;
+    
+    console.log('[WebRTC] Local stream available, checking for participants to connect to');
     participants.forEach(p => {
       if (p.id !== myParticipantId && !peerConnectionsRef.current.has(p.id)) {
         console.log('[WebRTC] Creating connection to existing participant:', p.id, p.name);
         createPeerConnection(p.id, true);
       }
     });
-  }, [enabled, participants, myParticipantId, createPeerConnection]);
+  }, [enabled, localStream, participants, myParticipantId, createPeerConnection]);
 
   useEffect(() => {
     return () => {
