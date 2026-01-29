@@ -201,9 +201,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const lineRoleId = currentLine.roleId;
     const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
     
-    if (!isRoleAssignedToParticipant) {
+    // Only the HOST plays TTS for unassigned roles (prevents duplicate audio across devices)
+    if (!isRoleAssignedToParticipant && multiplayer.isHost) {
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
       speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0);
+    }
+    
+    // Non-host devices auto-advance after a delay when AI should be speaking
+    // The host will advance via WebSocket and sync to all clients
+    if (!isRoleAssignedToParticipant && !multiplayer.isHost) {
+      // Just wait - the host will advance the line and sync via WebSocket
     }
     
     return () => {
@@ -211,7 +218,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         clearTimeout(aiSpeakTimeoutRef.current);
       }
     };
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine]);
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost]);
 
   useEffect(() => {
     return () => {
