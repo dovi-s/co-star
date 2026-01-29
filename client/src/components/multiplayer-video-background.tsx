@@ -149,12 +149,9 @@ export function MultiplayerVideoBackground({
   const effectiveSpeakerId = currentSpeakerId || myParticipantId;
   const isLocalSpeaker = effectiveSpeakerId === myParticipantId;
   
-  const remoteStream = effectiveSpeakerId && effectiveSpeakerId !== myParticipantId
-    ? peerStreams.find(ps => ps.participantId === effectiveSpeakerId)?.stream
-    : null;
-  
-  const mainStream = isLocalSpeaker ? localStream : (remoteStream || null);
-  const showLocalAsMain = isLocalSpeaker;
+  // Always show local stream as main background (like solo mode) - keeps video continuously live
+  const mainStream = localStream;
+  const showLocalAsMain = true;
   
   // Debug logging for video streams
   useEffect(() => {
@@ -245,7 +242,9 @@ export function MultiplayerVideoBackground({
     };
   }, [mainStream, showLocalAsMain]);
 
-  const stripParticipants = participants.filter(p => p.id !== effectiveSpeakerId);
+  // Show all remote participants in the strip (local is always main background)
+  // Highlight current speaker with ring effect in the tile
+  const stripParticipants = participants.filter(p => p.id !== myParticipantId);
 
   const toggleFocus = () => {
     setFocusMode(prev => prev === 'script' ? 'face' : 'script');
@@ -302,20 +301,18 @@ export function MultiplayerVideoBackground({
         data-testid="participant-strip"
       >
         {stripParticipants.map(participant => {
-          const isMe = participant.id === myParticipantId;
-          const stream = isMe 
-            ? localStream 
-            : peerStreams.find(ps => ps.participantId === participant.id)?.stream || null;
+          const stream = peerStreams.find(ps => ps.participantId === participant.id)?.stream || null;
+          const isSpeakingNow = participant.id === effectiveSpeakerId;
           
           return (
             <SmallVideoTile
               key={participant.id}
               stream={stream}
               participant={participant}
-              isLocal={isMe}
-              isMuted={isMe ? !isAudioEnabled : false}
-              isVideoOff={isMe ? !isVideoEnabled : !stream}
-              isSpeaking={false}
+              isLocal={false}
+              isMuted={false}
+              isVideoOff={!stream}
+              isSpeaking={isSpeakingNow}
             />
           );
         })}
