@@ -67,27 +67,35 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
     pc.ontrack = (event) => {
       const stream = event.streams[0];
-      const videoTracks = stream?.getVideoTracks() || [];
-      const audioTracks = stream?.getAudioTracks() || [];
-      console.log(`[WebRTC] ontrack from ${participantId}:`, {
-        trackKind: event.track.kind,
-        trackEnabled: event.track.enabled,
-        streamId: stream?.id,
-        videoTracks: videoTracks.length,
-        audioTracks: audioTracks.length,
-        videoEnabled: videoTracks.map(t => t.enabled),
-      });
       
       setPeerStreams(prev => {
         const existing = prev.find(p => p.participantId === participantId);
+        
+        // Create a new MediaStream that includes ALL tracks from the incoming stream
+        // This ensures we don't lose any tracks and forces React to re-render
+        const newStream = new MediaStream();
+        
+        if (existing && existing.stream) {
+          // First, add any tracks from the existing stream that aren't in the new stream
+          // (this preserves tracks we already had)
+          existing.stream.getTracks().forEach(track => {
+            if (!stream?.getTracks().find(t => t.id === track.id)) {
+              newStream.addTrack(track);
+            }
+          });
+        }
+        
+        // Add all tracks from the incoming stream
+        stream?.getTracks().forEach(track => newStream.addTrack(track));
+        
         if (existing) {
           return prev.map(p => 
             p.participantId === participantId 
-              ? { ...p, stream: event.streams[0] }
+              ? { ...p, stream: newStream }
               : p
           );
         }
-        return [...prev, { participantId, stream: event.streams[0] }];
+        return [...prev, { participantId, stream: newStream }];
       });
     };
 
