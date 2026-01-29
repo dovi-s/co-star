@@ -32,6 +32,7 @@ interface PeerAudioElementProps {
 function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioElementProps) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const watchdogTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedRef = useRef(false);
   const streamIdRef = useRef<string | null>(null);
 
@@ -39,10 +40,14 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     const audio = audioRef.current;
     if (!audio) return;
 
-    // Cleanup previous retry timer
+    // Cleanup previous timers
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
+    }
+    if (watchdogTimerRef.current) {
+      clearInterval(watchdogTimerRef.current);
+      watchdogTimerRef.current = null;
     }
 
     // Log stream info for debugging
@@ -74,9 +79,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       return;
     }
 
-    const attemptPlay = (attempt = 0) => {
-      if (hasPlayedRef.current) return;
-      
+    const attemptPlay = () => {
       // Ensure stream is attached and settings are correct
       if (audio.srcObject !== stream) {
         audio.srcObject = stream;
@@ -85,23 +88,46 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       audio.volume = 1.0;
       
       audio.play().then(() => {
-        hasPlayedRef.current = true;
-        console.log(`[PeerAudio ${participantId}] Playing successfully, paused=${audio.paused}, muted=${audio.muted}, volume=${audio.volume}`);
-      }).catch((err) => {
-        if (attempt < 20) {
-          const delay = Math.min(300 * (attempt + 1), 2000);
-          console.log(`[PeerAudio ${participantId}] Play retry ${attempt + 1}, delay ${delay}ms, error: ${err.name}`);
-          retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), delay);
-        } else {
-          console.warn(`[PeerAudio ${participantId}] Play failed after retries:`, err);
+        if (!hasPlayedRef.current) {
+          console.log(`[PeerAudio ${participantId}] Playing successfully`);
         }
+        hasPlayedRef.current = true;
+      }).catch((err) => {
+        console.log(`[PeerAudio ${participantId}] Play error: ${err.name}`);
       });
     };
 
-    // Small delay to let stream settle
+    // Initial play attempt
     setTimeout(() => attemptPlay(), 100);
 
-    // Also listen for track additions which might happen after stream is received
+    // Watchdog: periodically check if audio stopped and restart it
+    // This handles cases where mobile pauses audio (screen lock, background, etc)
+    watchdogTimerRef.current = setInterval(() => {
+      if (audio.paused && hasPlayedRef.current) {
+        console.log(`[PeerAudio ${participantId}] Watchdog: audio paused, restarting...`);
+        attemptPlay();
+      }
+    }, 2000);
+
+    // Handle visibility changes (app coming back to foreground)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && audioUnlocked) {
+        console.log(`[PeerAudio ${participantId}] Visibility restored, ensuring audio plays`);
+        attemptPlay();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Handle page focus (another way to detect coming back to foreground)
+    const handleFocus = () => {
+      if (audioUnlocked) {
+        console.log(`[PeerAudio ${participantId}] Window focused, ensuring audio plays`);
+        attemptPlay();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Listen for track additions which might happen after stream is received
     const handleTrackAdd = () => {
       console.log(`[PeerAudio ${participantId}] Track added, reattempting play`);
       hasPlayedRef.current = false;
@@ -113,6 +139,11 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
       }
+      if (watchdogTimerRef.current) {
+        clearInterval(watchdogTimerRef.current);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
       stream.removeEventListener('addtrack', handleTrackAdd);
     };
   }, [stream, audioUnlocked, participantId]);
