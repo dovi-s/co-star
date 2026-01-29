@@ -19,9 +19,10 @@ interface UseWebRTCOptions {
   myParticipantId: string | null;
   participants: Participant[];
   enabled: boolean;
+  existingVideoStream?: MediaStream | null; // Reuse lobby camera to avoid duplicate permission
 }
 
-export function useWebRTC({ socket, myParticipantId, participants, enabled }: UseWebRTCOptions) {
+export function useWebRTC({ socket, myParticipantId, participants, enabled, existingVideoStream }: UseWebRTCOptions) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [peerStreams, setPeerStreams] = useState<PeerStream[]>([]);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -203,10 +204,30 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled }: Us
 
   const startMedia = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-      });
+      let stream: MediaStream;
+      
+      // If we have an existing video stream from lobby, just add audio to avoid duplicate permission prompt
+      if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
+        console.log('[WebRTC] Reusing existing video stream, only requesting audio');
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // Create combined stream with existing video + new audio
+        stream = new MediaStream();
+        existingVideoStream.getVideoTracks().forEach(track => {
+          stream.addTrack(track);
+        });
+        audioStream.getAudioTracks().forEach(track => {
+          stream.addTrack(track);
+        });
+      } else {
+        // No existing stream, request both
+        console.log('[WebRTC] Requesting full media access');
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+        });
+      }
+      
       localStreamRef.current = stream;
       setLocalStream(stream);
       setError(null);
@@ -222,7 +243,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled }: Us
       setError('Could not access camera or microphone');
       return null;
     }
-  }, [processPendingOffers, processPendingPeers]);
+  }, [processPendingOffers, processPendingPeers, existingVideoStream]);
 
   const stopMedia = useCallback(() => {
     if (localStreamRef.current) {

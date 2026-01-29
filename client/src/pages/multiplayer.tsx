@@ -56,17 +56,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
   const isActivelyRehearing = !!multiplayer.room && multiplayer.room.state === 'rehearsing';
   
+  // Lobby camera state - declared before webrtc so stream can be reused
+  const [lobbyVideoEnabled, setLobbyVideoEnabled] = useState(false);
+  const [lobbyStream, setLobbyStream] = useState<MediaStream | null>(null);
+  const lobbyVideoRef = useRef<HTMLVideoElement>(null);
+  const [cameraPreferenceForRehearsal, setCameraPreferenceForRehearsal] = useState(true);
+  
   const webrtc = useWebRTC({
     socket: multiplayer.socket,
     myParticipantId: multiplayer.currentParticipant?.id ?? null,
     participants: multiplayer.room?.participants ?? [],
     enabled: isRehearsingOrPaused,
+    existingVideoStream: lobbyStream, // Reuse lobby camera to avoid duplicate permission prompt
   });
-
-  const [lobbyVideoEnabled, setLobbyVideoEnabled] = useState(false);
-  const [lobbyStream, setLobbyStream] = useState<MediaStream | null>(null);
-  const lobbyVideoRef = useRef<HTMLVideoElement>(null);
-  const [cameraPreferenceForRehearsal, setCameraPreferenceForRehearsal] = useState(true);
 
   const toggleLobbyCamera = useCallback(async () => {
     if (lobbyVideoEnabled && lobbyStream) {
@@ -110,11 +112,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   useEffect(() => {
     if (isRehearsingOrPaused && lobbyStream) {
-      lobbyStream.getTracks().forEach(track => track.stop());
+      // Don't stop the stream tracks - WebRTC will reuse them!
+      // Just detach from the video element and clear local state
       if (lobbyVideoRef.current) {
         lobbyVideoRef.current.srcObject = null;
       }
-      setLobbyStream(null);
+      // Keep lobbyStream reference for WebRTC - it will be cleaned up when WebRTC stops
       setLobbyVideoEnabled(false);
       
       if (!cameraPreferenceForRehearsal && webrtc.isVideoEnabled) {
