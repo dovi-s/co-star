@@ -44,10 +44,22 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       retryTimerRef.current = null;
     }
 
+    // Log stream info for debugging
+    const audioTracks = stream.getAudioTracks();
+    const videoTracks = stream.getVideoTracks();
+    console.log(`[PeerAudio ${participantId}] Stream info:`, {
+      audioTracks: audioTracks.length,
+      videoTracks: videoTracks.length,
+      audioTrackEnabled: audioTracks[0]?.enabled,
+      audioTrackMuted: audioTracks[0]?.muted,
+      audioTrackReadyState: audioTracks[0]?.readyState,
+    });
+
     // Attach stream
     if (audio.srcObject !== stream) {
       audio.srcObject = stream;
       audio.volume = 1.0;
+      audio.muted = false; // Explicitly unmute
       hasPlayedRef.current = false;
     }
 
@@ -60,13 +72,17 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     const attemptPlay = (attempt = 0) => {
       if (hasPlayedRef.current) return;
       
+      // Re-ensure unmuted before each attempt
+      audio.muted = false;
+      audio.volume = 1.0;
+      
       audio.play().then(() => {
         hasPlayedRef.current = true;
-        console.log(`[PeerAudio ${participantId}] Playing successfully`);
+        console.log(`[PeerAudio ${participantId}] Playing successfully, paused=${audio.paused}, muted=${audio.muted}, volume=${audio.volume}`);
       }).catch((err) => {
         if (attempt < 15) {
           const delay = Math.min(500 * (attempt + 1), 3000);
-          console.log(`[PeerAudio ${participantId}] Play retry ${attempt + 1}, delay ${delay}ms`);
+          console.log(`[PeerAudio ${participantId}] Play retry ${attempt + 1}, delay ${delay}ms, error: ${err.name}`);
           retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), delay);
         } else {
           console.warn(`[PeerAudio ${participantId}] Play failed after retries:`, err);

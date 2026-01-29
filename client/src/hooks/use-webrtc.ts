@@ -289,6 +289,12 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           const audioContext = new AudioContext();
           audioContextRef.current = audioContext;
           
+          // Ensure AudioContext is running (important for iOS/Safari)
+          if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+            console.log('[WebRTC] AudioContext resumed');
+          }
+          
           // Create destination for mixed audio
           const mixedDestination = audioContext.createMediaStreamDestination();
           mixedDestinationRef.current = mixedDestination;
@@ -486,6 +492,17 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         audioContextRef.current = new AudioContext();
       }
       const audioContext = audioContextRef.current;
+      
+      // Ensure AudioContext is running (important for iOS/Safari)
+      if (audioContext.state === 'suspended') {
+        console.log('[WebRTC] AudioContext suspended, attempting resume...');
+        audioContext.resume().then(() => {
+          console.log('[WebRTC] AudioContext resumed successfully');
+        }).catch(err => {
+          console.warn('[WebRTC] AudioContext resume failed:', err);
+        });
+      }
+      
       const mixedDestination = audioContext.createMediaStreamDestination();
       mixedDestinationRef.current = mixedDestination;
       
