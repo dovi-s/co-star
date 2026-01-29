@@ -161,7 +161,25 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const speakingLineRef = useRef<string | null>(null);
   const aiSpeakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Track safety timeout separately so we can clear it on navigation
+  const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
   const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
+    // ALWAYS stop any current audio first to prevent overlap
+    ttsEngine.stop();
+    
+    // Clear any pending safety timeout from previous line
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current);
+      safetyTimeoutRef.current = null;
+    }
+    
+    // Clear any pending advance timeout
+    if (aiSpeakTimeoutRef.current) {
+      clearTimeout(aiSpeakTimeoutRef.current);
+      aiSpeakTimeoutRef.current = null;
+    }
+    
     // Prevent duplicate calls for the same line
     if (speakingLineRef.current === lineId) {
       console.log('[Multiplayer TTS] Already speaking this line, skipping');
@@ -177,13 +195,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     // Safety timeout: if TTS doesn't complete in reasonable time, advance anyway (host only)
     const estimatedDuration = Math.max(5000, text.length * 100); // ~100ms per character
-    let safetyTimeout: ReturnType<typeof setTimeout> | null = null;
     let hasAdvanced = false;
     
     const advanceToNext = () => {
       if (hasAdvanced) return;
       hasAdvanced = true;
-      if (safetyTimeout) clearTimeout(safetyTimeout);
+      if (safetyTimeoutRef.current) {
+        clearTimeout(safetyTimeoutRef.current);
+        safetyTimeoutRef.current = null;
+      }
       
       setIsAiSpeaking(false);
       
@@ -197,7 +217,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     };
     
     if (isHost) {
-      safetyTimeout = setTimeout(() => {
+      safetyTimeoutRef.current = setTimeout(() => {
         console.log('[Multiplayer TTS] Safety timeout - forcing advance');
         advanceToNext();
       }, estimatedDuration + 3000);
