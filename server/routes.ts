@@ -6,7 +6,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
-import { aiCleanupScript } from "./ai-script-cleanup";
+import { aiCleanupScript, aiFilterRoles } from "./ai-script-cleanup";
 import { setupMultiplayer } from "./multiplayer";
 
 // Standard American English voices ONLY - no accents, no mixing
@@ -768,7 +768,14 @@ JOHN: We got the contract.`;
         console.log(`[Parse Script] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
       }
 
-      if (cleanedScript.roles.length === 0) {
+      // AI Role Filter - remove non-character names like MOTORCYCLES, RIGHT HAND, etc.
+      console.log(`[Parse Script] Running AI Role Filter...`);
+      const finalScript = await aiFilterRoles(cleanedScript);
+      if (finalScript.roles.length < cleanedScript.roles.length) {
+        console.log(`[Parse Script] AI Role Filter removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
+      }
+
+      if (finalScript.roles.length === 0) {
         // Provide helpful diagnostic info about why parsing failed
         const lines = text.split('\n').slice(0, 10);
         const sampleLines = lines.filter(l => l.trim()).slice(0, 3).map(l => l.substring(0, 60));
@@ -789,7 +796,7 @@ JOHN: We got the contract.`;
         });
       }
 
-      res.json({ parsed: cleanedScript });
+      res.json({ parsed: finalScript });
     } catch (error: any) {
       console.error("Script parse error:", error.message || error);
       res.status(500).json({ error: "Failed to parse script" });
@@ -939,7 +946,14 @@ JOHN: We got the contract.`;
         console.log(`[PDF->Session] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
       }
 
-      if (cleanedScript.roles.length === 0) {
+      // AI Role Filter - remove non-character names like MOTORCYCLES, RIGHT HAND, etc.
+      console.log(`[PDF->Session] Running AI Role Filter...`);
+      const finalScript = await aiFilterRoles(cleanedScript);
+      if (finalScript.roles.length < cleanedScript.roles.length) {
+        console.log(`[PDF->Session] AI Role Filter removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
+      }
+
+      if (finalScript.roles.length === 0) {
         const hasColons = text.includes(':');
         let hint = "Use format: CHARACTER: dialogue";
         if (!hasColons) {
@@ -952,7 +966,7 @@ JOHN: We got the contract.`;
 
       // Return the parsed result AND the raw text for display
       res.json({ 
-        parsed: cleanedScript,
+        parsed: finalScript,
         rawText: text,
         fileName: file.originalname 
       });

@@ -183,3 +183,116 @@ export async function smartParseAndClean(rawText: string, parseScript: (text: st
   const { cleanedScript } = await aiCleanupScript(parsed);
   return cleanedScript;
 }
+
+// AI-powered role filtering - identifies non-character names in the roles list
+export async function aiFilterRoles(script: ParsedScript): Promise<ParsedScript> {
+  if (!isAIConfigured()) {
+    console.log("[AI Role Filter] AI not configured, skipping");
+    return script;
+  }
+
+  if (script.roles.length === 0) {
+    return script;
+  }
+
+  // Create a list of role names for AI to review
+  const rolesForAI = script.roles.map((role, idx) => ({
+    index: idx,
+    name: role.name,
+    lineCount: role.lineCount,
+  }));
+
+  const prompt = `You are a screenplay expert. Review this list of detected "character names" from a script parser. Identify which ones are NOT actual character names.
+
+REMOVE these (NOT real characters):
+- Camera/editing directions: CLOSEUP, POV, INSERT, INTERCUT, ANGLE ON, FADE, etc.
+- Time markers: LATER, MOMENTS LATER, FIVE MINUTES LATER, etc.
+- Scene descriptions: THEIR HOUSE, THE BEDROOM, OUTSIDE, etc.
+- Props/objects: MOTORCYCLES, PHONE, DOOR, CAR, TV, etc.
+- Body parts: RIGHT HAND, LEFT ARM, etc.
+- Sound/music cues: MUSIC CUE, SOUND, SILENCE, etc.
+- Production terms: END INTERCUT, CONTINUED, FLASHBACK, MONTAGE, etc.
+- Any word/phrase that is clearly NOT a person who speaks dialogue
+
+KEEP these (real characters):
+- Actual character names: JOHN, MARY, DETECTIVE SMITH, MOM, DAD, etc.
+- Role descriptions: THE DOCTOR, BARTENDER, WAITER, STRANGER, MAN #1, etc.
+- Named characters with titles: DR. JONES, CAPTAIN MILLER, OFFICER CHEN, etc.
+
+Here are the detected "characters" to review:
+${JSON.stringify(rolesForAI, null, 2)}
+
+Return a JSON object:
+{
+  "removeIndices": [array of index numbers to remove - these are NOT characters],
+  "reasoning": "brief explanation"
+}
+
+Be aggressive - if something looks like a direction, object, location, or technical term, remove it. Real character names are proper nouns or role descriptions, not common nouns or phrases.`;
+
+  try {
+    const openai = new OpenAI({
+      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+    });
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.1,
+      max_tokens: 1000,
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content || "{}";
+    let result: { removeIndices?: number[]; reasoning?: string };
+    
+    try {
+      result = JSON.parse(content);
+    } catch {
+      console.log("[AI Role Filter] Failed to parse response, keeping all roles");
+      return script;
+    }
+
+    const rawIndices = result.removeIndices || [];
+    const validIndices = rawIndices.filter(idx => 
+      typeof idx === 'number' && idx >= 0 && idx < script.roles.length
+    );
+    
+    if (validIndices.length === 0) {
+      return script;
+    }
+
+    const indicesToRemove = new Set(validIndices);
+    const roleIdsToRemove = new Set<string>();
+    const removedNames: string[] = [];
+    
+    for (let idx = 0; idx < script.roles.length; idx++) {
+      if (indicesToRemove.has(idx)) {
+        roleIdsToRemove.add(script.roles[idx].id);
+        removedNames.push(script.roles[idx].name);
+      }
+    }
+
+    // Filter roles
+    const cleanedRoles = script.roles.filter(role => !roleIdsToRemove.has(role.id));
+    
+    // Filter lines that belong to removed roles
+    const cleanedScenes = script.scenes.map(scene => ({
+      ...scene,
+      lines: scene.lines.filter(line => !roleIdsToRemove.has(line.roleId))
+    })).filter(scene => scene.lines.length > 0);
+
+    console.log(`[AI Role Filter] Removed ${removedNames.length} non-character entries: ${removedNames.join(', ')}. ${result.reasoning || ""}`);
+
+    return {
+      ...script,
+      scenes: cleanedScenes,
+      roles: cleanedRoles,
+    };
+
+  } catch (error) {
+    console.error("[AI Role Filter] Failed, returning original script:", error);
+    return script;
+  }
+}
