@@ -340,12 +340,24 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const lineRoleId = currentLine.roleId;
     const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
     
+    console.log('[Multiplayer] TTS Effect:', {
+      lineId: currentLine.id,
+      lineIndex: room.currentLineIndex,
+      roleName: currentLine.roleName,
+      isRoleAssignedToParticipant,
+      isHost: multiplayer.isHost,
+      speakingLineRef: speakingLineRef.current,
+    });
+    
     // ONLY HOST plays TTS for unassigned roles to avoid sync issues
     // Joining devices see lines visually and hear through host's speakers/WebRTC
     if (!isRoleAssignedToParticipant && multiplayer.isHost) {
       hasStartedRef.current = true; // Mark that we've started
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
+      console.log('[Multiplayer] Starting TTS for AI line:', currentLine.roleName, roleIndex);
       speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, true);
+    } else if (isRoleAssignedToParticipant) {
+      console.log('[Multiplayer] User turn detected for:', currentLine.roleName);
     }
     
     // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared
