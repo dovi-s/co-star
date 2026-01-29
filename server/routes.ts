@@ -364,7 +364,15 @@ Output ONLY the dialogue lines. No titles, headers, or explanations.`;
         return res.status(500).json({ error: "Failed to generate script" });
       }
 
-      res.json({ script });
+      // Parse the generated script so client can skip parsing step
+      try {
+        const parsed = parseScript(script);
+        res.json({ script, parsed });
+      } catch (parseErr) {
+        // If parsing fails, still return the script for manual handling
+        console.error("Generated script parse error:", parseErr);
+        res.json({ script });
+      }
     } catch (error: any) {
       console.error("Script generation error:", error.message || error);
       res.status(500).json({ error: "Failed to generate script" });
@@ -484,7 +492,15 @@ Output the scene with dialogue AND action lines interspersed. No scene titles.`;
         return res.status(500).json({ error: "Failed to generate script" });
       }
 
-      res.json({ script, theme: `${scenario.setting}: ${scenario.conflict}` });
+      // Parse the generated script so client can skip parsing step
+      try {
+        const parsed = parseScript(script);
+        res.json({ script, parsed, theme: `${scenario.setting}: ${scenario.conflict}` });
+      } catch (parseErr) {
+        // If parsing fails, still return the script for manual handling
+        console.error("Generated random script parse error:", parseErr);
+        res.json({ script, theme: `${scenario.setting}: ${scenario.conflict}` });
+      }
     } catch (error: any) {
       console.error("Random script generation error:", error.message || error);
       res.status(500).json({ error: "Failed to generate script" });
