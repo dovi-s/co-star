@@ -341,7 +341,11 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         } catch (e) {
           console.log('[WebRTC] Audio mixing failed, falling back to mic only:', e);
           ttsIncludedInMixRef.current = false;
-          stream = micStream;
+          // Create new stream, don't mutate micStream
+          stream = new MediaStream();
+          micStream.getAudioTracks().forEach(track => {
+            stream.addTrack(track);
+          });
           if (videoStream && videoStream.getVideoTracks().length > 0) {
             videoStream.getVideoTracks().forEach(track => {
               stream.addTrack(track);

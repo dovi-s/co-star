@@ -80,34 +80,46 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     }
 
     const attemptPlay = () => {
-      // Ensure stream is attached and settings are correct
-      if (audio.srcObject !== stream) {
-        audio.srcObject = stream;
-      }
+      if (!audio) return;
+      
+      // Always reassign srcObject for mobile Safari
+      audio.srcObject = stream;
       audio.muted = false;
       audio.volume = 1.0;
       
-      audio.play().then(() => {
-        if (!hasPlayedRef.current) {
-          console.log(`[PeerAudio ${participantId}] Playing successfully`);
-        }
-        hasPlayedRef.current = true;
-      }).catch((err) => {
-        console.log(`[PeerAudio ${participantId}] Play error: ${err.name}`);
-      });
+      // Force load for mobile
+      try {
+        audio.load();
+      } catch (e) {
+        // Ignore load errors
+      }
+      
+      const playPromise = audio.play();
+      if (playPromise) {
+        playPromise.then(() => {
+          if (!hasPlayedRef.current) {
+            console.log(`[PeerAudio ${participantId}] Playing successfully`);
+          }
+          hasPlayedRef.current = true;
+        }).catch((err) => {
+          console.log(`[PeerAudio ${participantId}] Play error: ${err.name} - ${err.message}`);
+        });
+      }
     };
 
-    // Initial play attempt
+    // Initial play attempts with increasing delays for mobile
     setTimeout(() => attemptPlay(), 100);
+    setTimeout(() => attemptPlay(), 500);
+    setTimeout(() => attemptPlay(), 1000);
 
     // Watchdog: periodically check if audio stopped and restart it
-    // This handles cases where mobile pauses audio (screen lock, background, etc)
+    // More aggressive - checks even if never played before
     watchdogTimerRef.current = setInterval(() => {
-      if (audio.paused && hasPlayedRef.current) {
+      if (audio.paused) {
         console.log(`[PeerAudio ${participantId}] Watchdog: audio paused, restarting...`);
         attemptPlay();
       }
-    }, 2000);
+    }, 3000);
 
     // Handle visibility changes (app coming back to foreground)
     const handleVisibilityChange = () => {
@@ -153,7 +165,11 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       ref={audioRef}
       autoPlay
       playsInline
-      style={{ display: 'none' }}
+      controls={false}
+      preload="auto"
+      webkit-playsinline="true"
+      x-webkit-airplay="allow"
+      style={{ position: 'fixed', top: '-9999px', left: '-9999px', opacity: 0, pointerEvents: 'none' }}
     />
   );
 }

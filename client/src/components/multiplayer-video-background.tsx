@@ -47,6 +47,7 @@ interface SmallVideoTileProps {
 function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaking }: SmallVideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const streamIdRef = useRef<string>('');
   const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
@@ -60,7 +61,10 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
     const video = videoRef.current;
     
     // Reset when stream changes
-    setVideoReady(false);
+    if (!stream || streamIdRef.current !== stream.id) {
+      setVideoReady(false);
+      streamIdRef.current = stream?.id || '';
+    }
 
     if (stream) {
       // Always reassign srcObject when stream changes
@@ -71,7 +75,7 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       const audioTracks = stream.getAudioTracks();
       const hasVideoTracks = videoTracks.length > 0;
       
-      console.log(`[SmallVideoTile ${participant?.id}] Stream details:`, {
+      console.log(`[SmallVideoTile ${participant?.id || 'local'}] Stream details:`, {
         streamId: stream.id,
         videoTracks: videoTracks.length,
         audioTracks: audioTracks.length,
@@ -80,16 +84,15 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
         videoReadyState: videoTracks[0]?.readyState,
       });
       
-      // Function to check if video is truly ready
+      // If video tracks exist, show video immediately (even if black initially)
+      if (hasVideoTracks) {
+        setVideoReady(true);
+      }
+      
+      // Function to check if video is truly ready with dimensions
       const markVideoReady = () => {
-        // Only mark ready if video element has dimensions (frames available)
         if (video.videoWidth > 0 && video.videoHeight > 0) {
-          console.log(`[SmallVideoTile ${participant?.id}] Video ready with dimensions ${video.videoWidth}x${video.videoHeight}`);
-          setVideoReady(true);
-        } else if (hasVideoTracks) {
-          // Has tracks but no dimensions yet - still consider it "ready" to show video element
-          // The video element will display black until frames arrive
-          console.log(`[SmallVideoTile ${participant?.id}] Has tracks, showing video element`);
+          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video ready with dimensions ${video.videoWidth}x${video.videoHeight}`);
           setVideoReady(true);
         }
       };
@@ -104,8 +107,10 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       // Listen for track additions on stream
       const handleTrackAdd = (e: MediaStreamTrackEvent) => {
         if (e.track.kind === 'video') {
-          console.log(`[SmallVideoTile ${participant?.id}] Video track added`);
+          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video track added`);
           setVideoReady(true);
+          // Try to play again when new track is added
+          video.play().catch(() => {});
         }
       };
       const handleTrackRemove = (e: MediaStreamTrackEvent) => {
@@ -130,16 +135,24 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       // Ensure video plays on mobile with retry
       const attemptPlay = (attempt = 0) => {
         if (!videoRef.current) return;
+        // Reassign srcObject for mobile Safari
+        if (videoRef.current.srcObject !== stream) {
+          videoRef.current.srcObject = stream;
+        }
         videoRef.current.play().then(() => {
-          console.log(`[SmallVideoTile ${participant?.id}] Video playing`);
+          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video playing`);
           markVideoReady();
-        }).catch(() => {
-          if (attempt < 10) {
-            retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), 300 * (attempt + 1));
+        }).catch((err) => {
+          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Play attempt ${attempt} failed: ${err.name}`);
+          if (attempt < 15) {
+            retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), 200 * (attempt + 1));
           }
         });
       };
-      attemptPlay();
+      // Multiple initial attempts for mobile
+      attemptPlay(0);
+      setTimeout(() => attemptPlay(1), 500);
+      setTimeout(() => attemptPlay(2), 1000);
       
       return () => {
         video.removeEventListener('canplay', handleCanPlay);
@@ -173,6 +186,7 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
         autoPlay
         playsInline
         muted
+        webkit-playsinline="true"
         className={cn(
           "w-full h-full object-cover",
           isLocal && "transform scale-x-[-1]",
