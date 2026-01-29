@@ -218,10 +218,27 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     try {
       let stream: MediaStream;
       let micStream: MediaStream;
+      let videoStream: MediaStream | null = existingVideoStream || null;
       
       // Get microphone audio
       console.log('[WebRTC] Requesting microphone access');
       micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // If no existing video stream, try to get camera directly
+      // This handles the case where joiner didn't enable camera in lobby
+      if (!videoStream || videoStream.getVideoTracks().length === 0) {
+        console.log('[WebRTC] No existing video, requesting camera access');
+        try {
+          videoStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+            audio: false,
+          });
+          console.log('[WebRTC] Camera access granted');
+        } catch (videoErr) {
+          console.log('[WebRTC] Camera access denied or unavailable:', videoErr);
+          videoStream = null;
+        }
+      }
       
       // If host and we have TTS audio stream, mix it with mic so everyone hears TTS
       if (isHost && ttsAudioStream && ttsAudioStream.getAudioTracks().length > 0) {
@@ -252,11 +269,12 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
             stream.addTrack(track);
           });
           
-          // Add video track if we have lobby camera
-          if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
-            existingVideoStream.getVideoTracks().forEach(track => {
+          // Add video track if we have camera
+          if (videoStream && videoStream.getVideoTracks().length > 0) {
+            videoStream.getVideoTracks().forEach(track => {
               stream.addTrack(track);
             });
+            setIsVideoEnabled(true);
           } else {
             setIsVideoEnabled(false);
           }
@@ -265,29 +283,31 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         } catch (e) {
           console.log('[WebRTC] Audio mixing failed, falling back to mic only:', e);
           stream = micStream;
-          if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
-            existingVideoStream.getVideoTracks().forEach(track => {
+          if (videoStream && videoStream.getVideoTracks().length > 0) {
+            videoStream.getVideoTracks().forEach(track => {
               stream.addTrack(track);
             });
+            setIsVideoEnabled(true);
           } else {
             setIsVideoEnabled(false);
           }
         }
       } else {
-        // Non-host or no TTS stream: just use mic + optional video
+        // Non-host or no TTS stream: just use mic + video
         stream = new MediaStream();
         
         micStream.getAudioTracks().forEach(track => {
           stream.addTrack(track);
         });
         
-        if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
-          console.log('[WebRTC] Reusing existing video stream');
-          existingVideoStream.getVideoTracks().forEach(track => {
+        if (videoStream && videoStream.getVideoTracks().length > 0) {
+          console.log('[WebRTC] Using video stream');
+          videoStream.getVideoTracks().forEach(track => {
             stream.addTrack(track);
           });
+          setIsVideoEnabled(true);
         } else {
-          console.log('[WebRTC] No lobby camera, audio only');
+          console.log('[WebRTC] No camera available, audio only');
           setIsVideoEnabled(false);
         }
       }
