@@ -478,7 +478,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         setIsRecording(false);
       }
       
-      // Calculate stats
+      // Calculate stats - personalized for THIS user's role
       const performances = linePerformanceRef.current;
       const userLines = performances.length;
       const averageAccuracy = userLines > 0 
@@ -486,14 +486,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         : 0;
       const perfectLines = performances.filter(p => p.accuracy >= 95).length;
       
-      // Count total lines
-      let totalLines = 0;
+      // Count how many lines this user's role has (personalized stat)
+      const myRoleId = multiplayer.currentParticipant?.roleId;
+      let expectedUserLines = 0;
       room.scenes.forEach(scene => {
-        totalLines += scene.lines.length;
+        scene.lines.forEach(line => {
+          if (line.roleId === myRoleId) {
+            expectedUserLines++;
+          }
+        });
       });
       
       setCompletionStats({
-        totalLines,
+        totalLines: expectedUserLines, // Show expected lines for THIS user's role
         userLines,
         averageAccuracy,
         perfectLines
@@ -1375,7 +1380,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     );
   }
 
-  if (multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused')) {
+  if (multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused' || multiplayer.room.state === 'completed')) {
     const room = multiplayer.room;
     const currentScene = room.scenes[room.currentSceneIndex];
     const currentLine = currentScene?.lines[room.currentLineIndex];
@@ -1645,17 +1650,44 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 </div>
               </div>
               
-              {completionStats && completionStats.userLines > 0 && (
+              {/* Show personalized role name */}
+              {multiplayer.currentParticipant?.roleId && (
+                <p className="text-sm text-muted-foreground text-center mb-3">
+                  Your performance as <span className="font-medium text-foreground">
+                    {multiplayer.room?.roles.find(r => r.id === multiplayer.currentParticipant?.roleId)?.name || 'your role'}
+                  </span>
+                </p>
+              )}
+              
+              {completionStats && completionStats.totalLines > 0 && (
                 <div className="flex items-center justify-center gap-6 py-4 px-4 bg-muted/30 rounded-lg mb-4">
-                  <div className="text-center">
-                    <span className="text-2xl font-bold text-foreground">{Math.round(completionStats.averageAccuracy)}%</span>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">accuracy</p>
-                  </div>
-                  <div className="w-px h-8 bg-border" />
-                  <div className="text-center">
-                    <span className="text-2xl font-bold text-foreground">{completionStats.perfectLines}/{completionStats.userLines}</span>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wide">perfect</p>
-                  </div>
+                  {completionStats.userLines > 0 ? (
+                    <>
+                      <div className="text-center">
+                        <span className="text-2xl font-bold text-foreground">{Math.round(completionStats.averageAccuracy)}%</span>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">accuracy</p>
+                      </div>
+                      <div className="w-px h-8 bg-border" />
+                      <div className="text-center">
+                        <span className="text-2xl font-bold text-foreground">{completionStats.perfectLines}/{completionStats.userLines}</span>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wide">perfect</p>
+                      </div>
+                      {completionStats.userLines < completionStats.totalLines && (
+                        <>
+                          <div className="w-px h-8 bg-border" />
+                          <div className="text-center">
+                            <span className="text-2xl font-bold text-foreground">{completionStats.userLines}/{completionStats.totalLines}</span>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wide">spoken</p>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <span className="text-2xl font-bold text-foreground">0/{completionStats.totalLines}</span>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wide">lines spoken</p>
+                    </div>
+                  )}
                 </div>
               )}
               
