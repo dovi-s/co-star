@@ -218,6 +218,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     speakingLineRef.current = lineId;
     setIsAiSpeaking(true);
+    isAiSpeakingRef.current = true; // Update ref immediately
     
     console.log('[Multiplayer TTS] Speaking:', roleName, text.substring(0, 30), 'isHost:', isHost);
     
@@ -241,6 +242,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
       
       setIsAiSpeaking(false);
+      isAiSpeakingRef.current = false; // Update ref immediately for callbacks
       
       // Only HOST advances to prevent race conditions
       if (isHost) {
@@ -293,6 +295,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       if (isAiSpeaking) {
         ttsEngine.stop();
         setIsAiSpeaking(false);
+        isAiSpeakingRef.current = false;
       }
       speakingLineRef.current = null;
       currentLineIdRef.current = null;
@@ -344,6 +347,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       // Stop any playing audio immediately
       ttsEngine.stop();
       setIsAiSpeaking(false);
+      isAiSpeakingRef.current = false;
       // NOTE: Do NOT clear aiSpeakTimeoutRef here - it contains the pending nextLine() call
       // that triggered this line change. Clearing it would break auto-advance.
       speakingLineRef.current = null; // Reset so new line can speak
@@ -519,10 +523,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const isMyTurn = assignedParticipant?.id === multiplayer.participantId;
     const isUnassignedRole = !room.participants.some(p => p.roleId === currentLine.roleId);
     
+    // Use ref to get current AI speaking state (avoids stale closure issues)
+    const aiCurrentlySpeaking = isAiSpeakingRef.current;
+    
     console.log('[Multiplayer Speech] Turn check:', {
       lineRole: currentLine.roleName,
       isMyTurn,
-      isAiSpeaking,
+      aiCurrentlySpeaking,
       isUnassignedRole,
       speechAvailable: speechRecognition.available,
     });
@@ -531,7 +538,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // 1. It's my turn (I have this role)
     // 2. AI is not currently speaking
     // 3. This is NOT an unassigned role (those are handled by TTS)
-    if (isMyTurn && !isAiSpeaking && !isUnassignedRole) {
+    if (isMyTurn && !aiCurrentlySpeaking && !isUnassignedRole) {
       console.log('[Multiplayer Speech] Starting to listen for user speech');
       startListeningForUser();
     } else {
@@ -542,7 +549,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         userTurnTimeoutRef.current = null;
       }
     }
-  }, [isActivelyRehearing, multiplayer.room, multiplayer.participantId, isAiSpeaking, startListeningForUser]);
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.participantId, startListeningForUser]);
 
   // Manual skip handler - stops TTS and clears all timeouts before advancing
   const handleManualSkip = useCallback(() => {
@@ -551,6 +558,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // Stop TTS immediately
     ttsEngine.stop();
     setIsAiSpeaking(false);
+    isAiSpeakingRef.current = false;
     
     // Clear any pending advance timeouts
     if (aiSpeakTimeoutRef.current) {
