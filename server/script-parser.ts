@@ -692,6 +692,25 @@ function normalizeCharacterName(name: string): string {
   normalized = normalized.replace(/\s+/g, " ");
   normalized = normalized.trim();
   
+  // Fix OCR spacing artifacts in character names (e.g., "SIM BA" -> "SIMBA", "SCA R" -> "SCAR")
+  // If we have exactly 2 short "words" (2-4 chars each) that together form a short name, combine them
+  const words = normalized.split(/\s+/);
+  if (words.length === 2) {
+    const [w1, w2] = words;
+    // Both words are short (likely a split name)
+    if (w1.length >= 2 && w1.length <= 4 && w2.length >= 1 && w2.length <= 4) {
+      const combined = w1 + w2;
+      // If combined is a reasonable name length (4-8 chars), use it
+      if (combined.length >= 4 && combined.length <= 8) {
+        normalized = combined;
+      }
+    }
+  }
+  // Also fix single-letter fragments: "A LAN" -> "ALAN", "E LLA" -> "ELLA"  
+  normalized = normalized.replace(/^([A-Z])\s+([A-Z]{2,5})$/i, '$1$2');
+  // And trailing single letters: "SIMB A" -> "SIMBA"
+  normalized = normalized.replace(/^([A-Z]{2,5})\s+([A-Z])$/i, '$1$2');
+  
   return normalized.toUpperCase();
 }
 
