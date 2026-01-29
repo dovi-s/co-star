@@ -47,7 +47,7 @@ interface SmallVideoTileProps {
 function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaking }: SmallVideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [hasVideoFrames, setHasVideoFrames] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
     // Cleanup previous retry timer
@@ -58,67 +58,73 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
 
     if (!videoRef.current) return;
     const video = videoRef.current;
-
-    // Reset state when stream changes
-    setHasVideoFrames(false);
+    
+    // Reset when stream changes
+    setVideoReady(false);
 
     if (stream) {
       // Always reassign srcObject when stream changes
       video.srcObject = stream;
       
-      // Check for video dimensions to determine if we actually have video frames
-      const checkVideoFrames = () => {
-        const hasFrames = video.videoWidth > 0 && video.videoHeight > 0;
-        setHasVideoFrames(hasFrames);
+      // Check if stream has video tracks
+      const videoTracks = stream.getVideoTracks();
+      const hasVideoTracks = videoTracks.length > 0;
+      
+      console.log(`[SmallVideoTile ${participant?.id}] Stream has ${videoTracks.length} video tracks`);
+      
+      // Function to check if video is truly ready
+      const markVideoReady = () => {
+        // Only mark ready if video element has dimensions (frames available)
+        if (video.videoWidth > 0 && video.videoHeight > 0) {
+          console.log(`[SmallVideoTile ${participant?.id}] Video ready with dimensions ${video.videoWidth}x${video.videoHeight}`);
+          setVideoReady(true);
+        } else if (hasVideoTracks) {
+          // Has tracks but no dimensions yet - still consider it "ready" to show video element
+          // The video element will display black until frames arrive
+          console.log(`[SmallVideoTile ${participant?.id}] Has tracks, showing video element`);
+          setVideoReady(true);
+        }
       };
       
-      // Use video element events - more reliable than track state
-      const handleLoadedMetadata = () => checkVideoFrames();
-      const handleResize = () => checkVideoFrames();
-      const handleCanPlay = () => checkVideoFrames();
-      const handleError = () => setHasVideoFrames(false);
-      const handleEmptied = () => setHasVideoFrames(false);
+      // Video element events for when frames are available
+      const handleCanPlay = () => markVideoReady();
+      const handleLoadedMetadata = () => markVideoReady();
       
-      video.addEventListener('loadedmetadata', handleLoadedMetadata);
-      video.addEventListener('resize', handleResize);
       video.addEventListener('canplay', handleCanPlay);
-      video.addEventListener('error', handleError);
-      video.addEventListener('emptied', handleEmptied);
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
       
-      // Listen for track events on stream
-      const handleTrackAdd = () => setTimeout(checkVideoFrames, 100);
-      const handleTrackRemove = () => {
-        // Check if any video tracks remain
-        const videoTracks = stream.getVideoTracks();
-        if (videoTracks.length === 0) {
-          setHasVideoFrames(false);
+      // Listen for track additions on stream
+      const handleTrackAdd = (e: MediaStreamTrackEvent) => {
+        if (e.track.kind === 'video') {
+          console.log(`[SmallVideoTile ${participant?.id}] Video track added`);
+          setVideoReady(true);
+        }
+      };
+      const handleTrackRemove = (e: MediaStreamTrackEvent) => {
+        if (e.track.kind === 'video') {
+          const remainingVideo = stream.getVideoTracks();
+          if (remainingVideo.length === 0) {
+            setVideoReady(false);
+          }
         }
       };
       stream.addEventListener('addtrack', handleTrackAdd);
       stream.addEventListener('removetrack', handleTrackRemove);
       
-      // Listen for track ended on each video track
-      const videoTracks = stream.getVideoTracks();
-      const handleTrackEnded = () => setHasVideoFrames(false);
-      const handleTrackMute = () => setHasVideoFrames(false);
-      const handleTrackUnmute = () => setTimeout(checkVideoFrames, 100);
-      
-      videoTracks.forEach(track => {
-        track.addEventListener('ended', handleTrackEnded);
-        track.addEventListener('mute', handleTrackMute);
-        track.addEventListener('unmute', handleTrackUnmute);
-      });
-      
-      // Initial check - video might already be ready
-      if (video.readyState >= 1) {
-        checkVideoFrames();
+      // If video already has frames, mark ready immediately
+      if (video.readyState >= 2 && video.videoWidth > 0) {
+        markVideoReady();
+      } else if (hasVideoTracks) {
+        // Has tracks - show video element and let it display when ready
+        setVideoReady(true);
       }
       
-      // Ensure video plays on mobile with retry and cleanup
+      // Ensure video plays on mobile with retry
       const attemptPlay = (attempt = 0) => {
         if (!videoRef.current) return;
         videoRef.current.play().then(() => {
-          checkVideoFrames();
+          console.log(`[SmallVideoTile ${participant?.id}] Video playing`);
+          markVideoReady();
         }).catch(() => {
           if (attempt < 10) {
             retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), 300 * (attempt + 1));
@@ -128,30 +134,22 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       attemptPlay();
       
       return () => {
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        video.removeEventListener('resize', handleResize);
         video.removeEventListener('canplay', handleCanPlay);
-        video.removeEventListener('error', handleError);
-        video.removeEventListener('emptied', handleEmptied);
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
         stream.removeEventListener('addtrack', handleTrackAdd);
         stream.removeEventListener('removetrack', handleTrackRemove);
-        videoTracks.forEach(track => {
-          track.removeEventListener('ended', handleTrackEnded);
-          track.removeEventListener('mute', handleTrackMute);
-          track.removeEventListener('unmute', handleTrackUnmute);
-        });
         if (retryTimerRef.current) {
           clearTimeout(retryTimerRef.current);
         }
       };
     } else {
       video.srcObject = null;
-      setHasVideoFrames(false);
+      setVideoReady(false);
     }
-  }, [stream]);
+  }, [stream, participant?.id]);
 
-  // Use hasVideoFrames state OR check isVideoOff prop (either can indicate no video)
-  const showVideo = stream && hasVideoFrames && !isVideoOff;
+  // Show video if we have a stream and video is ready
+  const showVideo = stream && videoReady && !isVideoOff;
 
   return (
     <div
