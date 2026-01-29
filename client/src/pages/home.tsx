@@ -72,7 +72,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
 
   return (
     <div className="min-h-screen flex flex-col bg-background" data-testid="home-page">
-      <header className="flex items-center justify-between px-5 py-4 sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/40 safe-top">
+      <header className="flex items-center justify-between px-5 py-2 sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border/40 safe-top">
         <Logo size="sm" animated showWordmark />
         <div className="flex items-center gap-2">
           {onMultiplayer && (
