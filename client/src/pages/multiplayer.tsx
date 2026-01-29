@@ -563,6 +563,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // Use ref to get current AI speaking state (avoids stale closure issues)
     const aiCurrentlySpeaking = isAiSpeakingRef.current;
     
+    // NOTE: Speech recognition is now triggered directly in the TTS effect above
+    // This effect only handles cleanup when it's NOT my turn
     console.log('[Multiplayer Speech] Turn check:', {
       lineRole: currentLine.roleName,
       isMyTurn,
@@ -571,14 +573,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       speechAvailable: speechRecognition.available,
     });
     
-    // Only start listening if:
-    // 1. It's my turn (I have this role)
-    // 2. AI is not currently speaking
-    // 3. This is NOT an unassigned role (those are handled by TTS)
-    if (isMyTurn && !aiCurrentlySpeaking && !isUnassignedRole) {
-      console.log('[Multiplayer Speech] Starting to listen for user speech');
-      startListeningForUser();
-    } else {
+    // If it's NOT my turn, stop any ongoing speech recognition
+    if (!isMyTurn || isUnassignedRole) {
       waitingForUserRef.current = false;
       speechRecognition.abort();
       if (userTurnTimeoutRef.current) {
@@ -586,7 +582,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         userTurnTimeoutRef.current = null;
       }
     }
-  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.participantId, startListeningForUser]);
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.participantId]);
 
   // Manual skip handler - stops TTS and clears all timeouts before advancing
   const handleManualSkip = useCallback(() => {
