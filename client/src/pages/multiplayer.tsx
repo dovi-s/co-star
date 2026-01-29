@@ -182,6 +182,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   // Track safety timeout separately so we can clear it on navigation
   const safetyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
+  // Ref to always access latest multiplayer for callbacks
+  const multiplayerRef = useRef(multiplayer);
+  useEffect(() => {
+    multiplayerRef.current = multiplayer;
+  }, [multiplayer]);
+  
   const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
     // ALWAYS stop any current audio first to prevent overlap
     ttsEngine.stop();
@@ -233,8 +239,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       // Only HOST advances to prevent race conditions
       if (isHost) {
         aiSpeakTimeoutRef.current = setTimeout(() => {
-          console.log('[Multiplayer TTS] Host calling nextLine()');
-          multiplayer.nextLine();
+          console.log('[Multiplayer TTS] Host calling nextLine() via ref');
+          // Use ref to ensure we always call the latest multiplayer.nextLine
+          multiplayerRef.current.nextLine();
         }, 200);
       } else {
         console.log('[Multiplayer TTS] Not host, waiting for host to advance');
@@ -243,7 +250,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     if (isHost) {
       safetyTimeoutRef.current = setTimeout(() => {
-        console.log('[Multiplayer TTS] Safety timeout - forcing advance');
+        console.log('[Multiplayer TTS] Safety timeout - forcing advance via ref');
         advanceToNext();
       }, estimatedDuration + 3000);
     }
@@ -262,7 +269,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         characterIndex,
       }
     );
-  }, [multiplayer]);
+  }, []);
 
   const currentLineIdRef = useRef<string | null>(null);
 
@@ -379,15 +386,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const userTurnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [micBlocked, setMicBlocked] = useState(false);
   const isActivelyRehearsalRef = useRef(false);
-  const multiplayerRef = useRef(multiplayer);
 
   useEffect(() => {
     isActivelyRehearsalRef.current = isActivelyRehearing;
   }, [isActivelyRehearing]);
-
-  useEffect(() => {
-    multiplayerRef.current = multiplayer;
-  }, [multiplayer]);
 
   useEffect(() => {
     if (isAiSpeaking) {
