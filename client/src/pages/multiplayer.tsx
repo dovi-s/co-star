@@ -145,26 +145,45 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     speakingLineRef.current = lineId;
     setIsAiSpeaking(true);
     
-    console.log('[Multiplayer TTS] Speaking:', roleName, text.substring(0, 30));
+    console.log('[Multiplayer TTS] Speaking:', roleName, text.substring(0, 30), 'isHost:', isHost);
     
     const prosody = calculateProsody('neutral', 'natural');
+    
+    // Safety timeout: if TTS doesn't complete in reasonable time, advance anyway (host only)
+    const estimatedDuration = Math.max(5000, text.length * 100); // ~100ms per character
+    let safetyTimeout: ReturnType<typeof setTimeout> | null = null;
+    let hasAdvanced = false;
+    
+    const advanceToNext = () => {
+      if (hasAdvanced) return;
+      hasAdvanced = true;
+      if (safetyTimeout) clearTimeout(safetyTimeout);
+      
+      setIsAiSpeaking(false);
+      
+      // Only HOST advances to prevent race conditions
+      if (isHost) {
+        aiSpeakTimeoutRef.current = setTimeout(() => {
+          console.log('[Multiplayer TTS] Host advancing to next line');
+          multiplayer.nextLine();
+        }, 200);
+      }
+    };
+    
+    if (isHost) {
+      safetyTimeout = setTimeout(() => {
+        console.log('[Multiplayer TTS] Safety timeout - forcing advance');
+        advanceToNext();
+      }, estimatedDuration + 3000);
+    }
     
     ttsEngine.speak(
       text, 
       prosody, 
       (result: SpeakResult) => {
         console.log('[Multiplayer TTS] Complete:', result, 'isHost:', isHost);
-        setIsAiSpeaking(false);
-        
-        // Only the HOST advances the line (prevents race conditions from multiple devices)
-        // Don't reset speakingLineRef here - only reset when line actually changes
-        if (result === 'success' && isHost && currentLineIdRef.current === lineId) {
-          aiSpeakTimeoutRef.current = setTimeout(() => {
-            if (currentLineIdRef.current === lineId) {
-              console.log('[Multiplayer TTS] Host advancing to next line');
-              multiplayer.nextLine();
-            }
-          }, 300);
+        if (result === 'success' || result === 'error') {
+          advanceToNext();
         }
       },
       {
