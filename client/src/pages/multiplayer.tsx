@@ -1051,6 +1051,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const currentSpeaker = room.participants.find(p => p.roleId === currentLine?.roleId);
     const isMyTurn = currentLine?.roleId === multiplayer.currentParticipant?.roleId;
     const myRole = room.roles.find(r => r.id === multiplayer.currentParticipant?.roleId);
+    const isFirstLineOfScene = room.currentLineIndex === 0;
     
     return (
       <div className="min-h-screen relative" data-testid="multiplayer-rehearsal">
@@ -1078,6 +1079,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           isMyTurn={!isCountingDown && isMyTurn}
           userTranscript={userTranscript}
           isListening={listeningState === 'listening'}
+          currentScene={!isCountingDown && currentScene ? {
+            name: currentScene.name,
+            description: currentScene.description,
+          } : undefined}
+          isFirstLineOfScene={!isCountingDown && isFirstLineOfScene}
         />
         
         {isCountingDown && serverCountdown !== null && (

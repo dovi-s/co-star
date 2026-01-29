@@ -11,6 +11,11 @@ interface LineData {
   direction?: string;
 }
 
+interface SceneData {
+  name: string;
+  description?: string;
+}
+
 interface MultiplayerVideoBackgroundProps {
   localStream: MediaStream | null;
   peerStreams: PeerStream[];
@@ -25,6 +30,8 @@ interface MultiplayerVideoBackgroundProps {
   isMyTurn: boolean;
   userTranscript?: string;
   isListening?: boolean;
+  currentScene?: SceneData;
+  isFirstLineOfScene?: boolean;
   className?: string;
 }
 
@@ -117,6 +124,8 @@ export function MultiplayerVideoBackground({
   isMyTurn,
   userTranscript = '',
   isListening = false,
+  currentScene,
+  isFirstLineOfScene = false,
   className,
 }: MultiplayerVideoBackgroundProps) {
   const mainVideoRef = useRef<HTMLVideoElement>(null);
@@ -335,6 +344,28 @@ export function MultiplayerVideoBackground({
         data-testid="script-overlay"
       >
         <div className="max-w-2xl mx-auto">
+          {/* Scene transition card - like solo mode */}
+          {isFirstLineOfScene && currentScene && (
+            <div 
+              className="bg-black/50 backdrop-blur-xl border border-white/20 px-4 py-3 rounded-lg mb-3 animate-in fade-in slide-in-from-top-2 duration-300"
+              data-testid="scene-transition-card"
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-white/70">
+                  Scene
+                </span>
+              </div>
+              <p className="text-sm font-medium leading-snug text-white">
+                {currentScene.name}
+              </p>
+              {currentScene.description && (
+                <p className="mt-1.5 text-xs leading-relaxed italic text-white/60">
+                  {currentScene.description}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className={cn(
             "bg-black/70 backdrop-blur-md rounded-2xl p-6 border transition-all duration-300 ease-out",
             focusMode === 'script' 
