@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import type { PeerStream } from '@/hooks/use-webrtc';
 import type { Participant } from '@shared/schema';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, VideoOff, Crown } from 'lucide-react';
+import { matchWords } from '@/lib/word-matcher';
 
 interface LineData {
   text: string;
@@ -22,6 +23,8 @@ interface MultiplayerVideoBackgroundProps {
   previousLine?: LineData;
   nextLine?: LineData;
   isMyTurn: boolean;
+  userTranscript?: string;
+  isListening?: boolean;
   className?: string;
 }
 
@@ -112,6 +115,8 @@ export function MultiplayerVideoBackground({
   previousLine,
   nextLine,
   isMyTurn,
+  userTranscript = '',
+  isListening = false,
   className,
 }: MultiplayerVideoBackgroundProps) {
   const mainVideoRef = useRef<HTMLVideoElement>(null);
@@ -123,6 +128,14 @@ export function MultiplayerVideoBackground({
   
   const currentSpeaker = participants.find(p => p.id === currentSpeakerId);
   const myParticipant = participants.find(p => p.id === myParticipantId);
+  
+  // Word matching for user's turn (like solo mode)
+  const wordMatchResult = useMemo(() => {
+    if (!isMyTurn || !currentLine || !userTranscript) {
+      return null;
+    }
+    return matchWords(currentLine.text, userTranscript);
+  }, [isMyTurn, currentLine?.text, userTranscript]);
   
   const effectiveSpeakerId = currentSpeakerId || myParticipantId;
   const isLocalSpeaker = effectiveSpeakerId === myParticipantId;
@@ -347,7 +360,7 @@ export function MultiplayerVideoBackground({
                   )}>
                     {currentLine.roleName}
                   </span>
-                  {isMyTurn && (
+                  {isMyTurn && isListening && (
                     <Mic className="h-4 w-4 text-primary animate-pulse" />
                   )}
                 </div>
@@ -356,11 +369,50 @@ export function MultiplayerVideoBackground({
                     ({currentLine.direction})
                   </p>
                 )}
-                <p className="text-xl text-white font-medium leading-relaxed">
-                  {currentLine.text}
-                </p>
-                {isMyTurn && (
-                  <p className="text-sm text-primary mt-3">Speak your line</p>
+                
+                {/* Word-by-word highlighting like solo mode */}
+                {isMyTurn && wordMatchResult ? (
+                  <div className="space-y-3">
+                    {/* Progress bar */}
+                    <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-green-500 transition-all duration-200"
+                        style={{ width: `${wordMatchResult.progress * 100}%` }}
+                      />
+                    </div>
+                    
+                    {/* Words with highlighting */}
+                    <p className="text-xl text-white font-medium leading-relaxed">
+                      {wordMatchResult.words.map((word, i) => (
+                        <span
+                          key={i}
+                          className={cn(
+                            "transition-colors duration-150",
+                            word.matched ? "text-green-400" : "text-white"
+                          )}
+                        >
+                          {word.text}{' '}
+                        </span>
+                      ))}
+                    </p>
+                    
+                    {/* User transcript display */}
+                    {userTranscript && (
+                      <p className="text-sm text-white/60 italic">
+                        "{userTranscript}"
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xl text-white font-medium leading-relaxed">
+                    {currentLine.text}
+                  </p>
+                )}
+                
+                {isMyTurn && !userTranscript && (
+                  <p className="text-sm text-primary mt-3">
+                    {isListening ? "Listening..." : "Speak your line"}
+                  </p>
                 )}
               </div>
             )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,6 +11,7 @@ import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
+import { matchWords } from '@/lib/word-matcher';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -433,6 +434,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const userTurnTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [micBlocked, setMicBlocked] = useState(false);
   const isActivelyRehearsalRef = useRef(false);
+  const [userTranscript, setUserTranscript] = useState("");
 
   useEffect(() => {
     isActivelyRehearsalRef.current = isActivelyRehearing;
@@ -489,6 +491,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   useEffect(() => {
     const handleResult = (result: { transcript: string; isFinal: boolean }) => {
+      // Always update transcript for word tracing (like solo mode)
+      if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        setUserTranscript(result.transcript);
+      }
+      
       if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current) {
         console.log("[Multiplayer] User spoke:", result.transcript.substring(0, 30));
         waitingForUserRef.current = false;
@@ -498,7 +505,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         }
         speechRecognition.stop();
         
+        // Clear transcript after a short delay so user sees their final words
         setTimeout(() => {
+          setUserTranscript("");
           multiplayerRef.current.nextLine();
         }, 300);
       }
@@ -937,6 +946,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             roleName: nextLine.roleName,
           } : undefined}
           isMyTurn={!isCountingDown && isMyTurn}
+          userTranscript={userTranscript}
+          isListening={listeningState === 'listening'}
         />
         
         {isCountingDown && serverCountdown !== null && (
