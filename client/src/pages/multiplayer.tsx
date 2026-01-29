@@ -258,10 +258,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const lineRoleId = currentLine.roleId;
     const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
     
-    // ALL devices play TTS for unassigned roles simultaneously
-    if (!isRoleAssignedToParticipant) {
+    // ONLY HOST plays TTS for unassigned roles to avoid sync issues
+    // Joining devices see lines visually and hear through host's speakers/WebRTC
+    if (!isRoleAssignedToParticipant && multiplayer.isHost) {
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
-      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost);
+      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, true);
     }
     
     // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared

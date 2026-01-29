@@ -206,7 +206,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     try {
       let stream: MediaStream;
       
-      // If we have an existing video stream from lobby, just add audio to avoid duplicate permission prompt
+      // If we have an existing video stream from lobby, reuse it and add audio
       if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
         console.log('[WebRTC] Reusing existing video stream, only requesting audio');
         const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -220,12 +220,11 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           stream.addTrack(track);
         });
       } else {
-        // No existing stream, request both
-        console.log('[WebRTC] Requesting full media access');
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-        });
+        // No lobby camera - only request audio (mic for speaking lines)
+        // This avoids a combined audio+video permission popup
+        console.log('[WebRTC] No lobby camera, requesting audio only');
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        setIsVideoEnabled(false);
       }
       
       localStreamRef.current = stream;
@@ -240,7 +239,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       return stream;
     } catch (err) {
       console.error('[WebRTC] Error accessing media:', err);
-      setError('Could not access camera or microphone');
+      setError('Could not access microphone');
       return null;
     }
   }, [processPendingOffers, processPendingPeers, existingVideoStream]);
