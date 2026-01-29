@@ -374,7 +374,44 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       console.log('[Multiplayer] Starting TTS for AI line:', currentLine.roleName, roleIndex);
       speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, true);
     } else if (isRoleAssignedToParticipant) {
-      console.log('[Multiplayer] User turn detected for:', currentLine.roleName);
+      // This is a human player's turn - check if it's MY turn
+      const assignedParticipant = room.participants.find(p => p.roleId === lineRoleId);
+      const isMyTurn = assignedParticipant?.id === multiplayer.participantId;
+      
+      console.log('[Multiplayer] User turn detected for:', currentLine.roleName, 'isMyTurn:', isMyTurn);
+      
+      if (isMyTurn) {
+        // Directly trigger speech recognition here, don't rely on separate effect
+        console.log('[Multiplayer] MY TURN - triggering speech recognition directly');
+        isAiSpeakingRef.current = false; // Ensure this is false
+        setIsAiSpeaking(false);
+        
+        // Small delay to let any audio finish
+        setTimeout(() => {
+          if (isActivelyRehearsalRef.current && !isAiSpeakingRef.current) {
+            waitingForUserRef.current = true;
+            
+            if (speechRecognition.available) {
+              console.log('[Multiplayer] Starting speech recognition for my turn');
+              const started = speechRecognition.start();
+              console.log('[Multiplayer] Speech recognition start result:', started);
+            }
+            
+            // Set up timeout for auto-advance
+            if (userTurnTimeoutRef.current) {
+              clearTimeout(userTurnTimeoutRef.current);
+            }
+            userTurnTimeoutRef.current = setTimeout(() => {
+              if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
+                console.log("[Multiplayer] User turn timeout, auto-advancing");
+                waitingForUserRef.current = false;
+                speechRecognition.abort();
+                multiplayerRef.current.nextLine();
+              }
+            }, 20000);
+          }
+        }, 300);
+      }
     }
     
     // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared
