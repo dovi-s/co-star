@@ -211,7 +211,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         clearTimeout(aiSpeakTimeoutRef.current);
       }
     };
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine, isAiSpeaking]);
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine]);
 
   useEffect(() => {
     return () => {
@@ -976,7 +976,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <Button
                 className="flex-1"
                 disabled={!canStart}
-                onClick={() => multiplayer.startRehearsal()}
+                onClick={() => {
+                  // Unlock audio on mobile by playing a silent sound
+                  const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+                  silentAudio.play().catch(() => {});
+                  multiplayer.startRehearsal();
+                }}
                 data-testid="button-start-rehearsal"
               >
                 <Play className="h-4 w-4 mr-2" />
