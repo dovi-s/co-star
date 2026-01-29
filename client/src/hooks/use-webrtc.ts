@@ -188,6 +188,22 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     }
 
     let pc = peerConnectionsRef.current.get(fromId);
+    
+    // Handle "glare" - both sides trying to connect simultaneously
+    // Use participant ID comparison as tiebreaker - higher ID is "impolite" and wins
+    const isPolite = myParticipantId < fromId;
+    
+    if (pc && pc.signalingState !== 'stable') {
+      if (!isPolite) {
+        // We're impolite and already have an outgoing offer - ignore incoming offer
+        console.log(`[WebRTC] Glare detected with ${fromId} - we're impolite, ignoring their offer`);
+        return;
+      }
+      // We're polite - rollback our offer and accept theirs
+      console.log(`[WebRTC] Glare detected with ${fromId} - we're polite, rolling back`);
+      await pc.setLocalDescription({ type: 'rollback' });
+    }
+    
     if (!pc) {
       const newPc = createPeerConnection(fromId, false);
       if (!newPc) return;
@@ -195,6 +211,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     }
 
     try {
+      console.log(`[WebRTC] Setting remote offer from ${fromId}`);
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
       const pendingCandidates = pendingCandidatesRef.current.get(fromId) || [];
@@ -206,6 +223,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
+      console.log(`[WebRTC] Sending answer to ${fromId}`);
       socket.emit('room_event', {
         type: 'rtc_answer',
         targetId: fromId,
@@ -221,12 +239,23 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
   const handleRtcAnswer = useCallback(async (fromId: string, answer: { type: 'answer'; sdp: string }) => {
     const pc = peerConnectionsRef.current.get(fromId);
-    if (!pc) return;
+    if (!pc) {
+      console.log('[WebRTC] No peer connection for answer from', fromId);
+      return;
+    }
+
+    // Check signaling state - can only set answer when in "have-local-offer" state
+    if (pc.signalingState !== 'have-local-offer') {
+      console.log(`[WebRTC] Ignoring answer from ${fromId} - wrong state: ${pc.signalingState}`);
+      return;
+    }
 
     try {
+      console.log(`[WebRTC] Setting remote answer from ${fromId}`);
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       
       const pendingCandidates = pendingCandidatesRef.current.get(fromId) || [];
+      console.log(`[WebRTC] Adding ${pendingCandidates.length} pending ICE candidates for ${fromId}`);
       for (const candidate of pendingCandidates) {
         await pc.addIceCandidate(candidate);
       }
