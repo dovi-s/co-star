@@ -402,14 +402,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             if (userTurnTimeoutRef.current) {
               clearTimeout(userTurnTimeoutRef.current);
             }
+            // Safety timeout: 60 seconds like solo mode (generous time for user)
             userTurnTimeoutRef.current = setTimeout(() => {
               if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
-                console.log("[Multiplayer] User turn timeout, auto-advancing");
+                console.log("[Multiplayer] User turn safety timeout, advancing");
                 waitingForUserRef.current = false;
                 speechRecognition.abort();
+                setUserTranscript("");
                 multiplayerRef.current.nextLine();
               }
-            }, 20000);
+            }, 60000);
           }
         }, 300);
       }
@@ -435,6 +437,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const [micBlocked, setMicBlocked] = useState(false);
   const isActivelyRehearsalRef = useRef(false);
   const [userTranscript, setUserTranscript] = useState("");
+  const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advancedForLineRef = useRef<string | null>(null);
+  const currentLineAccuracyRef = useRef<number>(0);
 
   useEffect(() => {
     isActivelyRehearsalRef.current = isActivelyRehearing;
@@ -489,6 +494,22 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }, 20000);
   }, [micBlocked]);
 
+  // Helper to get current line for word matching
+  const getCurrentLineForMatch = useCallback(() => {
+    const room = multiplayer.room;
+    if (!room) return null;
+    const currentScene = room.scenes[room.currentSceneIndex];
+    return currentScene?.lines[room.currentLineIndex] || null;
+  }, [multiplayer.room]);
+
+  // Advance after user line - like solo mode
+  const advanceAfterUserLine = useCallback(() => {
+    console.log("[Multiplayer] Advancing after user line");
+    setUserTranscript("");
+    currentLineAccuracyRef.current = 0;
+    multiplayerRef.current.nextLine();
+  }, []);
+
   useEffect(() => {
     const handleResult = (result: { transcript: string; isFinal: boolean }) => {
       // Always update transcript for word tracing (like solo mode)
@@ -496,20 +517,68 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         setUserTranscript(result.transcript);
       }
       
-      if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current) {
-        console.log("[Multiplayer] User spoke:", result.transcript.substring(0, 30));
-        waitingForUserRef.current = false;
-        if (userTurnTimeoutRef.current) {
-          clearTimeout(userTurnTimeoutRef.current);
-          userTurnTimeoutRef.current = null;
-        }
-        speechRecognition.stop();
+      // Check word matching against current line (like solo mode)
+      const line = getCurrentLineForMatch();
+      if (line && result.transcript.length > 0 && waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        const match = matchWords(line.text, result.transcript);
+        console.log("[Multiplayer] Word match:", match.matchedCount, "/", match.totalWords, 
+          `(${Math.round(match.percentMatched)}%)`);
         
-        // Clear transcript after a short delay so user sees their final words
-        setTimeout(() => {
-          setUserTranscript("");
-          multiplayerRef.current.nextLine();
-        }, 300);
+        // Track best accuracy for this line
+        currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
+        
+        // Auto-advance when user has matched 80%+ of the words (like solo mode)
+        if (match.percentMatched >= 80) {
+          console.log("[Multiplayer] 80%+ match, advancing now!");
+          speechRecognition.stop();
+          waitingForUserRef.current = false;
+          
+          if (userTurnTimeoutRef.current) {
+            clearTimeout(userTurnTimeoutRef.current);
+            userTurnTimeoutRef.current = null;
+          }
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+            autoAdvanceTimeoutRef.current = null;
+          }
+          
+          // Quick pause then advance (150ms for snappy response like solo)
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isActivelyRehearsalRef.current) {
+              advanceAfterUserLine();
+            }
+          }, 150);
+          return;
+        }
+      }
+      
+      // On final result, auto-advance if we have at least some progress (35%+ like solo)
+      if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current && line) {
+        const match = matchWords(line.text, result.transcript);
+        if (match.percentMatched >= 35) {
+          console.log("[Multiplayer] Final result with", Math.round(match.percentMatched), "% match, advancing");
+          waitingForUserRef.current = false;
+          speechRecognition.stop();
+          
+          if (userTurnTimeoutRef.current) {
+            clearTimeout(userTurnTimeoutRef.current);
+            userTurnTimeoutRef.current = null;
+          }
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+            autoAdvanceTimeoutRef.current = null;
+          }
+          
+          // Quick transition (200ms for snappy response like solo)
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isActivelyRehearsalRef.current) {
+              advanceAfterUserLine();
+            }
+          }, 200);
+        } else {
+          console.log("[Multiplayer] Low match on final result, waiting for more speech");
+          // Don't advance yet, keep listening
+        }
       }
     };
 
@@ -521,7 +590,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
         console.log("[Multiplayer] Speech ended but still user's turn, auto-restarting...");
         setTimeout(() => {
-          if (waitingForUserRef.current && !speechRecognition.listening) {
+          if (waitingForUserRef.current && !speechRecognition.listening && isActivelyRehearsalRef.current) {
+            console.log("[Multiplayer] Restarting speech recognition");
             speechRecognition.start();
           }
         }, 300);
@@ -532,6 +602,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       console.log("[Multiplayer] Speech error:", error);
       if (error === "not-allowed") {
         setMicBlocked(true);
+      }
+      // On error, still try to advance if we're waiting (like solo mode)
+      if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
+        waitingForUserRef.current = false;
+        setTimeout(() => {
+          if (isActivelyRehearsalRef.current) {
+            advanceAfterUserLine();
+          }
+        }, 500);
       }
     };
 
@@ -545,8 +624,59 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       speechRecognition.onStateChange(() => {});
       speechRecognition.onEnd(() => {});
       speechRecognition.onError(() => {});
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+      }
     };
-  }, []);
+  }, [getCurrentLineForMatch, advanceAfterUserLine]);
+
+  // Backup watcher: if word match hits 70%+, force advancement
+  // This catches cases where the speech callback didn't trigger properly (like solo mode)
+  useEffect(() => {
+    const line = getCurrentLineForMatch();
+    if (!line || !isActivelyRehearing || !userTranscript || !waitingForUserRef.current) {
+      return;
+    }
+    
+    // Don't re-advance for the same line
+    if (advancedForLineRef.current === line.id) {
+      return;
+    }
+    
+    const match = matchWords(line.text, userTranscript);
+    if (match.percentMatched >= 70) {
+      console.log("[Multiplayer] Backup watcher: 70%+ match detected, forcing advance");
+      advancedForLineRef.current = line.id;
+      waitingForUserRef.current = false;
+      speechRecognition.stop();
+      
+      if (userTurnTimeoutRef.current) {
+        clearTimeout(userTurnTimeoutRef.current);
+        userTurnTimeoutRef.current = null;
+      }
+      if (autoAdvanceTimeoutRef.current) {
+        clearTimeout(autoAdvanceTimeoutRef.current);
+        autoAdvanceTimeoutRef.current = null;
+      }
+      
+      setTimeout(() => {
+        if (isActivelyRehearsalRef.current) {
+          advanceAfterUserLine();
+        }
+      }, 150);
+    }
+  }, [userTranscript, isActivelyRehearing, getCurrentLineForMatch, advanceAfterUserLine]);
+
+  // Clear transcript and reset when line changes
+  useEffect(() => {
+    const line = getCurrentLineForMatch();
+    if (line) {
+      // Reset for new line
+      advancedForLineRef.current = null;
+      currentLineAccuracyRef.current = 0;
+      setUserTranscript("");
+    }
+  }, [multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, getCurrentLineForMatch]);
 
   useEffect(() => {
     if (!isActivelyRehearing || !multiplayer.room) {
