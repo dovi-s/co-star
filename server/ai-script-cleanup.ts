@@ -214,10 +214,12 @@ REMOVE these (NOT real characters):
 - Production terms: END INTERCUT, CONTINUED, FLASHBACK, MONTAGE, etc.
 - Any word/phrase that is clearly NOT a person who speaks dialogue
 
-KEEP these (real characters):
+KEEP these (real characters - DO NOT REMOVE):
 - Actual character names: JOHN, MARY, DETECTIVE SMITH, MOM, DAD, etc.
-- Role descriptions: THE DOCTOR, BARTENDER, WAITER, STRANGER, MAN #1, etc.
+- Role descriptions (KEEP THESE): DETECTIVE, SUSPECT, OFFICER, DOCTOR, BARTENDER, WAITER, STRANGER, WITNESS, VICTIM, KILLER, THIEF, LAWYER, JUDGE, GUARD, NURSE, DRIVER, PILOT, etc.
+- Generic role labels: MAN, WOMAN, BOY, GIRL, MAN #1, WOMAN #2, etc.
 - Named characters with titles: DR. JONES, CAPTAIN MILLER, OFFICER CHEN, etc.
+- Occupation-based names: These are ALWAYS real speaking roles, even without a proper name
 
 Here are the detected "characters" to review:
 ${JSON.stringify(rolesForAI, null, 2)}
@@ -228,7 +230,7 @@ Return a JSON object:
   "reasoning": "brief explanation"
 }
 
-Be aggressive - if something looks like a direction, object, location, or technical term, remove it. Real character names are proper nouns or role descriptions, not common nouns or phrases.`;
+Remove only clear non-characters (camera directions, locations, objects, time markers). When in doubt, KEEP the role - occupation words like DETECTIVE, SUSPECT, OFFICER, NURSE, DOCTOR are almost always real speaking characters.`;
 
   try {
     const openai = new OpenAI({
