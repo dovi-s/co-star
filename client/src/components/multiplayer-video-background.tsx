@@ -46,20 +46,112 @@ interface SmallVideoTileProps {
 
 function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaking }: SmallVideoTileProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasVideoFrames, setHasVideoFrames] = useState(false);
 
   useEffect(() => {
-    if (videoRef.current && stream) {
-      videoRef.current.srcObject = stream;
+    // Cleanup previous retry timer
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+
+    // Reset state when stream changes
+    setHasVideoFrames(false);
+
+    if (stream) {
+      // Always reassign srcObject when stream changes
+      video.srcObject = stream;
       
-      // Ensure video plays on mobile with retry
-      const attemptPlay = () => {
-        videoRef.current?.play().catch(() => {
-          setTimeout(attemptPlay, 500);
+      // Check for video dimensions to determine if we actually have video frames
+      const checkVideoFrames = () => {
+        const hasFrames = video.videoWidth > 0 && video.videoHeight > 0;
+        setHasVideoFrames(hasFrames);
+      };
+      
+      // Use video element events - more reliable than track state
+      const handleLoadedMetadata = () => checkVideoFrames();
+      const handleResize = () => checkVideoFrames();
+      const handleCanPlay = () => checkVideoFrames();
+      const handleError = () => setHasVideoFrames(false);
+      const handleEmptied = () => setHasVideoFrames(false);
+      
+      video.addEventListener('loadedmetadata', handleLoadedMetadata);
+      video.addEventListener('resize', handleResize);
+      video.addEventListener('canplay', handleCanPlay);
+      video.addEventListener('error', handleError);
+      video.addEventListener('emptied', handleEmptied);
+      
+      // Listen for track events on stream
+      const handleTrackAdd = () => setTimeout(checkVideoFrames, 100);
+      const handleTrackRemove = () => {
+        // Check if any video tracks remain
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length === 0) {
+          setHasVideoFrames(false);
+        }
+      };
+      stream.addEventListener('addtrack', handleTrackAdd);
+      stream.addEventListener('removetrack', handleTrackRemove);
+      
+      // Listen for track ended on each video track
+      const videoTracks = stream.getVideoTracks();
+      const handleTrackEnded = () => setHasVideoFrames(false);
+      const handleTrackMute = () => setHasVideoFrames(false);
+      const handleTrackUnmute = () => setTimeout(checkVideoFrames, 100);
+      
+      videoTracks.forEach(track => {
+        track.addEventListener('ended', handleTrackEnded);
+        track.addEventListener('mute', handleTrackMute);
+        track.addEventListener('unmute', handleTrackUnmute);
+      });
+      
+      // Initial check - video might already be ready
+      if (video.readyState >= 1) {
+        checkVideoFrames();
+      }
+      
+      // Ensure video plays on mobile with retry and cleanup
+      const attemptPlay = (attempt = 0) => {
+        if (!videoRef.current) return;
+        videoRef.current.play().then(() => {
+          checkVideoFrames();
+        }).catch(() => {
+          if (attempt < 10) {
+            retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), 300 * (attempt + 1));
+          }
         });
       };
       attemptPlay();
+      
+      return () => {
+        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        video.removeEventListener('resize', handleResize);
+        video.removeEventListener('canplay', handleCanPlay);
+        video.removeEventListener('error', handleError);
+        video.removeEventListener('emptied', handleEmptied);
+        stream.removeEventListener('addtrack', handleTrackAdd);
+        stream.removeEventListener('removetrack', handleTrackRemove);
+        videoTracks.forEach(track => {
+          track.removeEventListener('ended', handleTrackEnded);
+          track.removeEventListener('mute', handleTrackMute);
+          track.removeEventListener('unmute', handleTrackUnmute);
+        });
+        if (retryTimerRef.current) {
+          clearTimeout(retryTimerRef.current);
+        }
+      };
+    } else {
+      video.srcObject = null;
+      setHasVideoFrames(false);
     }
   }, [stream]);
+
+  // Use hasVideoFrames state OR check isVideoOff prop (either can indicate no video)
+  const showVideo = stream && hasVideoFrames && !isVideoOff;
 
   return (
     <div
@@ -69,18 +161,19 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       )}
       data-testid={`small-video-tile-${participant?.id || 'local'}`}
     >
-      {stream && !isVideoOff ? (
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted // Always mute video elements - audio is played via dedicated hidden audio elements
-          className={cn(
-            "w-full h-full object-cover",
-            isLocal && "transform scale-x-[-1]"
-          )}
-        />
-      ) : (
+      {/* Always render video element for stream attachment, hide visually if no video */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className={cn(
+          "w-full h-full object-cover",
+          isLocal && "transform scale-x-[-1]",
+          !showVideo && "hidden"
+        )}
+      />
+      {!showVideo && (
         <div className="w-full h-full flex items-center justify-center">
           <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
             <span className="text-base font-medium text-white">
@@ -209,7 +302,17 @@ export function MultiplayerVideoBackground({
     if (!ctx) return;
 
     video.srcObject = mainStream;
-    video.play().catch(console.error);
+    
+    // Play with retry for mobile autoplay restrictions
+    let retryTimer: NodeJS.Timeout | null = null;
+    const attemptPlay = (attempt = 0) => {
+      video.play().catch(() => {
+        if (attempt < 10) {
+          retryTimer = setTimeout(() => attemptPlay(attempt + 1), 300 * (attempt + 1));
+        }
+      });
+    };
+    attemptPlay();
 
     const drawFrame = () => {
       if (!video.videoWidth || !video.videoHeight) {
@@ -273,6 +376,9 @@ export function MultiplayerVideoBackground({
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+      }
+      if (retryTimer) {
+        clearTimeout(retryTimer);
       }
     };
   }, [mainStream, showLocalAsMain]);
@@ -339,9 +445,6 @@ export function MultiplayerVideoBackground({
           const peerStream = peerStreams.find(ps => ps.participantId === participant.id);
           const stream = peerStream?.stream || null;
           const isSpeakingNow = participant.id === effectiveSpeakerId;
-          // Check if stream has active video tracks (not just if stream exists)
-          const videoTracks = stream?.getVideoTracks() || [];
-          const hasVideoTracks = videoTracks.length > 0 && videoTracks.some(t => t.enabled);
           
           return (
             <SmallVideoTile
@@ -350,7 +453,7 @@ export function MultiplayerVideoBackground({
               participant={participant}
               isLocal={false}
               isMuted={false}
-              isVideoOff={!hasVideoTracks}
+              isVideoOff={false} // Let SmallVideoTile detect video state internally
               isSpeaking={isSpeakingNow}
             />
           );
