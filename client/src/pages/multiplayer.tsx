@@ -1051,13 +1051,21 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 )}
                 
                 {!multiplayer.isHost && isMyTurn && (
-                  <Button
-                    onClick={handleManualSkip}
-                    className="bg-white text-black hover:bg-white/90"
-                    data-testid="button-done-speaking"
-                  >
-                    Done Speaking
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-white/70">
+                      <Mic className="h-4 w-4 animate-pulse text-primary" />
+                      <span className="text-sm">Listening...</span>
+                    </div>
+                    <Button
+                      onClick={handleManualSkip}
+                      variant="ghost"
+                      size="sm"
+                      className="text-white/50 hover:text-white"
+                      data-testid="button-skip-line"
+                    >
+                      <SkipForward className="h-4 w-4" />
+                    </Button>
+                  </div>
                 )}
                 
                 {!multiplayer.isHost && !isMyTurn && (
