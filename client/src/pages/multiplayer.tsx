@@ -136,10 +136,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const aiSpeakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
-    if (speakingLineRef.current === lineId) return;
+    // Prevent duplicate calls for the same line
+    if (speakingLineRef.current === lineId) {
+      console.log('[Multiplayer TTS] Already speaking this line, skipping');
+      return;
+    }
     
     speakingLineRef.current = lineId;
     setIsAiSpeaking(true);
+    
+    console.log('[Multiplayer TTS] Speaking:', roleName, text.substring(0, 30));
     
     const prosody = calculateProsody('neutral', 'natural');
     
@@ -150,18 +156,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         console.log('[Multiplayer TTS] Complete:', result, 'isHost:', isHost);
         setIsAiSpeaking(false);
         
-        const stillOnSameLine = speakingLineRef.current === lineId && currentLineIdRef.current === lineId;
-        
         // Only the HOST advances the line (prevents race conditions from multiple devices)
-        if (result === 'success' && stillOnSameLine && isHost) {
+        // Don't reset speakingLineRef here - only reset when line actually changes
+        if (result === 'success' && isHost && currentLineIdRef.current === lineId) {
           aiSpeakTimeoutRef.current = setTimeout(() => {
             if (currentLineIdRef.current === lineId) {
+              console.log('[Multiplayer TTS] Host advancing to next line');
               multiplayer.nextLine();
             }
-            speakingLineRef.current = null;
           }, 300);
-        } else {
-          speakingLineRef.current = null;
         }
       },
       {
@@ -173,14 +176,52 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const currentLineIdRef = useRef<string | null>(null);
 
+  // Track startup countdown
+  const [startupCountdown, setStartupCountdown] = useState<number | null>(null);
+  const startupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // When rehearsal starts, do a 3-second countdown to let all devices sync
   useEffect(() => {
-    if (!isActivelyRehearing || !multiplayer.room) {
+    if (isActivelyRehearing && multiplayer.room && startupCountdown === null) {
+      setStartupCountdown(3);
+      let count = 3;
+      const tick = () => {
+        count--;
+        if (count > 0) {
+          setStartupCountdown(count);
+          startupTimerRef.current = setTimeout(tick, 1000);
+        } else {
+          setStartupCountdown(0);
+        }
+      };
+      startupTimerRef.current = setTimeout(tick, 1000);
+    }
+    
+    if (!isActivelyRehearing) {
+      setStartupCountdown(null);
+      if (startupTimerRef.current) {
+        clearTimeout(startupTimerRef.current);
+      }
+    }
+    
+    return () => {
+      if (startupTimerRef.current) {
+        clearTimeout(startupTimerRef.current);
+      }
+    };
+  }, [isActivelyRehearing, multiplayer.room]);
+
+  useEffect(() => {
+    // Wait for countdown to finish
+    if (!isActivelyRehearing || !multiplayer.room || startupCountdown !== 0) {
       if (isAiSpeaking) {
         ttsEngine.stop();
         setIsAiSpeaking(false);
-        speakingLineRef.current = null;
       }
-      currentLineIdRef.current = null;
+      if (startupCountdown !== 0) {
+        speakingLineRef.current = null;
+        currentLineIdRef.current = null;
+      }
       return;
     }
     
@@ -190,12 +231,14 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     if (!currentLine) return;
 
+    // When line changes, reset speaking ref so new line can play
     if (currentLineIdRef.current !== currentLine.id) {
+      console.log('[Multiplayer] Line changed from', currentLineIdRef.current, 'to', currentLine.id);
       if (speakingLineRef.current && speakingLineRef.current !== currentLine.id) {
         ttsEngine.stop();
         setIsAiSpeaking(false);
-        speakingLineRef.current = null;
       }
+      speakingLineRef.current = null; // Reset so new line can speak
       currentLineIdRef.current = currentLine.id;
     }
     
@@ -213,7 +256,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         clearTimeout(aiSpeakTimeoutRef.current);
       }
     };
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost]);
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost, startupCountdown]);
 
   useEffect(() => {
     return () => {
@@ -673,21 +716,30 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           currentSpeakerId={currentSpeaker?.id ?? null}
           isAudioEnabled={webrtc.isAudioEnabled}
           isVideoEnabled={webrtc.isVideoEnabled}
-          currentLine={currentLine ? {
+          currentLine={startupCountdown === 0 && currentLine ? {
             text: currentLine.text,
             roleName: currentLine.roleName,
             direction: currentLine.direction,
           } : undefined}
-          previousLine={prevLine ? {
+          previousLine={startupCountdown === 0 && prevLine ? {
             text: prevLine.text,
             roleName: prevLine.roleName,
           } : undefined}
-          nextLine={nextLine ? {
+          nextLine={startupCountdown === 0 && nextLine ? {
             text: nextLine.text,
             roleName: nextLine.roleName,
           } : undefined}
-          isMyTurn={isMyTurn}
+          isMyTurn={startupCountdown === 0 && isMyTurn}
         />
+        
+        {startupCountdown !== null && startupCountdown > 0 && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
+            <div className="text-center">
+              <div className="text-8xl font-bold text-white mb-4">{startupCountdown}</div>
+              <p className="text-xl text-white/70">Get ready...</p>
+            </div>
+          </div>
+        )}
 
         <header className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-sm safe-top">
           <div className="flex items-center justify-between px-3 py-2 gap-2">
