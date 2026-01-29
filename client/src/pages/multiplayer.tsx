@@ -943,18 +943,20 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       key={role.id}
                       variant={isSelected ? "default" : "outline"}
                       className={cn(
-                        "justify-start h-auto py-3",
+                        "justify-start h-auto py-2.5 px-3 w-full overflow-hidden",
                         isTakenByOther && "opacity-50"
                       )}
                       disabled={isTakenByOther}
                       onClick={() => handleSelectRole(role.id)}
                       data-testid={`button-select-role-${role.id}`}
                     >
-                      <div className="text-left">
-                        <div className="font-medium">{role.name}</div>
-                        <div className="text-xs opacity-70">
+                      <div className="text-left w-full min-w-0">
+                        <div className="font-medium text-sm truncate" title={role.name}>
+                          {role.name}
+                        </div>
+                        <div className="text-xs opacity-70 truncate">
                           {role.lineCount} line{role.lineCount !== 1 ? 's' : ''}
-                          {isTakenByOther && ` - ${takenBy.name}`}
+                          {isTakenByOther && ` · ${takenBy.name}`}
                         </div>
                       </div>
                     </Button>
