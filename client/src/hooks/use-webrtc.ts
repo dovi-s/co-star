@@ -66,12 +66,16 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
 
     pc.ontrack = (event) => {
-      const stream = event.streams[0];
+      // Safari/iOS may not have event.streams - fallback to creating stream from track
+      const incomingStream = event.streams?.[0];
+      const incomingTrack = event.track;
+      
+      console.log(`[WebRTC] ontrack: ${incomingTrack?.kind} track from ${participantId}, stream exists: ${!!incomingStream}`);
       
       setPeerStreams(prev => {
         const existing = prev.find(p => p.participantId === participantId);
         
-        // Create a new MediaStream that includes ALL tracks from the incoming stream
+        // Create a new MediaStream that includes ALL tracks
         // This ensures we don't lose any tracks and forces React to re-render
         const newStream = new MediaStream();
         
@@ -79,14 +83,24 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           // First, add any tracks from the existing stream that aren't in the new stream
           // (this preserves tracks we already had)
           existing.stream.getTracks().forEach(track => {
-            if (!stream?.getTracks().find(t => t.id === track.id)) {
+            const isInIncoming = incomingStream?.getTracks().find(t => t.id === track.id) ||
+                                 incomingTrack?.id === track.id;
+            if (!isInIncoming) {
               newStream.addTrack(track);
             }
           });
         }
         
-        // Add all tracks from the incoming stream
-        stream?.getTracks().forEach(track => newStream.addTrack(track));
+        // Add all tracks from the incoming stream OR just the single track
+        if (incomingStream) {
+          incomingStream.getTracks().forEach(track => newStream.addTrack(track));
+        } else if (incomingTrack) {
+          // Safari fallback: no streams array, use track directly
+          console.log(`[WebRTC] Safari fallback: adding ${incomingTrack.kind} track directly`);
+          newStream.addTrack(incomingTrack);
+        }
+        
+        console.log(`[WebRTC] Created stream for ${participantId} with ${newStream.getAudioTracks().length} audio, ${newStream.getVideoTracks().length} video tracks`);
         
         if (existing) {
           return prev.map(p => 

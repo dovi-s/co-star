@@ -23,6 +23,76 @@ interface MultiplayerPageProps {
   initialView?: View;
 }
 
+interface PeerAudioElementProps {
+  stream: MediaStream;
+  participantId: string;
+  audioUnlocked: boolean;
+}
+
+function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioElementProps) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasPlayedRef = useRef(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    // Cleanup previous retry timer
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+
+    // Attach stream
+    if (audio.srcObject !== stream) {
+      audio.srcObject = stream;
+      audio.volume = 1.0;
+      hasPlayedRef.current = false;
+    }
+
+    // Only attempt to play if audio is unlocked by user gesture
+    if (!audioUnlocked) {
+      console.log(`[PeerAudio ${participantId}] Waiting for audio unlock...`);
+      return;
+    }
+
+    const attemptPlay = (attempt = 0) => {
+      if (hasPlayedRef.current) return;
+      
+      audio.play().then(() => {
+        hasPlayedRef.current = true;
+        console.log(`[PeerAudio ${participantId}] Playing successfully`);
+      }).catch((err) => {
+        if (attempt < 15) {
+          const delay = Math.min(500 * (attempt + 1), 3000);
+          console.log(`[PeerAudio ${participantId}] Play retry ${attempt + 1}, delay ${delay}ms`);
+          retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), delay);
+        } else {
+          console.warn(`[PeerAudio ${participantId}] Play failed after retries:`, err);
+        }
+      });
+    };
+
+    attemptPlay();
+
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+      }
+    };
+  }, [stream, audioUnlocked, participantId]);
+
+  return (
+    <audio
+      ref={audioRef}
+      autoPlay
+      playsInline
+      style={{ display: 'none' }}
+    />
+  );
+}
+
 export default function MultiplayerPage({ onBack, onStartRehearsal, initialView = 'menu' }: MultiplayerPageProps) {
   const { session } = useSessionContext();
   const { toast } = useToast();
@@ -1017,6 +1087,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const handleCreateRoom = () => {
     if (!session || !playerName.trim()) return;
+    unlockAudio(); // Unlock audio on user gesture when creating room
     multiplayer.createRoom(
       session.name,
       session.roles,
@@ -1027,6 +1098,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const handleJoinRoom = () => {
     if (!joinCode.trim() || !playerName.trim()) return;
+    unlockAudio(); // Unlock audio on user gesture when joining
     multiplayer.joinRoom(joinCode.trim().toUpperCase(), playerName.trim());
   };
 
@@ -1306,28 +1378,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       <div className="min-h-screen relative" data-testid="multiplayer-rehearsal">
         {/* Hidden audio elements for peer streams - ensures joiners hear audio from host/peers */}
         {webrtc.peerStreams.map((peerStream) => (
-          <audio
+          <PeerAudioElement 
             key={`audio-${peerStream.participantId}`}
-            ref={(el) => {
-              if (el && el.srcObject !== peerStream.stream) {
-                el.srcObject = peerStream.stream;
-                el.volume = 1.0; // Ensure full volume
-                // Retry play with exponential backoff for mobile audio restrictions
-                const attemptPlay = (attempt = 0) => {
-                  el.play().catch((err) => {
-                    if (attempt < 5) {
-                      setTimeout(() => attemptPlay(attempt + 1), 500 * (attempt + 1));
-                    } else {
-                      console.warn('[Multiplayer] Peer audio play failed after retries:', err);
-                    }
-                  });
-                };
-                attemptPlay();
-              }
-            }}
-            autoPlay
-            playsInline
-            style={{ display: 'none' }}
+            stream={peerStream.stream}
+            participantId={peerStream.participantId}
+            audioUnlocked={audioUnlocked}
           />
         ))}
         
@@ -1362,6 +1417,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           isFirstLineOfScene={!isCountingDown && isFirstLineOfScene}
         />
         
+        {/* Countdown overlay */}
         {isCountingDown && serverCountdown !== null && (
           <div 
             className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 cursor-pointer"
@@ -1374,6 +1430,28 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <p className="text-xl text-white/70">
                 {audioUnlocked ? 'Get ready...' : 'Tap to enable audio'}
               </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Enforced audio unlock overlay during rehearsal - required for mobile audio playback */}
+        {!isCountingDown && isActivelyRehearing && !audioUnlocked && (
+          <div 
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 cursor-pointer"
+            onClick={() => {
+              unlockAudio();
+            }}
+            data-testid="audio-unlock-overlay"
+          >
+            <div className="text-center px-6">
+              <Volume2 className="h-16 w-16 text-primary mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-white mb-2">Enable Audio</h2>
+              <p className="text-lg text-white/70 mb-6">
+                Tap anywhere to hear AI voices and other participants
+              </p>
+              <Button variant="default" size="lg" onClick={unlockAudio}>
+                Enable Audio
+              </Button>
             </div>
           </div>
         )}
