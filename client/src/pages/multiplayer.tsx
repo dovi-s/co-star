@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
 import { matchWords } from '@/lib/word-matcher';
-import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff } from 'lucide-react';
+import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff, Download, Star, RefreshCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type View = 'menu' | 'create' | 'join' | 'lobby';
@@ -40,6 +40,16 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingBlobRef = useRef<Blob | null>(null);
+  
+  // Completion state
+  const [showCompletion, setShowCompletion] = useState(false);
+  const [completionStats, setCompletionStats] = useState<{
+    totalLines: number;
+    userLines: number;
+    averageAccuracy: number;
+    perfectLines: number;
+  } | null>(null);
+  const linePerformanceRef = useRef<{ lineId: string; accuracy: number }[]>([]);
 
   // Track if audio has been unlocked by user gesture (required for mobile)
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -274,6 +284,52 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
     };
   }, []);
+  
+  // Detect script completion
+  useEffect(() => {
+    const room = multiplayer.room;
+    if (!room) return;
+    
+    // Check if we've reached the end of the script
+    const isLastScene = room.currentSceneIndex === room.scenes.length - 1;
+    const currentScene = room.scenes[room.currentSceneIndex];
+    const isLastLine = currentScene && room.currentLineIndex === currentScene.lines.length - 1;
+    
+    // Detect completion when room state is 'completed' or we're at the last line
+    if (room.state === 'completed' && !showCompletion) {
+      // Stop recording if active
+      if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+        setIsRecording(false);
+      }
+      
+      // Calculate stats
+      const performances = linePerformanceRef.current;
+      const userLines = performances.length;
+      const averageAccuracy = userLines > 0 
+        ? performances.reduce((sum, p) => sum + p.accuracy, 0) / userLines 
+        : 0;
+      const perfectLines = performances.filter(p => p.accuracy >= 95).length;
+      
+      // Count total lines
+      let totalLines = 0;
+      room.scenes.forEach(scene => {
+        totalLines += scene.lines.length;
+      });
+      
+      setCompletionStats({
+        totalLines,
+        userLines,
+        averageAccuracy,
+        perfectLines
+      });
+      setShowCompletion(true);
+    }
+  }, [multiplayer.room, showCompletion, isRecording]);
 
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const isAiSpeakingRef = useRef(false);
@@ -604,10 +660,24 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   // Advance after user line - like solo mode
   const advanceAfterUserLine = useCallback(() => {
     console.log("[Multiplayer] Advancing after user line");
+    
+    // Track performance for this line
+    const room = multiplayer.room;
+    if (room) {
+      const currentScene = room.scenes[room.currentSceneIndex];
+      const currentLine = currentScene?.lines[room.currentLineIndex];
+      if (currentLine) {
+        linePerformanceRef.current.push({
+          lineId: currentLine.id,
+          accuracy: currentLineAccuracyRef.current
+        });
+      }
+    }
+    
     setUserTranscript("");
     currentLineAccuracyRef.current = 0;
     multiplayerRef.current.nextLine();
-  }, []);
+  }, [multiplayer.room]);
 
   useEffect(() => {
     const handleResult = (result: { transcript: string; isFinal: boolean }) => {
@@ -1344,6 +1414,91 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </div>
           </div>
         </footer>
+        
+        {/* Completion Modal */}
+        {showCompletion && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+            <div className="bg-background rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center",
+                  completionStats && completionStats.averageAccuracy >= 95 ? "bg-yellow-500 text-white" :
+                  completionStats && completionStats.averageAccuracy >= 80 ? "bg-green-500 text-white" :
+                  "bg-foreground text-background"
+                )}>
+                  {completionStats && completionStats.averageAccuracy >= 95 ? (
+                    <Star className="h-6 w-6 fill-current" />
+                  ) : (
+                    <Check className="h-6 w-6" />
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-xl font-semibold">Table Read Complete</h3>
+                  <p className={cn(
+                    "text-sm",
+                    completionStats && completionStats.averageAccuracy >= 95 ? "text-yellow-600 dark:text-yellow-400" :
+                    completionStats && completionStats.averageAccuracy >= 80 ? "text-green-600 dark:text-green-400" :
+                    "text-muted-foreground"
+                  )}>
+                    {completionStats && completionStats.averageAccuracy >= 95 ? "Flawless performance" :
+                     completionStats && completionStats.averageAccuracy >= 80 ? "Great job" :
+                     completionStats && completionStats.averageAccuracy >= 60 ? "Solid run" : "Nice work"}
+                  </p>
+                </div>
+              </div>
+              
+              {completionStats && completionStats.userLines > 0 && (
+                <div className="flex items-center justify-center gap-6 py-4 px-4 bg-muted/30 rounded-lg mb-4">
+                  <div className="text-center">
+                    <span className="text-2xl font-bold text-foreground">{Math.round(completionStats.averageAccuracy)}%</span>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">accuracy</p>
+                  </div>
+                  <div className="w-px h-8 bg-border" />
+                  <div className="text-center">
+                    <span className="text-2xl font-bold text-foreground">{completionStats.perfectLines}/{completionStats.userLines}</span>
+                    <p className="text-xs text-muted-foreground uppercase tracking-wide">perfect</p>
+                  </div>
+                </div>
+              )}
+              
+              {hasRecording && (
+                <Button
+                  variant="outline"
+                  className="w-full mb-3"
+                  onClick={downloadRecording}
+                  data-testid="button-download-recording"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Recording
+                </Button>
+              )}
+              
+              <Button
+                className="w-full"
+                onClick={() => {
+                  setShowCompletion(false);
+                  linePerformanceRef.current = [];
+                  multiplayer.goToScene(0);
+                }}
+                data-testid="button-run-again"
+              >
+                <RefreshCcw className="h-4 w-4 mr-2" />
+                Run Again
+              </Button>
+              
+              <button
+                onClick={() => {
+                  setShowCompletion(false);
+                  handleLeave();
+                }}
+                className="w-full mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-leave-after-complete"
+              >
+                Leave Room
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
