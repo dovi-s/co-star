@@ -68,9 +68,17 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       
       // Check if stream has video tracks
       const videoTracks = stream.getVideoTracks();
+      const audioTracks = stream.getAudioTracks();
       const hasVideoTracks = videoTracks.length > 0;
       
-      console.log(`[SmallVideoTile ${participant?.id}] Stream has ${videoTracks.length} video tracks`);
+      console.log(`[SmallVideoTile ${participant?.id}] Stream details:`, {
+        streamId: stream.id,
+        videoTracks: videoTracks.length,
+        audioTracks: audioTracks.length,
+        videoEnabled: videoTracks[0]?.enabled,
+        videoMuted: videoTracks[0]?.muted,
+        videoReadyState: videoTracks[0]?.readyState,
+      });
       
       // Function to check if video is truly ready
       const markVideoReady = () => {

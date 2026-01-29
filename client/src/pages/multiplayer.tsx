@@ -33,6 +33,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
   const audioRef = useRef<HTMLAudioElement>(null);
   const retryTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedRef = useRef(false);
+  const streamIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -48,6 +49,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     const audioTracks = stream.getAudioTracks();
     const videoTracks = stream.getVideoTracks();
     console.log(`[PeerAudio ${participantId}] Stream info:`, {
+      streamId: stream.id,
       audioTracks: audioTracks.length,
       videoTracks: videoTracks.length,
       audioTrackEnabled: audioTracks[0]?.enabled,
@@ -55,13 +57,16 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       audioTrackReadyState: audioTracks[0]?.readyState,
     });
 
-    // Attach stream
-    if (audio.srcObject !== stream) {
-      audio.srcObject = stream;
-      audio.volume = 1.0;
-      audio.muted = false; // Explicitly unmute
+    // Reset hasPlayed when stream changes
+    if (streamIdRef.current !== stream.id) {
+      streamIdRef.current = stream.id;
       hasPlayedRef.current = false;
     }
+
+    // Always reattach stream (mobile Safari needs this)
+    audio.srcObject = stream;
+    audio.volume = 1.0;
+    audio.muted = false;
 
     // Only attempt to play if audio is unlocked by user gesture
     if (!audioUnlocked) {
@@ -72,7 +77,10 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     const attemptPlay = (attempt = 0) => {
       if (hasPlayedRef.current) return;
       
-      // Re-ensure unmuted before each attempt
+      // Ensure stream is attached and settings are correct
+      if (audio.srcObject !== stream) {
+        audio.srcObject = stream;
+      }
       audio.muted = false;
       audio.volume = 1.0;
       
@@ -80,8 +88,8 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
         hasPlayedRef.current = true;
         console.log(`[PeerAudio ${participantId}] Playing successfully, paused=${audio.paused}, muted=${audio.muted}, volume=${audio.volume}`);
       }).catch((err) => {
-        if (attempt < 15) {
-          const delay = Math.min(500 * (attempt + 1), 3000);
+        if (attempt < 20) {
+          const delay = Math.min(300 * (attempt + 1), 2000);
           console.log(`[PeerAudio ${participantId}] Play retry ${attempt + 1}, delay ${delay}ms, error: ${err.name}`);
           retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), delay);
         } else {
@@ -90,12 +98,22 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       });
     };
 
-    attemptPlay();
+    // Small delay to let stream settle
+    setTimeout(() => attemptPlay(), 100);
+
+    // Also listen for track additions which might happen after stream is received
+    const handleTrackAdd = () => {
+      console.log(`[PeerAudio ${participantId}] Track added, reattempting play`);
+      hasPlayedRef.current = false;
+      attemptPlay();
+    };
+    stream.addEventListener('addtrack', handleTrackAdd);
 
     return () => {
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
       }
+      stream.removeEventListener('addtrack', handleTrackAdd);
     };
   }, [stream, audioUnlocked, participantId]);
 
