@@ -30,6 +30,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
   const [isVideoEnabled, setIsVideoEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [connectedPeers, setConnectedPeers] = useState<Set<string>>(new Set());
   
   const peerConnectionsRef = useRef<Map<string, RTCPeerConnection>>(new Map());
   const pendingCandidatesRef = useRef<Map<string, RTCIceCandidate[]>>(new Map());
@@ -79,7 +80,14 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
     pc.onconnectionstatechange = () => {
       console.log(`[WebRTC] Connection state with ${participantId}: ${pc.connectionState}`);
-      if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+      if (pc.connectionState === 'connected') {
+        setConnectedPeers(prev => new Set(Array.from(prev).concat(participantId)));
+      } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+        setConnectedPeers(prev => {
+          const next = new Set(prev);
+          next.delete(participantId);
+          return next;
+        });
         closePeerConnection(participantId);
       }
     };
@@ -318,6 +326,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     peerConnectionsRef.current.clear();
     pendingCandidatesRef.current.clear();
     setPeerStreams([]);
+    setConnectedPeers(new Set());
   }, []);
 
   const toggleAudio = useCallback(() => {
@@ -399,6 +408,15 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
   }, [stopMedia]);
 
+  // Check if all remote participants have connected peer connections AND have streams
+  const otherParticipants = participants.filter(p => p.id !== myParticipantId);
+  const allPeersConnected = otherParticipants.length === 0 || 
+    otherParticipants.every(p => connectedPeers.has(p.id));
+  
+  // Also check if we've received streams from all peers (more reliable than connection state)
+  const allPeersHaveStreams = otherParticipants.length === 0 ||
+    otherParticipants.every(p => peerStreams.some(ps => ps.participantId === p.id));
+
   return {
     localStream,
     peerStreams,
@@ -409,5 +427,8 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     toggleVideo,
     startMedia,
     stopMedia,
+    allPeersConnected,
+    allPeersHaveStreams, // More reliable: checks for actual media streams
+    connectedPeersCount: connectedPeers.size,
   };
 }

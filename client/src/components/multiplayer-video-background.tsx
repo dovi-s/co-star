@@ -133,6 +133,18 @@ export function MultiplayerVideoBackground({
   
   const mainStream = isLocalSpeaker ? localStream : (remoteStream || null);
   const showLocalAsMain = isLocalSpeaker;
+  
+  // Debug logging for video streams
+  useEffect(() => {
+    console.log('[VideoBackground] Stream state:', {
+      localStream: !!localStream,
+      peerStreamsCount: peerStreams.length,
+      peerStreamIds: peerStreams.map(ps => ps.participantId),
+      effectiveSpeakerId,
+      isLocalSpeaker,
+      mainStream: !!mainStream,
+    });
+  }, [localStream, peerStreams, effectiveSpeakerId, isLocalSpeaker, mainStream]);
 
   useEffect(() => {
     if (!mainStream || !mainVideoRef.current || !mainCanvasRef.current) return;

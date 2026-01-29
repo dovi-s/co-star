@@ -76,7 +76,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     },
   });
 
-  const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused');
+  // WebRTC should start during countdown so peers are connected by the time rehearsal starts
+  const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused' || multiplayer.room.state === 'counting_down');
   const isActivelyRehearing = !!multiplayer.room && multiplayer.room.state === 'rehearsing';
   
   // Lobby camera state - declared before webrtc so stream can be reused
@@ -215,8 +216,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     let hasAdvanced = false;
     
     const advanceToNext = () => {
-      if (hasAdvanced) return;
+      if (hasAdvanced) {
+        console.log('[Multiplayer TTS] advanceToNext called but already advanced');
+        return;
+      }
       hasAdvanced = true;
+      console.log('[Multiplayer TTS] advanceToNext triggered, isHost:', isHost);
+      
       if (safetyTimeoutRef.current) {
         clearTimeout(safetyTimeoutRef.current);
         safetyTimeoutRef.current = null;
@@ -227,9 +233,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       // Only HOST advances to prevent race conditions
       if (isHost) {
         aiSpeakTimeoutRef.current = setTimeout(() => {
-          console.log('[Multiplayer TTS] Host advancing to next line');
+          console.log('[Multiplayer TTS] Host calling nextLine()');
           multiplayer.nextLine();
         }, 200);
+      } else {
+        console.log('[Multiplayer TTS] Not host, waiting for host to advance');
       }
     };
     
@@ -262,6 +270,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const serverCountdown = multiplayer.countdown;
   const isCountingDown = multiplayer.room?.state === 'counting_down';
 
+  // Track if we've started the first line yet (to delay until all peers connected)
+  const hasStartedRef = useRef(false);
+  const peerWaitStartTimeRef = useRef<number | null>(null);
+  
   useEffect(() => {
     // Only play TTS when actively rehearsing (not counting down)
     if (!isActivelyRehearing || !multiplayer.room) {
@@ -271,6 +283,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
       speakingLineRef.current = null;
       currentLineIdRef.current = null;
+      hasStartedRef.current = false; // Reset for next rehearsal
+      peerWaitStartTimeRef.current = null;
       return;
     }
     
@@ -279,6 +293,37 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const currentLine = currentScene?.lines[room.currentLineIndex];
     
     if (!currentLine) return;
+
+    // For the FIRST line, wait until all peers have streams before starting TTS
+    // This ensures everyone can hear the audio from the start
+    // Use allPeersHaveStreams (more reliable) with a 5-second timeout to avoid infinite wait
+    const otherParticipants = room.participants.filter(p => p.id !== multiplayer.participantId);
+    const peersReady = webrtc.allPeersHaveStreams || webrtc.allPeersConnected;
+    
+    // Start the wait timer if not already started
+    if (!peerWaitStartTimeRef.current && otherParticipants.length > 0 && !hasStartedRef.current) {
+      peerWaitStartTimeRef.current = Date.now();
+    }
+    
+    // Check if we've waited long enough (5 second max wait)
+    const waitTime = peerWaitStartTimeRef.current ? Date.now() - peerWaitStartTimeRef.current : 0;
+    const timedOut = waitTime > 5000;
+    
+    const needToWaitForPeers = otherParticipants.length > 0 && !hasStartedRef.current && !peersReady && !timedOut;
+    
+    if (needToWaitForPeers && multiplayer.isHost) {
+      console.log('[Multiplayer] Waiting for peers (streams)...', {
+        connected: webrtc.connectedPeersCount,
+        hasStreams: webrtc.allPeersHaveStreams,
+        expected: otherParticipants.length,
+        waitedMs: waitTime,
+      });
+      return; // Don't start TTS yet
+    }
+    
+    if (timedOut && !hasStartedRef.current) {
+      console.log('[Multiplayer] Peer wait timeout, starting anyway');
+    }
 
     // When line changes, ALWAYS stop current TTS immediately to prevent overlap
     if (currentLineIdRef.current !== currentLine.id) {
@@ -298,6 +343,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // ONLY HOST plays TTS for unassigned roles to avoid sync issues
     // Joining devices see lines visually and hear through host's speakers/WebRTC
     if (!isRoleAssignedToParticipant && multiplayer.isHost) {
+      hasStartedRef.current = true; // Mark that we've started
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
       speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, true);
     }
@@ -305,7 +351,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared
     // when this effect re-runs because it may contain the nextLine() call that 
     // advances to the next line. Clearing it would break auto-advance.
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost]);
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost, multiplayer.participantId, webrtc.allPeersConnected, webrtc.allPeersHaveStreams, webrtc.connectedPeersCount]);
 
   useEffect(() => {
     return () => {
@@ -447,8 +493,22 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     const assignedParticipant = room.participants.find(p => p.roleId === currentLine.roleId);
     const isMyTurn = assignedParticipant?.id === multiplayer.participantId;
+    const isUnassignedRole = !room.participants.some(p => p.roleId === currentLine.roleId);
     
-    if (isMyTurn && !isAiSpeaking) {
+    console.log('[Multiplayer Speech] Turn check:', {
+      lineRole: currentLine.roleName,
+      isMyTurn,
+      isAiSpeaking,
+      isUnassignedRole,
+      speechAvailable: speechRecognition.available,
+    });
+    
+    // Only start listening if:
+    // 1. It's my turn (I have this role)
+    // 2. AI is not currently speaking
+    // 3. This is NOT an unassigned role (those are handled by TTS)
+    if (isMyTurn && !isAiSpeaking && !isUnassignedRole) {
+      console.log('[Multiplayer Speech] Starting to listen for user speech');
       startListeningForUser();
     } else {
       waitingForUserRef.current = false;
