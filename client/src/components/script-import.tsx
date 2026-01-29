@@ -608,8 +608,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       )}
 
       {(error || fileError) && (
-        <div className="px-3 py-3 rounded-lg bg-destructive/10 text-sm space-y-2" data-testid="text-error">
-          <p className="text-destructive font-medium">
+        <div className="px-4 py-4 rounded-lg bg-destructive/10 border border-destructive/20 text-sm space-y-3" data-testid="text-error">
+          <p className="text-destructive font-medium leading-relaxed">
             {(() => {
               const errText = error || fileError || "";
               // Parse JSON error if present
@@ -628,13 +628,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               }
             })()}
           </p>
-          <div className="text-muted-foreground text-xs space-y-1">
-            <p className="font-medium">Tips:</p>
-            <ul className="list-disc list-inside space-y-0.5">
-              <li>Use format: <code className="bg-muted px-1 rounded">CHARACTER: dialogue</code></li>
-              <li>Character names should be in ALL CAPS</li>
-              <li>Each character should have a colon after their name</li>
-            </ul>
+          <div className="border-t border-destructive/10 pt-3">
+            <p className="text-xs text-muted-foreground mb-2">Expected format:</p>
+            <div className="bg-muted/50 rounded px-3 py-2 font-mono text-xs text-foreground/80 space-y-0.5">
+              <p>JOHN: Hello, how are you?</p>
+              <p>MARY: I'm doing well, thanks.</p>
+            </div>
           </div>
         </div>
       )}
