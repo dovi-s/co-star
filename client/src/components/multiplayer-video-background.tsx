@@ -370,43 +370,39 @@ export function MultiplayerVideoBackground({
                   </p>
                 )}
                 
-                {/* Word-by-word highlighting like solo mode */}
-                {isMyTurn && wordMatchResult ? (
-                  <div className="space-y-3">
-                    {/* Progress bar */}
-                    <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+                {/* Text with word-by-word opacity like solo mode */}
+                <p className="text-xl text-white font-medium leading-relaxed">
+                  {isMyTurn && wordMatchResult ? (
+                    // User speaking - matched words full opacity, unmatched dimmed
+                    wordMatchResult.words.map((w, i) => (
+                      <span
+                        key={i}
+                        className={cn(
+                          "transition-opacity duration-150",
+                          w.matched ? "opacity-100" : "opacity-50"
+                        )}
+                      >
+                        {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
+                      </span>
+                    ))
+                  ) : (
+                    currentLine.text
+                  )}
+                </p>
+                
+                {/* Progress bar below text - like solo mode */}
+                {isMyTurn && wordMatchResult && userTranscript && (
+                  <div className="flex items-center gap-2 mt-3">
+                    <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-green-500 transition-all duration-200"
-                        style={{ width: `${wordMatchResult.progress * 100}%` }}
+                        className="h-full bg-green-400 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min(100, wordMatchResult.percentMatched)}%` }}
                       />
                     </div>
-                    
-                    {/* Words with highlighting */}
-                    <p className="text-xl text-white font-medium leading-relaxed">
-                      {wordMatchResult.words.map((word, i) => (
-                        <span
-                          key={i}
-                          className={cn(
-                            "transition-colors duration-150",
-                            word.matched ? "text-green-400" : "text-white"
-                          )}
-                        >
-                          {word.text}{' '}
-                        </span>
-                      ))}
-                    </p>
-                    
-                    {/* User transcript display */}
-                    {userTranscript && (
-                      <p className="text-sm text-white/60 italic">
-                        "{userTranscript}"
-                      </p>
-                    )}
+                    <span className="text-xs text-white/70 font-medium">
+                      {Math.round(wordMatchResult.percentMatched)}%
+                    </span>
                   </div>
-                ) : (
-                  <p className="text-xl text-white font-medium leading-relaxed">
-                    {currentLine.text}
-                  </p>
                 )}
                 
                 {isMyTurn && !userTranscript && (
