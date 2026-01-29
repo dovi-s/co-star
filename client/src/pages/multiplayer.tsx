@@ -35,6 +35,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
   const watchdogTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hasPlayedRef = useRef(false);
   const streamIdRef = useRef<string | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -101,8 +102,10 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
             console.log(`[PeerAudio ${participantId}] Playing successfully`);
           }
           hasPlayedRef.current = true;
+          setIsPlaying(true);
         }).catch((err) => {
           console.log(`[PeerAudio ${participantId}] Play error: ${err.name} - ${err.message}`);
+          setIsPlaying(false);
         });
       }
     };
@@ -147,6 +150,12 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
     };
     stream.addEventListener('addtrack', handleTrackAdd);
 
+    // Track play/pause state
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+
     return () => {
       if (retryTimerRef.current) {
         clearTimeout(retryTimerRef.current);
@@ -157,6 +166,8 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
       stream.removeEventListener('addtrack', handleTrackAdd);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
     };
   }, [stream, audioUnlocked, participantId]);
 
