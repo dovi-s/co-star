@@ -176,6 +176,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   }, [lobbyStream]);
 
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const isAiSpeakingRef = useRef(false);
   const speakingLineRef = useRef<string | null>(null);
   const aiSpeakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -187,6 +188,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   useEffect(() => {
     multiplayerRef.current = multiplayer;
   }, [multiplayer]);
+  
+  // Keep isAiSpeaking ref in sync
+  useEffect(() => {
+    isAiSpeakingRef.current = isAiSpeaking;
+  }, [isAiSpeaking]);
   
   const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
     // ALWAYS stop any current audio first to prevent overlap
@@ -403,7 +409,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   }, [isAiSpeaking]);
 
   const startListeningForUser = useCallback(() => {
-    if (isAiSpeaking) {
+    // Use ref to get current value, not stale closure
+    if (isAiSpeakingRef.current) {
       console.log("[Multiplayer] Cannot start listening while AI is speaking");
       return;
     }
@@ -414,10 +421,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
     if (speechRecognition.available && !micBlocked) {
       setTimeout(() => {
-        if (waitingForUserRef.current && !isAiSpeaking) {
+        // Use ref to check current state, not stale closure
+        if (waitingForUserRef.current && !isAiSpeakingRef.current) {
           const started = speechRecognition.start();
           if (!started) {
             console.log("[Multiplayer] Speech recognition failed to start");
+          } else {
+            console.log("[Multiplayer] Speech recognition started successfully");
           }
         }
       }, 200);
@@ -434,7 +444,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         multiplayerRef.current.nextLine();
       }
     }, 20000);
-  }, [micBlocked, isAiSpeaking]);
+  }, [micBlocked]);
 
   useEffect(() => {
     const handleResult = (result: { transcript: string; isFinal: boolean }) => {
