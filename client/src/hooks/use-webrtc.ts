@@ -220,24 +220,29 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       let micStream: MediaStream;
       let videoStream: MediaStream | null = existingVideoStream || null;
       
-      // Get microphone audio
-      console.log('[WebRTC] Requesting microphone access');
-      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      // If no existing video stream, try to get camera directly
-      // This handles the case where joiner didn't enable camera in lobby
+      // If no existing video stream, request both camera AND mic together in one prompt
+      // This avoids annoying the user with two separate permission dialogs
       if (!videoStream || videoStream.getVideoTracks().length === 0) {
-        console.log('[WebRTC] No existing video, requesting camera access');
+        console.log('[WebRTC] No existing video, requesting camera + mic together');
         try {
-          videoStream = await navigator.mediaDevices.getUserMedia({
+          const combinedStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
-            audio: false,
+            audio: true,
           });
-          console.log('[WebRTC] Camera access granted');
-        } catch (videoErr) {
-          console.log('[WebRTC] Camera access denied or unavailable:', videoErr);
+          // Split the combined stream into video and audio parts
+          videoStream = new MediaStream(combinedStream.getVideoTracks());
+          micStream = new MediaStream(combinedStream.getAudioTracks());
+          console.log('[WebRTC] Camera + mic access granted together');
+        } catch (combinedErr) {
+          console.log('[WebRTC] Combined access failed, trying audio only:', combinedErr);
+          // Fall back to audio only
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           videoStream = null;
         }
+      } else {
+        // Have existing video, just get mic
+        console.log('[WebRTC] Reusing existing video, requesting mic only');
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       }
       
       // If host and we have TTS audio stream, mix it with mic so everyone hears TTS
