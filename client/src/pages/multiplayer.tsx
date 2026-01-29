@@ -532,6 +532,39 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }
   }, [isActivelyRehearing, multiplayer.room, multiplayer.participantId, isAiSpeaking, startListeningForUser]);
 
+  // Manual skip handler - stops TTS and clears all timeouts before advancing
+  const handleManualSkip = useCallback(() => {
+    console.log('[Multiplayer] Manual skip - stopping all audio');
+    
+    // Stop TTS immediately
+    ttsEngine.stop();
+    setIsAiSpeaking(false);
+    
+    // Clear any pending advance timeouts
+    if (aiSpeakTimeoutRef.current) {
+      clearTimeout(aiSpeakTimeoutRef.current);
+      aiSpeakTimeoutRef.current = null;
+    }
+    if (safetyTimeoutRef.current) {
+      clearTimeout(safetyTimeoutRef.current);
+      safetyTimeoutRef.current = null;
+    }
+    
+    // Stop speech recognition
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    if (userTurnTimeoutRef.current) {
+      clearTimeout(userTurnTimeoutRef.current);
+      userTurnTimeoutRef.current = null;
+    }
+    
+    // Reset speaking ref so next line can speak
+    speakingLineRef.current = null;
+    
+    // Now advance
+    multiplayer.nextLine();
+  }, [multiplayer]);
+
   useEffect(() => {
     return () => {
       speechRecognition.abort();
@@ -955,7 +988,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => multiplayer.nextLine()}
+                      onClick={handleManualSkip}
                       className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
                       data-testid="button-next-line"
                     >
@@ -966,7 +999,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 
                 {!multiplayer.isHost && isMyTurn && (
                   <Button
-                    onClick={() => multiplayer.nextLine()}
+                    onClick={handleManualSkip}
                     className="bg-white text-black hover:bg-white/90"
                     data-testid="button-done-speaking"
                   >
