@@ -321,7 +321,8 @@ export function MultiplayerVideoBackground({
         })}
       </div>
 
-      <div className="absolute top-4 right-4 z-20">
+      {/* Turn indicator - positioned below header */}
+      <div className="absolute top-16 right-4 z-20">
         <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
           <div className={cn(
             "w-3 h-3 rounded-full",
