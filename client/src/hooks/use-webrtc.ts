@@ -40,15 +40,29 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const micStreamRef = useRef<MediaStream | null>(null); // Store original mic stream for mute toggle
   const audioContextRef = useRef<AudioContext | null>(null);
   const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const micGainNodeRef = useRef<GainNode | null>(null); // Gain node to control mic mute
   const ttsIncludedInMixRef = useRef<boolean>(false); // Track if TTS is included in audio mix
 
   const createPeerConnection = useCallback((participantId: string, isInitiator: boolean) => {
-    if (!socket || !myParticipantId || !localStreamRef.current) return null;
+    if (!socket || !myParticipantId || !localStreamRef.current) {
+      console.log('[WebRTC] Cannot create peer connection:', {
+        socket: !!socket,
+        myParticipantId,
+        localStream: !!localStreamRef.current,
+      });
+      return null;
+    }
     
     const pc = new RTCPeerConnection(ICE_SERVERS);
     peerConnectionsRef.current.set(participantId, pc);
 
-    localStreamRef.current.getTracks().forEach(track => {
+    // Log what tracks we're adding
+    const localTracks = localStreamRef.current.getTracks();
+    console.log(`[WebRTC] Adding ${localTracks.length} tracks to peer connection with ${participantId}:`, 
+      localTracks.map(t => `${t.kind}:${t.enabled}:${t.readyState}`).join(', ')
+    );
+    
+    localTracks.forEach(track => {
       pc.addTrack(track, localStreamRef.current!);
     });
 
@@ -310,11 +324,17 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           const mixedDestination = audioContext.createMediaStreamDestination();
           mixedDestinationRef.current = mixedDestination;
           
-          // Connect microphone to mixed output
-          const micSource = audioContext.createMediaStreamSource(micStream);
-          micSource.connect(mixedDestination);
+          // Create gain node for mic (allows muting by setting gain to 0)
+          const micGain = audioContext.createGain();
+          micGain.gain.value = 1.0;
+          micGainNodeRef.current = micGain;
           
-          // Connect TTS audio to mixed output
+          // Connect microphone through gain node to mixed output
+          const micSource = audioContext.createMediaStreamSource(micStream);
+          micSource.connect(micGain);
+          micGain.connect(mixedDestination);
+          
+          // Connect TTS audio to mixed output (no gain control needed)
           const ttsSource = audioContext.createMediaStreamSource(ttsAudioStream);
           ttsSource.connect(mixedDestination);
           
@@ -375,6 +395,14 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         }
       }
       
+      // Log final stream details
+      console.log('[WebRTC] Final local stream:', {
+        id: stream.id,
+        audioTracks: stream.getAudioTracks().length,
+        videoTracks: stream.getVideoTracks().length,
+        tracks: stream.getTracks().map(t => `${t.kind}:${t.enabled}:${t.readyState}`).join(', '),
+      });
+      
       localStreamRef.current = stream;
       setLocalStream(stream);
       setError(null);
@@ -409,6 +437,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       audioContextRef.current = null;
     }
     mixedDestinationRef.current = null;
+    micGainNodeRef.current = null;
     ttsIncludedInMixRef.current = false; // Reset TTS flag
     
     peerConnectionsRef.current.forEach(pc => pc.close());
@@ -419,8 +448,16 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   }, []);
 
   const toggleAudio = useCallback(() => {
-    // Toggle the ORIGINAL mic stream tracks (not the mixed stream)
-    // This ensures mute works even when TTS is mixed in
+    // For host with audio mixing, use gain node to mute/unmute
+    if (micGainNodeRef.current && ttsIncludedInMixRef.current) {
+      const newEnabled = !isAudioEnabled;
+      micGainNodeRef.current.gain.value = newEnabled ? 1.0 : 0.0;
+      console.log(`[WebRTC] Host mic gain set to: ${micGainNodeRef.current.gain.value}`);
+      setIsAudioEnabled(newEnabled);
+      return;
+    }
+    
+    // For non-host or fallback: toggle the audio track enabled state
     if (micStreamRef.current) {
       micStreamRef.current.getAudioTracks().forEach(track => {
         track.enabled = !track.enabled;
@@ -435,7 +472,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       });
       setIsAudioEnabled(prev => !prev);
     }
-  }, []);
+  }, [isAudioEnabled]);
 
   const toggleVideo = useCallback(() => {
     if (localStreamRef.current) {
