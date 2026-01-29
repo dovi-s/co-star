@@ -38,7 +38,7 @@ function VideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isSpeaki
           ref={videoRef}
           autoPlay
           playsInline
-          muted={isLocal}
+          muted // Always mute - audio is played via dedicated hidden audio elements
           className={cn(
             "w-full h-full object-cover",
             isLocal && "transform scale-x-[-1]"

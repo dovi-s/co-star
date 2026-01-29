@@ -96,8 +96,35 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     },
   });
 
+  // TTS audio stream for WebRTC mixing (declared early so it can be used in timing logic)
+  const [ttsAudioStream, setTtsAudioStream] = useState<MediaStream | null>(null);
+  
   // WebRTC should start during countdown so peers are connected by the time rehearsal starts
-  const isRehearsingOrPaused = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused' || multiplayer.room.state === 'counting_down');
+  // For hosts, try to wait until TTS stream is ready to ensure audio mixing works
+  // But use a fallback timeout to not block WebRTC indefinitely
+  const isCountdownOrRehearsing = !!multiplayer.room && (multiplayer.room.state === 'rehearsing' || multiplayer.room.state === 'paused' || multiplayer.room.state === 'counting_down');
+  const [ttsWaitTimedOut, setTtsWaitTimedOut] = useState(false);
+  
+  // Timeout to proceed with WebRTC even if TTS isn't ready (after 2 seconds)
+  useEffect(() => {
+    if (isCountdownOrRehearsing && multiplayer.isHost && !ttsAudioStream && !ttsWaitTimedOut) {
+      const timeout = setTimeout(() => {
+        console.log('[Multiplayer] TTS wait timeout - proceeding with WebRTC without TTS mixing');
+        setTtsWaitTimedOut(true);
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isCountdownOrRehearsing, multiplayer.isHost, ttsAudioStream, ttsWaitTimedOut]);
+  
+  // Reset timeout state when not in countdown/rehearsing
+  useEffect(() => {
+    if (!isCountdownOrRehearsing) {
+      setTtsWaitTimedOut(false);
+    }
+  }, [isCountdownOrRehearsing]);
+  
+  const hostTtsReady = !multiplayer.isHost || ttsAudioStream !== null || ttsWaitTimedOut;
+  const isRehearsingOrPaused = isCountdownOrRehearsing && hostTtsReady;
   const isActivelyRehearing = !!multiplayer.room && multiplayer.room.state === 'rehearsing';
   
   // Lobby camera state - declared before webrtc so stream can be reused
@@ -106,12 +133,52 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const lobbyVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraPreferenceForRehearsal, setCameraPreferenceForRehearsal] = useState(true);
   
-  // Get TTS audio stream for mixing with WebRTC (so everyone hears AI voices)
-  const [ttsAudioStream, setTtsAudioStream] = useState<MediaStream | null>(null);
+  // Early mic permission state - request in lobby before rehearsal starts
+  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
   
-  // Initialize TTS audio context when audio is unlocked
+  // Request mic permission early (in lobby)
+  const requestMicPermission = useCallback(async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Immediately stop the stream - we just wanted to get permission
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermissionGranted(true);
+      setMicPermissionDenied(false);
+      console.log('[Multiplayer] Mic permission granted early');
+    } catch (err) {
+      console.error('[Multiplayer] Mic permission denied:', err);
+      setMicPermissionDenied(true);
+    }
+  }, []);
+  
+  // Auto-request mic permission when entering lobby
   useEffect(() => {
-    if (audioUnlocked && multiplayer.isHost) {
+    if (view === 'lobby' && !micPermissionGranted && !micPermissionDenied) {
+      // Small delay to let UI render first
+      const timer = setTimeout(() => {
+        requestMicPermission();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [view, micPermissionGranted, micPermissionDenied, requestMicPermission]);
+  
+  // Initialize TTS audio context early for hosts - needed BEFORE WebRTC starts
+  // We initialize when entering lobby so stream is ready when countdown begins
+  useEffect(() => {
+    if (view === 'lobby' && multiplayer.isHost) {
+      ttsEngine.initAudioContext();
+      const stream = ttsEngine.getTTSAudioStream();
+      if (stream) {
+        console.log('[Multiplayer] TTS audio stream ready for WebRTC mixing (early init)');
+        setTtsAudioStream(stream);
+      }
+    }
+  }, [view, multiplayer.isHost]);
+  
+  // Also init when audio is unlocked (belt and suspenders)
+  useEffect(() => {
+    if (audioUnlocked && multiplayer.isHost && !ttsAudioStream) {
       ttsEngine.initAudioContext();
       const stream = ttsEngine.getTTSAudioStream();
       if (stream) {
@@ -119,7 +186,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         setTtsAudioStream(stream);
       }
     }
-  }, [audioUnlocked, multiplayer.isHost]);
+  }, [audioUnlocked, multiplayer.isHost, ttsAudioStream]);
   
   const webrtc = useWebRTC({
     socket: multiplayer.socket,
@@ -1235,6 +1302,24 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     return (
       <div className="min-h-screen relative" data-testid="multiplayer-rehearsal">
+        {/* Hidden audio elements for peer streams - ensures joiners hear audio from host/peers */}
+        {webrtc.peerStreams.map((peerStream) => (
+          <audio
+            key={`audio-${peerStream.participantId}`}
+            ref={(el) => {
+              if (el && el.srcObject !== peerStream.stream) {
+                el.srcObject = peerStream.stream;
+                el.play().catch((err) => {
+                  console.warn('[Multiplayer] Peer audio play failed:', err);
+                });
+              }
+            }}
+            autoPlay
+            playsInline
+            style={{ display: 'none' }}
+          />
+        ))}
+        
         <MultiplayerVideoBackground
           localStream={webrtc.localStream}
           peerStreams={webrtc.peerStreams}
@@ -1597,6 +1682,43 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </CardContent>
           </Card>
 
+          {/* Mic permission status */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Microphone</CardTitle>
+                {micPermissionGranted ? (
+                  <Badge className="bg-green-500/20 text-green-600">
+                    <Mic className="h-3 w-3 mr-1" />
+                    Ready
+                  </Badge>
+                ) : micPermissionDenied ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={requestMicPermission}
+                    data-testid="button-retry-mic-permission"
+                  >
+                    <MicOff className="h-4 w-4 mr-2 text-red-500" />
+                    Retry
+                  </Button>
+                ) : (
+                  <Badge variant="secondary">
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Checking...
+                  </Badge>
+                )}
+              </div>
+              <CardDescription>
+                {micPermissionGranted 
+                  ? 'Mic access granted for speech recognition' 
+                  : micPermissionDenied 
+                    ? 'Mic access denied. Tap Retry to try again.' 
+                    : 'Requesting mic permission...'}
+              </CardDescription>
+            </CardHeader>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Participants</CardTitle>
@@ -1679,6 +1801,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               className="flex-1"
               onClick={() => {
                 unlockAudio(); // Unlock audio on user gesture
+                // For hosts, also init TTS on Ready click (user gesture)
+                if (multiplayer.isHost) {
+                  ttsEngine.initAudioContext();
+                  const stream = ttsEngine.getTTSAudioStream();
+                  if (stream && !ttsAudioStream) {
+                    console.log('[Multiplayer] TTS audio stream ready on Ready click');
+                    setTtsAudioStream(stream);
+                  }
+                }
                 multiplayer.setReady(!multiplayer.currentParticipant?.isReady);
               }}
               data-testid="button-toggle-ready"
@@ -1692,6 +1823,14 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 disabled={!canStart}
                 onClick={() => {
                   unlockAudio();
+                  // Ensure TTS audio context is initialized on user gesture (host only)
+                  // This guarantees AudioContext works on iOS/Safari
+                  ttsEngine.initAudioContext();
+                  const stream = ttsEngine.getTTSAudioStream();
+                  if (stream && !ttsAudioStream) {
+                    console.log('[Multiplayer] TTS audio stream ready on Start click');
+                    setTtsAudioStream(stream);
+                  }
                   multiplayer.startRehearsal();
                 }}
                 data-testid="button-start-rehearsal"

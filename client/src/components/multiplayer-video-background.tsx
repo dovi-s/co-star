@@ -74,7 +74,7 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
           ref={videoRef}
           autoPlay
           playsInline
-          muted={isLocal}
+          muted // Always mute video elements - audio is played via dedicated hidden audio elements
           className={cn(
             "w-full h-full object-cover",
             isLocal && "transform scale-x-[-1]"
@@ -180,8 +180,9 @@ export function MultiplayerVideoBackground({
     return matchWords(currentLine.text, userTranscript);
   }, [isMyTurn, currentLine?.text, userTranscript]);
   
-  const effectiveSpeakerId = currentSpeakerId || myParticipantId;
-  const isLocalSpeaker = effectiveSpeakerId === myParticipantId;
+  // Only use currentSpeakerId if it exists - don't fallback to self
+  const effectiveSpeakerId = currentSpeakerId;
+  const isLocalSpeaker = currentSpeakerId === myParticipantId;
   
   // Always show local stream as main background (like solo mode) - keeps video continuously live
   const mainStream = localStream;
@@ -360,10 +361,10 @@ export function MultiplayerVideoBackground({
         <div className="bg-black/60 backdrop-blur-sm rounded-lg px-4 py-2 flex items-center gap-2">
           <div className={cn(
             "w-3 h-3 rounded-full",
-            isMyTurn || isLocalSpeaker ? "bg-primary animate-pulse" : "bg-green-500"
+            isMyTurn ? "bg-primary animate-pulse" : "bg-green-500"
           )} />
           <span className="text-white text-sm font-medium">
-            {isMyTurn || isLocalSpeaker ? 'Your turn' : currentSpeaker ? `${currentSpeaker.name} speaking` : 'Waiting...'}
+            {isMyTurn ? 'Your turn' : currentSpeaker ? `${currentSpeaker.name} speaking` : 'AI speaking'}
           </span>
         </div>
       </div>

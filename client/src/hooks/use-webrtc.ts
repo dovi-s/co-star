@@ -39,6 +39,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const localStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const ttsIncludedInMixRef = useRef<boolean>(false); // Track if TTS is included in audio mix
 
   const createPeerConnection = useCallback((participantId: string, isInitiator: boolean) => {
     if (!socket || !myParticipantId || !localStreamRef.current) return null;
@@ -297,8 +298,10 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           }
           
           console.log('[WebRTC] Host: mixed stream created with TTS + mic');
+          ttsIncludedInMixRef.current = true; // Mark TTS as included
         } catch (e) {
           console.log('[WebRTC] Audio mixing failed, falling back to mic only:', e);
+          ttsIncludedInMixRef.current = false;
           stream = micStream;
           if (videoStream && videoStream.getVideoTracks().length > 0) {
             videoStream.getVideoTracks().forEach(track => {
@@ -358,6 +361,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       audioContextRef.current = null;
     }
     mixedDestinationRef.current = null;
+    ttsIncludedInMixRef.current = false; // Reset TTS flag
     
     peerConnectionsRef.current.forEach(pc => pc.close());
     peerConnectionsRef.current.clear();
@@ -444,6 +448,70 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       stopMedia();
     };
   }, [stopMedia]);
+
+  // Handle late TTS stream availability - update audio mixing when TTS becomes available after WebRTC started
+  useEffect(() => {
+    if (!isHost || !ttsAudioStream || !localStreamRef.current) return;
+    
+    // If TTS is already included in the mix, nothing to do
+    if (ttsIncludedInMixRef.current) return;
+    
+    console.log('[WebRTC] Late TTS stream available - updating audio mixing');
+    
+    try {
+      // Create AudioContext if not already created
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext();
+      }
+      const audioContext = audioContextRef.current;
+      const mixedDestination = audioContext.createMediaStreamDestination();
+      mixedDestinationRef.current = mixedDestination;
+      
+      // Get current audio tracks from local stream
+      const currentAudioTracks = localStreamRef.current.getAudioTracks();
+      if (currentAudioTracks.length > 0) {
+        // Create source from current mic track
+        const currentMicStream = new MediaStream([currentAudioTracks[0]]);
+        const micSource = audioContext.createMediaStreamSource(currentMicStream);
+        micSource.connect(mixedDestination);
+      }
+      
+      // Connect TTS audio to mixed output
+      const ttsSource = audioContext.createMediaStreamSource(ttsAudioStream);
+      ttsSource.connect(mixedDestination);
+      
+      // Replace audio tracks on all peer connections
+      const newAudioTrack = mixedDestination.stream.getAudioTracks()[0];
+      if (newAudioTrack) {
+        peerConnectionsRef.current.forEach((pc, peerId) => {
+          const senders = pc.getSenders();
+          const audioSender = senders.find(s => s.track?.kind === 'audio');
+          if (audioSender) {
+            audioSender.replaceTrack(newAudioTrack).then(() => {
+              console.log(`[WebRTC] Replaced audio track for peer ${peerId} with TTS-mixed audio`);
+            }).catch(err => {
+              console.warn(`[WebRTC] Failed to replace audio track for peer ${peerId}:`, err);
+            });
+          }
+        });
+        
+        // Rebuild localStreamRef with mixed audio + existing video
+        const videoTracks = localStreamRef.current.getVideoTracks();
+        const newStream = new MediaStream();
+        newStream.addTrack(newAudioTrack);
+        videoTracks.forEach(track => newStream.addTrack(track));
+        
+        // Replace localStreamRef so new peer connections use mixed audio
+        localStreamRef.current = newStream;
+        setLocalStream(newStream);
+      }
+      
+      ttsIncludedInMixRef.current = true; // Mark TTS as now included
+      console.log('[WebRTC] Late TTS mixing complete');
+    } catch (err) {
+      console.error('[WebRTC] Failed to update audio mixing with late TTS:', err);
+    }
+  }, [isHost, ttsAudioStream]);
 
   // Check if all remote participants have connected peer connections AND have streams
   const otherParticipants = participants.filter(p => p.id !== myParticipantId);
