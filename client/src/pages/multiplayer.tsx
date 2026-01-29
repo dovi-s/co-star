@@ -135,7 +135,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const speakingLineRef = useRef<string | null>(null);
   const aiSpeakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number) => {
+  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
     if (speakingLineRef.current === lineId) return;
     
     speakingLineRef.current = lineId;
@@ -147,12 +147,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       text, 
       prosody, 
       (result: SpeakResult) => {
-        console.log('[Multiplayer TTS] Complete:', result);
+        console.log('[Multiplayer TTS] Complete:', result, 'isHost:', isHost);
         setIsAiSpeaking(false);
         
         const stillOnSameLine = speakingLineRef.current === lineId && currentLineIdRef.current === lineId;
         
-        if (result === 'success' && stillOnSameLine) {
+        // Only the HOST advances the line (prevents race conditions from multiple devices)
+        if (result === 'success' && stillOnSameLine && isHost) {
           aiSpeakTimeoutRef.current = setTimeout(() => {
             if (currentLineIdRef.current === lineId) {
               multiplayer.nextLine();
@@ -201,16 +202,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const lineRoleId = currentLine.roleId;
     const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
     
-    // Only the HOST plays TTS for unassigned roles (prevents duplicate audio across devices)
-    if (!isRoleAssignedToParticipant && multiplayer.isHost) {
+    // ALL devices play TTS for unassigned roles simultaneously
+    if (!isRoleAssignedToParticipant) {
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
-      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0);
-    }
-    
-    // Non-host devices auto-advance after a delay when AI should be speaking
-    // The host will advance via WebSocket and sync to all clients
-    if (!isRoleAssignedToParticipant && !multiplayer.isHost) {
-      // Just wait - the host will advance the line and sync via WebSocket
+      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost);
     }
     
     return () => {
