@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PeerStream } from '@/hooks/use-webrtc';
 import type { Participant } from '@shared/schema';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff, VideoOff, Crown } from 'lucide-react';
+import { Mic, MicOff, VideoOff, Crown, Focus, FileText } from 'lucide-react';
 
 interface LineData {
   text: string;
@@ -118,6 +118,9 @@ export function MultiplayerVideoBackground({
   const mainCanvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   
+  // Focus mode: 'face' zooms in on face, 'script' shows script prominently
+  const [focusMode, setFocusMode] = useState<'script' | 'face'>('script');
+  
   const currentSpeaker = participants.find(p => p.id === currentSpeakerId);
   const myParticipant = participants.find(p => p.id === myParticipantId);
   
@@ -210,6 +213,10 @@ export function MultiplayerVideoBackground({
 
   const stripParticipants = participants.filter(p => p.id !== effectiveSpeakerId);
 
+  const toggleFocus = () => {
+    setFocusMode(prev => prev === 'script' ? 'face' : 'script');
+  };
+
   return (
     <div className={cn("fixed inset-0 z-0 bg-black", className)}>
       <video
@@ -222,10 +229,18 @@ export function MultiplayerVideoBackground({
       {mainStream ? (
         <canvas
           ref={mainCanvasRef}
-          className="w-full h-full object-cover"
+          className={cn(
+            "w-full h-full object-cover transition-transform duration-300 ease-out",
+            focusMode === 'face' && "scale-110"
+          )}
+          onClick={toggleFocus}
+          data-testid="video-canvas"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center">
+        <div 
+          className="w-full h-full flex items-center justify-center"
+          onClick={toggleFocus}
+        >
           <div className="text-center">
             <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4">
               <span className="text-4xl font-medium text-white">
@@ -281,10 +296,27 @@ export function MultiplayerVideoBackground({
         </div>
       </div>
 
-      <div className="absolute bottom-32 left-4 right-4 z-20">
+      <div 
+        className={cn(
+          "absolute left-4 right-4 z-20 transition-all duration-300 ease-out",
+          focusMode === 'face' 
+            ? "bottom-4 opacity-60 scale-90 origin-bottom" 
+            : "bottom-32 opacity-100 scale-100"
+        )}
+        onClick={(e) => {
+          e.stopPropagation();
+          if (focusMode === 'face') {
+            setFocusMode('script');
+          }
+        }}
+        data-testid="script-overlay"
+      >
         <div className="max-w-2xl mx-auto">
-          <div className="bg-black/70 backdrop-blur-md rounded-2xl p-6 border border-white/10">
-            {previousLine && (
+          <div className={cn(
+            "bg-black/70 backdrop-blur-md rounded-2xl border border-white/10 transition-all duration-300",
+            focusMode === 'face' ? "p-3" : "p-6"
+          )}>
+            {focusMode === 'script' && previousLine && (
               <div className="text-center mb-4 opacity-50">
                 <span className="text-xs font-medium text-white/70">{previousLine.roleName}</span>
                 <p className="text-sm text-white/70">{previousLine.text}</p>
@@ -293,35 +325,43 @@ export function MultiplayerVideoBackground({
             
             {currentLine && (
               <div className={cn(
-                "text-center py-4 px-2 rounded-lg transition-all",
+                "text-center rounded-lg transition-all",
+                focusMode === 'script' ? "py-4 px-2" : "py-2 px-1",
                 isMyTurn ? "bg-primary/20 border border-primary/40" : ""
               )}>
-                <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="flex items-center justify-center gap-2 mb-1">
                   <span className={cn(
-                    "text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded",
+                    "font-semibold uppercase tracking-wider px-2 py-0.5 rounded",
+                    focusMode === 'script' ? "text-xs" : "text-[10px]",
                     isMyTurn ? "bg-primary text-primary-foreground" : "bg-white/20 text-white"
                   )}>
                     {currentLine.roleName}
                   </span>
                   {isMyTurn && (
-                    <Mic className="h-4 w-4 text-primary animate-pulse" />
+                    <Mic className={cn(
+                      "text-primary animate-pulse",
+                      focusMode === 'script' ? "h-4 w-4" : "h-3 w-3"
+                    )} />
                   )}
                 </div>
-                {currentLine.direction && (
+                {focusMode === 'script' && currentLine.direction && (
                   <p className="text-sm text-white/60 italic mb-2">
                     ({currentLine.direction})
                   </p>
                 )}
-                <p className="text-xl text-white font-medium leading-relaxed">
+                <p className={cn(
+                  "text-white font-medium leading-relaxed",
+                  focusMode === 'script' ? "text-xl" : "text-base"
+                )}>
                   {currentLine.text}
                 </p>
-                {isMyTurn && (
+                {focusMode === 'script' && isMyTurn && (
                   <p className="text-sm text-primary mt-3">Speak your line</p>
                 )}
               </div>
             )}
             
-            {nextLine && (
+            {focusMode === 'script' && nextLine && (
               <div className="text-center mt-4 opacity-40">
                 <span className="text-xs font-medium text-white/50">{nextLine.roleName}</span>
                 <p className="text-sm text-white/50">{nextLine.text}</p>
@@ -329,6 +369,10 @@ export function MultiplayerVideoBackground({
             )}
           </div>
         </div>
+        
+        {focusMode === 'face' && (
+          <p className="text-center text-white/40 text-xs mt-2">Tap to show script</p>
+        )}
       </div>
     </div>
   );
