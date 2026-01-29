@@ -65,6 +65,18 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
 
     pc.ontrack = (event) => {
+      const stream = event.streams[0];
+      const videoTracks = stream?.getVideoTracks() || [];
+      const audioTracks = stream?.getAudioTracks() || [];
+      console.log(`[WebRTC] ontrack from ${participantId}:`, {
+        trackKind: event.track.kind,
+        trackEnabled: event.track.enabled,
+        streamId: stream?.id,
+        videoTracks: videoTracks.length,
+        audioTracks: audioTracks.length,
+        videoEnabled: videoTracks.map(t => t.enabled),
+      });
+      
       setPeerStreams(prev => {
         const existing = prev.find(p => p.participantId === participantId);
         if (existing) {

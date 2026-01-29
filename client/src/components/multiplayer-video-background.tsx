@@ -50,10 +50,16 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      // Debug: log track info
+      const videoTracks = stream.getVideoTracks();
+      const audioTracks = stream.getAudioTracks();
+      console.log(`[SmallVideoTile] ${participant?.name || 'unknown'}: video=${videoTracks.length}, audio=${audioTracks.length}`, 
+        videoTracks.map(t => ({ enabled: t.enabled, muted: t.muted, readyState: t.readyState }))
+      );
       // Ensure video plays on mobile
-      videoRef.current.play().catch(() => {});
+      videoRef.current.play().catch((e) => console.log('[SmallVideoTile] play failed:', e));
     }
-  }, [stream]);
+  }, [stream, participant?.name]);
 
   return (
     <div
@@ -329,8 +335,11 @@ export function MultiplayerVideoBackground({
         data-testid="participant-strip"
       >
         {stripParticipants.map(participant => {
-          const stream = peerStreams.find(ps => ps.participantId === participant.id)?.stream || null;
+          const peerStream = peerStreams.find(ps => ps.participantId === participant.id);
+          const stream = peerStream?.stream || null;
           const isSpeakingNow = participant.id === effectiveSpeakerId;
+          // Check if stream has active video tracks (not just if stream exists)
+          const hasVideoTracks = stream && stream.getVideoTracks().length > 0 && stream.getVideoTracks().some(t => t.enabled);
           
           return (
             <SmallVideoTile
@@ -339,7 +348,7 @@ export function MultiplayerVideoBackground({
               participant={participant}
               isLocal={false}
               isMuted={false}
-              isVideoOff={!stream}
+              isVideoOff={!hasVideoTracks}
               isSpeaking={isSpeakingNow}
             />
           );

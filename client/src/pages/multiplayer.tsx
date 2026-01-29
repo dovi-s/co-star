@@ -513,13 +513,17 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const lineRoleId = currentLine.roleId;
     const isRoleAssignedToParticipant = room.participants.some(p => p.roleId === lineRoleId);
     
-    console.log('[Multiplayer] TTS Effect:', {
+    console.log('[Multiplayer] TTS Effect triggered:', {
       lineId: currentLine.id,
       lineIndex: room.currentLineIndex,
+      sceneIndex: room.currentSceneIndex,
       roleName: currentLine.roleName,
+      roleId: lineRoleId,
       isRoleAssignedToParticipant,
+      assignedTo: room.participants.find(p => p.roleId === lineRoleId)?.name || 'AI',
       isHost: multiplayer.isHost,
       speakingLineRef: speakingLineRef.current,
+      willSpeak: !isRoleAssignedToParticipant && multiplayer.isHost,
     });
     
     // ONLY HOST plays TTS for unassigned roles to avoid sync issues
@@ -575,7 +579,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared
     // when this effect re-runs because it may contain the nextLine() call that 
     // advances to the next line. Clearing it would break auto-advance.
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost, multiplayer.participantId, webrtc.allPeersConnected, webrtc.allPeersHaveStreams, webrtc.connectedPeersCount]);
+    // IMPORTANT: Use specific line/scene indices as dependencies for reliable re-trigger
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, speakAiLine, multiplayer.isHost, multiplayer.participantId, webrtc.allPeersConnected, webrtc.allPeersHaveStreams, webrtc.connectedPeersCount]);
 
   useEffect(() => {
     return () => {
@@ -659,25 +664,31 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   // Advance after user line - like solo mode
   const advanceAfterUserLine = useCallback(() => {
-    console.log("[Multiplayer] Advancing after user line");
+    const room = multiplayer.room;
+    const currentScene = room?.scenes[room?.currentSceneIndex || 0];
+    const currentLine = currentScene?.lines[room?.currentLineIndex || 0];
+    
+    console.log("[Multiplayer] advanceAfterUserLine called:", {
+      lineId: currentLine?.id,
+      roleName: currentLine?.roleName,
+      lineIndex: room?.currentLineIndex,
+      isHost: multiplayer.isHost,
+    });
     
     // Track performance for this line
-    const room = multiplayer.room;
-    if (room) {
-      const currentScene = room.scenes[room.currentSceneIndex];
-      const currentLine = currentScene?.lines[room.currentLineIndex];
-      if (currentLine) {
-        linePerformanceRef.current.push({
-          lineId: currentLine.id,
-          accuracy: currentLineAccuracyRef.current
-        });
-      }
+    if (room && currentLine) {
+      linePerformanceRef.current.push({
+        lineId: currentLine.id,
+        accuracy: currentLineAccuracyRef.current
+      });
     }
     
     setUserTranscript("");
     currentLineAccuracyRef.current = 0;
+    
+    console.log("[Multiplayer] Calling nextLine() now...");
     multiplayerRef.current.nextLine();
-  }, [multiplayer.room]);
+  }, [multiplayer.room, multiplayer.isHost]);
 
   useEffect(() => {
     const handleResult = (result: { transcript: string; isFinal: boolean }) => {
