@@ -85,12 +85,29 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const lobbyVideoRef = useRef<HTMLVideoElement>(null);
   const [cameraPreferenceForRehearsal, setCameraPreferenceForRehearsal] = useState(true);
   
+  // Get TTS audio stream for mixing with WebRTC (so everyone hears AI voices)
+  const [ttsAudioStream, setTtsAudioStream] = useState<MediaStream | null>(null);
+  
+  // Initialize TTS audio context when audio is unlocked
+  useEffect(() => {
+    if (audioUnlocked && multiplayer.isHost) {
+      ttsEngine.initAudioContext();
+      const stream = ttsEngine.getTTSAudioStream();
+      if (stream) {
+        console.log('[Multiplayer] TTS audio stream ready for WebRTC mixing');
+        setTtsAudioStream(stream);
+      }
+    }
+  }, [audioUnlocked, multiplayer.isHost]);
+  
   const webrtc = useWebRTC({
     socket: multiplayer.socket,
     myParticipantId: multiplayer.currentParticipant?.id ?? null,
     participants: multiplayer.room?.participants ?? [],
     enabled: isRehearsingOrPaused,
     existingVideoStream: lobbyStream, // Reuse lobby camera to avoid duplicate permission prompt
+    ttsAudioStream: ttsAudioStream, // Host's TTS audio mixed into WebRTC for all participants
+    isHost: multiplayer.isHost,
   });
 
   const toggleLobbyCamera = useCallback(async () => {

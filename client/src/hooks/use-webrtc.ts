@@ -20,9 +20,11 @@ interface UseWebRTCOptions {
   participants: Participant[];
   enabled: boolean;
   existingVideoStream?: MediaStream | null; // Reuse lobby camera to avoid duplicate permission
+  ttsAudioStream?: MediaStream | null; // TTS audio stream from host to mix and send to all participants
+  isHost?: boolean; // Whether this client is the host (only host sends TTS audio)
 }
 
-export function useWebRTC({ socket, myParticipantId, participants, enabled, existingVideoStream }: UseWebRTCOptions) {
+export function useWebRTC({ socket, myParticipantId, participants, enabled, existingVideoStream, ttsAudioStream, isHost }: UseWebRTCOptions) {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [peerStreams, setPeerStreams] = useState<PeerStream[]>([]);
   const [isAudioEnabled, setIsAudioEnabled] = useState(true);
@@ -34,6 +36,8 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const pendingOffersRef = useRef<Map<string, { type: 'offer'; sdp: string }>>(new Map());
   const pendingPeersRef = useRef<Set<string>>(new Set());
   const localStreamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
 
   const createPeerConnection = useCallback((participantId: string, isInitiator: boolean) => {
     if (!socket || !myParticipantId || !localStreamRef.current) return null;
@@ -205,26 +209,79 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const startMedia = useCallback(async () => {
     try {
       let stream: MediaStream;
+      let micStream: MediaStream;
       
-      // If we have an existing video stream from lobby, reuse it and add audio
-      if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
-        console.log('[WebRTC] Reusing existing video stream, only requesting audio');
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Get microphone audio
+      console.log('[WebRTC] Requesting microphone access');
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // If host and we have TTS audio stream, mix it with mic so everyone hears TTS
+      if (isHost && ttsAudioStream && ttsAudioStream.getAudioTracks().length > 0) {
+        console.log('[WebRTC] Host: mixing TTS audio with mic for participants');
         
-        // Create combined stream with existing video + new audio
-        stream = new MediaStream();
-        existingVideoStream.getVideoTracks().forEach(track => {
-          stream.addTrack(track);
-        });
-        audioStream.getAudioTracks().forEach(track => {
-          stream.addTrack(track);
-        });
+        try {
+          // Create audio context for mixing
+          const audioContext = new AudioContext();
+          audioContextRef.current = audioContext;
+          
+          // Create destination for mixed audio
+          const mixedDestination = audioContext.createMediaStreamDestination();
+          mixedDestinationRef.current = mixedDestination;
+          
+          // Connect microphone to mixed output
+          const micSource = audioContext.createMediaStreamSource(micStream);
+          micSource.connect(mixedDestination);
+          
+          // Connect TTS audio to mixed output
+          const ttsSource = audioContext.createMediaStreamSource(ttsAudioStream);
+          ttsSource.connect(mixedDestination);
+          
+          // Create final stream with mixed audio + video (if any)
+          stream = new MediaStream();
+          
+          // Add mixed audio track
+          mixedDestination.stream.getAudioTracks().forEach(track => {
+            stream.addTrack(track);
+          });
+          
+          // Add video track if we have lobby camera
+          if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
+            existingVideoStream.getVideoTracks().forEach(track => {
+              stream.addTrack(track);
+            });
+          } else {
+            setIsVideoEnabled(false);
+          }
+          
+          console.log('[WebRTC] Host: mixed stream created with TTS + mic');
+        } catch (e) {
+          console.log('[WebRTC] Audio mixing failed, falling back to mic only:', e);
+          stream = micStream;
+          if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
+            existingVideoStream.getVideoTracks().forEach(track => {
+              stream.addTrack(track);
+            });
+          } else {
+            setIsVideoEnabled(false);
+          }
+        }
       } else {
-        // No lobby camera - only request audio (mic for speaking lines)
-        // This avoids a combined audio+video permission popup
-        console.log('[WebRTC] No lobby camera, requesting audio only');
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        setIsVideoEnabled(false);
+        // Non-host or no TTS stream: just use mic + optional video
+        stream = new MediaStream();
+        
+        micStream.getAudioTracks().forEach(track => {
+          stream.addTrack(track);
+        });
+        
+        if (existingVideoStream && existingVideoStream.getVideoTracks().length > 0) {
+          console.log('[WebRTC] Reusing existing video stream');
+          existingVideoStream.getVideoTracks().forEach(track => {
+            stream.addTrack(track);
+          });
+        } else {
+          console.log('[WebRTC] No lobby camera, audio only');
+          setIsVideoEnabled(false);
+        }
       }
       
       localStreamRef.current = stream;
@@ -242,7 +299,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       setError('Could not access microphone');
       return null;
     }
-  }, [processPendingOffers, processPendingPeers, existingVideoStream]);
+  }, [processPendingOffers, processPendingPeers, existingVideoStream, ttsAudioStream, isHost]);
 
   const stopMedia = useCallback(() => {
     if (localStreamRef.current) {
@@ -250,6 +307,13 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       localStreamRef.current = null;
       setLocalStream(null);
     }
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    mixedDestinationRef.current = null;
+    
     peerConnectionsRef.current.forEach(pc => pc.close());
     peerConnectionsRef.current.clear();
     pendingCandidatesRef.current.clear();

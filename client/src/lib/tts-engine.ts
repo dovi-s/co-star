@@ -84,6 +84,11 @@ class TTSEngine {
   private useElevenLabs = true;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private callbackFired = false;
+  
+  // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
+  private audioContext: AudioContext | null = null;
+  private ttsDestination: MediaStreamAudioDestinationNode | null = null;
+  private currentMediaSource: MediaElementAudioSourceNode | null = null;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -121,6 +126,28 @@ class TTSEngine {
 
   get ready(): boolean {
     return this.isReady || this.useElevenLabs;
+  }
+
+  // Initialize audio context for WebRTC streaming (must be called after user interaction)
+  initAudioContext(): void {
+    if (this.audioContext) return;
+    
+    try {
+      this.audioContext = new AudioContext();
+      this.ttsDestination = this.audioContext.createMediaStreamDestination();
+      console.log("[TTS] Audio context initialized for WebRTC streaming");
+    } catch (e) {
+      console.error("[TTS] Failed to create audio context:", e);
+    }
+  }
+
+  // Get the TTS audio stream for mixing with WebRTC
+  // Returns a MediaStream containing TTS audio that can be mixed with mic
+  getTTSAudioStream(): MediaStream | null {
+    if (!this.ttsDestination) {
+      this.initAudioContext();
+    }
+    return this.ttsDestination?.stream || null;
   }
 
   private clearWatchdog() {
@@ -216,11 +243,19 @@ class TTSEngine {
 
       return new Promise((resolve) => {
         let hasEnded = false;
+        let mediaSource: MediaElementAudioSourceNode | null = null;
         
         const cleanup = () => {
           if (!hasEnded) {
             hasEnded = true;
             URL.revokeObjectURL(audioUrl);
+            // Disconnect media source to free resources
+            if (mediaSource) {
+              try { mediaSource.disconnect(); } catch (e) { /* ignore */ }
+              if (this.currentMediaSource === mediaSource) {
+                this.currentMediaSource = null;
+              }
+            }
             if (this.currentAudio === audio) {
               this.currentAudio = null;
             }
@@ -265,6 +300,31 @@ class TTSEngine {
         audio.play().then(() => {
           // Also set after play starts (belt and suspenders)
           audio.playbackRate = targetSpeed;
+          
+          // Route audio through AudioContext for WebRTC streaming
+          // This allows other participants to hear the TTS audio
+          if (this.audioContext && this.ttsDestination) {
+            try {
+              // Resume audio context if suspended (required after user gesture)
+              if (this.audioContext.state === 'suspended') {
+                this.audioContext.resume();
+              }
+              
+              // Create media source from audio element
+              mediaSource = this.audioContext.createMediaElementSource(audio);
+              this.currentMediaSource = mediaSource;
+              
+              // Connect to both speakers (destination) and TTS stream (for WebRTC)
+              mediaSource.connect(this.audioContext.destination); // Local speakers
+              mediaSource.connect(this.ttsDestination); // WebRTC stream
+              
+              console.log("[TTS] Audio routed through AudioContext for WebRTC");
+            } catch (e) {
+              console.log("[TTS] AudioContext routing failed (normal on first play):", e);
+              // Falls back to regular audio playback
+            }
+          }
+          
           const duration = audio.duration || text.length * 0.08; // Estimate ~80ms per char
           const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
           console.log("[TTS] Playing audio, duration:", duration, "words:", wordCount);
