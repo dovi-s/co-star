@@ -1309,9 +1309,18 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             ref={(el) => {
               if (el && el.srcObject !== peerStream.stream) {
                 el.srcObject = peerStream.stream;
-                el.play().catch((err) => {
-                  console.warn('[Multiplayer] Peer audio play failed:', err);
-                });
+                el.volume = 1.0; // Ensure full volume
+                // Retry play with exponential backoff for mobile audio restrictions
+                const attemptPlay = (attempt = 0) => {
+                  el.play().catch((err) => {
+                    if (attempt < 5) {
+                      setTimeout(() => attemptPlay(attempt + 1), 500 * (attempt + 1));
+                    } else {
+                      console.warn('[Multiplayer] Peer audio play failed after retries:', err);
+                    }
+                  });
+                };
+                attemptPlay();
               }
             }}
             autoPlay

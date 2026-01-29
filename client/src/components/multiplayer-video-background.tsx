@@ -365,7 +365,13 @@ export function MultiplayerVideoBackground({
             isMyTurn ? "bg-primary animate-pulse" : "bg-green-500"
           )} />
           <span className="text-white text-sm font-medium">
-            {isMyTurn ? 'Your turn' : currentSpeaker ? `${currentSpeaker.name} speaking` : 'AI speaking'}
+            {isMyTurn 
+              ? 'Your turn' 
+              : currentSpeaker 
+                ? `${currentSpeaker.name}'s turn` 
+                : currentLine?.roleName 
+                  ? `${currentLine.roleName} (AI)` 
+                  : 'AI speaking'}
           </span>
         </div>
       </div>
