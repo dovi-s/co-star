@@ -135,6 +135,34 @@ export function MultiplayerVideoBackground({
   // Focus mode: 'face' zooms in on face, 'script' shows script prominently
   const [focusMode, setFocusMode] = useState<'script' | 'face'>('script');
   
+  // Script box vertical position adjustment (percentage from bottom, default 32 = bottom-32)
+  const [scriptOffset, setScriptOffset] = useState(32); // Tailwind's bottom-32 = 8rem = 128px
+  const isDraggingRef = useRef(false);
+  const dragStartYRef = useRef(0);
+  const startOffsetRef = useRef(32);
+  
+  // Handle mouse move/up for desktop drag
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDraggingRef.current) return;
+      const deltaY = dragStartYRef.current - e.clientY;
+      const newOffset = Math.max(8, Math.min(80, startOffsetRef.current + deltaY / 4));
+      setScriptOffset(newOffset);
+    };
+    
+    const handleMouseUp = () => {
+      isDraggingRef.current = false;
+    };
+    
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+  
   const currentSpeaker = participants.find(p => p.id === currentSpeakerId);
   const myParticipant = participants.find(p => p.id === myParticipantId);
   
@@ -332,7 +360,8 @@ export function MultiplayerVideoBackground({
       </div>
 
       <div 
-        className="absolute bottom-32 left-4 right-4 z-20"
+        className="absolute left-4 right-4 z-20"
+        style={{ bottom: `${scriptOffset * 4}px` }}
         onClick={(e) => {
           e.stopPropagation();
           if (focusMode === 'face') {
@@ -342,6 +371,33 @@ export function MultiplayerVideoBackground({
         data-testid="script-overlay"
       >
         <div className="max-w-2xl mx-auto">
+          {/* Drag handle to adjust script position */}
+          <div 
+            className="flex justify-center mb-2"
+            onTouchStart={(e) => {
+              isDraggingRef.current = true;
+              dragStartYRef.current = e.touches[0].clientY;
+              startOffsetRef.current = scriptOffset;
+            }}
+            onTouchMove={(e) => {
+              if (!isDraggingRef.current) return;
+              const deltaY = dragStartYRef.current - e.touches[0].clientY;
+              const newOffset = Math.max(8, Math.min(80, startOffsetRef.current + deltaY / 4));
+              setScriptOffset(newOffset);
+            }}
+            onTouchEnd={() => {
+              isDraggingRef.current = false;
+            }}
+            onMouseDown={(e) => {
+              isDraggingRef.current = true;
+              dragStartYRef.current = e.clientY;
+              startOffsetRef.current = scriptOffset;
+              e.preventDefault();
+            }}
+            data-testid="script-drag-handle"
+          >
+            <div className="w-12 h-1.5 bg-white/40 rounded-full cursor-ns-resize hover:bg-white/60 transition-colors" />
+          </div>
           {/* Scene transition card - like solo mode */}
           {isFirstLineOfScene && currentScene && (
             <div 
