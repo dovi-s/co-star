@@ -1776,18 +1776,25 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 </Button>
               )}
               
-              <Button
-                className="w-full"
-                onClick={() => {
-                  setShowCompletion(false);
-                  linePerformanceRef.current = [];
-                  multiplayer.goToScene(0);
-                }}
-                data-testid="button-run-again"
-              >
-                <RefreshCcw className="h-4 w-4 mr-2" />
-                Run Again
-              </Button>
+              {multiplayer.isHost && (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setShowCompletion(false);
+                    linePerformanceRef.current = [];
+                    // Go to first scene/line
+                    multiplayer.goToScene(0);
+                    // Resume if paused or completed
+                    if (multiplayer.room?.state === 'paused' || multiplayer.room?.state === 'completed') {
+                      multiplayer.resumeRehearsal();
+                    }
+                  }}
+                  data-testid="button-run-again"
+                >
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                  Run Again
+                </Button>
+              )}
               
               <button
                 onClick={() => {
