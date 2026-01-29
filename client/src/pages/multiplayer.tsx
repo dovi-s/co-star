@@ -549,7 +549,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         userTurnTimeoutRef.current = null;
       }
     }
-  }, [isActivelyRehearing, multiplayer.room, multiplayer.participantId, startListeningForUser]);
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.participantId, startListeningForUser]);
 
   // Manual skip handler - stops TTS and clears all timeouts before advancing
   const handleManualSkip = useCallback(() => {
