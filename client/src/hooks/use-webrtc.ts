@@ -37,6 +37,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const pendingOffersRef = useRef<Map<string, { type: 'offer'; sdp: string }>>(new Map());
   const pendingPeersRef = useRef<Set<string>>(new Set());
   const localStreamRef = useRef<MediaStream | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null); // Store original mic stream for mute toggle
   const audioContextRef = useRef<AudioContext | null>(null);
   const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   const ttsIncludedInMixRef = useRef<boolean>(false); // Track if TTS is included in audio mix
@@ -287,6 +288,9 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       }
       
+      // Store the original mic stream for mute toggle
+      micStreamRef.current = micStream;
+      
       // If host and we have TTS audio stream, mix it with mic so everyone hears TTS
       if (isHost && ttsAudioStream && ttsAudioStream.getAudioTracks().length > 0) {
         console.log('[WebRTC] Host: mixing TTS audio with mic for participants');
@@ -390,6 +394,11 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       localStreamRef.current = null;
       setLocalStream(null);
     }
+    // Also stop mic stream if separate
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach(track => track.stop());
+      micStreamRef.current = null;
+    }
     // Clean up audio context
     if (audioContextRef.current) {
       audioContextRef.current.close();
@@ -406,9 +415,19 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   }, []);
 
   const toggleAudio = useCallback(() => {
-    if (localStreamRef.current) {
+    // Toggle the ORIGINAL mic stream tracks (not the mixed stream)
+    // This ensures mute works even when TTS is mixed in
+    if (micStreamRef.current) {
+      micStreamRef.current.getAudioTracks().forEach(track => {
+        track.enabled = !track.enabled;
+        console.log(`[WebRTC] Mic track ${track.id} enabled: ${track.enabled}`);
+      });
+      setIsAudioEnabled(prev => !prev);
+    } else if (localStreamRef.current) {
+      // Fallback to local stream if no separate mic stream
       localStreamRef.current.getAudioTracks().forEach(track => {
         track.enabled = !track.enabled;
+        console.log(`[WebRTC] Audio track ${track.id} enabled: ${track.enabled}`);
       });
       setIsAudioEnabled(prev => !prev);
     }
