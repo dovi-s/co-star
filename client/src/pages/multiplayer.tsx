@@ -31,6 +31,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const [playerName, setPlayerName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [copied, setCopied] = useState(false);
+  
+  // Recording state
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [hasRecording, setHasRecording] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const recordingBlobRef = useRef<Blob | null>(null);
 
   // Track if audio has been unlocked by user gesture (required for mobile)
   const [audioUnlocked, setAudioUnlocked] = useState(false);
@@ -175,6 +184,96 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
     };
   }, [lobbyStream]);
+  
+  // Recording functions
+  const toggleRecording = useCallback(() => {
+    if (isRecording) {
+      // Stop recording
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+      setIsRecording(false);
+    } else {
+      // Start recording
+      const stream = webrtc.localStream;
+      if (!stream) {
+        toast({ title: 'No camera stream', description: 'Enable camera to record', variant: 'destructive' });
+        return;
+      }
+      
+      recordingChunksRef.current = [];
+      setRecordingTime(0);
+      setHasRecording(false);
+      
+      // Determine supported MIME type
+      const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
+      let mimeType = 'video/webm';
+      for (const type of mimeTypes) {
+        if (MediaRecorder.isTypeSupported(type)) {
+          mimeType = type;
+          break;
+        }
+      }
+      
+      try {
+        const recorder = new MediaRecorder(stream, { mimeType });
+        mediaRecorderRef.current = recorder;
+        
+        recorder.ondataavailable = (e) => {
+          if (e.data.size > 0) {
+            recordingChunksRef.current.push(e.data);
+          }
+        };
+        
+        recorder.onstop = () => {
+          const blob = new Blob(recordingChunksRef.current, { type: mimeType });
+          recordingBlobRef.current = blob;
+          setHasRecording(true);
+          toast({ title: 'Recording saved', description: 'Tap to download your recording' });
+        };
+        
+        recorder.start(1000);
+        setIsRecording(true);
+        
+        // Start timer
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingTime(t => t + 1);
+        }, 1000);
+        
+      } catch (err) {
+        console.error('[Recording] Error starting:', err);
+        toast({ title: 'Recording failed', variant: 'destructive' });
+      }
+    }
+  }, [isRecording, webrtc.localStream, toast]);
+  
+  const downloadRecording = useCallback(() => {
+    if (!recordingBlobRef.current) return;
+    const url = URL.createObjectURL(recordingBlobRef.current);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `castmate-tableread-${new Date().toISOString().slice(0,10)}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, []);
+  
+  // Cleanup recording on unmount
+  useEffect(() => {
+    return () => {
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+      }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
 
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const isAiSpeakingRef = useRef(false);
@@ -1125,6 +1224,27 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </div>
             
             <div className="flex items-center gap-0.5 shrink-0">
+              {/* Record button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={hasRecording && !isRecording ? downloadRecording : toggleRecording}
+                className={cn(
+                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
+                  isRecording && "text-red-500"
+                )}
+                data-testid="button-toggle-recording"
+              >
+                {isRecording ? (
+                  <div className="relative">
+                    <Circle className="h-4 w-4 fill-red-500 text-red-500 animate-pulse" />
+                  </div>
+                ) : hasRecording ? (
+                  <Circle className="h-4 w-4 fill-green-500 text-green-500" />
+                ) : (
+                  <Circle className="h-4 w-4" />
+                )}
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
