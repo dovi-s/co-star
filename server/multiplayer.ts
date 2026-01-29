@@ -212,12 +212,31 @@ function handleStartRehearsal(socket: Socket, io: SocketIOServer) {
     return;
   }
 
-  room.state = "rehearsing";
+  // Set state to counting_down first
+  room.state = "counting_down";
   room.currentSceneIndex = 0;
   room.currentLineIndex = 0;
   room.updatedAt = new Date().toISOString();
   broadcastRoomUpdate(io, room);
-  console.log(`[Multiplayer] Room ${room.code} started rehearsal`);
+  console.log(`[Multiplayer] Room ${room.code} starting countdown`);
+
+  // Server-synced countdown: 3, 2, 1, go
+  let count = 3;
+  io.to(room.id).emit("countdown", { count });
+  
+  const countdownInterval = setInterval(() => {
+    count--;
+    if (count > 0) {
+      io.to(room.id).emit("countdown", { count });
+    } else {
+      clearInterval(countdownInterval);
+      // Now start rehearsing
+      room.state = "rehearsing";
+      room.updatedAt = new Date().toISOString();
+      broadcastRoomUpdate(io, room);
+      console.log(`[Multiplayer] Room ${room.code} started rehearsal`);
+    }
+  }, 1000);
 }
 
 function handlePauseRehearsal(socket: Socket, io: SocketIOServer) {

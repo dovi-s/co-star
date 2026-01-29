@@ -9,6 +9,7 @@ interface UseMultiplayerOptions {
   onError?: (message: string) => void;
   onKicked?: () => void;
   onRoomClosed?: () => void;
+  onCountdown?: (count: number) => void;
 }
 
 export function useMultiplayer(options: UseMultiplayerOptions = {}) {
@@ -17,6 +18,7 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
   const [room, setRoom] = useState<Room | null>(null);
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   useEffect(() => {
     const socket = io({
@@ -71,6 +73,13 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
           options.onRoomClosed?.();
           break;
       }
+    });
+
+    // Listen for server-synced countdown
+    socket.on('countdown', (data: { count: number }) => {
+      console.log('[Multiplayer] Countdown:', data.count);
+      setCountdown(data.count);
+      options.onCountdown?.(data.count);
     });
 
     return () => {
@@ -149,6 +158,13 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
   const currentParticipant = room?.participants.find(p => p.id === participantId);
   const isHost = currentParticipant?.isHost ?? false;
 
+  // Reset countdown when room state changes away from counting_down
+  useEffect(() => {
+    if (room?.state === 'rehearsing') {
+      setCountdown(null);
+    }
+  }, [room?.state]);
+
   return {
     isConnected,
     room,
@@ -156,6 +172,7 @@ export function useMultiplayer(options: UseMultiplayerOptions = {}) {
     currentParticipant,
     isHost,
     error,
+    countdown,
     socket: socketRef.current,
     createRoom,
     joinRoom,

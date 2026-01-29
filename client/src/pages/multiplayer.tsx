@@ -176,52 +176,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const currentLineIdRef = useRef<string | null>(null);
 
-  // Track startup countdown
-  const [startupCountdown, setStartupCountdown] = useState<number | null>(null);
-  const startupTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  
-  // When rehearsal starts, do a 3-second countdown to let all devices sync
-  useEffect(() => {
-    if (isActivelyRehearing && multiplayer.room && startupCountdown === null) {
-      setStartupCountdown(3);
-      let count = 3;
-      const tick = () => {
-        count--;
-        if (count > 0) {
-          setStartupCountdown(count);
-          startupTimerRef.current = setTimeout(tick, 1000);
-        } else {
-          setStartupCountdown(0);
-        }
-      };
-      startupTimerRef.current = setTimeout(tick, 1000);
-    }
-    
-    if (!isActivelyRehearing) {
-      setStartupCountdown(null);
-      if (startupTimerRef.current) {
-        clearTimeout(startupTimerRef.current);
-      }
-    }
-    
-    return () => {
-      if (startupTimerRef.current) {
-        clearTimeout(startupTimerRef.current);
-      }
-    };
-  }, [isActivelyRehearing, multiplayer.room]);
+  // Server-synced countdown from multiplayer hook
+  const serverCountdown = multiplayer.countdown;
+  const isCountingDown = multiplayer.room?.state === 'counting_down';
 
   useEffect(() => {
-    // Wait for countdown to finish
-    if (!isActivelyRehearing || !multiplayer.room || startupCountdown !== 0) {
+    // Only play TTS when actively rehearsing (not counting down)
+    if (!isActivelyRehearing || !multiplayer.room) {
       if (isAiSpeaking) {
         ttsEngine.stop();
         setIsAiSpeaking(false);
       }
-      if (startupCountdown !== 0) {
-        speakingLineRef.current = null;
-        currentLineIdRef.current = null;
-      }
+      speakingLineRef.current = null;
+      currentLineIdRef.current = null;
       return;
     }
     
@@ -256,7 +223,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         clearTimeout(aiSpeakTimeoutRef.current);
       }
     };
-  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost, startupCountdown]);
+  }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost]);
 
   useEffect(() => {
     return () => {
@@ -716,26 +683,26 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           currentSpeakerId={currentSpeaker?.id ?? null}
           isAudioEnabled={webrtc.isAudioEnabled}
           isVideoEnabled={webrtc.isVideoEnabled}
-          currentLine={startupCountdown === 0 && currentLine ? {
+          currentLine={!isCountingDown && currentLine ? {
             text: currentLine.text,
             roleName: currentLine.roleName,
             direction: currentLine.direction,
           } : undefined}
-          previousLine={startupCountdown === 0 && prevLine ? {
+          previousLine={!isCountingDown && prevLine ? {
             text: prevLine.text,
             roleName: prevLine.roleName,
           } : undefined}
-          nextLine={startupCountdown === 0 && nextLine ? {
+          nextLine={!isCountingDown && nextLine ? {
             text: nextLine.text,
             roleName: nextLine.roleName,
           } : undefined}
-          isMyTurn={startupCountdown === 0 && isMyTurn}
+          isMyTurn={!isCountingDown && isMyTurn}
         />
         
-        {startupCountdown !== null && startupCountdown > 0 && (
+        {isCountingDown && serverCountdown !== null && (
           <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
             <div className="text-center">
-              <div className="text-8xl font-bold text-white mb-4">{startupCountdown}</div>
+              <div className="text-8xl font-bold text-white mb-4">{serverCountdown}</div>
               <p className="text-xl text-white/70">Get ready...</p>
             </div>
           </div>

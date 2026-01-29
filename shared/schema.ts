@@ -143,7 +143,7 @@ export const participantSchema = z.object({
 });
 export type Participant = z.infer<typeof participantSchema>;
 
-export const roomStateSchema = z.enum(["lobby", "rehearsing", "paused", "completed"]);
+export const roomStateSchema = z.enum(["lobby", "counting_down", "rehearsing", "paused", "completed"]);
 export type RoomState = z.infer<typeof roomStateSchema>;
 
 export const roomSchema = z.object({
