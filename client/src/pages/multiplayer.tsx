@@ -31,6 +31,29 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const [joinCode, setJoinCode] = useState('');
   const [copied, setCopied] = useState(false);
 
+  // Track if audio has been unlocked by user gesture (required for mobile)
+  const [audioUnlocked, setAudioUnlocked] = useState(false);
+  const audioUnlockedRef = useRef(false);
+  
+  // Unlock audio on mobile by playing silent sound and creating AudioContext
+  const unlockAudio = useCallback(() => {
+    if (audioUnlockedRef.current) return;
+    audioUnlockedRef.current = true;
+    setAudioUnlocked(true);
+    
+    // Method 1: Play silent audio
+    const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+    silentAudio.play().catch(() => {});
+    
+    // Method 2: Create AudioContext (helps on iOS)
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      ctx.resume().then(() => ctx.close()).catch(() => {});
+    } catch {}
+    
+    console.log('[Multiplayer] Audio unlocked by user gesture');
+  }, []);
+
   const multiplayer = useMultiplayer({
     onRoomCreated: (room) => {
       toast({ title: 'Room Created', description: `Share code: ${room.code}` });
@@ -226,11 +249,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       // Stop any playing audio immediately
       ttsEngine.stop();
       setIsAiSpeaking(false);
-      // Clear any pending advance timeouts
-      if (aiSpeakTimeoutRef.current) {
-        clearTimeout(aiSpeakTimeoutRef.current);
-        aiSpeakTimeoutRef.current = null;
-      }
+      // NOTE: Do NOT clear aiSpeakTimeoutRef here - it contains the pending nextLine() call
+      // that triggered this line change. Clearing it would break auto-advance.
       speakingLineRef.current = null; // Reset so new line can speak
       currentLineIdRef.current = currentLine.id;
     }
@@ -244,11 +264,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost);
     }
     
-    return () => {
-      if (aiSpeakTimeoutRef.current) {
-        clearTimeout(aiSpeakTimeoutRef.current);
-      }
-    };
+    // NOTE: No cleanup needed - the aiSpeakTimeoutRef is intentionally NOT cleared
+    // when this effect re-runs because it may contain the nextLine() call that 
+    // advances to the next line. Clearing it would break auto-advance.
   }, [isActivelyRehearing, multiplayer.room, speakAiLine, multiplayer.isHost]);
 
   useEffect(() => {
@@ -726,10 +744,17 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         />
         
         {isCountingDown && serverCountdown !== null && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div 
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 cursor-pointer"
+            onClick={() => {
+              unlockAudio(); // Unlock audio when user taps during countdown
+            }}
+          >
             <div className="text-center">
               <div className="text-8xl font-bold text-white mb-4">{serverCountdown}</div>
-              <p className="text-xl text-white/70">Get ready...</p>
+              <p className="text-xl text-white/70">
+                {audioUnlocked ? 'Get ready...' : 'Tap to enable audio'}
+              </p>
             </div>
           </div>
         )}
@@ -1015,7 +1040,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button
               variant={multiplayer.currentParticipant?.isReady ? "secondary" : "outline"}
               className="flex-1"
-              onClick={() => multiplayer.setReady(!multiplayer.currentParticipant?.isReady)}
+              onClick={() => {
+                unlockAudio(); // Unlock audio on user gesture
+                multiplayer.setReady(!multiplayer.currentParticipant?.isReady);
+              }}
               data-testid="button-toggle-ready"
             >
               {multiplayer.currentParticipant?.isReady ? 'Not Ready' : 'Ready'}
@@ -1026,9 +1054,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 className="flex-1"
                 disabled={!canStart}
                 onClick={() => {
-                  // Unlock audio on mobile by playing a silent sound
-                  const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-                  silentAudio.play().catch(() => {});
+                  unlockAudio();
                   multiplayer.startRehearsal();
                 }}
                 data-testid="button-start-rehearsal"

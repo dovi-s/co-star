@@ -40,6 +40,8 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
   useEffect(() => {
     if (videoRef.current && stream) {
       videoRef.current.srcObject = stream;
+      // Ensure video plays on mobile
+      videoRef.current.play().catch(() => {});
     }
   }, [stream]);
 
