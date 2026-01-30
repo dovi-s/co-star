@@ -5,6 +5,51 @@ function generateId(): string {
   return Math.random().toString(36).substring(2, 11);
 }
 
+// Levenshtein distance for OCR error detection
+function levenshteinDistance(a: string, b: string): number {
+  const matrix: number[][] = [];
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+  return matrix[b.length][a.length];
+}
+
+// Check if two names are likely OCR variants of each other
+function areOCRVariants(name1: string, name2: string): boolean {
+  // Must be similar length (within 2 chars)
+  if (Math.abs(name1.length - name2.length) > 2) return false;
+  
+  // Very short names need exact match
+  if (name1.length <= 2 || name2.length <= 2) return false;
+  
+  // Calculate edit distance
+  const distance = levenshteinDistance(name1.toUpperCase(), name2.toUpperCase());
+  
+  // For names 3-4 chars: max 1 difference
+  // For names 5-7 chars: max 2 differences  
+  // For names 8+ chars: max 3 differences
+  const minLen = Math.min(name1.length, name2.length);
+  const maxDistance = minLen <= 4 ? 1 : minLen <= 7 ? 2 : 3;
+  
+  return distance > 0 && distance <= maxDistance;
+}
+
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
 const PARENTHETICAL_REGEX = /\(([^)]+)\)/g;
 
@@ -1591,6 +1636,7 @@ export function parseScript(rawText: string): ParsedScript {
 
 // Consolidate roles that are variations of the same character
 // e.g., "DET COLE", "DETECTIVE COLE", "COLE" -> "DETECTIVE COLE"
+// Also fixes OCR errors: "HARA" -> "SARA", "GRORGE" -> "GEORGE"
 function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
   // Title abbreviation map
   const titleExpansions: Record<string, string> = {
@@ -1615,8 +1661,11 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
   const nameMap = new Map<string, string>(); // normalized -> canonical
   const rolesByCanonical = new Map<string, Role>(); // canonical -> merged role
   
+  // Sort roles by line count descending - names with more lines are more likely correct
+  const sortedRoles = [...roles].sort((a, b) => b.lineCount - a.lineCount);
+  
   // First pass: identify the longest/most complete version of each name
-  for (const role of roles) {
+  for (const role of sortedRoles) {
     const name = role.name;
     const words = name.split(/\s+/);
     
@@ -1637,6 +1686,19 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
       
       const existingWords = existingCanon.split(/\s+/);
       const existingLastName = existingWords[existingWords.length - 1];
+      
+      // Check for OCR variants first (HARA/SARA, GRORGE/GEORGE, etc.)
+      // For single-word names, compare directly
+      if (words.length === 1 && existingWords.length === 1) {
+        if (areOCRVariants(name, existingCanon)) {
+          // Merge into the one with more lines (already sorted, so existingCanon has more)
+          nameMap.set(name, existingCanon);
+          existingRole.lineCount += role.lineCount;
+          canonical = existingCanon;
+          foundMatch = true;
+          break;
+        }
+      }
       
       // Same last name? Likely the same character
       if (lastName === existingLastName && lastName.length >= 4) {
@@ -1660,6 +1722,18 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
         }
         foundMatch = true;
         break;
+      }
+      
+      // Check for OCR variants in last names of multi-word names
+      if (words.length > 1 && existingWords.length > 1) {
+        if (areOCRVariants(lastName, existingLastName)) {
+          // Merge into the one with more lines
+          nameMap.set(name, existingCanon);
+          existingRole.lineCount += role.lineCount;
+          canonical = existingCanon;
+          foundMatch = true;
+          break;
+        }
       }
     }
     
