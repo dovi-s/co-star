@@ -237,12 +237,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   }, []);
 
   const multiplayer = useMultiplayer({
-    onRoomCreated: (room) => {
-      toast({ title: 'Room Created', description: `Share code: ${room.code}` });
+    onRoomCreated: () => {
       setView('lobby');
     },
     onRoomJoined: () => {
-      toast({ title: 'Joined Room' });
       setView('lobby');
     },
     onError: (message) => {
