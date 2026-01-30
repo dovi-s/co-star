@@ -1515,9 +1515,10 @@ function preprocessScript(rawText: string): string {
   
   // Split when ALL-CAPS character name appears after any lowercase text (mid-line)
   // e.g., "...came straight WINSLEY. It's fine" -> "...came straight\nWINSLEY. It's fine"
+  // Also handles no-space case from PDF merge: "straightWINSLEY." -> "straight\nWINSLEY."
   // This is critical for stage plays where multiple characters' lines get merged
-  text = text.replace(/([a-z])\s+([A-Z]{3,})\.\s+([A-Z])/g, '$1\n$2. $3');
-  text = text.replace(/([a-z])\s+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+([A-Z])/g, '$1\n$2. $3');
+  text = text.replace(/([a-z])\s*([A-Z]{3,})\.\s+([A-Z])/g, '$1\n$2. $3');
+  text = text.replace(/([a-z])\s*((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s*[A-Z]{2,})\.\s+([A-Z])/g, '$1\n$2. $3');
   
   // Split on parenthetical stage direction appearing mid-line (not at start)
   // e.g., "...to you. (Beverly cries.) She..." -> "...to you.\n(Beverly cries.)\nShe..."
