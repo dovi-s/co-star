@@ -1550,8 +1550,11 @@ function preprocessScript(rawText: string): string {
   // e.g., "...came straight WINSLEY. It's fine" -> "...came straight\nWINSLEY. It's fine"
   // Also handles no-space case from PDF merge: "straightWINSLEY." -> "straight\nWINSLEY."
   // This is critical for stage plays where multiple characters' lines get merged
-  text = text.replace(/([a-z])\s*([A-Z]{3,})\.\s+([A-Z])/g, '$1\n$2. $3');
-  text = text.replace(/([a-z])\s*((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s*[A-Z]{2,})\.\s+([A-Z])/g, '$1\n$2. $3');
+  // Use lookbehind to avoid capturing the preceding letter
+  text = text.replace(/(?<=[a-z])\s+([A-Z]{3,})\.\s+([A-Z])/g, '\n$1. $2');
+  text = text.replace(/(?<=[a-z])([A-Z]{3,})\.\s+([A-Z])/g, '\n$1. $2'); // No space case
+  text = text.replace(/(?<=[a-z])\s+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s*[A-Z]{2,})\.\s+([A-Z])/g, '\n$1. $2');
+  text = text.replace(/(?<=[a-z])((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s*[A-Z]{2,})\.\s+([A-Z])/g, '\n$1. $2'); // No space case
   
   // Split when mixed-case character name + action verb appears after lowercase (PDF merge)
   // e.g., "...house atCallie checks her watch" -> "...house at\nCallie checks her watch"
@@ -1565,7 +1568,8 @@ function preprocessScript(rawText: string): string {
   // STAGE PLAY FORMAT: Split merged dialogue where character name runs directly after dialogue
   // e.g., "sitSARA." -> "sit\nSARA." or "youCALLIE." -> "you\nCALLIE."
   // Pattern: lowercase letters immediately followed by ALL CAPS name + period + space + dialogue
-  text = text.replace(/([a-z])([A-Z]{2,})\.\s+/g, '$1\n$2. ');
+  // Use lookbehind to avoid capturing the preceding letter
+  text = text.replace(/(?<=[a-z])([A-Z]{2,})\.\s+/g, '\n$1. ');
   
   // Split when dialogue ends with punctuation and action begins with character name (no space)
   // e.g., "up!Callie buzzes her in" -> "up!\nCallie buzzes her in"
