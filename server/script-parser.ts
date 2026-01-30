@@ -1186,6 +1186,10 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     // Sentence starting with plural noun + comma (object list in stage direction)
     // e.g., "newspapers, several pairs of dirty socks..."
     /[!?.]\s+((?:newspapers?|magazines?|books?|boxes?|papers?|clothes?|socks?|shoes?|bags?|bottles?|cups?|plates?|keys?|coins?|letters?|envelopes?|photos?|pictures?|documents?),\s*(?:several|a\s+few|some|many|various|a\s+couple|a\s+bunch|a\s+pile|a\s+stack|a\s+box|and))/i,
+    // Colon followed by object list (common in stage directions after location descriptions)
+    // e.g., "...junk on her sofa:newspapers, several pairs..."
+    // Note: Also handles colon with space or without
+    /:\s*((?:newspapers?|magazines?|books?|boxes?|papers?|clothes?|socks?|shoes?|bags?|bottles?|cups?|plates?|keys?|coins?|letters?|envelopes?|photos?|pictures?|documents?|mail|bra|videotapes?|tapes?),\s*(?:several|a\s+few|some|many|various|a\s+couple|a\s+bunch|a\s+pile|a\s+stack|a\s+box|and\s+a|a\s+))/i,
     // Lowercase word starting after punctuation indicates narrative/action (not dialogue)
     // e.g., "Come on up! newspapers, several..." - lowercase after ! is unlikely in dialogue
     // Note: Also matches when there's NO space after punctuation (PDF merge issue)
