@@ -1668,8 +1668,20 @@ export function parseScript(rawText: string): ParsedScript {
 function extractCastNames(rawText: string): string[] {
   const canonicalNames: string[] = [];
   
-  // Look for CAST section - various formats
-  const castMatch = rawText.match(/(?:^|\n)\s*(CAST(?:\s+OF\s+CHARACTERS)?|CHARACTERS|DRAMATIS\s+PERSONAE)\s*[\n:]/im);
+  // Look for CAST section - various formats, more flexible matching
+  const castPatterns = [
+    /(?:^|\n)\s*CAST\s*(?:OF\s+CHARACTERS)?\s*[\n:]/im,
+    /(?:^|\n)\s*CAST\s*\n/im,
+    /(?:^|\n)\s*CHARACTERS\s*[\n:]/im,
+    /(?:^|\n)\s*DRAMATIS\s+PERSONAE\s*[\n:]/im,
+    /\bCAST\b[^\n]*\n\s*[A-Z]/im,
+  ];
+  
+  let castMatch: RegExpMatchArray | null = null;
+  for (const pattern of castPatterns) {
+    castMatch = rawText.match(pattern);
+    if (castMatch) break;
+  }
   
   if (!castMatch) {
     return canonicalNames;

@@ -1626,13 +1626,27 @@ export function parseScript(rawText: string): ParsedScript {
 function extractCastNames(rawText: string): string[] {
   const canonicalNames: string[] = [];
   
-  // Look for CAST section - various formats
-  // "CAST", "CAST:", "CAST OF CHARACTERS", "CHARACTERS", "DRAMATIS PERSONAE"
-  // Also match "CAST" followed immediately by character name on next line
-  const castMatch = rawText.match(/(?:^|\n)\s*(CAST(?:\s+OF\s+CHARACTERS)?|CHARACTERS|DRAMATIS\s+PERSONAE)\s*[\n:]/im);
+  // Look for CAST section - various formats, more flexible matching
+  // Match "CAST" alone on a line, or followed by colon, or with variations
+  const castPatterns = [
+    /(?:^|\n)\s*CAST\s*(?:OF\s+CHARACTERS)?\s*[\n:]/im,
+    /(?:^|\n)\s*CAST\s*\n/im,
+    /(?:^|\n)\s*CHARACTERS\s*[\n:]/im,
+    /(?:^|\n)\s*DRAMATIS\s+PERSONAE\s*[\n:]/im,
+    /\bCAST\b[^\n]*\n\s*[A-Z]/im, // CAST followed by character name on next line
+  ];
   
   console.log(`[CAST DEBUG] Searching for CAST section...`);
-  console.log(`[CAST DEBUG] First 500 chars of script: ${rawText.substring(0, 500).replace(/\n/g, '\\n')}`);
+  console.log(`[CAST DEBUG] First 1000 chars: ${rawText.substring(0, 1000).replace(/\n/g, '\\n')}`);
+  
+  let castMatch: RegExpMatchArray | null = null;
+  for (const pattern of castPatterns) {
+    castMatch = rawText.match(pattern);
+    if (castMatch) {
+      console.log(`[CAST DEBUG] Matched pattern: ${pattern}`);
+      break;
+    }
+  }
   
   if (!castMatch) {
     console.log(`[CAST DEBUG] No CAST section found`);
