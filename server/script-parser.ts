@@ -429,17 +429,12 @@ function isValidDialogue(text: string): boolean {
     return false;
   }
   
-  // Third-person pronouns + verbs = action description
-  if (/^(He|She|They|It|His|Her|Their|Its)\s+[a-z]/i.test(trimmed)) {
-    // More general: if it starts with he/she/they/it + any word, it's likely prose
-    // Real dialogue uses "I", "You", "We" as subjects
-    if (/^(He|She|They|It)\s+(is|are|was|were|has|had|does|did|will|would|can|could|shall|should|may|might|must)\b/i.test(trimmed)) {
-      return false;
-    }
-    // He/She + verb patterns
-    if (/^(He|She|They|It)\s+[a-z]+s\b/i.test(trimmed)) {
-      return false; // "He walks", "She runs", etc.
-    }
+  // Third-person pronouns + action verbs = stage direction action description
+  // But be CAREFUL: dialogue CAN start with He/She when talking about someone!
+  // e.g., "He was just saying stuff." is valid dialogue, "She is stable now." is valid dialogue
+  // Only reject clear STAGE DIRECTION patterns with specific action verbs (movement, gestures)
+  if (/^(He|She|They|It)\s+(walks?|runs?|enters?|exits?|leaves?|comes?|goes?|stands?|sits?|moves?|turns?|looks?\s+at\b|looks?\s+around\b|picks?\s+up|puts?\s+down|grabs?|reaches?|opens?|closes?|pulls?|pushes?|steps?|crosses?|approaches?|backs?\s+away)\b/i.test(trimmed)) {
+    return false;
   }
   
   // Possessive pronouns starting prose: "His eyes narrow", "Her hand trembles"
@@ -828,8 +823,7 @@ const RESERVED_WORDS = new Set([
   "ACTUALLY", "REALLY", "TRULY", "SIMPLY", "JUST", "ONLY", "EVEN", "STILL",
   // Common phrases that get parsed as names
   "LET ME", "LET ME GUESS", "ALMOST", "GUESS WHAT",
-  // Stage direction words
-  "WINSLEY", "COLE", // Partial names that should be caught by full name matching
+  // (removed WINSLEY and COLE - they are valid character last names when used with titles like MRS. WINSLEY, DET. COLE)
   // Preposition phrases
   "IN THE", "ON THE", "AT THE", "TO THE", "FOR THE", "WITH THE",
   // Known false positives
@@ -922,11 +916,15 @@ function normalizeCharacterName(name: string): string {
   
   // Fix OCR spacing artifacts in character names (e.g., "SIM BA" -> "SIMBA", "SCA R" -> "SCAR")
   // If we have exactly 2 short "words" (2-4 chars each) that together form a short name, combine them
+  // BUT don't combine if the first word is a title prefix (DR., MRS., DET., etc.)
   const words = normalized.split(/\s+/);
   if (words.length === 2) {
     const [w1, w2] = words;
-    // Both words are short (likely a split name)
-    if (w1.length >= 2 && w1.length <= 4 && w2.length >= 1 && w2.length <= 4) {
+    // Check if first word is a title prefix (don't combine these!)
+    const titlePrefixes = /^(DR|MR|MRS|MS|MISS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF)\.?$/i;
+    const isTitle = titlePrefixes.test(w1);
+    // Both words are short (likely a split name) - but skip if first word is a title
+    if (!isTitle && w1.length >= 2 && w1.length <= 4 && w2.length >= 1 && w2.length <= 4) {
       const combined = w1 + w2;
       // If combined is a reasonable name length (4-8 chars), use it
       if (combined.length >= 4 && combined.length <= 8) {
@@ -1167,7 +1165,11 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
       
       if (potentialName.length <= 40 && dialogue.length > 0) {
         const normalizedName = normalizeCharacterName(potentialName);
-        if (isValidCharacterName(potentialName)) {
+        const isValid = isValidCharacterName(potentialName);
+        if (!isValid) {
+          console.log(`[DEBUG] Rejected name "${potentialName}" (normalized: "${normalizedName}") for line: ${trimmed.substring(0, 50)}`);
+        }
+        if (isValid) {
           return { isCharacter: true, name: normalizedName, dialogue };
         }
       }
@@ -1733,6 +1735,13 @@ export function parseScript(rawText: string): ParsedScript {
     if (SCENE_HEADING_REGEX.test(trimmed)) return false;
     if (TRANSITION_REGEX.test(trimmed)) return false;
     if (SOUND_CUE_REGEX.test(trimmed)) return false;
+    
+    // CRITICAL: Skip if line looks like "CHARACTER: dialogue" format
+    // This prevents dialogue content from being misidentified as action
+    // e.g., "NURSE: She is stable now." should NOT match "She is" action patterns
+    if (/^[A-Z][A-Z0-9\.\s\-']+\s*:\s*.+/i.test(trimmed)) {
+      return false;
+    }
     
     // Only consider as action if we're NOT in the middle of collecting dialogue
     // This is handled by the caller - here we just detect obvious action patterns
