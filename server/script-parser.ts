@@ -71,11 +71,44 @@ function areOCRVariants(name1: string, name2: string): boolean {
     }
   }
   
-  // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
+  // Calculate match ratio and check first letter
   const matchRatio = matches / shorter.length;
   const firstLetterMatches = upper1[0] === upper2[0];
   
+  // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
   if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 3) {
+    return true;
+  }
+  
+  // For very high overlap (90%+), allow even if first letter doesn't match
+  // This catches cases like CROR -> GEORGE where OCR badly mangled the name
+  if (matchRatio >= 0.9 && shorter.length >= 3) {
+    return true;
+  }
+  
+  // Check if name could be a misread version (common OCR confusions: G/C, S/5, I/1, O/0, etc.)
+  const ocrConfusions: Record<string, string[]> = {
+    'G': ['C', 'O', 'Q', '6', '9'],
+    'C': ['G', 'O', '(', '<'],
+    'S': ['5', '$', '8'],
+    'O': ['0', 'Q', 'D', 'C'],
+    'I': ['1', 'L', '!', '|'],
+    'B': ['8', '3', 'R'],
+    'E': ['F', '3'],
+    'H': ['N', 'M'],
+    'R': ['K', 'P'],
+  };
+  
+  // Check if first letters could be OCR confused
+  const char1 = upper1[0];
+  const char2 = upper2[0];
+  const firstLetterConfused = 
+    ocrConfusions[char1]?.includes(char2) || 
+    ocrConfusions[char2]?.includes(char1) ||
+    char1 === char2;
+  
+  // If first letters are OCR-confusable and high overlap, it's a match
+  if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 3) {
     return true;
   }
   
