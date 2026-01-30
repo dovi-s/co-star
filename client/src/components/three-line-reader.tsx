@@ -147,11 +147,13 @@ export function ThreeLineReader({
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
+  const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const fontSizeClass = fontSize === 0 ? "text-base" : fontSize === 1 ? "text-lg" : "text-xl";
 
   useEffect(() => {
     setShowHint(false);
     setShowContext(false);
+    setDescriptionExpanded(false);
   }, [currentLine?.id, currentScene?.id]);
 
   const wordMatchResult = useMemo(() => {
@@ -469,12 +471,65 @@ export function ThreeLineReader({
             {currentScene.name}
           </p>
           {currentScene.description && (
-            <p className={cn(
-              "mt-1.5 text-xs leading-relaxed italic",
-              cameraMode ? "text-white/60" : "text-muted-foreground/70"
-            )}>
-              {currentScene.description}
-            </p>
+            <div 
+              className="mt-1.5 cursor-pointer group"
+              onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+              data-testid="scene-description-toggle"
+            >
+              {descriptionExpanded ? (
+                <p className={cn(
+                  "text-xs leading-relaxed italic",
+                  cameraMode ? "text-white/60" : "text-muted-foreground/70"
+                )}>
+                  {currentScene.description}
+                </p>
+              ) : (
+                <div className="overflow-hidden relative">
+                  <div 
+                    className={cn(
+                      "whitespace-nowrap text-xs italic",
+                      cameraMode ? "text-white/60" : "text-muted-foreground/70",
+                      currentScene.description.length > 60 && "animate-marquee"
+                    )}
+                    style={{
+                      animation: currentScene.description.length > 60 
+                        ? `marquee ${Math.max(8, currentScene.description.length / 10)}s linear infinite` 
+                        : undefined
+                    }}
+                  >
+                    {currentScene.description}
+                    {currentScene.description.length > 60 && (
+                      <span className="mx-8 opacity-50">|</span>
+                    )}
+                    {currentScene.description.length > 60 && currentScene.description}
+                  </div>
+                  {currentScene.description.length > 60 && (
+                    <div className={cn(
+                      "absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l pointer-events-none",
+                      cameraMode ? "from-black/60" : "from-muted/30"
+                    )} />
+                  )}
+                </div>
+              )}
+              {currentScene.description.length > 60 && (
+                <div className={cn(
+                  "flex items-center gap-1 mt-1 text-[10px]",
+                  cameraMode ? "text-white/40" : "text-muted-foreground/50"
+                )}>
+                  {descriptionExpanded ? (
+                    <>
+                      <ChevronUp className="h-3 w-3" />
+                      <span>Collapse</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-3 w-3" />
+                      <span>Expand</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
