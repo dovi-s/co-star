@@ -793,10 +793,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       autoAdvanceTimeoutRef.current = null;
     }
     
-    if (sceneIndex !== undefined) {
-      goToScene(sceneIndex);
-    }
-    goToLine(lineIndex);
+    // Use goToLine with both scene and line index to avoid race condition
+    // (goToScene updates state async, so calling goToLine immediately after
+    // would use the old scene index)
+    const targetScene = sceneIndex !== undefined ? sceneIndex : session?.currentSceneIndex ?? 0;
+    goToLine(targetScene, lineIndex);
   };
 
   const handleRolePresetChange = (roleId: string, preset: VoicePreset) => {
