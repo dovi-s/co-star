@@ -1623,6 +1623,30 @@ export function parseScript(rawText: string): ParsedScript {
   // Normalize various periods/dots
   cleanedText = cleanedText.replace(/[\u2024\u2027\uFE52\uFF0E]/g, '.');
   
+  // Normalize all whitespace types to regular spaces (non-breaking spaces, etc.)
+  cleanedText = cleanedText.replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+  
+  // Normalize common OCR Cyrillic to Latin substitutions
+  // These are visually similar characters that OCR often confuses
+  cleanedText = cleanedText.replace(/\u0410/g, 'A'); // Cyrillic А -> Latin A
+  cleanedText = cleanedText.replace(/\u0412/g, 'B'); // Cyrillic В -> Latin B
+  cleanedText = cleanedText.replace(/\u0415/g, 'E'); // Cyrillic Е -> Latin E
+  cleanedText = cleanedText.replace(/\u041A/g, 'K'); // Cyrillic К -> Latin K
+  cleanedText = cleanedText.replace(/\u041C/g, 'M'); // Cyrillic М -> Latin M
+  cleanedText = cleanedText.replace(/\u041D/g, 'H'); // Cyrillic Н -> Latin H
+  cleanedText = cleanedText.replace(/\u041E/g, 'O'); // Cyrillic О -> Latin O
+  cleanedText = cleanedText.replace(/\u0420/g, 'P'); // Cyrillic Р -> Latin P
+  cleanedText = cleanedText.replace(/\u0421/g, 'C'); // Cyrillic С -> Latin C
+  cleanedText = cleanedText.replace(/\u0422/g, 'T'); // Cyrillic Т -> Latin T
+  cleanedText = cleanedText.replace(/\u0425/g, 'X'); // Cyrillic Х -> Latin X
+  cleanedText = cleanedText.replace(/\u0430/g, 'a'); // Cyrillic а -> Latin a
+  cleanedText = cleanedText.replace(/\u0435/g, 'e'); // Cyrillic е -> Latin e
+  cleanedText = cleanedText.replace(/\u043E/g, 'o'); // Cyrillic о -> Latin o
+  cleanedText = cleanedText.replace(/\u0440/g, 'p'); // Cyrillic р -> Latin p
+  cleanedText = cleanedText.replace(/\u0441/g, 'c'); // Cyrillic с -> Latin c
+  cleanedText = cleanedText.replace(/\u0443/g, 'y'); // Cyrillic у -> Latin y (sometimes)
+  cleanedText = cleanedText.replace(/\u0445/g, 'x'); // Cyrillic х -> Latin x
+  
   // Preprocess to fix PDF copy-paste issues
   const preprocessed = preprocessScript(cleanedText);
   const lines = preprocessed.split(/\r?\n/);
