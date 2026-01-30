@@ -1189,6 +1189,9 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     // Lowercase word starting after punctuation indicates narrative/action (not dialogue)
     // e.g., "Come on up! newspapers, several..." - lowercase after ! is unlikely in dialogue
     /[!?.]\s+([a-z]{4,}[,\s])/,
+    // Character name repeating + action verb (stage direction after dialogue)
+    // e.g., "Come on up! Callie buzzes her in" - Callie is speaking, then "Callie buzzes" is action
+    /[!?.]\s+([A-Z][a-z]+\s+(?:buzzes?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|turns?|walks?|runs?|sits?|stands?|looks?\s+at|checks?|dials?|hangs?\s+up|answers?|reads?|writes?|types?|clicks?|taps?|presses?|holds?|drops?|throws?|catches?|lifts?|lowers?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|finishes?|ends?))/i,
   ];
   
   let earliestMatch = text.length;
