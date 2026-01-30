@@ -1433,8 +1433,19 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
     }
   }
   
-  // Third-person action descriptions (He walks, She looks) - very reliable
-  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|opens?|closes?|falls?|kisses?)\b/i.test(trimmed)) {
+  // Third-person action descriptions (He walks, She looks, She sets) - very reliable
+  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|opens?|closes?|falls?|kisses?|sets?|puts?|takes?|picks?|grabs?|reaches?|holds?|drops?|throws?|catches?|pushes?|pulls?|answers?|dials?|hangs?|starts?|stops?|begins?|continues?|pauses?|waits?|watches?|stares?|nods?|shakes?|smiles?|laughs?|cries?|sighs?|gasps?|screams?|whispers?|mutters?)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Character name + action verb (e.g., "Callie checks her watch", "Sara enters the room")
+  // Mixed-case name followed by action verb is a stage direction, not dialogue
+  if (/^[A-Z][a-z]+\s+(checks?|looks?|turns?|walks?|runs?|sits?|stands?|moves?|enters?|exits?|opens?|closes?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|crosses?|goes?|comes?|starts?|stops?|begins?|continues?|pauses?|hesitates?|buzzes?|dials?|hangs?\s+up|answers?|reads?|writes?|laughs?|smiles?|nods?|shakes?|sighs?|gasps?|cries?|screams?|whispers?|mutters?|stares?|watches?|waits?)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // "Her/His [noun] [verb]" pattern (e.g., "Her buzzer buzzes", "His phone rings")
+  if (/^(Her|His|Their)\s+\w+\s+(buzzes?|rings?|beeps?|vibrates?|opens?|closes?|falls?|drops?)\b/i.test(trimmed)) {
     return false;
   }
   
