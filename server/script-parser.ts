@@ -94,9 +94,9 @@ function areOCRVariants(name1: string, name2: string): boolean {
     'O': ['0', 'Q', 'D', 'C'],
     'I': ['1', 'L', '!', '|'],
     'B': ['8', '3', 'R'],
-    'E': ['F', '3'],
+    'E': ['F', '3', 'R'],  // E can look like R in some OCR
     'H': ['N', 'M'],
-    'R': ['K', 'P'],
+    'R': ['K', 'P', 'E'],  // R can look like E
   };
   
   // Check if first letters could be OCR confused
@@ -110,6 +110,70 @@ function areOCRVariants(name1: string, name2: string): boolean {
   // If first letters are OCR-confusable and high overlap, it's a match
   if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 3) {
     return true;
+  }
+  
+  return false;
+}
+
+// Check if a short name could be a badly garbled version of a longer canonical name
+// This is used when we have CAST canonical names to be more aggressive
+function isGarbledVersion(garbled: string, canonical: string): boolean {
+  const g = garbled.toUpperCase();
+  const c = canonical.toUpperCase();
+  
+  // Only check if garbled is shorter or similar length
+  if (g.length > c.length + 1) return false;
+  
+  // If very short (3-4 chars) and canonical is longer (5+), use different approach
+  // Check if garbled could be a truncated/mangled version
+  if (g.length <= 4 && c.length >= 5) {
+    // Check if first letter could be confused
+    const ocrConfusions: Record<string, string[]> = {
+      'G': ['C', 'O', 'Q', '6', '9'],
+      'C': ['G', 'O', '(', '<'],
+      'S': ['5', '$', '8'],
+      'O': ['0', 'Q', 'D', 'C'],
+      'I': ['1', 'L', '!', '|'],
+      'B': ['8', '3', 'R'],
+      'E': ['F', '3', 'R'],
+      'H': ['N', 'M'],
+      'R': ['K', 'P', 'E'],
+    };
+    
+    const firstMatch = g[0] === c[0] || 
+      ocrConfusions[g[0]]?.includes(c[0]) || 
+      ocrConfusions[c[0]]?.includes(g[0]);
+    
+    if (!firstMatch) return false;
+    
+    // Count how many letters from garbled appear in canonical
+    const cLetters = c.split('');
+    let matches = 0;
+    for (const char of g) {
+      const idx = cLetters.indexOf(char);
+      if (idx !== -1) {
+        matches++;
+        cLetters.splice(idx, 1);
+      } else {
+        // Check if this could be an OCR confusion
+        for (const [original, confused] of Object.entries(ocrConfusions)) {
+          if (confused.includes(char)) {
+            const origIdx = cLetters.indexOf(original);
+            if (origIdx !== -1) {
+              matches++;
+              cLetters.splice(origIdx, 1);
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    // If at least 50% of garbled letters match (with OCR confusion), it's a match
+    // Combined with first letter match, this catches CROR -> GEORGE
+    if (matches >= g.length * 0.5) {
+      return true;
+    }
   }
   
   return false;
@@ -1804,6 +1868,13 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       // Check if OCR-mangled version matches canonical last word
       if (nameWords.length === 1 && canonWords.length >= 1) {
         if (areOCRVariants(upperName, canonLast)) {
+          return canonical;
+        }
+      }
+      
+      // Check for badly garbled short names (like CROR -> GEORGE)
+      if (nameWords.length === 1 && canonWords.length === 1) {
+        if (isGarbledVersion(upperName, canonical)) {
           return canonical;
         }
       }

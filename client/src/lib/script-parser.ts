@@ -88,9 +88,9 @@ function areOCRVariants(name1: string, name2: string): boolean {
     'O': ['0', 'Q', 'D', 'C'],
     'I': ['1', 'L', '!', '|'],
     'B': ['8', '3', 'R'],
-    'E': ['F', '3'],
+    'E': ['F', '3', 'R'],  // E can look like R
     'H': ['N', 'M'],
-    'R': ['K', 'P'],
+    'R': ['K', 'P', 'E'],  // R can look like E
   };
   
   const char1 = upper1[0];
@@ -102,6 +102,61 @@ function areOCRVariants(name1: string, name2: string): boolean {
   
   if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 3) {
     return true;
+  }
+  
+  return false;
+}
+
+// Check if a short name could be a badly garbled version of a longer canonical name
+function isGarbledVersion(garbled: string, canonical: string): boolean {
+  const g = garbled.toUpperCase();
+  const c = canonical.toUpperCase();
+  
+  if (g.length > c.length + 1) return false;
+  
+  if (g.length <= 4 && c.length >= 5) {
+    const ocrConfusions: Record<string, string[]> = {
+      'G': ['C', 'O', 'Q', '6', '9'],
+      'C': ['G', 'O', '(', '<'],
+      'S': ['5', '$', '8'],
+      'O': ['0', 'Q', 'D', 'C'],
+      'I': ['1', 'L', '!', '|'],
+      'B': ['8', '3', 'R'],
+      'E': ['F', '3', 'R'],
+      'H': ['N', 'M'],
+      'R': ['K', 'P', 'E'],
+    };
+    
+    const firstMatch = g[0] === c[0] || 
+      ocrConfusions[g[0]]?.includes(c[0]) || 
+      ocrConfusions[c[0]]?.includes(g[0]);
+    
+    if (!firstMatch) return false;
+    
+    const cLetters = c.split('');
+    let matches = 0;
+    for (const char of g) {
+      const idx = cLetters.indexOf(char);
+      if (idx !== -1) {
+        matches++;
+        cLetters.splice(idx, 1);
+      } else {
+        for (const [original, confused] of Object.entries(ocrConfusions)) {
+          if (confused.includes(char)) {
+            const origIdx = cLetters.indexOf(original);
+            if (origIdx !== -1) {
+              matches++;
+              cLetters.splice(origIdx, 1);
+              break;
+            }
+          }
+        }
+      }
+    }
+    
+    if (matches >= g.length * 0.5) {
+      return true;
+    }
   }
   
   return false;
@@ -1811,6 +1866,13 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       
       if (nameWords.length === 1 && canonWords.length >= 1) {
         if (areOCRVariants(upperName, canonLast)) {
+          return canonical;
+        }
+      }
+      
+      // Check for badly garbled short names (like CROR -> GEORGE)
+      if (nameWords.length === 1 && canonWords.length === 1) {
+        if (isGarbledVersion(upperName, canonical)) {
           return canonical;
         }
       }
