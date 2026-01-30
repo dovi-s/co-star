@@ -1446,6 +1446,12 @@ function preprocessScript(rawText: string): string {
   // IMPORTANT: Keep the period and dialogue together with the character name
   text = text.replace(/([)a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
   
+  // Split when stage play character name appears after sentence-ending punctuation
+  // e.g., "...great. WINSLEY. How are you" -> "...great.\nWINSLEY. How are you"
+  // e.g., "...8:00. MRS. WINSLEY. Should we..." -> "...8:00.\nMRS. WINSLEY. Should we..."
+  text = text.replace(/([.!?])\s+([A-Z]{2,})\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  text = text.replace(/([.!?])\s+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  
   // Split on parenthetical stage direction appearing mid-line (not at start)
   // e.g., "...to you. (Beverly cries.) She..." -> "...to you.\n(Beverly cries.)\nShe..."
   text = text.replace(/([.!?])\s*(\([^)]+\))\s*([A-Z])/g, '$1\n$2\n$3');
