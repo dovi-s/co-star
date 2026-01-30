@@ -19,7 +19,7 @@ interface HeaderProps {
   onBack?: () => void;
   onFontSizeChange?: (size: number) => void;
   onToggleDirections?: () => void;
-  onJumpToLine?: (lineIndex: number) => void;
+  onJumpToLine?: (lineIndex: number, sceneIndex?: number) => void;
   cameraMode?: boolean;
 }
 
