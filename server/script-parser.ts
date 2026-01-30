@@ -378,6 +378,19 @@ function isValidDialogue(text: string): boolean {
     return false;
   }
   
+  // Reject stage directions that are "Character does action" format
+  // e.g., "Callie checks her watch.", "Sara sits down.", "George enters."
+  // Pattern: Proper name + action verb (+ optional object)
+  if (/^[A-Z][a-z]+\s+(checks?|looks?|turns?|picks?\s+up|puts?\s+down|sets?|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|walks?|runs?|sits?|stands?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|pauses?|hesitates?|buzzes?|dials?|hangs?\s+up|answers?|reads?|writes?|watches?|waits?|smiles?|laughs?|cries?|nods?|shakes?|gestures?|points?|waves?|hugs?|kisses?|touches?|holds?|drops?|throws?|catches?|follows?|leads?|approaches?|backs?\s+(away|up)|steps?\s+(forward|back)|puts?\s+on|takes?\s+off)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Also catch "Name's [possessive action]" stage directions
+  // e.g., "Sara's eyes widen.", "George's voice softens."
+  if (/^[A-Z][a-z]+['']s\s+(eyes?|voice|face|hands?|expression|tone|manner|gaze|look|smile|frown)\s+(widen|narrow|soften|harden|change|shift|light|brighten|darken|trembles?|shakes?)/i.test(trimmed)) {
+    return false;
+  }
+  
   // For very short text (1-3 chars), be strict
   if (trimmed.length <= 3) {
     const lower = trimmed.toLowerCase();
