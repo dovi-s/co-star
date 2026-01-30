@@ -1503,12 +1503,33 @@ function preprocessScript(rawText: string): string {
   // e.g., "...she wakes upSCENE THREE" -> "...she wakes up\nSCENE THREE"
   text = text.replace(/([a-z])(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))/gi, '$1\n$2');
   
+  // Split SCENE headings that appear after punctuation with space
+  // e.g., "...she wakes up. SCENE THREE" -> "...she wakes up.\nSCENE THREE"
+  text = text.replace(/([.!?])\s+(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))/gi, '$1\n$2');
+  
+  // Split SCENE headings that appear after any text (preceded by space)
+  // e.g., "STOP KISS by Diana Son SCENE ONE" -> "...Son\nSCENE ONE"
+  text = text.replace(/\s+(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))\b/gi, '\n$1');
+  
   return text;
 }
 
 export function parseScript(rawText: string): ParsedScript {
+  // Strip BOM (Byte Order Mark) if present
+  let cleanedText = rawText.replace(/^\uFEFF/, '');
+  
+  // Normalize various dash types to standard hyphen
+  cleanedText = cleanedText.replace(/[\u2010\u2011\u2012\u2013\u2014\u2015]/g, '-');
+  
+  // Normalize various quote types
+  cleanedText = cleanedText.replace(/[\u2018\u2019\u201B]/g, "'");
+  cleanedText = cleanedText.replace(/[\u201C\u201D\u201F]/g, '"');
+  
+  // Normalize various periods/dots
+  cleanedText = cleanedText.replace(/[\u2024\u2027\uFE52\uFF0E]/g, '.');
+  
   // Preprocess to fix PDF copy-paste issues
-  const preprocessed = preprocessScript(rawText);
+  const preprocessed = preprocessScript(cleanedText);
   const lines = preprocessed.split(/\r?\n/);
   
   const roles: Map<string, Role> = new Map();
