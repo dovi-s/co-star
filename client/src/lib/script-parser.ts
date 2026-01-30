@@ -1867,7 +1867,7 @@ export function parseScript(rawText: string): ParsedScript {
       continue;
     }
     
-    // Skip title page / front matter until first scene heading OR first dialogue
+    // Handle content before first scene heading or dialogue
     if (!foundFirstScene) {
       // Check if this line is dialogue (inline format) or standalone character name
       const earlyCheck = isLikelyCharacterLine(trimmed);
@@ -1877,6 +1877,19 @@ export function parseScript(rawText: string): ParsedScript {
         currentSceneName = "Scene 1";
         // Fall through to process this line as dialogue/character
       } else {
+        // Check if this is an action/description line (not front matter)
+        // Front matter typically has: copyright, author name, production info, cast lists
+        // Action lines describe what's happening on stage
+        const isFrontMatter = /^(?:copyright|©|all rights|caution:|professionals|amateurs|dramatists|play service|permission|inquiries|special note|produced by|directed by|set design|lighting design|sound design|costume design|stage manager|the cast|cast:|setting:|time:|note:|for\s+\w+,)/i.test(trimmed) ||
+          /^\d+$/.test(trimmed) || // Page numbers
+          /^(?:\*|★)+/.test(trimmed) || // Stars/decorations
+          /^(?:by\s+)?[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(trimmed) || // Author names like "Diana Son"
+          /^[A-Z\s]+$/.test(trimmed) && trimmed.length < 30; // Short all-caps titles
+        
+        if (!isFrontMatter && isActionLine(trimmed)) {
+          // This looks like an opening scene description - capture it as context
+          pendingContext.push(trimmed);
+        }
         continue;
       }
     }
