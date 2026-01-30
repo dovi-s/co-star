@@ -44,24 +44,25 @@ export async function aiCleanupScript(script: ParsedScript): Promise<CleanupResu
     dialogue: item.line.text.substring(0, 200),
   }));
 
-  const prompt = `You are a script parsing validator. Analyze these parsed "dialogue" lines from a script and identify which ones are NOT actual spoken dialogue.
+  const prompt = `You are a script parsing validator. Analyze these parsed "dialogue" lines from a script and identify which ones are CLEARLY NOT actual spoken dialogue.
 
-REMOVE these types of content (they are NOT dialogue):
-- Title page content (movie/play titles, "by [author name]", dates, draft info)
-- Writer/author credits ("by Will Ferrell", "Written by John Smith")
-- Cast lists or actor names ("Will Ferrell John C Reilly", "Starring...")
-- Production notes, copyright notices, revision markers
-- Stage directions or action descriptions written as prose
-- Scene headings or location descriptions
-- Crew credits, production company names
-- ANY text that a character would not actually SPEAK aloud in the scene
+BE VERY CONSERVATIVE - ONLY REMOVE lines that are CLEARLY NOT dialogue:
+- Title page content ONLY (literal titles like "STOP KISS" or "A Play by...")
+- Writer credits ONLY if they say "by [author name]" or "Written by"
+- Copyright notices, draft info, revision dates
 
-KEEP these (they ARE dialogue):
-- Actual spoken lines characters say to each other
-- Questions, statements, exclamations characters speak
-- Monologues or soliloquies
-- Song lyrics if sung by a character
-- Phone conversations
+DO NOT REMOVE (these ARE valid dialogue or should be kept):
+- ANY line where a character is speaking, even if fragmented or unclear
+- Phone conversations ("Hi George...", "Yeah I know...")
+- Lines that START with dialogue even if they have stage directions mixed in
+- Casual speech, questions, exclamations, interjections
+- Lines with character names like CALLIE, SARA, GEORGE, etc.
+- Stage play format lines (CHARACTER. dialogue) - these are valid
+- ANY line that could reasonably be spoken by a character
+
+IMPORTANT: Be extremely conservative. When in doubt, KEEP the line. 
+It is MUCH better to keep a non-dialogue line than to remove actual dialogue.
+Only remove lines you are 100% certain are title page content or credits.
 
 IMPORTANT: These are VALID character names based on occupations/roles - do NOT remove their lines:
 SPY, HANDLER, AGENT, OPERATIVE, ASSASSIN, DETECTIVE, SUSPECT, OFFICER, CAPTAIN, SERGEANT, LIEUTENANT, COMMANDER, GENERAL, SOLDIER, GUARD, NURSE, DOCTOR, PROFESSOR, TEACHER, STUDENT, WAITER, WAITRESS, BARTENDER, DRIVER, PILOT, JUDGE, LAWYER, WITNESS, CLERK, MAYOR, SENATOR, PRESIDENT, KING, QUEEN, PRINCE, PRINCESS, DUKE, LORD, LADY, BUTLER, MAID, CHEF, PORTER, JANITOR, REPORTER, ANCHOR, HOST, GUEST, CALLER, VICTIM, THIEF, BURGLAR, KILLER, STRANGER, VISITOR, TRAVELER, MESSENGER, NARRATOR, VOICE
