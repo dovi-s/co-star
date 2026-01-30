@@ -1005,8 +1005,9 @@ function isValidCharacterName(name: string): boolean {
   // Reject names starting with "I" followed by a name (OCR merge: "ICALLIE")
   if (/^I[A-Z]{3,}$/.test(normalized)) return false;
   
-  // Reject "NAME. WORD" patterns (merged dialogue)
-  if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized)) return false;
+  // Reject "NAME. WORD" patterns (merged dialogue) - BUT allow valid titles like DET., MRS., DR.
+  const validTitles = /^(DR|MR|MRS|MS|MISS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|LADY|LORD|PROF|OFFICER|DETECTIVE|INSPECTOR|NURSE|FATHER|MOTHER|SISTER|BROTHER|AUNT|UNCLE)\.?\s+/i;
+  if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized) && !validTitles.test(normalized)) return false;
   
   // Reject if contains lowercase words (indicates merged dialogue like "SARA. It's...almost 6")
   // A valid character name should not have lowercase words after the first
