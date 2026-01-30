@@ -390,6 +390,24 @@ function isValidDialogue(text: string): boolean {
     return false;
   }
   
+  // Reject cast/character doubling notes
+  // e.g., "Can be doubled with Mrs. Winsley."
+  if (/^Can be doubled with/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Reject setting/location descriptions
+  // e.g., "New York City." as standalone line
+  if (/^(New York|Los Angeles|Chicago|Boston|San Francisco|London|Paris)(\s+City)?\.?$/i.test(trimmed)) {
+    return false;
+  }
+  
+  // Reject time/note markers
+  // e.g., "Now.", "TIME", "SETTING", "Note:"
+  if (/^(Now|TIME|SETTING|Note:|CAST|CHARACTERS?)\.?$/i.test(trimmed)) {
+    return false;
+  }
+  
   // For very short text (1-3 chars), be strict
   if (trimmed.length <= 3) {
     const lower = trimmed.toLowerCase();
@@ -1450,6 +1468,24 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
 // Preprocess script text to handle PDF copy-paste issues
 function preprocessScript(rawText: string): string {
   let text = rawText;
+  
+  // Remove CAST section entirely (contains character descriptions, not dialogue)
+  // Matches "CAST" heading followed by character descriptions until SETTING/TIME/SCENE/ACT
+  // e.g., "CAST\nCALLIE-late 20s to early 30s.\nSARA-mid-20s...\n\nSETTING"
+  text = text.replace(/\n\s*CAST\s*\n[\s\S]*?(?=\n\s*(?:SETTING|TIME|NOTE|SCENE|ACT|PROLOGUE|The play|Stop Kiss|[A-Z]{2,}\s+[A-Z]{2,}\s*\n))/gi, '\n');
+  
+  // Also remove standalone CAST section patterns
+  // Handles "CAST" followed by NAME-age descriptions
+  text = text.replace(/\bCAST\b[:\s]*\n(?:[A-Z][A-Za-z\s.]*[-–—]\s*(?:late|early|mid)?[\s\-]*(?:teens|20s|30s|40s|50s|60s|70s|80s|90s)[^\n]*\n?)+/gi, '');
+  
+  // Remove CHARACTER section (similar to CAST)
+  text = text.replace(/\n\s*CHARACTERS?\s*\n[\s\S]*?(?=\n\s*(?:SETTING|TIME|NOTE|SCENE|ACT|PROLOGUE))/gi, '\n');
+  
+  // Remove SETTING section (location description, not dialogue)
+  text = text.replace(/\n\s*SETTING\s*\n[^\n]*(?:City|Town|House|Apartment|Office|Street|Room|Place)[^\n]*\n?/gi, '\n');
+  
+  // Remove TIME section (time markers, not dialogue)
+  text = text.replace(/\n\s*TIME\s*\n[^\n]*(?:Now|Present|Past|Future|Day|Night|Morning|Evening|Year|Century)[^\n]*\n?/gi, '\n');
   
   // Split title page content that got merged into single lines
   // e.g., "TITLE Written by Author Revisions by..." -> separate lines
