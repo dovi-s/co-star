@@ -1197,6 +1197,12 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     /\.\s+([A-Z][a-z]+'s\s+(?:head|eyes|face|hand|hands|body|voice)\s+(?:bobs?|turns?|moves?|drops?|rises?))/i,
     // ALL CAPS CHARACTER NAME + enters/exits/walks etc. (e.g., "KEVIN McCALLISTER enters")
     /\.\s+([A-Z][A-Z\s]+(?:[A-Z][a-z]+)?\s+(?:enters?|exits?|walks?|runs?|appears?|leaves?|crosses?|stands?|sits?|looks?|turns?|moves?|comes?|goes?))/,
+    // Character name (proper noun) + "is/was/are/were" + emotional/action state (very common stage direction)
+    // e.g., "Callie is stunned to see George", "Sara is confused", "George was surprised"
+    /[!?.]\s+([A-Z][a-z]+\s+(?:is|was|are|were)\s+(?:stunned|shocked|surprised|confused|amused|delighted|horrified|embarrassed|annoyed|frustrated|worried|scared|nervous|excited|relieved|hurt|angry|happy|sad|moved|touched|silent|quiet|still|frozen|struck|taken aback|caught off guard|lost for words|speechless|at a loss))/i,
+    // Character name + third person action verbs (stage direction narrative)
+    // e.g., "Callie plays it off", "George looks away", "Sara turns to leave"
+    /[!?.]\s+([A-Z][a-z]+\s+(?:plays?|looks?|turns?|walks?|runs?|stands?|sits?|moves?|crosses?|exits?|enters?|leaves?|appears?|goes?|comes?|starts?|stops?|tries?|begins?|continues?|pauses?|hesitates?|nods?|shakes?|smiles?|laughs?|cries?|sighs?|gasps?|shrugs?)\s+(?:it\s+off|away|around|back|to|at|up|down|over|off|in|out|for|the|his|her|their))/i,
   ];
   
   let earliestMatch = text.length;
