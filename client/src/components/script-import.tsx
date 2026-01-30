@@ -294,21 +294,24 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         .replace(/\s*[-–—]\s*(DAY|NIGHT|MORNING|EVENING|LATER|CONTINUOUS|SAME).*$/i, '')
         .trim();
       if (name.length > 3 && name.length <= 40) {
-        return name.split(' ').map(w => 
+        return name.split(' ').filter(w => w && w.length > 0).map(w => 
           w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
         ).join(' ');
       }
     }
     
-    if (detectedChars.length >= 2) {
-      const top2 = detectedChars.slice(0, 2).map(c => 
+    // Filter out null/undefined values from character array
+    const validChars = detectedChars.filter(c => c && typeof c === 'string' && c.length > 0);
+    
+    if (validChars.length >= 2) {
+      const top2 = validChars.slice(0, 2).map(c => 
         c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()
       );
       return `${top2[0]} & ${top2[1]}`;
     }
     
-    if (detectedChars.length === 1) {
-      const name = detectedChars[0];
+    if (validChars.length === 1) {
+      const name = validChars[0];
       return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() + "'s Scene";
     }
     
