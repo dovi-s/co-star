@@ -791,7 +791,9 @@ const RESERVED_WORDS = new Set([
   "ELEVEN", "TWELVE", "THIRTEEN", "FOURTEEN", "FIFTEEN", "SIXTEEN", "SEVENTEEN",
   "EIGHTEEN", "NINETEEN", "TWENTY", "TWENTY-ONE", "TWENTY-TWO", "THIRTY", "FORTY", "FIFTY",
   // Common play/movie titles that appear in scripts
-  "STOP KISS", "THE END", "BLACKOUT", "LIGHTS UP", "CURTAIN", "INTERMISSION",
+  "STOP KISS", "STOPKISS", "KINN", "THE END", "BLACKOUT", "LIGHTS UP", "CURTAIN", "INTERMISSION",
+  // Title page content and OCR artifacts
+  "PLAYS", "SPRCIAL NOTI", "SPRCIAL", "NOTI", "DRAMATISTS", "DRAMATIST",
   // Common verbs/actions that aren't names
   "STOP", "KISS", "RUN", "WALK", "TALK", "LOOK", "SEE", "HEAR", "WAIT", "HELP",
   "COME", "GO", "STAY", "LEAVE", "TAKE", "GIVE", "GET", "MAKE", "FIND", "TELL",
@@ -954,6 +956,23 @@ function isValidCharacterName(name: string): boolean {
   // Reject "NAME. WORD" patterns (merged dialogue)
   if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized)) return false;
   
+  // Reject if contains lowercase words (indicates merged dialogue like "SARA. It's...almost 6")
+  // A valid character name should not have lowercase words after the first
+  if (/[A-Z]+\.\s+[A-Za-z].*[a-z]/.test(name) && /\s/.test(name)) {
+    // Has period followed by space and then mixed case - this is dialogue
+    return false;
+  }
+  
+  // Reject if name contains obviously lowercase dialogue words
+  if (/\b(it's|i'm|i'll|you're|we're|they're|don't|can't|won't|isn't|aren't|wasn't|weren't|didn't|hasn't|haven't|couldn't|wouldn't|shouldn't|almost|about|around|until)\b/i.test(name)) {
+    return false;
+  }
+  
+  // Reject if name ends with a number (looks like time reference e.g., "UNTIL 8")
+  if (/\b(UNTIL|AROUND|ABOUT|BEFORE|AFTER|BY|AT)\s+\d+$/i.test(name)) {
+    return false;
+  }
+  
   // Reject if contains apostrophe in weird places (OCR artifact: "T'WENTY")
   if (/[A-Z]'[A-Z]{2,}/i.test(normalized)) return false;
   
@@ -1098,7 +1117,7 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     return { isCharacter: false, name: "", dialogue: "" };
   }
   
-  // Pattern 1: CHARACTER: dialogue (most common for pasted scripts)
+  // Pattern 1: CHARACTER: dialogue or CHARACTER. dialogue (most common for pasted scripts)
   const colonPatterns = [
     // Basic: NAME: dialogue
     /^([A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
@@ -1110,6 +1129,11 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     /^(\d+[\.\)]\s*[A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
     // With extension: NAME (V.O.): dialogue
     /^([A-Z][A-Z0-9\s\-'\.]+\s*\([^)]+\))\s*[:：]\s*(.+)$/,
+    // STAGE PLAY FORMAT: NAME. dialogue (character name ends with period)
+    // Match: GEORGE. Hey Cal... or CALLIE. Yes!
+    /^([A-Z][A-Z]+)\.\s+([A-Z][a-z].+)$/,
+    // STAGE PLAY with title: MRS. WINSLEY. dialogue
+    /^((?:DR|MR|MRS|MS|DET|SGT|LT|CAPT)\.?\s+[A-Z][A-Z]+)\.\s+(.+)$/,
   ];
   
   for (const pattern of colonPatterns) {
@@ -1453,6 +1477,23 @@ function preprocessScript(rawText: string): string {
   // Split on parenthetical stage direction appearing mid-line (not at start)
   // e.g., "...to you. (Beverly cries.) She..." -> "...to you.\n(Beverly cries.)\nShe..."
   text = text.replace(/([.!?])\s*(\([^)]+\))\s*([A-Z])/g, '$1\n$2\n$3');
+  
+  // STAGE PLAY FORMAT: Split merged dialogue where character name runs directly after dialogue
+  // e.g., "sitSARA." -> "sit\nSARA." or "youCALLIE." -> "you\nCALLIE."
+  // Pattern: lowercase letters immediately followed by ALL CAPS name + period + space + dialogue
+  text = text.replace(/([a-z])([A-Z]{2,})\.\s+/g, '$1\n$2. ');
+  
+  // Handle title-based stage play names merged with dialogue
+  // e.g., "showsMRS. WINSLEY." -> "shows\nMRS. WINSLEY."
+  text = text.replace(/([a-z])((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+/g, '$1\n$2. ');
+  
+  // Split when character name with period appears directly after lowercase (no space)
+  // e.g., "soCALLIE." -> "so\nCALLIE." 
+  text = text.replace(/([a-z])([A-Z]{3,})\.\s*([A-Z])/g, '$1\n$2.\n$3');
+  
+  // Split SCENE headings that are merged at end of lines
+  // e.g., "...she wakes upSCENE THREE" -> "...she wakes up\nSCENE THREE"
+  text = text.replace(/([a-z])(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))/gi, '$1\n$2');
   
   return text;
 }
