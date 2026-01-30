@@ -454,8 +454,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Tips</p>
                 <ul className="space-y-1.5 text-muted-foreground text-xs">
                   <li className="flex gap-2">
-                    <span className="text-foreground">PDF</span>
-                    <span>Upload directly or copy-paste text</span>
+                    <span className="text-foreground font-medium">PDF</span>
+                    <span>Use the Upload button for best results</span>
                   </li>
                   <li className="flex gap-2">
                     <span className="text-foreground">Names</span>
@@ -466,6 +466,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                     <span>Use [brackets] or (parentheses)</span>
                   </li>
                 </ul>
+                <p className="text-[10px] text-muted-foreground/60 mt-2">
+                  Copy-paste from PDFs often loses formatting. Upload the file directly for better accuracy.
+                </p>
               </div>
             </div>
           </DialogContent>
