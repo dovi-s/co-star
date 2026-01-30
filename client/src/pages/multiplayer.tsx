@@ -1450,21 +1450,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     return (
       <div className="min-h-screen relative" data-testid="multiplayer-rehearsal">
-        {/* Debug panel - shows WebRTC connection status */}
-        {import.meta.env.DEV && (
-          <div className="fixed top-2 right-2 z-50 bg-black/80 text-white text-xs p-2 rounded max-w-xs font-mono">
-            <div>Local: {webrtc.localStream ? `${webrtc.localStream.getAudioTracks().length}a/${webrtc.localStream.getVideoTracks().length}v` : 'none'}</div>
-            <div>Peers: {webrtc.peerStreams.length}</div>
-            <div>Audio: {webrtc.isAudioEnabled ? 'on' : 'off'} | Video: {webrtc.isVideoEnabled ? 'on' : 'off'}</div>
-            {webrtc.peerStreams.map(ps => (
-              <div key={ps.participantId}>
-                Peer {ps.participantId.slice(0,4)}: {ps.stream.getAudioTracks().length}a/{ps.stream.getVideoTracks().length}v
-              </div>
-            ))}
-            {webrtc.error && <div className="text-red-400">Err: {webrtc.error}</div>}
-          </div>
-        )}
-        
         {/* Hidden audio elements for peer streams - ensures joiners hear audio from host/peers */}
         {webrtc.peerStreams.map((peerStream) => (
           <PeerAudioElement 
