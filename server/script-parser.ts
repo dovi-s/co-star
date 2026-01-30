@@ -346,6 +346,20 @@ function isValidDialogue(text: string): boolean {
   // Reject empty
   if (!trimmed) return false;
   
+  // Reject character age/description patterns
+  // e.g., "late 20s to early 30s", "mid-40s", "20s, attractive"
+  if (/^(late|early|mid)[\s\-]*(teens|20s|30s|40s|50s|60s|70s|80s|90s)/i.test(trimmed)) {
+    return false;
+  }
+  // "20s to 30s" style
+  if (/^(teens|20s|30s|40s|50s|60s|70s|80s|90s)(\s+to\s+(early|late|mid)?[\s\-]*(teens|20s|30s|40s|50s|60s|70s|80s|90s))?[,.\s]*$/i.test(trimmed)) {
+    return false;
+  }
+  // Age description followed by trait: "late 20s, attractive"
+  if (/^(late|early|mid)?[\s\-]*(teens|20s|30s|40s|50s|60s|70s|80s|90s)[,\s]+(attractive|handsome|beautiful|plain|tall|short|thin|heavy|blonde|brunette|redhead)/i.test(trimmed)) {
+    return false;
+  }
+  
   // For very short text (1-3 chars), be strict
   if (trimmed.length <= 3) {
     const lower = trimmed.toLowerCase();
