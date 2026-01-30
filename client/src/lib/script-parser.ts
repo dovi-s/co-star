@@ -627,9 +627,16 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\s*OMITTED\s*/gi, ' ');
   
   // Remove copyright notices and special notes embedded in text
-  cleaned = cleaned.replace(/\*See Special Note[^*]*\./gi, '');
+  // Pattern handles various spacings: "*See", "* See", etc.
+  cleaned = cleaned.replace(/\*\s*See\s+Special\s+Note[^.]*\./gi, '');
+  cleaned = cleaned.replace(/\*\s*See\s+Note[^.]*\./gi, '');
   cleaned = cleaned.replace(/\*[^*]*copyright[^*]*\./gi, '');
   cleaned = cleaned.replace(/\*[^*]*page\s*\d*\./gi, '');
+  
+  // Remove third-person narrative action descriptions that got merged into dialogue
+  // "The doorbell rings." "Callie hides." "George enters." etc.
+  cleaned = cleaned.replace(/\.\s+The\s+(?:doorbell|phone|buzzer|alarm|bell|door)\s+(?:rings?|buzzes?|sounds?|opens?|closes?)[^.]*\./gi, '.');
+  cleaned = cleaned.replace(/\.\s+[A-Z][a-z]+\s+(?:hides?|appears?|enters?|exits?|leaves?|walks?|runs?|sits?|stands?|looks?|turns?|moves?|crosses?|nods?|shakes?|smiles?|laughs?|sighs?|gasps?|pauses?|hesitates?|waits?)[^.]*\./gi, '.');
   
   // Remove embedded character names with periods mid-dialogue: "SARA. You're Callie. CALLIE. Yes."
   // Pattern: NAME. (where NAME is 2+ caps followed by period and space)
@@ -1203,6 +1210,15 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     // Character name + third person action verbs (stage direction narrative)
     // e.g., "Callie plays it off", "George looks away", "Sara turns to leave"
     /[!?.]\s+([A-Z][a-z]+\s+(?:plays?|looks?|turns?|walks?|runs?|stands?|sits?|moves?|crosses?|exits?|enters?|leaves?|appears?|goes?|comes?|starts?|stops?|tries?|begins?|continues?|pauses?|hesitates?|nods?|shakes?|smiles?|laughs?|cries?|sighs?|gasps?|shrugs?)\s+(?:it\s+off|away|around|back|to|at|up|down|over|off|in|out|for|the|his|her|their))/i,
+    // Character name + "grabs/picks/takes" something (stage direction)
+    // e.g., "Callie grabs newspapers", "George picks up the phone"
+    /[!?.]\s+([A-Z][a-z]+\s+(?:grabs?|picks?|takes?|puts?|throws?|catches?|opens?|closes?|pulls?|pushes?|hands?|passes?|reaches?|lifts?|drops?|sets?|places?)\s+(?:up\s+)?(?:a|an|the|some|her|his|their|it|them|newspapers?|phone|door|book|bag|coat|hat|keys?|papers?))/i,
+    // Sentence starting with plural noun + comma (object list in stage direction)
+    // e.g., "newspapers, several pairs of dirty socks..."
+    /[!?.]\s+((?:newspapers?|magazines?|books?|boxes?|papers?|clothes?|socks?|shoes?|bags?|bottles?|cups?|plates?|keys?|coins?|letters?|envelopes?|photos?|pictures?|documents?),\s*(?:several|a\s+few|some|many|various|a\s+couple|a\s+bunch|a\s+pile|a\s+stack|a\s+box|and))/i,
+    // Lowercase word starting after punctuation indicates narrative/action (not dialogue)
+    // e.g., "Come on up! newspapers, several..." - lowercase after ! is unlikely in dialogue
+    /[!?.]\s+([a-z]{4,}[,\s])/,
   ];
   
   let earliestMatch = text.length;
