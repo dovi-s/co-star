@@ -381,6 +381,25 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning && !isSubmitting;
   
+  // Detect if text looks badly formatted (common with PDF copy-paste)
+  const looksLikeBadPdfCopy = useMemo(() => {
+    if (!script || script.length < 200) return false;
+    
+    const lines = script.split('\n');
+    // Check for very long lines (common when line breaks are lost)
+    const veryLongLines = lines.filter(l => l.length > 200).length;
+    const avgLineLength = script.length / Math.max(lines.length, 1);
+    
+    // Check for merged character names (e.g., "straightWINSLEY." or "atCallie checks")
+    const hasMergedNames = /[a-z][A-Z]{3,}\.\s+[A-Z]/.test(script) || 
+                           /[a-z][A-Z][a-z]+\s+(?:checks|looks|turns|walks|sits|stands)/.test(script);
+    
+    // Check for multiple character lines merged on same line
+    const hasMergedDialogue = /[A-Z]{3,}\.\s+[A-Za-z].*[A-Z]{3,}\.\s+[A-Z]/.test(script);
+    
+    return (veryLongLines > 3 || avgLineLength > 150 || hasMergedNames || hasMergedDialogue);
+  }, [script]);
+
   // Use the full parser for accurate preview (with OCR correction and CAST detection)
   const previewData = useMemo(() => {
     if (!script || script.trim().length < 50) {
@@ -557,8 +576,32 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         }}
       />
 
+      {/* Warning for badly formatted text */}
+      {script && looksLikeBadPdfCopy && previewData.roles > 0 && !isCleaning && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-center animate-fade-in" data-testid="warning-bad-format">
+          <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+            This text may have formatting issues from PDF copy-paste. Lines could be misattributed.
+          </p>
+          <button
+            onClick={cleanupScript}
+            className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+            data-testid="button-fix-formatting"
+          >
+            Fix with AI
+          </button>
+          <span className="text-amber-600/60 dark:text-amber-400/60 mx-2">or</span>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+            data-testid="button-upload-instead"
+          >
+            Upload PDF instead
+          </button>
+        </div>
+      )}
+
       {/* Character preview with clear option */}
-      {script && previewData.roles > 0 && (
+      {script && previewData.roles > 0 && !looksLikeBadPdfCopy && (
         <p className="text-xs text-muted-foreground text-center mt-2 mb-4">
           {previewData.roles} roles
           {previewData.scenes > 0 && <span> · {previewData.scenes} scenes</span>}
@@ -573,6 +616,14 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             Clear
           </button>
         </p>
+      )}
+      
+      {/* Cleaning in progress indicator */}
+      {isCleaning && (
+        <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground animate-fade-in">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span className="text-sm">Fixing formatting with AI...</span>
+        </div>
       )}
       
       {script && previewData.roles === 0 && script.trim().length > 50 && (

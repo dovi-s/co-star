@@ -515,8 +515,8 @@ Output the scene with dialogue AND action lines interspersed. No scene titles.`;
         return res.status(400).json({ error: "Script text is required" });
       }
 
-      if (script.length > 50000) {
-        return res.status(400).json({ error: "Script too long. Maximum 50,000 characters." });
+      if (script.length > 150000) {
+        return res.status(400).json({ error: "Script too long for AI cleanup. Maximum 150,000 characters." });
       }
 
       if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
