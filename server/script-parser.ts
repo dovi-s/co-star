@@ -36,22 +36,50 @@ function levenshteinDistance(a: string, b: string): number {
 
 // Check if two names are likely OCR variants of each other
 function areOCRVariants(name1: string, name2: string): boolean {
-  // Must be similar length (within 2 chars)
-  if (Math.abs(name1.length - name2.length) > 2) return false;
+  const upper1 = name1.toUpperCase();
+  const upper2 = name2.toUpperCase();
   
   // Very short names need exact match
   if (name1.length <= 2 || name2.length <= 2) return false;
   
-  // Calculate edit distance
-  const distance = levenshteinDistance(name1.toUpperCase(), name2.toUpperCase());
-  
-  // For names 3-4 chars: max 1 difference
-  // For names 5-7 chars: max 2 differences  
-  // For names 8+ chars: max 3 differences
+  // Method 1: Edit distance (for similar-length names)
+  const distance = levenshteinDistance(upper1, upper2);
   const minLen = Math.min(name1.length, name2.length);
-  const maxDistance = minLen <= 4 ? 1 : minLen <= 7 ? 2 : 3;
+  const maxLen = Math.max(name1.length, name2.length);
   
-  return distance > 0 && distance <= maxDistance;
+  // For similar-length names, use edit distance
+  if (Math.abs(name1.length - name2.length) <= 2) {
+    const maxDistance = minLen <= 4 ? 1 : minLen <= 7 ? 2 : 3;
+    if (distance > 0 && distance <= maxDistance) {
+      return true;
+    }
+  }
+  
+  // Method 2: Letter overlap (for badly mangled OCR like GROR/GEORGE)
+  // Check if shorter name's letters are mostly contained in longer name
+  const shorter = upper1.length <= upper2.length ? upper1 : upper2;
+  const longer = upper1.length > upper2.length ? upper1 : upper2;
+  
+  // Count how many letters from shorter are in longer
+  const longerLetters = longer.split('');
+  let matches = 0;
+  for (const char of shorter) {
+    const idx = longerLetters.indexOf(char);
+    if (idx !== -1) {
+      matches++;
+      longerLetters.splice(idx, 1); // Remove matched letter
+    }
+  }
+  
+  // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
+  const matchRatio = matches / shorter.length;
+  const firstLetterMatches = upper1[0] === upper2[0];
+  
+  if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 3) {
+    return true;
+  }
+  
+  return false;
 }
 
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
