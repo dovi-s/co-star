@@ -1548,6 +1548,11 @@ function preprocessScript(rawText: string): string {
   // e.g., "STOP KISS by Diana Son SCENE ONE" -> "...Son\nSCENE ONE"
   text = text.replace(/\s+(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))\b/gi, '\n$1');
   
+  // Split SCENE headings that have trailing content (scene description merged on same line)
+  // e.g., "SCENE ONE Callie's apartment. She..." -> "SCENE ONE\nCallie's apartment. She..."
+  // Match scene heading followed by any content that starts with uppercase letter (description)
+  text = text.replace(/^(SCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY(?:-\w+)?|\d+))\s+([A-Z])/gim, '$1\n$2');
+  
   return text;
 }
 

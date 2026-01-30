@@ -1,0 +1,38 @@
+217db146043b4ca4.js:2 Unrecognized feature: 'ambient-light-sensor'.
+
+217db146043b4ca4.js:2 Unrecognized feature: 'battery'.
+217db146043b4ca4.js:2 Unrecognized feature: 'execution-while-not-rendered'.
+217db146043b4ca4.js:2 Unrecognized feature: 'execution-while-out-of-viewport'.
+217db146043b4ca4.js:2 Unrecognized feature: 'layout-animations'.
+217db146043b4ca4.js:2 Unrecognized feature: 'legacy-image-formats'.
+217db146043b4ca4.js:2 Unrecognized feature: 'navigation-override'.
+217db146043b4ca4.js:2 Unrecognized feature: 'oversized-images'.
+217db146043b4ca4.js:2 Unrecognized feature: 'publickey-credentials'.
+217db146043b4ca4.js:2 Unrecognized feature: 'speaker-selection'.
+217db146043b4ca4.js:2 Unrecognized feature: 'unoptimized-images'.
+217db146043b4ca4.js:2 Unrecognized feature: 'unsized-media'.
+217db146043b4ca4.js:2 Unrecognized feature: 'pointer-lock'.
+217db146043b4ca4.js:2 Allow attribute will take precedence over 'allowfullscreen'.
+217db146043b4ca4.js:2 Allow attribute will take precedence over 'allowpaymentrequest'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Error while parsing the 'sandbox' attribute: 'allow-downloads-without-user-activation' is an invalid sandbox flag.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'ambient-light-sensor'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'battery'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'execution-while-not-rendered'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'execution-while-out-of-viewport'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'layout-animations'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'legacy-image-formats'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'navigation-override'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'oversized-images'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'publickey-credentials'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'speaker-selection'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'unoptimized-images'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Unrecognized feature: 'unsized-media'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Allow attribute will take precedence over 'allowfullscreen'.
+workspace_iframe.htm…2F&id=%3Ar2po%3A:32 Allow attribute will take precedence over 'allowpaymentrequest'.
+﻿
+
+Press ctrl i to turn on code suggestions. Press ctrl x to disable code suggestions.
+ctrl
+i
+ to turn on code suggestions. Don't show again
+
