@@ -1188,10 +1188,12 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     /[!?.]\s+((?:newspapers?|magazines?|books?|boxes?|papers?|clothes?|socks?|shoes?|bags?|bottles?|cups?|plates?|keys?|coins?|letters?|envelopes?|photos?|pictures?|documents?),\s*(?:several|a\s+few|some|many|various|a\s+couple|a\s+bunch|a\s+pile|a\s+stack|a\s+box|and))/i,
     // Lowercase word starting after punctuation indicates narrative/action (not dialogue)
     // e.g., "Come on up! newspapers, several..." - lowercase after ! is unlikely in dialogue
-    /[!?.]\s+([a-z]{4,}[,\s])/,
+    // Note: Also matches when there's NO space after punctuation (PDF merge issue)
+    /[!?.]\s*([a-z]{4,}[,\s])/,
     // Character name repeating + action verb (stage direction after dialogue)
     // e.g., "Come on up! Callie buzzes her in" - Callie is speaking, then "Callie buzzes" is action
-    /[!?.]\s+([A-Z][a-z]+\s+(?:buzzes?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|turns?|walks?|runs?|sits?|stands?|looks?\s+at|checks?|dials?|hangs?\s+up|answers?|reads?|writes?|types?|clicks?|taps?|presses?|holds?|drops?|throws?|catches?|lifts?|lowers?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|finishes?|ends?))/i,
+    // Note: Also matches when there's NO space after punctuation (PDF merge issue)
+    /[!?.]\s*([A-Z][a-z]+\s+(?:buzzes?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|turns?|walks?|runs?|sits?|stands?|looks?\s+at|checks?|dials?|hangs?\s+up|answers?|reads?|writes?|types?|clicks?|taps?|presses?|holds?|drops?|throws?|catches?|lifts?|lowers?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|finishes?|ends?))/i,
   ];
   
   let earliestMatch = text.length;
@@ -1485,6 +1487,11 @@ function preprocessScript(rawText: string): string {
   // e.g., "sitSARA." -> "sit\nSARA." or "youCALLIE." -> "you\nCALLIE."
   // Pattern: lowercase letters immediately followed by ALL CAPS name + period + space + dialogue
   text = text.replace(/([a-z])([A-Z]{2,})\.\s+/g, '$1\n$2. ');
+  
+  // Split when dialogue ends with punctuation and action begins with character name (no space)
+  // e.g., "up!Callie buzzes her in" -> "up!\nCallie buzzes her in"
+  // This handles PDF merge issues where spaces are lost between dialogue and stage direction
+  text = text.replace(/([!?.])([A-Z][a-z]+\s+(?:buzzes?|picks?|takes?|opens?|closes?|turns?|walks?|runs?|sits?|stands?|looks?|moves?|checks?|grabs?|reaches?|holds?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|puts?|sets?|places?|answers?|reads?|writes?|dials?|hangs?))/g, '$1\n$2');
   
   // Handle title-based stage play names merged with dialogue
   // e.g., "showsMRS. WINSLEY." -> "shows\nMRS. WINSLEY."
