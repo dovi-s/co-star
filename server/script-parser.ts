@@ -118,8 +118,12 @@ function areOCRVariants(name1: string, name2: string): boolean {
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
 const PARENTHETICAL_REGEX = /\(([^)]+)\)/g;
 
-// Scene headings - now includes INSERT shots
-const SCENE_HEADING_REGEX = /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.|INSERT\s*[-–—]|SCENE\s*\d|ACT\s*[IVX\d]|FADE IN:|FADE OUT:|THE SCREEN)/i;
+// Written-out numbers for scene headings (up to 99)
+const WRITTEN_NUMBERS = 'ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY|THIRTY|FORTY|FIFTY|SIXTY|SEVENTY|EIGHTY|NINETY';
+const WRITTEN_COMPOUND = `(${WRITTEN_NUMBERS})([-\\s]?(${WRITTEN_NUMBERS}))?`;
+
+// Scene headings - now includes INSERT shots and written-out scene numbers (up to NINETY-NINE)
+const SCENE_HEADING_REGEX = new RegExp(`^(INT\\.|EXT\\.|INT\\/EXT\\.|I\\/E\\.|INSERT\\s*[-–—]|SCENE\\s*(\\d+|${WRITTEN_COMPOUND})|ACT\\s*[IVX\\d]|FADE IN:|FADE OUT:|THE SCREEN)`, 'i');
 
 // Common screenplay transitions that should be ignored
 const TRANSITION_REGEX = /^(FADE TO:|DISSOLVE TO:|CUT TO:|SMASH CUT TO:|MATCH CUT TO:|JUMP CUT TO:|FADE OUT\.|FADE IN\.|THE END|CONTINUED|MORE|\d+\.?\s*$)$/i;
@@ -1699,8 +1703,16 @@ function extractCastNames(rawText: string): string[] {
   const castEnd = endMatch ? castStart + endMatch.index! : castStart + 2000; // Limit search area
   const castSection = rawText.substring(castStart, Math.min(castEnd, castStart + 2000));
   
-  // Parse each line in CAST section
-  const lines = castSection.split('\n');
+  // Parse cast section - handle merged entries on same line
+  // OCR often loses line breaks: "CALLIE-late 20s.SARA-mid 20s." all on one line
+  
+  // First, split merged entries by looking for NAME-age patterns
+  // Pattern: period followed by uppercase name with dash and age descriptor
+  let normalizedCast = castSection;
+  // Add newline before each character entry (NAME-age or NAME - age pattern)
+  normalizedCast = normalizedCast.replace(/\.([A-Z][A-Z\s\.]+?)\s*[-–—]/g, '.\n$1-');
+  
+  const lines = normalizedCast.split('\n');
   
   for (const line of lines) {
     const trimmed = line.trim();
@@ -1729,6 +1741,7 @@ function extractCastNames(rawText: string): string[] {
     }
   }
   
+  console.log(`[CAST] Total canonical names found: ${canonicalNames.length}`);
   return canonicalNames;
 }
 
