@@ -1667,7 +1667,31 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Lines mentioning character name in ALL CAPS + action verb mid-line are action
     // e.g., "JOHN swears under his breath and pulls over"
-    if (/[A-Z]{2,}\s+(swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|turns?|enters?|exits?|stands?|sits?)\b/i.test(trimmed)) {
+    if (/[A-Z]{2,}\s+(swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|looks?\s+at|turns?|enters?|exits?|stands?|sits?)\b/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines starting with character name + possessive ('s) are scene description
+    // e.g., "Callie's apartment.", "John's car pulls up."
+    if (/^[A-Z][a-z]+('s|'s)\s+\w+/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines starting with proper noun (capitalized word) + action verb are stage direction
+    // e.g., "Callie puts on a CD.", "George enters the room."
+    if (/^[A-Z][a-z]+\s+(puts?|picks?|takes?|opens?|closes?|enters?|exits?|walks?|runs?|sits?|stands?|looks?|turns?|moves?|crosses?|grabs?|reaches?|holds?|checks?|locks?|unlocks?|buzzes?|rings?|answers?|dials?|hangs?|sets?|places?|drops?|throws?|catches?|lifts?|lowers?|pours?|drinks?|eats?|reads?|writes?|types?|clicks?|taps?|presses?|pulls?|pushes?|lip-syncs?|ceremoniously|slowly|quickly|carefully|quietly|suddenly|nervously)\b/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines starting with articles describing the scene
+    // e.g., "The phone rings.", "A door slams."
+    if (/^(The|A|An)\s+\w+\s+(rings?|slams?|opens?|closes?|buzzes?|beeps?|chimes?|falls?|breaks?|crashes?)\b/i.test(trimmed)) {
+      return true;
+    }
+    
+    // Lines that describe setting/location (common scene description patterns)
+    // e.g., "Something '70s and great to dance to..."
+    if (/^Something\s+/i.test(trimmed) || /^Somewhere\s+/i.test(trimmed)) {
       return true;
     }
     
