@@ -539,6 +539,7 @@ RULES:
 6. Preserve the order of dialogue as it appears
 7. If the format is unclear, make your best intelligent guess based on context
 8. Keep emotional parentheticals like (whispering), (angry), (laughing) as [stage directions]
+9. Mark scene changes with: --- SCENE: [Scene Name] ---
 
 SUPPORTED INPUT FORMATS:
 - Standard screenplay: CHARACTER NAME then dialogue below
@@ -551,26 +552,91 @@ SUPPORTED INPUT FORMATS:
 OUTPUT ONLY the formatted dialogue lines. No explanations or commentary.
 
 Example output:
+--- SCENE: Scene One ---
 JOHN: [excited] Did you hear the news?
 MARY: [surprised] What news?
 JOHN: We got the contract.`;
 
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: script }
-        ],
-        max_tokens: 4000,
-        temperature: 0.3,
-      });
+      // For long scripts, process in chunks to avoid token limits
+      const CHUNK_SIZE = 20000; // ~5000 tokens input per chunk
+      const chunks: string[] = [];
+      
+      // Split by scene markers if possible, otherwise by size
+      const scenePattern = /(?=\bSCENE\s+(?:ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|\d+)\b)/gi;
+      const scenes = script.split(scenePattern).filter(s => s.trim());
+      
+      if (scenes.length > 1) {
+        // Script has scene markers, process scene by scene
+        let currentChunk = "";
+        for (const scene of scenes) {
+          if (currentChunk.length + scene.length > CHUNK_SIZE && currentChunk.length > 0) {
+            chunks.push(currentChunk);
+            currentChunk = scene;
+          } else {
+            currentChunk += scene;
+          }
+        }
+        if (currentChunk.trim()) {
+          chunks.push(currentChunk);
+        }
+      } else if (script.length > CHUNK_SIZE) {
+        // No scene markers, split by size at paragraph boundaries
+        let remaining = script;
+        while (remaining.length > 0) {
+          if (remaining.length <= CHUNK_SIZE) {
+            chunks.push(remaining);
+            break;
+          }
+          // Find a good break point (double newline or end of sentence)
+          let breakPoint = remaining.lastIndexOf('\n\n', CHUNK_SIZE);
+          if (breakPoint < CHUNK_SIZE / 2) {
+            breakPoint = remaining.lastIndexOf('\n', CHUNK_SIZE);
+          }
+          if (breakPoint < CHUNK_SIZE / 2) {
+            breakPoint = CHUNK_SIZE;
+          }
+          chunks.push(remaining.substring(0, breakPoint));
+          remaining = remaining.substring(breakPoint).trim();
+        }
+      } else {
+        chunks.push(script);
+      }
 
-      const cleanedScript = response.choices[0]?.message?.content?.trim() || "";
+      console.log(`[Cleanup Script] Processing ${chunks.length} chunk(s) for ${script.length} character script`);
+
+      const cleanedParts: string[] = [];
+      
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const chunkPrompt = chunks.length > 1 
+          ? `This is part ${i + 1} of ${chunks.length} of a script. Continue extracting dialogue:\n\n${chunk}`
+          : chunk;
+          
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: chunkPrompt }
+          ],
+          max_tokens: 16000,
+          temperature: 0.2,
+        });
+
+        const partResult = response.choices[0]?.message?.content?.trim() || "";
+        if (partResult) {
+          cleanedParts.push(partResult);
+        }
+        
+        console.log(`[Cleanup Script] Processed chunk ${i + 1}/${chunks.length}, output: ${partResult.length} chars`);
+      }
+
+      const cleanedScript = cleanedParts.join('\n\n');
       
       if (!cleanedScript) {
         return res.status(500).json({ error: "Failed to clean script" });
       }
 
+      console.log(`[Cleanup Script] Final output: ${cleanedScript.length} characters`);
       res.json({ script: cleanedScript });
     } catch (error: any) {
       console.error("Script cleanup error:", error.message || error);
