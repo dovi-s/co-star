@@ -1652,8 +1652,11 @@ export function parseScript(rawText: string): ParsedScript {
     });
   }
 
-  // Consolidate and deduplicate roles
-  const consolidatedRoles = consolidateRoles(Array.from(roles.values()), scenes);
+  // Extract canonical names from CAST section if present
+  const canonicalNames = extractCastNames(rawText);
+  
+  // Consolidate and deduplicate roles, using canonical names if available
+  const consolidatedRoles = consolidateRoles(Array.from(roles.values()), scenes, canonicalNames);
 
   return {
     roles: consolidatedRoles,
@@ -1661,10 +1664,50 @@ export function parseScript(rawText: string): ParsedScript {
   };
 }
 
+// Extract canonical character names from CAST section
+function extractCastNames(rawText: string): string[] {
+  const canonicalNames: string[] = [];
+  
+  // Look for CAST section - various formats
+  const castMatch = rawText.match(/(?:^|\n)\s*(CAST(?:\s+OF\s+CHARACTERS)?|CHARACTERS|DRAMATIS\s+PERSONAE)\s*[\n:]/im);
+  
+  if (!castMatch) {
+    return canonicalNames;
+  }
+  
+  const castStart = castMatch.index! + castMatch[0].length;
+  const afterCast = rawText.substring(castStart);
+  const endMatch = afterCast.match(/(?:^|\n)\s*(?:ACT\s+[IVX\d]|SCENE\s*\d|INT\.|EXT\.|[A-Z]{2,}:\s+[a-z])/im);
+  
+  const castEnd = endMatch ? castStart + endMatch.index! : castStart + 2000;
+  const castSection = rawText.substring(castStart, Math.min(castEnd, castStart + 2000));
+  
+  const lines = castSection.split('\n');
+  
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    
+    const nameMatch = trimmed.match(/^([A-Z][A-Z\s\.]+?)(?:\s*[-–—]\s*|\s*\(|\s+(?:late|mid|early|[0-9]))/i);
+    
+    if (nameMatch) {
+      let name = nameMatch[1].trim();
+      if (name.endsWith('.') && !name.match(/\b(?:MRS|MR|DR|MS|PROF|REV|DET|SGT|LT|CAPT|COL|MAJ|GEN|SEN|REP|GOV)\.$/i)) {
+        name = name.slice(0, -1).trim();
+      }
+      if (name.length >= 2 && name.length <= 30) {
+        canonicalNames.push(name.toUpperCase());
+      }
+    }
+  }
+  
+  return canonicalNames;
+}
+
 // Consolidate roles that are variations of the same character
 // e.g., "DET COLE", "DETECTIVE COLE", "COLE" -> "DETECTIVE COLE"
 // Also fixes OCR errors: "HARA" -> "SARA", "GRORGE" -> "GEORGE"
-function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
+function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string[] = []): Role[] {
   // Title abbreviation map
   const titleExpansions: Record<string, string> = {
     "DET": "DETECTIVE",
@@ -1688,6 +1731,40 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
   const nameMap = new Map<string, string>(); // normalized -> canonical
   const rolesByCanonical = new Map<string, Role>(); // canonical -> merged role
   
+  // Helper: find matching canonical name from CAST section
+  function findCanonicalMatch(name: string): string | null {
+    const upperName = name.toUpperCase();
+    
+    if (canonicalNames.includes(upperName)) {
+      return upperName;
+    }
+    
+    for (const canonical of canonicalNames) {
+      const nameWords = upperName.split(/\s+/);
+      const canonWords = canonical.split(/\s+/);
+      const nameLast = nameWords[nameWords.length - 1];
+      const canonLast = canonWords[canonWords.length - 1];
+      
+      if (nameWords.length > 1 && canonWords.length > 1 && nameLast === canonLast) {
+        return canonical;
+      }
+      
+      if (nameWords.length === 1 && canonWords.length === 1) {
+        if (areOCRVariants(upperName, canonical)) {
+          return canonical;
+        }
+      }
+      
+      if (nameWords.length === 1 && canonWords.length >= 1) {
+        if (areOCRVariants(upperName, canonLast)) {
+          return canonical;
+        }
+      }
+    }
+    
+    return null;
+  }
+  
   // Sort roles by line count descending - names with more lines are more likely correct
   const sortedRoles = [...roles].sort((a, b) => b.lineCount - a.lineCount);
   
@@ -1702,6 +1779,24 @@ function consolidateRoles(roles: Role[], scenes: Scene[]): Role[] {
     
     // Get the last word (likely the surname)
     const lastName = words[words.length - 1];
+    
+    // First, check if this name matches a canonical name from CAST section
+    const castCanonical = findCanonicalMatch(name);
+    if (castCanonical && castCanonical !== name.toUpperCase()) {
+      // Check if we already have this canonical role
+      if (rolesByCanonical.has(castCanonical)) {
+        const existingRole = rolesByCanonical.get(castCanonical)!;
+        existingRole.lineCount += role.lineCount;
+        nameMap.set(name, castCanonical);
+      } else {
+        // Create new role with canonical name
+        const correctedRole = { ...role, name: castCanonical };
+        rolesByCanonical.set(castCanonical, correctedRole);
+        nameMap.set(name, castCanonical);
+        nameMap.set(castCanonical, castCanonical);
+      }
+      continue;
+    }
     
     // Check if this name is a substring of or contains another role
     let canonical = name;
