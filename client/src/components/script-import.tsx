@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { Upload, Clipboard, X, Loader2, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { parseScript } from "@/lib/script-parser";
 import {
   Dialog,
   DialogContent,
@@ -377,45 +378,29 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning && !isSubmitting;
   
-  const detectCharacters = (text: string): string[] => {
-    const lines = text.split('\n');
-    const characters = new Set<string>();
+  // Use the full parser for accurate preview (with OCR correction and CAST detection)
+  const previewData = useMemo(() => {
+    if (!script || script.trim().length < 50) {
+      return { roles: 0, scenes: 0, time: null };
+    }
     
-    const patterns = [
-      /^([A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*.+$/,
-      /^((?:DR|MR|MRS|MS|MISS|PROF|CAPTAIN|DETECTIVE|OFFICER|AGENT|CHEF|WAITER)\.?\s+[A-Za-z][A-Za-z\-'\.]+)(?:\s*\([^)]*\))?\s*[:：]/i,
-    ];
-    
-    lines.forEach(line => {
-      const trimmed = line.trim();
-      for (const pattern of patterns) {
-        const match = trimmed.match(pattern);
-        if (match && match[1]) {
-          let name = match[1].trim()
-            .replace(/\s*\([^)]*\)\s*$/, "")
-            .replace(/^\d+[\.\)\-\s]+/, "")
-            .toUpperCase();
-          if (name.length >= 1 && name.length <= 35) {
-            characters.add(name);
-            break;
-          }
-        }
-      }
-    });
-    return Array.from(characters);
-  };
+    try {
+      const parsed = parseScript(script);
+      const roleCount = parsed.roles.length;
+      const sceneCount = parsed.scenes.length;
+      
+      // Estimate reading time
+      const words = script.trim().split(/\s+/).filter(w => w.length > 0).length;
+      const minutes = Math.ceil(words / 130);
+      const time = minutes >= 1 ? `${minutes} min` : null;
+      
+      return { roles: roleCount, scenes: sceneCount, time };
+    } catch {
+      return { roles: 0, scenes: 0, time: null };
+    }
+  }, [script]);
   
-  const characters = script ? detectCharacters(script) : [];
-  
-  const estimateSceneTime = (text: string): string | null => {
-    const words = text.trim().split(/\s+/).filter(w => w.length > 0).length;
-    if (words < 20) return null;
-    const minutes = Math.ceil(words / 130);
-    if (minutes < 1) return null;
-    return `${minutes} min`;
-  };
-  
-  const sceneTime = script ? estimateSceneTime(script) : null;
+  const characters = previewData.roles > 0 ? Array(previewData.roles).fill(null) : [];
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
@@ -567,10 +552,11 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       />
 
       {/* Character preview with clear option */}
-      {script && characters.length > 0 && (
+      {script && previewData.roles > 0 && (
         <p className="text-xs text-muted-foreground text-center mt-2 mb-4">
-          {characters.length} roles detected
-          {sceneTime && <span> · {sceneTime} scene</span>}
+          {previewData.roles} roles
+          {previewData.scenes > 0 && <span> · {previewData.scenes} scenes</span>}
+          {previewData.time && <span> · {previewData.time}</span>}
           {" · "}
           <button
             type="button"
@@ -583,7 +569,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         </p>
       )}
       
-      {script && characters.length === 0 && script.trim().length > 50 && (
+      {script && previewData.roles === 0 && script.trim().length > 50 && (
         <p className="text-center text-sm text-muted-foreground/70 animate-fade-in" data-testid="text-cleanup-hint">
           {isCleaning ? (
             <span className="inline-flex items-center gap-1.5" data-testid="text-cleanup-loading">
