@@ -1628,11 +1628,18 @@ function extractCastNames(rawText: string): string[] {
   
   // Look for CAST section - various formats
   // "CAST", "CAST:", "CAST OF CHARACTERS", "CHARACTERS", "DRAMATIS PERSONAE"
+  // Also match "CAST" followed immediately by character name on next line
   const castMatch = rawText.match(/(?:^|\n)\s*(CAST(?:\s+OF\s+CHARACTERS)?|CHARACTERS|DRAMATIS\s+PERSONAE)\s*[\n:]/im);
   
+  console.log(`[CAST DEBUG] Searching for CAST section...`);
+  console.log(`[CAST DEBUG] First 500 chars of script: ${rawText.substring(0, 500).replace(/\n/g, '\\n')}`);
+  
   if (!castMatch) {
+    console.log(`[CAST DEBUG] No CAST section found`);
     return canonicalNames;
   }
+  
+  console.log(`[CAST DEBUG] Found CAST match: "${castMatch[0].replace(/\n/g, '\\n')}"`)
   
   // Find where CAST section starts
   const castStart = castMatch.index! + castMatch[0].length;
