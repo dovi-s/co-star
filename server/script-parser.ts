@@ -1493,6 +1493,11 @@ function preprocessScript(rawText: string): string {
   // This handles PDF merge issues where spaces are lost between dialogue and stage direction
   text = text.replace(/([!?.])([A-Z][a-z]+\s+(?:buzzes?|picks?|takes?|opens?|closes?|turns?|walks?|runs?|sits?|stands?|looks?|moves?|checks?|grabs?|reaches?|holds?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|puts?|sets?|places?|answers?|reads?|writes?|dials?|hangs?))/g, '$1\n$2');
   
+  // Split when lowercase word runs directly into capitalized character name + action verb (no space, no punctuation)
+  // e.g., "house atCallie checks her watch" -> "house at\nCallie checks her watch"
+  // This handles severe PDF merge issues where spaces AND punctuation are lost
+  text = text.replace(/([a-z]{2,})([A-Z][a-z]+\s+(?:checks?|looks?|turns?|walks?|runs?|sits?|stands?|moves?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|puts?|sets?|places?|grabs?|reaches?|holds?|opens?|closes?|picks?|takes?|answers?|reads?|writes?|dials?|hangs?|buzzes?|hides?|appears?|crosses?|watches?|waits?|nods?|shakes?|smiles?|laughs?|sighs?|gasps?))/g, '$1\n$2');
+  
   // Handle title-based stage play names merged with dialogue
   // e.g., "showsMRS. WINSLEY." -> "shows\nMRS. WINSLEY."
   text = text.replace(/([a-z])((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+/g, '$1\n$2. ');
