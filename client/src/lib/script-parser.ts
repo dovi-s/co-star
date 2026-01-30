@@ -756,9 +756,11 @@ function cleanDialogueText(text: string): string {
   
   // Fix merged character names at start: "HUDSONGood evening" -> "Good evening"
   // Also handles "OLIVERYou refused" -> "You refused" (no space between name and dialogue)
-  // The pattern matches: ALL_CAPS_NAME possibly followed by extension, then optionally transition to Title case
-  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?(?=[A-Z][a-z])/, '');
-  cleaned = cleaned.replace(/^[A-Z]{2,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s+/, '');
+  // The pattern matches: ALL_CAPS_NAME (3+ chars to avoid removing abbreviations like PS, OK, LA)
+  // possibly followed by extension, then optionally transition to Title case
+  cleaned = cleaned.replace(/^[A-Z]{3,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?(?=[A-Z][a-z])/, '');
+  // Only strip if it looks like a character name (3+ chars) followed by dialogue
+  cleaned = cleaned.replace(/^[A-Z]{3,}(?:\s+[A-Z]{2,})?(?:\s*\([^)]*\))?\s+(?=[A-Z][a-z])/, '');
   
   // Extract embedded stage directions mid-dialogue: "(Beverly starts to cry.)" 
   // These are descriptive and should be removed from spoken dialogue
@@ -1025,7 +1027,8 @@ function isValidCharacterName(name: string): boolean {
   }
   
   // Reject if contains apostrophe in weird places (OCR artifact: "T'WENTY")
-  if (/[A-Z]'[A-Z]{2,}/i.test(normalized)) return false;
+  // BUT allow possessive 'S: "GEORGE'S VOICE", "SARA'S MOM"
+  if (/[A-Z]'[A-Z]{2,}/i.test(normalized) && !/[A-Z]'S\b/i.test(normalized)) return false;
   
   // Reject "SCENE" anything
   if (/^SCENE\b/i.test(normalized)) return false;
@@ -1074,16 +1077,21 @@ function isValidCharacterName(name: string): boolean {
   if (TRANSITION_REGEX.test(normalized)) return false;
   
   // Must not match action patterns (e.g., "JORDAN REALIZES")
-  for (const pattern of ACTION_PATTERNS) {
-    if (pattern.test(normalized)) return false;
+  // BUT allow possessive character names like "GEORGE'S VOICE ON MACHINE"
+  const isPossessiveDescriptor = /^[A-Z]+['']S\s+/i.test(normalized);
+  if (!isPossessiveDescriptor) {
+    for (const pattern of ACTION_PATTERNS) {
+      if (pattern.test(normalized)) return false;
+    }
   }
   
   // Should be mostly letters (allow spaces, hyphens, apostrophes, periods for titles)
   if (!/^[A-Z][A-Z0-9\s\-'\.#]+$/.test(normalized)) return false;
   
-  // Character names typically are 1-2 words (maybe 3 with title like "DR. JOHN SMITH")
+  // Character names typically are 1-3 words, but allow up to 5 for descriptive names
+  // e.g., "GEORGE'S VOICE ON MACHINE", "MAN WITH THE HAT", "WOMAN IN RED DRESS"
   const wordCount = normalized.split(/\s+/).length;
-  if (wordCount > 3) return false;
+  if (wordCount > 5) return false;
   
   return true;
 }
@@ -1107,9 +1115,9 @@ function looksLikeCharacterName(line: string): boolean {
   const capsRatio = upperLetters.length / letters.length;
   if (capsRatio < 0.7) return false;
   
-  // Should be short
+  // Should be short (allow up to 5 for descriptive names)
   const wordCount = coreName.split(/\s+/).length;
-  if (wordCount > 3) return false;
+  if (wordCount > 5) return false;
   
   return true;
 }
@@ -1180,6 +1188,8 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     /^(\d+[\.\)]\s*[A-Za-z][A-Za-z0-9\s\-'\.]+?)(?:\s*\([^)]*\))?\s*[:：]\s*(.+)$/,
     // With extension: NAME (V.O.): dialogue
     /^([A-Z][A-Z0-9\s\-'\.]+\s*\([^)]+\))\s*[:：]\s*(.+)$/,
+    // Possessive with descriptor: GEORGE'S VOICE ON MACHINE: dialogue
+    /^([A-Z]+['']S\s+[A-Z\s]+)\s*[:：]\s*(.+)$/,
     // STAGE PLAY FORMAT: NAME. dialogue (character name ends with period)
     // Match: GEORGE. Hey Cal... or CALLIE. Yes!
     /^([A-Z][A-Z]+)\.\s+([A-Z][a-z].+)$/,
@@ -1264,10 +1274,7 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
     // e.g., "...junk on her sofa:newspapers, several pairs..."
     // Note: Also handles colon with space or without
     /:\s*((?:newspapers?|magazines?|books?|boxes?|papers?|clothes?|socks?|shoes?|bags?|bottles?|cups?|plates?|keys?|coins?|letters?|envelopes?|photos?|pictures?|documents?|mail|bra|videotapes?|tapes?),\s*(?:several|a\s+few|some|many|various|a\s+couple|a\s+bunch|a\s+pile|a\s+stack|a\s+box|and\s+a|a\s+))/i,
-    // Lowercase word starting after punctuation indicates narrative/action (not dialogue)
-    // e.g., "Come on up! newspapers, several..." - lowercase after ! is unlikely in dialogue
-    // Note: Also matches when there's NO space after punctuation (PDF merge issue)
-    /[!?.]\s*([a-z]{4,}[,\s])/,
+    // REMOVED: /[!?.]\s*([a-z]{4,}[,\s])/ - Too aggressive, cuts off normal dialogue like "Hi George... yeah"
     // Character name repeating + action verb (stage direction after dialogue)
     // e.g., "Come on up! Callie buzzes her in" - Callie is speaking, then "Callie buzzes" is action
     // Note: Also matches when there's NO space after punctuation (PDF merge issue)
@@ -1542,7 +1549,8 @@ function preprocessScript(rawText: string): string {
   
   // Fix character name appearing after punctuation and space, followed by period then dialogue
   // e.g., "you will be, too - BEVERLY. This" -> split properly
-  text = text.replace(/([,;:!?])\s*-?\s*([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z])/g, '$1\n$2\n$3');
+  // IMPORTANT: Use [ ] instead of \s to avoid matching across line breaks
+  text = text.replace(/([,;:!?])[ ]*-?[ ]*([A-Z]{2,}(?:[ ]+[A-Z]{2,})?)\.[ ]+([A-Z])/g, '$1\n$2\n$3');
   
   // Split on character names that appear mid-line (common in PDF extraction)
   // e.g., "...the best. GENE HACKMAN Trained professionals" -> "...the best.\nGENE HACKMAN\nTrained professionals"
@@ -1554,9 +1562,11 @@ function preprocessScript(rawText: string): string {
   text = text.replace(/([a-z][.!?])\s*([A-Z]{2,}(?:\s+(?:[A-Z]{2,}|Mc[A-Z][a-z]+))+)\s+(enters|exits|walks|runs|looks|turns|appears|leaves|crosses|stands|sits|moves|comes|goes)/gi, 
     '$1\n$2 $3');
   
-  // Split when we see "He's/She's" after a sentence (indicates action line)
-  // e.g., "...on the phone. He's seven." -> "...on the phone.\nHe's seven."
-  text = text.replace(/([.!?])\s+(He's|She's|It's|They're)\s+/gi, '$1\n$2 ');
+  // Split when we see "He's/She's" after a sentence ONLY if followed by action-like patterns
+  // e.g., "...on the phone. He's seven years old." -> split (describes character)
+  // BUT NOT: "...live in LA now. It's perfect." (normal dialogue continuation)
+  // Only split when followed by age, physical description, or action verbs
+  text = text.replace(/([.!?])\s+(He's|She's|It's|They're)\s+(about\s+)?(a\s+)?(seven|eight|nine|ten|eleven|twelve|\d+|mid-|late-|early-|[a-z]+ing\s+(?:the|his|her|a)|sitting|standing|lying|holding|wearing|carrying|looking|watching|staring|walking|running|moving|coming|going)\b/gi, '$1\n$2 $3$4$5');
   
   // Split consecutive character names (e.g., "CLAUDETTEHave...COUNSELORCLAUDETTE")
   // Look for ALLCAPS name followed by another ALLCAPS name

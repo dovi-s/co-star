@@ -224,6 +224,8 @@ KEEP these (real characters - DO NOT REMOVE):
 - Generic role labels: MAN, WOMAN, BOY, GIRL, MAN #1, WOMAN #2, etc.
 - Named characters with titles: DR. JONES, CAPTAIN MILLER, OFFICER CHEN, etc.
 - Occupation-based names: These are ALWAYS real speaking roles, even without a proper name
+- VOICEOVER and VOICE characters: [NAME]'S VOICE, VOICE ON PHONE, VOICE ON MACHINE, VOICE OVER, V.O., O.S., etc. - these ARE speaking characters
+- Offscreen/answering machine voices: GEORGE'S VOICE ON MACHINE, MOM'S VOICE, OPERATOR'S VOICE, etc. - these ARE characters with dialogue
 
 Here are the detected "characters" to review:
 ${JSON.stringify(rolesForAI, null, 2)}
