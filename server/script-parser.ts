@@ -214,9 +214,11 @@ const SKIP_LINE_PATTERNS = [
   /^\s*\d+\.\s*$/, // Just page numbers like "2."
   /^\d+\s*$/,  // Just numbers
   // Cast list patterns (actor name after character)
-  /^[A-Z][A-Z\s\.]+\.{3,}\s*[A-Z]/i, // "SARA....... Actor Name"
+  // Must be ALL CAPS name (no spaces/lowercase) followed by MANY dots (5+) and actor name
+  // This avoids matching dialogue with ellipsis like "CALLIE. Hi George...yeah"
+  /^[A-Z]{2,}\.{5,}\s*[A-Z]/i, // "SARA....... Actor Name" (5+ dots required)
   /^\.\s*[A-Z]/i, // ". Sandra Oh" (OCR fragment)
-  /^[A-Z]+\.{3,}\s*$/i, // "SARA..." alone
+  /^[A-Z]+\.{5,}\s*$/i, // "SARA....." alone (5+ dots required)
   // Photo/design credits
   /^Set design by\b/i,
   /^Photo by\b/i,
@@ -1161,13 +1163,15 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     // Possessive with descriptor: GEORGE'S VOICE ON MACHINE: dialogue
     /^([A-Z]+['']S\s+[A-Z\s]+)\s*[:：]\s*(.+)$/,
     // STAGE PLAY FORMAT: NAME. dialogue (character name ends with period)
-    // Match: GEORGE. Hey Cal... or CALLIE. Yes!
-    /^([A-Z][A-Z]+)\.\s+([A-Z][a-z].+)$/,
-    // STAGE PLAY with title: MRS. WINSLEY. dialogue
+    // Match: GEORGE. Hey Cal... or CALLIE. Yes! or SARA. I'm Sara...
+    // Allow dialogue to start with: capital letter + lowercase OR single capital like "I" + apostrophe
+    /^([A-Z][A-Z]+)\.\s+([A-Z](?:[a-z']|$).*)$/,
+    // STAGE PLAY with title: MRS. WINSLEY. dialogue or DET. COLE. Was he...
     /^((?:DR|MR|MRS|MS|DET|SGT|LT|CAPT)\.?\s+[A-Z][A-Z]+)\.\s+(.+)$/,
   ];
   
-  for (const pattern of colonPatterns) {
+  for (let i = 0; i < colonPatterns.length; i++) {
+    const pattern = colonPatterns[i];
     const match = trimmed.match(pattern);
     if (match) {
       const potentialName = match[1].trim();
@@ -1176,9 +1180,6 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
       if (potentialName.length <= 40 && dialogue.length > 0) {
         const normalizedName = normalizeCharacterName(potentialName);
         const isValid = isValidCharacterName(potentialName);
-        if (!isValid) {
-          console.log(`[DEBUG] Rejected name "${potentialName}" (normalized: "${normalizedName}") for line: ${trimmed.substring(0, 50)}`);
-        }
         if (isValid) {
           return { isCharacter: true, name: normalizedName, dialogue };
         }
@@ -1566,8 +1567,10 @@ function preprocessScript(rawText: string): string {
   
   // Split when stage play character name appears after sentence-ending punctuation
   // e.g., "...great. WINSLEY. How are you" -> "...great.\nWINSLEY. How are you"
-  // e.g., "...8:00. MRS. WINSLEY. Should we..." -> "...8:00.\nMRS. WINSLEY. Should we..."
-  text = text.replace(/([.!?])\s+([A-Z]{2,})\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  // IMPORTANT: Don't split titles like "DET. COLE." - use negative lookbehind for title abbreviations
+  // The period after a title abbreviation is NOT sentence-ending punctuation
+  text = text.replace(/(?<!(?:MR|MRS|MS|DR|DET|SGT|LT|CAPT))([.!?])\s+([A-Z]{2,})\.\s+([A-Z][a-z])/gi, '$1\n$2. $3');
+  // Handle titled character names: "...8:00. MRS. WINSLEY. Should we..." -> "...8:00.\nMRS. WINSLEY. Should we..."
   text = text.replace(/([.!?])\s+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
   
   // Split when ALL-CAPS character name appears after any lowercase text (mid-line)
@@ -1750,6 +1753,16 @@ export function parseScript(rawText: string): ParsedScript {
     // This prevents dialogue content from being misidentified as action
     // e.g., "NURSE: She is stable now." should NOT match "She is" action patterns
     if (/^[A-Z][A-Z0-9\.\s\-']+\s*:\s*.+/i.test(trimmed)) {
+      return false;
+    }
+    
+    // CRITICAL: Skip STAGE PLAY format "CHARACTER. Dialogue" (period instead of colon)
+    // e.g., "CALLIE. Hi George..." should NOT be treated as action
+    if (/^[A-Z][A-Z]+\.\s+[A-Z]/.test(trimmed)) {
+      return false;
+    }
+    // Also skip titled stage play format: "DET. COLE. Was he..."
+    if (/^(?:DR|MR|MRS|MS|DET|SGT|LT|CAPT)\.?\s+[A-Z][A-Z]+\.\s+/i.test(trimmed)) {
       return false;
     }
     
