@@ -13,6 +13,8 @@ interface TransportBarProps {
   onNext: () => void;
   onRepeat: () => void;
   cameraMode?: boolean;
+  isSpeaking?: boolean;
+  isListening?: boolean;
 }
 
 export function TransportBar({
@@ -26,6 +28,8 @@ export function TransportBar({
   onNext,
   onRepeat,
   cameraMode = false,
+  isSpeaking = false,
+  isListening = false,
 }: TransportBarProps) {
   const progress = totalLines > 0 ? ((currentLine + 1) / totalLines) * 100 : 0;
   const circumference = 2 * Math.PI * 28;
@@ -80,11 +84,28 @@ export function TransportBar({
             <ChevronLeft className="h-5 w-5" />
           </button>
 
-          <div className="relative mx-1">
+          <div className={cn(
+            "relative mx-1",
+            isPlaying && "energy-halo rounded-full"
+          )}>
             <svg 
               className="w-[68px] h-[68px] -rotate-90"
               viewBox="0 0 64 64"
             >
+              <defs>
+                <linearGradient id="progress-gradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="hsl(217 89% 51%)" />
+                  <stop offset="100%" stopColor="hsl(214 100% 68%)" />
+                </linearGradient>
+                <linearGradient id="progress-success" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="hsl(142 71% 45%)" />
+                  <stop offset="100%" stopColor="hsl(162 63% 50%)" />
+                </linearGradient>
+                <linearGradient id="progress-listening" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="hsl(142 71% 45%)" />
+                  <stop offset="100%" stopColor="hsl(162 63% 50%)" />
+                </linearGradient>
+              </defs>
               <circle
                 cx="32"
                 cy="32"
@@ -99,15 +120,12 @@ export function TransportBar({
                 cy="32"
                 r="28"
                 fill="none"
-                stroke="currentColor"
+                stroke={isComplete ? "url(#progress-success)" : isListening ? "url(#progress-listening)" : "url(#progress-gradient)"}
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeDasharray={circumference}
                 strokeDashoffset={strokeDashoffset}
-                className={cn(
-                  "transition-all duration-500 ease-out",
-                  isComplete ? "text-success" : "text-primary"
-                )}
+                className="transition-all duration-500 ease-out"
               />
             </svg>
             
@@ -122,10 +140,7 @@ export function TransportBar({
                 "transition-transform duration-100 active:scale-90"
               )}
             >
-              <div className={cn(
-                "transition-all duration-200",
-                isPlaying ? "scale-100" : "scale-100"
-              )}>
+              <div className="transition-all duration-200">
                 {isPlaying ? (
                   <Pause className="h-5 w-5" />
                 ) : (

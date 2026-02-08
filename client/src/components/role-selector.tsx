@@ -95,8 +95,8 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
                 onClick={() => handleCardClick(role.id)}
                 className={cn(
                   "w-full flex items-center gap-3 p-4 text-left cursor-pointer",
-                  "transition-all duration-150 hover-elevate press-effect",
-                  "animate-fade-in-up",
+                  "transition-all duration-200 hover-elevate press-effect",
+                  "animate-fade-in-up rounded-xl",
                   isSelected && "ring-2 ring-primary shadow-sm bg-primary/[0.03]",
                 )}
                 style={{ animationDelay: `${index * 40}ms` }}
@@ -104,7 +104,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
               >
                 <div
                   className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200",
+                    "circle-badge w-10 h-10 transition-all duration-200",
                     isSelected
                       ? "bg-primary text-primary-foreground scale-105"
                       : "bg-muted"
@@ -113,7 +113,9 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
                   {isSelected ? (
                     <Check className="h-5 w-5" />
                   ) : (
-                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-semibold text-muted-foreground">
+                      {role.name.charAt(0)}
+                    </span>
                   )}
                 </div>
 

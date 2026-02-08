@@ -1264,6 +1264,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             onNext={handleNext}
             onRepeat={handleRepeat}
             cameraMode={camera.isEnabled}
+            isSpeaking={isSpeaking}
+            isListening={listeningState === "listening"}
           />
         </div>
 

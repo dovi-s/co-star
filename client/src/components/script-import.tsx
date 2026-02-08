@@ -549,8 +549,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             >
               {isParsingFile ? (
                 <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Parsing...
+                  <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                  Parsing
                 </>
               ) : (
                 <>
@@ -620,9 +620,11 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       {/* Cleaning in progress indicator */}
       {isCleaning && (
-        <div className="flex items-center justify-center gap-2 py-2 text-muted-foreground animate-fade-in">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Fixing formatting with AI...</span>
+        <div className="flex items-center justify-center gap-3 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting with AI">
+          <div className="circle-badge w-6 h-6 energy-ring thinking" aria-hidden="true">
+            <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+          </div>
+          <span className="text-sm">Fixing formatting with AI</span>
         </div>
       )}
       
@@ -630,8 +632,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         <p className="text-center text-sm text-muted-foreground/70 animate-fade-in" data-testid="text-cleanup-hint">
           {isCleaning ? (
             <span className="inline-flex items-center gap-1.5" data-testid="text-cleanup-loading">
-              <Loader2 className="h-3 w-3 animate-spin" />
-              Formatting...
+              <div className="w-3 h-3 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
+              Formatting
             </span>
           ) : cleanupError ? (
             <span data-testid="text-cleanup-error">
@@ -707,7 +709,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       >
         {isLoading ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin mr-2" />
             Processing
           </>
         ) : canSubmit ? (
@@ -745,7 +747,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 disabled={!customPrompt.trim() || isGenerating}
                 data-testid="button-generate-from-prompt"
               >
-                {isGenerating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Go"}
+                {isGenerating ? <div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin" /> : "Go"}
               </Button>
               <button
                 onClick={() => {

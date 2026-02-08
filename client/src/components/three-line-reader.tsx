@@ -191,7 +191,7 @@ export function ThreeLineReader({
       <div
         onClick={() => onLineClick?.(line)}
         className={cn(
-          "relative py-4 px-4 rounded-lg transition-all duration-300 cursor-pointer",
+          "relative py-4 px-4 rounded-xl transition-all duration-300 cursor-pointer",
           type === "previous" && "opacity-30 scale-[0.98]",
           type === "next" && "opacity-35 scale-[0.98]",
           isCurrent && isUser && !cameraMode && "bg-foreground text-background",
@@ -201,15 +201,25 @@ export function ThreeLineReader({
         )}
         data-testid={`line-${type}`}
       >
-        <div className="flex items-start gap-3">
+        {isCurrent && !isUser && isSpeaking && !cameraMode && (
+          <div className="absolute inset-0 rounded-xl gradient-flow pointer-events-none" aria-hidden="true" />
+        )}
+        {isCurrent && isUser && isListening && !cameraMode && (
+          <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none" aria-hidden="true">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent gradient-flow-fast" />
+          </div>
+        )}
+        <div className="flex items-start gap-3 relative">
           {isCurrent && (
             <div
               className={cn(
-                "flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center",
+                "flex-shrink-0 w-8 h-8 circle-badge transition-all duration-300",
                 isUser && !cameraMode && "bg-background/20",
                 isUser && cameraMode && "bg-white/20",
                 !isUser && !cameraMode && "bg-muted/60",
-                !isUser && cameraMode && "bg-white/10"
+                !isUser && cameraMode && "bg-white/10",
+                isSpeaking && !isUser && "energy-ring speaking",
+                isListening && isUser && "energy-ring listening"
               )}
             >
               {isUser ? (
@@ -353,14 +363,15 @@ export function ThreeLineReader({
                 <div className="flex items-center gap-2">
                   {isListening ? (
                     <>
-                      <div className="flex items-center gap-0.5">
-                        <span className="w-1.5 h-3 rounded-full bg-red-400 animate-pulse" />
-                        <span className="w-1.5 h-4 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.1s' }} />
-                        <span className="w-1.5 h-2.5 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.2s' }} />
-                        <span className="w-1.5 h-3.5 rounded-full bg-red-400 animate-pulse" style={{ animationDelay: '0.15s' }} />
+                      <div className="speaking-energy speaking-energy-success">
+                        <span />
+                        <span />
+                        <span />
+                        <span />
+                        <span />
                       </div>
                       <span className="text-xs text-background/90 font-medium">
-                        Listening...
+                        Listening
                       </span>
                     </>
                   ) : (
@@ -404,13 +415,14 @@ export function ThreeLineReader({
             {/* AI speaking indicator */}
             {isCurrent && !isUser && isPlaying && (
               <div className="mt-2 flex items-center gap-2">
-                <div className="speaking-wave">
+                <div className="speaking-energy">
+                  <span />
                   <span />
                   <span />
                   <span />
                   <span />
                 </div>
-                <span className="text-[10px] text-muted-foreground/70">Speaking...</span>
+                <span className="text-[10px] text-muted-foreground/70">Speaking</span>
               </div>
             )}
           </div>
@@ -445,7 +457,7 @@ export function ThreeLineReader({
       {isFirstLineOfScene && currentScene && (
         <div 
           className={cn(
-            "px-4 py-3 rounded-lg animate-in fade-in slide-in-from-top-2 duration-300",
+            "px-4 py-3 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300 scene-energy",
             cameraMode 
               ? "bg-black/50 backdrop-blur-xl border border-white/20" 
               : "bg-muted/30 border border-border/40"
@@ -453,10 +465,15 @@ export function ThreeLineReader({
           data-testid="scene-transition-card"
         >
           <div className="flex items-center gap-2 mb-1">
-            <Film className={cn(
-              "w-3.5 h-3.5",
-              cameraMode ? "text-white/70" : "text-muted-foreground/70"
-            )} />
+            <div className={cn(
+              "circle-badge w-5 h-5",
+              cameraMode ? "bg-white/10" : "bg-primary/10"
+            )}>
+              <Film className={cn(
+                "w-3 h-3",
+                cameraMode ? "text-white/70" : "text-primary/70"
+              )} />
+            </div>
             <span className={cn(
               "text-[11px] font-medium uppercase tracking-wide",
               cameraMode ? "text-white/70" : "text-muted-foreground/70"
