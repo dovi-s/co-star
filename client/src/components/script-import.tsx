@@ -124,7 +124,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     }
   };
 
-  const [cleanupError, setCleanupError] = useState(false);
+  const [cleanupError, setCleanupError] = useState<string | boolean>(false);
   
   const cleanupScript = async () => {
     if (!script.trim()) return;
@@ -132,19 +132,33 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     setIsCleaning(true);
     setCleanupError(false);
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      
       const response = await fetch("/api/cleanup-script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ script }),
+        signal: controller.signal,
       });
       
-      if (!response.ok) throw new Error("Cleanup failed");
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "Cleanup failed");
+      }
       
       const data = await response.json();
+      if (!data.script) throw new Error("No result returned");
       setScript(data.script);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to clean up script:", e);
-      setCleanupError(true);
+      if (e.name === "AbortError") {
+        setCleanupError("This script is too large for AI formatting. Try uploading the PDF directly instead.");
+      } else {
+        setCleanupError(e.message || true);
+      }
     } finally {
       setIsCleaning(false);
     }
@@ -580,23 +594,35 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       {script && looksLikeBadPdfCopy && previewData.roles > 0 && !isCleaning && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-center animate-fade-in" data-testid="warning-bad-format">
           <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
-            This text may have formatting issues from PDF copy-paste. Lines could be misattributed.
+            This text may have formatting issues from PDF copy-paste. Some lines could be misattributed.
           </p>
-          <button
-            onClick={cleanupScript}
-            className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
-            data-testid="button-fix-formatting"
-          >
-            Fix with AI
-          </button>
-          <span className="text-amber-600/60 dark:text-amber-400/60 mx-2">or</span>
+          <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mb-2">
+            We found {previewData.roles} roles and can still parse this. You can continue, or try these options for better accuracy:
+          </p>
+          {script.length <= 30000 && (
+            <>
+              <button
+                onClick={cleanupScript}
+                className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+                data-testid="button-fix-formatting"
+              >
+                Fix with AI
+              </button>
+              <span className="text-amber-600/60 dark:text-amber-400/60 mx-2">or</span>
+            </>
+          )}
           <button
             onClick={() => fileInputRef.current?.click()}
             className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
             data-testid="button-upload-instead"
           >
-            Upload PDF instead
+            Upload the PDF file directly
           </button>
+          {script.length > 30000 && (
+            <p className="text-[10px] text-amber-600/50 dark:text-amber-400/40 mt-2">
+              AI formatting is not available for very long scripts. Upload the original file for best results.
+            </p>
+          )}
         </div>
       )}
 
@@ -620,11 +646,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       {/* Cleaning in progress indicator */}
       {isCleaning && (
-        <div className="flex items-center justify-center gap-3 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting with AI">
-          <div className="circle-badge w-6 h-6 energy-ring thinking" aria-hidden="true">
-            <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+        <div className="flex flex-col items-center gap-2 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting with AI">
+          <div className="flex items-center gap-3">
+            <div className="circle-badge w-6 h-6 energy-ring thinking" aria-hidden="true">
+              <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            </div>
+            <span className="text-sm">Fixing formatting with AI</span>
           </div>
-          <span className="text-sm">Fixing formatting with AI</span>
+          {script.length > 10000 && (
+            <span className="text-xs text-muted-foreground/60">Large script, this may take up to a minute</span>
+          )}
         </div>
       )}
       
@@ -637,7 +668,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             </span>
           ) : cleanupError ? (
             <span data-testid="text-cleanup-error">
-              Formatting failed.{" "}
+              {typeof cleanupError === "string" ? cleanupError : "Formatting failed."}{" "}
               <button
                 onClick={cleanupScript}
                 className="underline underline-offset-2 hover:text-foreground transition-colors"
