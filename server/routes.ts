@@ -8,6 +8,10 @@ import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
 import { aiCleanupScript, aiFilterRoles } from "./ai-script-cleanup";
 import { setupMultiplayer } from "./multiplayer";
+import { execFile } from "child_process";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
 
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
@@ -644,6 +648,105 @@ JOHN: We got the contract.`;
     }
   });
 
+  async function ocrScannedPdf(pdfBuffer: Buffer, fileName: string): Promise<string> {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'castmate-ocr-'));
+    try {
+      const pdfPath = path.join(tmpDir, 'input.pdf');
+      await fs.writeFile(pdfPath, pdfBuffer);
+      
+      const numPages = await new Promise<number>((resolve, reject) => {
+        const data = new Uint8Array(pdfBuffer);
+        pdfjsLib.getDocument({ data, verbosity: 0 }).promise
+          .then(pdf => resolve(pdf.numPages))
+          .catch(reject);
+      });
+      
+      console.log(`[OCR] Starting OCR for ${fileName}, ${numPages} pages`);
+      
+      const outputPrefix = path.join(tmpDir, 'page');
+      await new Promise<void>((resolve, reject) => {
+        execFile('pdftoppm', [
+          '-png', '-r', '200',
+          pdfPath, outputPrefix
+        ], { timeout: 300000 }, (err) => {
+          if (err) reject(err);
+          else resolve();
+        });
+      });
+      
+      const files = await fs.readdir(tmpDir);
+      const pageFiles = files
+        .filter(f => f.startsWith('page-') && f.endsWith('.png'))
+        .sort();
+      
+      console.log(`[OCR] Converted ${pageFiles.length} pages to images, sending to AI for text extraction...`);
+      
+      const openai = new OpenAI({
+        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+      });
+      
+      const BATCH_SIZE = 4;
+      const allPageTexts: string[] = [];
+      
+      for (let batchStart = 0; batchStart < pageFiles.length; batchStart += BATCH_SIZE) {
+        const batch = pageFiles.slice(batchStart, batchStart + BATCH_SIZE);
+        const batchNum = Math.floor(batchStart / BATCH_SIZE) + 1;
+        const totalBatches = Math.ceil(pageFiles.length / BATCH_SIZE);
+        console.log(`[OCR] Processing batch ${batchNum}/${totalBatches} (pages ${batchStart + 1}-${batchStart + batch.length})`);
+        
+        const batchPromises = batch.map(async (pageFile, idx) => {
+          const pageNum = batchStart + idx + 1;
+          const imgPath = path.join(tmpDir, pageFile);
+          const imgData = await fs.readFile(imgPath);
+          const base64 = imgData.toString('base64');
+          
+          try {
+            const response = await openai.chat.completions.create({
+              model: "gpt-5-mini",
+              messages: [{
+                role: "user",
+                content: [
+                  {
+                    type: "text",
+                    text: "Extract ALL text from this scanned script page exactly as written. Preserve character names in UPPERCASE, dialogue, stage directions in italics or parentheses, and line breaks. This is a theatrical play script. Output ONLY the raw extracted text, nothing else. Do not add any commentary."
+                  },
+                  {
+                    type: "image_url",
+                    image_url: { url: `data:image/png;base64,${base64}` }
+                  }
+                ]
+              }],
+              max_completion_tokens: 4096,
+            });
+            
+            const text = response.choices[0]?.message?.content || '';
+            console.log(`[OCR] Page ${pageNum}: ${text.length} chars extracted`);
+            return { pageNum, text };
+          } catch (err: any) {
+            console.error(`[OCR] Page ${pageNum} failed:`, err.message);
+            return { pageNum, text: '' };
+          }
+        });
+        
+        const results = await Promise.all(batchPromises);
+        results.sort((a, b) => a.pageNum - b.pageNum);
+        allPageTexts.push(...results.map(r => r.text));
+      }
+      
+      const emptyPages = allPageTexts.reduce((count, text, i) => text.length < 10 ? count + 1 : count, 0);
+      if (emptyPages > 0) {
+        console.log(`[OCR] Warning: ${emptyPages} of ${pageFiles.length} pages had no extractable text`);
+      }
+      
+      const fullText = allPageTexts.join('\n\n');
+      console.log(`[OCR] Complete: ${fullText.length} total characters from ${pageFiles.length} pages (${emptyPages} empty)`);
+      return fullText;
+    } finally {
+      await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
+    }
+  }
+
   // File upload for PDF/TXT parsing
   const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -795,11 +898,24 @@ JOHN: We got the contract.`;
         .replace(/\n{4,}/g, "\n\n\n") // Max 3 newlines
         .trim();
 
+      if ((!text || text.length < 10) && (mimeType === "application/pdf" || fileName.endsWith(".pdf"))) {
+        console.log(`[PDF] No text layer found, attempting OCR...`);
+        try {
+          text = await ocrScannedPdf(file.buffer, file.originalname);
+          text = text
+            .replace(/\r\n/g, "\n")
+            .replace(/\r/g, "\n")
+            .replace(/\n{4,}/g, "\n\n\n")
+            .trim();
+        } catch (ocrErr: any) {
+          console.error(`[PDF] OCR failed:`, ocrErr.message);
+        }
+      }
+
       if (!text || text.length < 10) {
-        // Check if it was a PDF with no text (likely scanned/image-based)
         if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
           return res.status(400).json({ 
-            error: "This PDF is scanned or image-based. Try opening it in a PDF reader, select all text (Cmd/Ctrl+A), copy (Cmd/Ctrl+C), and paste it here." 
+            error: "Could not extract text from this PDF. The scan quality may be too low. Try opening it in a PDF reader, select all text (Cmd/Ctrl+A), copy (Cmd/Ctrl+C), and paste it here." 
           });
         }
         return res.status(400).json({ error: "Could not extract text from file. Try copying and pasting the script text directly." });
@@ -1000,13 +1116,15 @@ JOHN: We got the contract.`;
         .replace(/\n{4,}/g, "\n\n\n")
         .trim();
 
+      if ((!text || text.length < 10) && (mimeType === "application/pdf" || fileName.endsWith(".pdf"))) {
+        console.log(`[PDF->Session] No text layer found, signaling client for OCR`);
+        return res.status(422).json({ 
+          needsOcr: true,
+          error: "This PDF appears to be scanned. AI-powered text recognition is needed." 
+        });
+      }
+
       if (!text || text.length < 10) {
-        // Check if it was a PDF with no text (likely scanned/image-based)
-        if (mimeType === "application/pdf" || fileName.endsWith(".pdf")) {
-          return res.status(400).json({ 
-            error: "This PDF is scanned or image-based. Try opening it in a PDF reader, select all text (Cmd/Ctrl+A), copy (Cmd/Ctrl+C), and paste it here." 
-          });
-        }
         return res.status(400).json({ error: "Could not extract text from file. Try copying and pasting the script text directly." });
       }
 
@@ -1055,6 +1173,74 @@ JOHN: We got the contract.`;
     } catch (error: any) {
       console.error("File parse to session error:", error.message || error);
       res.status(500).json({ error: "Failed to parse file" });
+    }
+  });
+
+  app.post("/api/ocr-pdf-to-session", upload.single("file"), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      const file = req.file;
+      console.log(`[OCR Endpoint] Starting OCR for ${file.originalname}, ${file.buffer.length} bytes`);
+
+      let text = "";
+      try {
+        text = await ocrScannedPdf(file.buffer, file.originalname);
+        text = text
+          .replace(/\r\n/g, "\n")
+          .replace(/\r/g, "\n")
+          .replace(/\n{4,}/g, "\n\n\n")
+          .trim();
+      } catch (ocrErr: any) {
+        console.error(`[OCR Endpoint] OCR failed:`, ocrErr.message);
+        return res.status(500).json({ 
+          error: "AI text recognition failed. Try opening the PDF in a reader, select all text, copy, and paste it here instead." 
+        });
+      }
+
+      if (!text || text.length < 10) {
+        return res.status(400).json({ 
+          error: "Could not extract text from this PDF. The scan quality may be too low." 
+        });
+      }
+
+      console.log(`[OCR Endpoint] Parsing ${text.length} chars of OCR text...`);
+      const parsed = parseScript(text);
+      console.log(`[OCR Endpoint] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
+      
+      let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      console.log(`[OCR Endpoint] Total dialogue lines: ${totalLines}`);
+
+      console.log(`[OCR Endpoint] Running AI Smart Cleanup...`);
+      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
+      
+      if (removedCount > 0) {
+        console.log(`[OCR Endpoint] AI removed ${removedCount} non-dialogue lines`);
+        totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+      }
+
+      console.log(`[OCR Endpoint] Running AI Role Filter...`);
+      const finalScript = await aiFilterRoles(cleanedScript);
+      if (finalScript.roles.length < cleanedScript.roles.length) {
+        console.log(`[OCR Endpoint] AI removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
+      }
+
+      if (finalScript.roles.length === 0) {
+        return res.status(400).json({ 
+          error: "Could not find character names in the scanned text." 
+        });
+      }
+
+      res.json({ 
+        parsed: finalScript,
+        rawText: text,
+        fileName: file.originalname 
+      });
+    } catch (error: any) {
+      console.error("OCR endpoint error:", error.message || error);
+      res.status(500).json({ error: "Failed to process scanned PDF" });
     }
   });
 

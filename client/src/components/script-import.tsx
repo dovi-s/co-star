@@ -184,6 +184,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   };
 
   const [isParsingFile, setIsParsingFile] = useState(false);
+  const [parseProgress, setParseProgress] = useState<string>("");
   const [fileError, setFileError] = useState<string | null>(null);
 
   // Extract a clean title from filename
@@ -217,14 +218,22 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       return;
     }
     
-    // For PDF files, use server-side parsing to avoid data truncation
     if (fileName.endsWith(".pdf")) {
       setIsParsingFile(true);
+      setParseProgress("Reading PDF...");
+      let progressTimer: ReturnType<typeof setInterval> | null = null;
       try {
         const formData = new FormData();
         formData.append("file", file);
         
-        // Use the new endpoint that returns parsed data directly
+        progressTimer = setInterval(() => {
+          setParseProgress(prev => {
+            if (prev.includes("Scanning")) return prev;
+            if (prev.includes("Reading")) return "Analyzing pages...";
+            return prev;
+          });
+        }, 5000);
+
         const response = await fetch("/api/parse-file-to-session", {
           method: "POST",
           body: formData,
@@ -232,6 +241,26 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         
         if (!response.ok) {
           const data = await response.json();
+          if (data.needsOcr) {
+            setParseProgress("Scanning pages with AI (this may take a few minutes)...");
+            const ocrResponse = await fetch("/api/ocr-pdf-to-session", {
+              method: "POST",
+              body: formData,
+            });
+            if (!ocrResponse.ok) {
+              const ocrData = await ocrResponse.json();
+              throw new Error(ocrData.error || "Failed to scan PDF");
+            }
+            const ocrData = await ocrResponse.json();
+            console.log('[PDF Import] OCR parsed:', {
+              roles: ocrData.parsed.roles.length,
+              scenes: ocrData.parsed.scenes.length,
+              totalLines: ocrData.parsed.scenes.reduce((s: number, sc: any) => s + sc.lines.length, 0)
+            });
+            setServerParsedData(ocrData.parsed);
+            setScript(ocrData.rawText || "");
+            return;
+          }
           throw new Error(data.error || "Failed to parse file");
         }
         
@@ -242,15 +271,15 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           totalLines: data.parsed.scenes.reduce((s: number, sc: any) => s + sc.lines.length, 0)
         });
         
-        // Store the parsed data - we'll use it directly when starting rehearsal
         setServerParsedData(data.parsed);
-        // Show the actual script text (not a summary)
         setScript(data.rawText || "");
       } catch (e: any) {
         console.error("File parse error:", e);
         setFileError(e.message || "Failed to parse file");
       } finally {
+        if (progressTimer) clearInterval(progressTimer);
         setIsParsingFile(false);
+        setParseProgress("");
       }
       return;
     }
@@ -528,6 +557,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           data-testid="textarea-script"
         />
 
+        {isParsingFile && parseProgress && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-background/90 backdrop-blur-sm z-10" data-testid="overlay-parse-progress">
+            <div className="w-8 h-8 rounded-full border-3 border-primary/20 border-t-primary animate-spin mb-3" />
+            <p className="text-sm font-medium text-foreground">{parseProgress}</p>
+            {parseProgress.includes("Scanning") && (
+              <p className="text-xs text-muted-foreground mt-1">Scanned PDF detected. Reading each page with AI.</p>
+            )}
+          </div>
+        )}
+
         {isDragging && (
           <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-background/80 backdrop-blur-sm">
             <span className="text-sm text-muted-foreground">Drop file here</span>
@@ -564,7 +603,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               {isParsingFile ? (
                 <>
                   <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                  Parsing
+                  {parseProgress.includes("Scanning") ? "Scanning" : "Parsing"}
                 </>
               ) : (
                 <>

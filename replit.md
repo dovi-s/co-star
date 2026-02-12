@@ -28,7 +28,7 @@ The design philosophy is sophisticated and minimal, inspired by premium companie
 - **Audition Mode UI**: When camera is active, UI becomes dark and translucent with glassmorphic styling (e.g., `bg-black/60` with `backdrop-blur-xl`).
 
 ### Technical Implementations
-- **Script Import**: Supports pasting text or uploading `.txt` files. Automatically parses `CHARACTER: dialogue` format, `[brackets]` and `(parentheticals)` for stage directions, and multi-scene scripts with descriptions. Action lines preceding dialogue are captured as context.
+- **Script Import**: Supports pasting text or uploading `.txt` and `.pdf` files. Automatically parses `CHARACTER: dialogue` format, `[brackets]` and `(parentheticals)` for stage directions, and multi-scene scripts with descriptions. Action lines preceding dialogue are captured as context. Scanned/image-based PDFs are handled via AI-powered OCR: pages are converted to images with `pdftoppm` (200 DPI), then sent to OpenAI Vision API (gpt-5-mini) in batches of 4 for text extraction. The two-step flow detects scanned PDFs (422 response with `needsOcr: true`) and routes to `/api/ocr-pdf-to-session`.
 - **Role Selection**: Auto-detects all roles with line counts, allows user to select their role, and uses Smart Cast for AI voice assignment to other roles.
 - **Three-Line Reader**: Displays previous (dim), current (bold, highlighted if user's turn), and next (ghost) lines. Includes visual cues for user's turn, scene transition cards, and a context peek button for action/directions.
 - **Transport Controls**: Provides Back, Play-Pause, Next buttons, progress indicator, repeat current line, and bookmarking.
