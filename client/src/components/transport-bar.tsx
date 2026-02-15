@@ -108,7 +108,31 @@ export function TransportBar({
                   <stop offset="0%" stopColor="hsl(142 71% 45%)" />
                   <stop offset="100%" stopColor="hsl(162 63% 50%)" />
                 </linearGradient>
+                <radialGradient id="vessel-fill-speaking" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="hsl(217 89% 51% / 0.08)" />
+                  <stop offset="60%" stopColor="hsl(280 65% 60% / 0.04)" />
+                  <stop offset="100%" stopColor="transparent" />
+                </radialGradient>
+                <radialGradient id="vessel-fill-listening" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="hsl(142 71% 45% / 0.08)" />
+                  <stop offset="60%" stopColor="hsl(162 63% 50% / 0.04)" />
+                  <stop offset="100%" stopColor="transparent" />
+                </radialGradient>
+                <radialGradient id="vessel-fill-thinking" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="hsl(47 96% 53% / 0.06)" />
+                  <stop offset="60%" stopColor="hsl(28 60% 54% / 0.03)" />
+                  <stop offset="100%" stopColor="transparent" />
+                </radialGradient>
               </defs>
+              {isPlaying && (
+                <circle
+                  cx="32"
+                  cy="32"
+                  r="28"
+                  fill={isSpeaking ? "url(#vessel-fill-speaking)" : isListening ? "url(#vessel-fill-listening)" : "url(#vessel-fill-thinking)"}
+                  className="transition-all duration-500"
+                />
+              )}
               <circle
                 cx="32"
                 cy="32"

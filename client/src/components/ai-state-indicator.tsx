@@ -65,9 +65,12 @@ export function AIStateIndicator({
             />
           )}
           {state === "thinking" && (
-            <div
-              className={cn(config.blob, "thinking-blob transition-all duration-200")}
-            />
+            <div className={cn(config.blob, "thinking-dots transition-all duration-200")}>
+              <span className="dot" />
+              <span className="dot" />
+              <span className="dot" />
+              <span className="dot" />
+            </div>
           )}
           {state === "idle" && (
             <Volume2

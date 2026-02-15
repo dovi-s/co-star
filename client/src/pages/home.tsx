@@ -90,10 +90,15 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col onboarding-glow">
+      <main className="flex-1 flex flex-col onboarding-glow relative">
+        <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
+          style={{
+            background: 'radial-gradient(ellipse at 50% 50%, hsl(340 65% 55% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
+            animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
+          }}
+        />
         <div className="px-5 pt-10 pb-5 relative z-10">
           <div className="absolute -top-6 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
-          <div className="absolute -top-2 left-1/4 w-32 h-32 rounded-full bg-primary/[0.04] blur-3xl pointer-events-none" />
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             Your on demand scene partner.
           </h1>

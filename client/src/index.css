@@ -571,9 +571,9 @@
    Points users toward what matters
    ============================================ */
 
-@keyframes directional-sweep {
-  0% { background-position: -100% 0; }
-  100% { background-position: 200% 0; }
+@keyframes comet-sweep {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(200%); }
 }
 
 .energy-directional {
@@ -584,17 +584,22 @@
 .energy-directional::before {
   content: '';
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 45%;
+  height: 100%;
   border-radius: inherit;
   background: linear-gradient(
     90deg,
     transparent 0%,
-    hsl(var(--primary) / 0.25) 20%,
-    hsl(var(--primary) / 0.12) 40%,
-    transparent 65%
+    hsl(var(--primary) / 0.06) 15%,
+    hsl(var(--primary) / 0.18) 40%,
+    hsl(var(--primary) / 0.35) 70%,
+    hsl(var(--primary) / 0.40) 85%,
+    hsl(var(--primary) / 0.30) 95%,
+    transparent 100%
   );
-  background-size: 200% 100%;
-  animation: directional-sweep 4s ease-in-out infinite;
+  animation: comet-sweep 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   pointer-events: none;
 }
 
@@ -602,24 +607,29 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    hsl(var(--success) / 0.22) 20%,
-    hsl(var(--success) / 0.10) 40%,
-    transparent 65%
+    hsl(var(--success) / 0.05) 15%,
+    hsl(var(--success) / 0.15) 40%,
+    hsl(var(--success) / 0.30) 70%,
+    hsl(var(--success) / 0.35) 85%,
+    hsl(var(--success) / 0.25) 95%,
+    transparent 100%
   );
-  background-size: 200% 100%;
-  animation: directional-sweep 3s ease-in-out infinite;
+  animation: comet-sweep 2.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .energy-directional-speaking::before {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    hsl(var(--primary) / 0.22) 15%,
-    hsl(var(--primary) / 0.10) 35%,
-    transparent 60%
+    hsl(217 89% 51% / 0.05) 10%,
+    hsl(217 89% 51% / 0.15) 30%,
+    hsl(280 65% 60% / 0.25) 55%,
+    hsl(var(--primary) / 0.38) 80%,
+    hsl(var(--primary) / 0.28) 92%,
+    transparent 100%
   );
-  background-size: 200% 100%;
-  animation: directional-sweep 3.5s ease-in-out infinite;
+  width: 50%;
+  animation: comet-sweep 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 /* Left-edge accent: sharp energy entering from left */
@@ -659,46 +669,92 @@
    Morphing gradient that shows active synthesis
    ============================================ */
 
-@keyframes thinking-morph {
-  0%, 100% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    background-position: 0% 50%;
-  }
-  25% {
-    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-  }
-  50% {
-    border-radius: 50% 60% 30% 60% / 30% 70% 40% 60%;
-    background-position: 100% 50%;
-  }
-  75% {
-    border-radius: 60% 30% 60% 40% / 70% 40% 60% 30%;
-  }
+@keyframes dot-orbit-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(35%, -30%) scale(0.85); }
+  50% { transform: translate(5%, -5%) scale(1.3); }
+  75% { transform: translate(-30%, 25%) scale(0.9); }
 }
 
-.thinking-blob {
-  background: conic-gradient(
-    from 180deg,
-    hsl(28 35% 54% / 0.85),
-    hsl(47 96% 53% / 0.65),
-    hsl(280 65% 60% / 0.50),
-    hsl(217 89% 51% / 0.65),
-    hsl(28 35% 54% / 0.85)
-  );
-  background-size: 200% 200%;
-  animation: thinking-morph 4s ease-in-out infinite, energy-rotate 8s linear infinite;
+@keyframes dot-orbit-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(-30%, -25%) scale(0.9); }
+  50% { transform: translate(-5%, 5%) scale(1.2); }
+  75% { transform: translate(35%, 30%) scale(0.85); }
+}
+
+@keyframes dot-orbit-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(25%, 35%) scale(0.85); }
+  50% { transform: translate(0%, 5%) scale(1.25); }
+  75% { transform: translate(-35%, -20%) scale(0.9); }
+}
+
+@keyframes dot-orbit-4 {
+  0%, 100% { transform: translate(0, 0) scale(0.9); }
+  25% { transform: translate(-20%, 30%) scale(1.1); }
+  50% { transform: translate(5%, 0%) scale(1.3); }
+  75% { transform: translate(25%, -35%) scale(0.85); }
+}
+
+.thinking-dots {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thinking-dots .dot {
+  position: absolute;
+  border-radius: 50%;
   filter: blur(0.5px);
 }
 
-.dark .thinking-blob {
-  background: conic-gradient(
-    from 180deg,
-    hsl(28 45% 52% / 0.80),
-    hsl(47 90% 55% / 0.60),
-    hsl(280 60% 65% / 0.50),
-    hsl(214 100% 68% / 0.60),
-    hsl(28 45% 52% / 0.80)
-  );
+.thinking-dots .dot:nth-child(1) {
+  width: 45%;
+  height: 45%;
+  background: hsl(217 89% 51% / 0.85);
+  animation: dot-orbit-1 3s ease-in-out infinite;
+}
+
+.thinking-dots .dot:nth-child(2) {
+  width: 40%;
+  height: 40%;
+  background: hsl(4 72% 50% / 0.80);
+  animation: dot-orbit-2 3s ease-in-out infinite;
+  animation-delay: -0.2s;
+}
+
+.thinking-dots .dot:nth-child(3) {
+  width: 38%;
+  height: 38%;
+  background: hsl(47 96% 53% / 0.85);
+  animation: dot-orbit-3 3s ease-in-out infinite;
+  animation-delay: -0.4s;
+}
+
+.thinking-dots .dot:nth-child(4) {
+  width: 42%;
+  height: 42%;
+  background: hsl(142 71% 45% / 0.80);
+  animation: dot-orbit-4 3s ease-in-out infinite;
+  animation-delay: -0.6s;
+}
+
+.dark .thinking-dots .dot:nth-child(1) {
+  background: hsl(214 100% 68% / 0.85);
+}
+
+.dark .thinking-dots .dot:nth-child(2) {
+  background: hsl(4 65% 58% / 0.80);
+}
+
+.dark .thinking-dots .dot:nth-child(3) {
+  background: hsl(47 90% 60% / 0.85);
+}
+
+.dark .thinking-dots .dot:nth-child(4) {
+  background: hsl(142 65% 52% / 0.80);
 }
 
 /* ============================================
@@ -706,15 +762,19 @@
    Concentric gradient rings expanding outward
    ============================================ */
 
-@keyframes gradient-ripple {
-  0% {
-    transform: scale(0.8);
-    opacity: 0.6;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
+@keyframes arc-ripple-1 {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  100% { transform: scale(2.0); opacity: 0; }
+}
+
+@keyframes arc-ripple-2 {
+  0% { transform: scale(0.85); opacity: 0.55; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+@keyframes arc-ripple-3 {
+  0% { transform: scale(0.8); opacity: 0.4; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 
 .gradient-ripple {
@@ -725,32 +785,36 @@
 .gradient-ripple::after {
   content: '';
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    transparent 45%,
-    hsl(var(--success) / 0.40) 58%,
-    hsl(var(--success) / 0.20) 70%,
-    transparent 82%
-  );
-  animation: gradient-ripple 2.5s ease-out infinite;
   pointer-events: none;
 }
 
-.gradient-ripple::after {
-  animation-delay: 0.8s;
+.gradient-ripple::before {
+  border: 2px solid hsl(var(--success) / 0.50);
+  box-shadow:
+    0 0 8px 1px hsl(var(--success) / 0.20),
+    inset 0 0 4px hsl(var(--success) / 0.10);
+  animation: arc-ripple-1 2.2s ease-out infinite;
 }
 
-.gradient-ripple-primary::before,
+.gradient-ripple::after {
+  border: 1.5px solid hsl(var(--success) / 0.35);
+  box-shadow: 0 0 6px 1px hsl(var(--success) / 0.15);
+  animation: arc-ripple-2 2.2s ease-out infinite;
+  animation-delay: 0.6s;
+}
+
+.gradient-ripple-primary::before {
+  border-color: hsl(var(--primary) / 0.50);
+  box-shadow:
+    0 0 8px 1px hsl(var(--primary) / 0.20),
+    inset 0 0 4px hsl(var(--primary) / 0.10);
+}
+
 .gradient-ripple-primary::after {
-  background: radial-gradient(
-    circle,
-    transparent 45%,
-    hsl(var(--primary) / 0.35) 58%,
-    hsl(var(--primary) / 0.15) 70%,
-    transparent 82%
-  );
+  border-color: hsl(var(--primary) / 0.35);
+  box-shadow: 0 0 6px 1px hsl(var(--primary) / 0.15);
 }
 
 /* ============================================
@@ -758,36 +822,42 @@
    State-responsive gradient aura around the transport
    ============================================ */
 
-@keyframes emotional-aura {
+@keyframes vessel-breathe {
   0%, 100% {
-    box-shadow: 0 0 0 0 var(--aura-color, hsl(var(--primary) / 0.25)),
-                0 0 20px 0px var(--aura-color, hsl(var(--primary) / 0.15));
+    box-shadow:
+      0 0 0 0px var(--vessel-inner, transparent),
+      0 0 12px 2px var(--vessel-glow, transparent);
+    transform: scale(1);
   }
   50% {
-    box-shadow: 0 0 0 8px var(--aura-color, hsl(var(--primary) / 0.12)),
-                0 0 40px 4px var(--aura-color, hsl(var(--primary) / 0.20));
+    box-shadow:
+      0 0 0 4px var(--vessel-inner, transparent),
+      0 0 28px 6px var(--vessel-glow, transparent);
+    transform: scale(1.03);
   }
 }
 
 .transport-emotional {
-  --aura-color: hsl(var(--primary) / 0.20);
   border-radius: 50%;
-  transition: box-shadow 0.3s ease;
+  transition: box-shadow 0.4s ease, transform 0.3s ease;
 }
 
 .transport-emotional.state-speaking {
-  --aura-color: hsl(var(--primary) / 0.30);
-  animation: emotional-aura 2.5s ease-in-out infinite;
+  --vessel-inner: hsl(217 89% 51% / 0.15);
+  --vessel-glow: hsl(280 65% 60% / 0.18);
+  animation: vessel-breathe 2.5s ease-in-out infinite;
 }
 
 .transport-emotional.state-listening {
-  --aura-color: hsl(var(--success) / 0.30);
-  animation: emotional-aura 3s ease-in-out infinite;
+  --vessel-inner: hsl(var(--success) / 0.18);
+  --vessel-glow: hsl(162 63% 50% / 0.20);
+  animation: vessel-breathe 3s ease-in-out infinite;
 }
 
 .transport-emotional.state-thinking {
-  --aura-color: hsl(28 35% 54% / 0.28);
-  animation: emotional-aura 4s ease-in-out infinite;
+  --vessel-inner: hsl(47 96% 53% / 0.12);
+  --vessel-glow: hsl(28 60% 54% / 0.18);
+  animation: vessel-breathe 4s ease-in-out infinite;
 }
 
 .transport-emotional.state-idle {
@@ -800,18 +870,37 @@
    Welcoming gradient backgrounds that invite exploration
    ============================================ */
 
-@keyframes soft-ambient {
+@keyframes spectrum-drift-1 {
+  0%, 100% {
+    opacity: 0.8;
+    transform: translate(0, 0) scale(1);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(8%, -5%) scale(1.1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-3%, 4%) scale(1.05);
+  }
+  75% {
+    opacity: 0.85;
+    transform: translate(5%, 2%) scale(1.12);
+  }
+}
+
+@keyframes spectrum-drift-2 {
   0%, 100% {
     opacity: 0.7;
-    transform: scale(1) translate(0, 0);
+    transform: translate(0, 0) scale(1);
   }
-  33% {
-    opacity: 1;
-    transform: scale(1.15) translate(5%, -3%);
+  30% {
+    opacity: 0.95;
+    transform: translate(-6%, 5%) scale(1.08);
   }
-  66% {
-    opacity: 0.85;
-    transform: scale(1.08) translate(-3%, 2%);
+  60% {
+    opacity: 0.8;
+    transform: translate(4%, -3%) scale(1.15);
   }
 }
 
@@ -823,19 +912,19 @@
 .onboarding-glow::before {
   content: '';
   position: absolute;
-  top: 5%;
-  left: -5%;
-  width: 65%;
-  height: 65%;
+  top: 0%;
+  left: -10%;
+  width: 70%;
+  height: 70%;
   border-radius: 50%;
   background: radial-gradient(
-    circle,
-    hsl(var(--primary) / 0.15) 0%,
-    hsl(var(--primary) / 0.08) 35%,
-    hsl(var(--primary) / 0.03) 60%,
-    transparent 80%
+    ellipse at 40% 40%,
+    hsl(217 89% 51% / 0.18) 0%,
+    hsl(280 65% 60% / 0.12) 30%,
+    hsl(280 65% 60% / 0.05) 55%,
+    transparent 75%
   );
-  animation: soft-ambient 12s ease-in-out infinite;
+  animation: spectrum-drift-1 14s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
 }
@@ -843,41 +932,41 @@
 .onboarding-glow::after {
   content: '';
   position: absolute;
-  bottom: 5%;
-  right: -5%;
-  width: 55%;
-  height: 55%;
+  bottom: 0%;
+  right: -8%;
+  width: 60%;
+  height: 60%;
   border-radius: 50%;
   background: radial-gradient(
-    circle,
-    hsl(28 35% 54% / 0.12) 0%,
-    hsl(28 35% 54% / 0.06) 35%,
-    hsl(28 35% 54% / 0.02) 60%,
-    transparent 80%
+    ellipse at 60% 60%,
+    hsl(28 60% 54% / 0.14) 0%,
+    hsl(340 65% 55% / 0.08) 35%,
+    hsl(47 96% 53% / 0.04) 55%,
+    transparent 75%
   );
-  animation: soft-ambient 15s ease-in-out infinite;
-  animation-delay: -5s;
+  animation: spectrum-drift-2 18s ease-in-out infinite;
+  animation-delay: -6s;
   pointer-events: none;
   z-index: 0;
 }
 
 .dark .onboarding-glow::before {
   background: radial-gradient(
-    circle,
-    hsl(214 100% 68% / 0.18) 0%,
-    hsl(214 100% 68% / 0.10) 35%,
-    hsl(214 100% 68% / 0.04) 60%,
-    transparent 80%
+    ellipse at 40% 40%,
+    hsl(214 100% 68% / 0.20) 0%,
+    hsl(280 60% 65% / 0.14) 30%,
+    hsl(280 60% 65% / 0.06) 55%,
+    transparent 75%
   );
 }
 
 .dark .onboarding-glow::after {
   background: radial-gradient(
-    circle,
-    hsl(28 45% 52% / 0.14) 0%,
-    hsl(28 45% 52% / 0.07) 35%,
-    hsl(28 45% 52% / 0.03) 60%,
-    transparent 80%
+    ellipse at 60% 60%,
+    hsl(28 45% 52% / 0.16) 0%,
+    hsl(340 55% 55% / 0.10) 35%,
+    hsl(47 90% 55% / 0.05) 55%,
+    transparent 75%
   );
 }
 

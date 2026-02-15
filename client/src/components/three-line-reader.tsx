@@ -225,6 +225,9 @@ export function ThreeLineReader({
               ) : (
                 <Volume2 className={cn("h-4 w-4", cameraMode ? "text-white/70" : "text-muted-foreground")} />
               )}
+              {isListening && isUser && (
+                <span className="absolute inset-[-5px] rounded-full border border-[hsl(var(--success)/0.25)] pointer-events-none" style={{ animation: 'arc-ripple-3 2.2s ease-out infinite 1.2s' }} />
+              )}
             </div>
           )}
           
