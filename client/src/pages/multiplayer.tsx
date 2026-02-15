@@ -1199,7 +1199,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   if (view === 'menu') {
     return (
       <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-menu">
-        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -1276,7 +1276,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           </div>
         </div>
 
-        <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom">
+        <footer className="px-5 py-6 pb-8 glass-surface safe-bottom">
           <p className="text-[11px] text-muted-foreground/60 text-center">
             Video and audio stay between participants.
           </p>
@@ -1288,7 +1288,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   if (view === 'create') {
     return (
       <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-create">
-        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -1334,7 +1334,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           </div>
         </div>
 
-        <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background safe-bottom">
+        <div className="sticky bottom-0 px-4 pt-3 pb-4 glass-surface safe-bottom">
           <Button
             size="lg"
             className="w-full"
@@ -1359,7 +1359,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   if (view === 'join') {
     return (
       <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-join">
-        <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top">
+        <header className="flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -1414,7 +1414,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           </div>
         </div>
 
-        <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background safe-bottom">
+        <div className="sticky bottom-0 px-4 pt-3 pb-4 glass-surface safe-bottom">
           <Button
             size="lg"
             className="w-full"
@@ -1494,9 +1494,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         {/* Countdown overlay */}
         {isCountingDown && serverCountdown !== null && (
           <div 
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 cursor-pointer"
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-md cursor-pointer"
             onClick={() => {
-              unlockAudio(); // Unlock audio when user taps during countdown
+              unlockAudio();
             }}
           >
             <div className="text-center">
@@ -1511,7 +1511,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         {/* Enforced audio unlock overlay during rehearsal - required for mobile audio playback */}
         {!isCountingDown && isActivelyRehearing && !audioUnlocked && (
           <div 
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 cursor-pointer"
+            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md cursor-pointer"
             onClick={() => {
               unlockAudio();
             }}
@@ -1530,13 +1530,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           </div>
         )}
 
-        <header className="absolute top-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-sm safe-top">
+        <header className="absolute top-0 left-0 right-0 z-30 glass-surface-clear bg-black/40 safe-top">
           <div className="flex items-center justify-between px-3 py-2 gap-2">
             <Button 
               variant="ghost" 
               size="icon"
               onClick={handleLeave} 
-              className="text-white hover:text-white hover:bg-white/20 shrink-0"
+              className="text-white shrink-0"
               data-testid="button-leave-rehearsal"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -1553,13 +1553,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </div>
             
             <div className="flex items-center gap-0.5 shrink-0">
-              {/* Record button */}
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={hasRecording && !isRecording ? downloadRecording : toggleRecording}
                 className={cn(
-                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
+                  "text-white",
                   isRecording && "text-red-500"
                 )}
                 data-testid="button-toggle-recording"
@@ -1579,7 +1578,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 size="icon"
                 onClick={webrtc.toggleAudio}
                 className={cn(
-                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
+                  "text-white",
                   !webrtc.isAudioEnabled && "text-red-400"
                 )}
                 data-testid="button-toggle-audio-rehearsal"
@@ -1591,7 +1590,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 size="icon"
                 onClick={webrtc.toggleVideo}
                 className={cn(
-                  "text-white hover:text-white hover:bg-white/20 h-8 w-8",
+                  "text-white",
                   !webrtc.isVideoEnabled && "text-red-400"
                 )}
                 data-testid="button-toggle-video-rehearsal"
@@ -1602,7 +1601,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           </div>
         </header>
 
-        <footer className="absolute bottom-0 left-0 right-0 z-30 bg-black/40 backdrop-blur-sm safe-bottom">
+        <footer className="absolute bottom-0 left-0 right-0 z-30 glass-surface-clear bg-black/40 safe-bottom">
           <div className="p-4">
             <div className="max-w-2xl mx-auto">
               <div className="flex items-center justify-between mb-3">
@@ -1621,7 +1620,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       variant="outline"
                       size="icon"
                       onClick={() => multiplayer.prevLine()}
-                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+                      className="bg-white/10 border-white/30 text-white"
                       data-testid="button-prev-line"
                     >
                       <SkipBack className="h-4 w-4" />
@@ -1629,7 +1628,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       size="icon"
                       onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
-                      className="bg-white text-black hover:bg-white/90"
+                      className="bg-white text-black"
                       data-testid="button-play-pause"
                     >
                       {room.state === 'paused' ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
@@ -1638,7 +1637,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       variant="outline"
                       size="icon"
                       onClick={handleManualSkip}
-                      className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white"
+                      className="bg-white/10 border-white/30 text-white"
                       data-testid="button-next-line"
                     >
                       <SkipForward className="h-4 w-4" />
@@ -1656,7 +1655,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                       onClick={handleManualSkip}
                       variant="ghost"
                       size="sm"
-                      className="text-white/50 hover:text-white"
+                      className="text-white/50"
                       data-testid="button-skip-line"
                     >
                       <SkipForward className="h-4 w-4" />
@@ -1676,8 +1675,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         
         {/* Completion Modal */}
         {showCompletion && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-            <div className="bg-background rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-300">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="glass-surface-heavy rounded-2xl p-6 m-4 max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-300">
               <div className="flex items-center gap-3 mb-4">
                 <div className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center",
