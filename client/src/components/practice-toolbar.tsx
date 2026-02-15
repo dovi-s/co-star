@@ -40,14 +40,14 @@ export function PracticeToolbar({
   recordingTime = 0,
 }: PracticeToolbarProps) {
   return (
-    <div className="flex items-center justify-between gap-2 py-1" data-testid="practice-toolbar">
-      <div className="flex items-center gap-1">
+    <div className="flex items-center justify-between gap-3 py-1" data-testid="practice-toolbar">
+      <div className="flex items-center gap-1.5 min-w-0">
         <span className={cn(
-          "text-xs mr-1 hidden sm:inline",
-          cameraEnabled ? "text-white/60" : "text-muted-foreground"
-        )}>Practice:</span>
+          "text-[11px] font-medium shrink-0 hidden sm:inline",
+          cameraEnabled ? "text-white/50" : "text-muted-foreground/70"
+        )}>Practice</span>
         <div className={cn(
-          "flex items-center rounded-lg p-1",
+          "flex items-center rounded-lg p-0.5 gap-0.5",
           cameraEnabled ? "bg-white/10" : "bg-muted/50"
         )}>
           {modes.map((m) => (
@@ -57,9 +57,9 @@ export function PracticeToolbar({
               size="sm"
               onClick={() => onMemorizationChange(m.value)}
               className={cn(
-                "gap-1.5 text-xs h-7 px-2",
+                "gap-1 text-[11px] px-2",
                 memorizationMode === m.value && "shadow-sm",
-                cameraEnabled && memorizationMode !== m.value && "text-white/70 hover:text-white hover:bg-white/10",
+                cameraEnabled && memorizationMode !== m.value && "text-white/60",
                 cameraEnabled && memorizationMode === m.value && "bg-white/20 text-white"
               )}
               title={m.description}
@@ -72,15 +72,15 @@ export function PracticeToolbar({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1 shrink-0">
         <Button
           variant={micEnabled ? "secondary" : "ghost"}
           size="sm"
           onClick={onMicToggle}
           className={cn(
-            "gap-1.5 text-xs h-7 px-2",
+            "gap-1 text-[11px] px-2",
             cameraEnabled && micEnabled && "shadow-sm bg-white/20 text-white",
-            cameraEnabled && !micEnabled && "text-white/70"
+            cameraEnabled && !micEnabled && "text-white/60"
           )}
           title={micEnabled ? "Turn microphone off" : "Turn microphone on"}
           data-testid="button-mic-toggle"
@@ -98,7 +98,7 @@ export function PracticeToolbar({
           size="sm"
           onClick={onCameraToggle}
           className={cn(
-            "gap-1.5 text-xs h-7 px-2",
+            "gap-1 text-[11px] px-2",
             cameraEnabled && "shadow-sm bg-white/20 text-white"
           )}
           title={cameraEnabled ? "Turn camera off" : "Turn camera on"}
@@ -117,9 +117,9 @@ export function PracticeToolbar({
           size="sm"
           onClick={onRecordToggle}
           className={cn(
-            "gap-1.5 text-xs h-7 px-2 min-w-[70px]",
+            "gap-1 text-[11px] px-2",
             isRecording && "animate-pulse",
-            cameraEnabled && "text-white/70 hover:text-white hover:bg-white/10"
+            cameraEnabled && !isRecording && "text-white/60"
           )}
           title={isRecording ? "Stop recording" : cameraEnabled ? "Record video and audio" : "Record audio only"}
           data-testid="button-record-toggle"
@@ -131,7 +131,7 @@ export function PracticeToolbar({
             )} 
           />
           {isRecording ? (
-            <span className="font-mono text-xs">{formatTime(recordingTime)}</span>
+            <span className="font-mono text-[11px]">{formatTime(recordingTime)}</span>
           ) : (
             <span className="hidden sm:inline">Record</span>
           )}
