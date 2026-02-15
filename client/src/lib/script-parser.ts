@@ -1253,8 +1253,8 @@ function truncateAtActionStart(text: string): { dialogue: string; action: string
   const actionStartPatterns = [
     // "the [object] [verbs]" - narrative description of SPECIFIC objects with action verbs
     /\.\s+(the\s+(?:stick|helicopter|car|door|phone|camera|screen|lights?|plane|boat|room)\s+(?:descends?|rises?|moves?|opens?|closes?|falls?|crashes?|lands?|hovers?|flies?|spins?|turns?|shakes?))/i,
-    // ALL CAPS action words mid-sentence (sound effects, actions)
-    /\s+(then\s+)?([A-Z]{4,}S?\s+(and\s+)?[A-Z]{4,}S?\s+to\s+the)/i,
+    // ALL CAPS action words mid-sentence (sound effects, actions) - NO i flag, must be uppercase
+    /\s+(then\s+)?([A-Z]{4,}S?\s+(and\s+)?[A-Z]{4,}S?\s+to\s+the)/,
     // "then LURCHES", "then SLAMS" patterns  
     /\.\.\.\s*then\s+[A-Z]{4,}/i,
     // Character name's body part doing something (mid-text)
