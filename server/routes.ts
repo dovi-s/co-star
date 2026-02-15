@@ -329,11 +329,18 @@ CRITICAL RULES:
 4. Embrace the user's creative vision fully - comedy, drama, accents, cultural backgrounds, age, personality
 
 FORMAT:
-- For MONOLOGUES: Use a single character name, 15-30 lines. Break the speech into separate lines for rehearsal (one thought per line). Format: CHARACTER: Dialogue here.
-- For DIALOGUE: 12-20 lines between characters. Format: CHARACTER: Dialogue here.
+- EVERY line must start with the character name followed by a colon. This is critical for parsing.
+- For MONOLOGUES: Repeat the character name on EVERY line. Break the speech into 15-30 separate lines (one thought or beat per line). Example:
+  JAKE: So my mom calls me last week, right?
+  JAKE: She goes, "When are you getting married?"
+  JAKE: Ma, I can barely commit to a Netflix show.
+- For DIALOGUE: 12-20 lines between characters. Example:
+  SARAH: Did you hear about the promotion?
+  MIKE: No, what happened?
 - Character names in ALL CAPS
 - Brief stage directions in [brackets] when helpful
 - Any number of characters the user requests (including just one)
+- NEVER write long paragraphs under a single character label. Split into short, separate lines.
 
 WHAT MAKES GOOD WRITING:
 - Authentic voice that matches the character description
