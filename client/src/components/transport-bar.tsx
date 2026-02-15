@@ -227,7 +227,7 @@ export function TransportBar({
         </div>
       </div>
       
-      <div className="flex items-center justify-center gap-4 mt-3">
+      <div className="hidden sm:flex items-center justify-center gap-4 mt-3">
         <kbd className={cn(
           "px-2 py-0.5 rounded text-[9px] font-medium",
           cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground/70"
