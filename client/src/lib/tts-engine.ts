@@ -84,6 +84,8 @@ class TTSEngine {
   private useElevenLabs = true;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private callbackFired = false;
+  private fetchController: AbortController | null = null;
+  private speakGeneration = 0;
   
   // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
   private audioContext: AudioContext | null = null;
@@ -192,8 +194,17 @@ class TTSEngine {
       // Strip emphasis markers before sending to TTS
       const cleanText = stripEmphasisMarkers(text);
       
-      // Set a timeout for the fetch itself
+      // Capture the current generation so we can detect if stop() was called during fetch
+      const myGeneration = this.speakGeneration;
+      
+      // Abort any previous in-flight fetch
+      if (this.fetchController) {
+        this.fetchController.abort();
+      }
+      
+      // Create a new controller for this request (combines timeout + cancellation)
       const controller = new AbortController();
+      this.fetchController = controller;
       const fetchTimeout = setTimeout(() => controller.abort(), 15000);
       
       const response = await fetch("/api/tts/speak", {
@@ -211,6 +222,12 @@ class TTSEngine {
       });
       
       clearTimeout(fetchTimeout);
+      
+      // If stop() was called while we were fetching, discard this response
+      if (myGeneration !== this.speakGeneration) {
+        console.log("[TTS] Generation changed during fetch, discarding response");
+        return false;
+      }
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
@@ -225,6 +242,12 @@ class TTSEngine {
       if (audioBlob.size === 0) {
         console.log("[TTS] Empty audio blob");
         this.fireCallback("error", onEnd);
+        return false;
+      }
+      
+      // Check generation again after blob loaded
+      if (myGeneration !== this.speakGeneration) {
+        console.log("[TTS] Generation changed during blob load, discarding");
         return false;
       }
       
@@ -450,6 +473,13 @@ class TTSEngine {
   stop() {
     this.clearWatchdog();
     this.callbackFired = true; // Prevent any pending callbacks
+    this.speakGeneration++; // Invalidate any in-flight requests
+    
+    // Abort any in-flight fetch
+    if (this.fetchController) {
+      this.fetchController.abort();
+      this.fetchController = null;
+    }
     
     if (this.currentAudio) {
       this.currentAudio.pause();
