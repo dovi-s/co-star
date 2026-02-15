@@ -1562,8 +1562,9 @@ function preprocessScript(rawText: string): string {
   
   // Split on colon-format character names mid-line (screenplay format merged lines)
   // e.g., "Like, a LUCY: You're disgusting." -> "Like, a\nLUCY: You're disgusting."
-  // Pattern: space + ALLCAPS NAME (3+ chars to avoid short words like IN, AT) + colon + space
-  text = text.replace(/\s+([A-Z]{3,}(?:\s+[A-Z]{2,})?):\s+/g, '\n$1: ');
+  // Only split after sentence-ending punctuation or comma, NOT inside quoted dialogue
+  // Pattern: punctuation + space + ALLCAPS NAME (3+ chars) + colon + space
+  text = text.replace(/([.!?,;])\s+([A-Z]{3,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
   
   // Split when lowercase dialogue ends and all-caps name starts directly
   // e.g., "...phone. KEVIN McCALLISTER enters." -> "...phone.\nKEVIN McCALLISTER enters."
