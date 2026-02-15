@@ -93,7 +93,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
       <main className="flex-1 flex flex-col onboarding-glow relative">
         <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
           style={{
-            background: 'radial-gradient(ellipse at 50% 50%, hsl(340 65% 55% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
+            background: 'radial-gradient(ellipse at 50% 50%, hsl(28 35% 54% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
             animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
           }}
         />

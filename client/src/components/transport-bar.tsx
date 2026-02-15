@@ -110,7 +110,7 @@ export function TransportBar({
                 </linearGradient>
                 <radialGradient id="vessel-fill-speaking" cx="50%" cy="50%" r="50%">
                   <stop offset="0%" stopColor="hsl(217 89% 51% / 0.08)" />
-                  <stop offset="60%" stopColor="hsl(280 65% 60% / 0.04)" />
+                  <stop offset="60%" stopColor="hsl(214 100% 68% / 0.04)" />
                   <stop offset="100%" stopColor="transparent" />
                 </radialGradient>
                 <radialGradient id="vessel-fill-listening" cx="50%" cy="50%" r="50%">

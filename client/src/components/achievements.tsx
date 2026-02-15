@@ -43,7 +43,7 @@ const ACHIEVEMENTS: Achievement[] = [
     name: "Line Master",
     description: "1,000 lines rehearsed",
     icon: <Award className="h-5 w-5" />,
-    color: "from-purple-400 to-purple-600",
+    color: "from-blue-400 to-blue-600",
   },
   {
     id: "runs_10",
