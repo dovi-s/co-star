@@ -85,8 +85,11 @@ export function TransportBar({
           </button>
 
           <div className={cn(
-            "relative mx-1",
-            isPlaying && "energy-halo rounded-full"
+            "relative mx-1 transport-emotional",
+            !isPlaying && "state-idle",
+            isPlaying && isSpeaking && "state-speaking",
+            isPlaying && isListening && "state-listening",
+            isPlaying && !isSpeaking && !isListening && "state-thinking"
           )}>
             <svg 
               className="w-[68px] h-[68px] -rotate-90"

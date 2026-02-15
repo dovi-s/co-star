@@ -11,9 +11,9 @@ interface AIStateIndicatorProps {
 }
 
 const sizeConfig = {
-  sm: { container: "w-8 h-8", icon: "h-3.5 w-3.5", ring: 14, stroke: 2 },
-  md: { container: "w-10 h-10", icon: "h-4 w-4", ring: 18, stroke: 2.5 },
-  lg: { container: "w-12 h-12", icon: "h-5 w-5", ring: 22, stroke: 3 },
+  sm: { container: "w-8 h-8", icon: "h-3.5 w-3.5", blob: "w-5 h-5" },
+  md: { container: "w-10 h-10", icon: "h-4 w-4", blob: "w-6 h-6" },
+  lg: { container: "w-12 h-12", icon: "h-5 w-5", blob: "w-7 h-7" },
 };
 
 const stateLabels: Record<AIState, string> = {
@@ -39,7 +39,7 @@ export function AIStateIndicator({
           "relative flex items-center justify-center rounded-full transition-all duration-300",
           config.container,
           state === "speaking" && "energy-ring speaking",
-          state === "listening" && "energy-ring listening",
+          state === "listening" && "gradient-ripple",
           state === "thinking" && "energy-ring thinking",
           isActive && "energy-halo"
         )}
@@ -66,8 +66,7 @@ export function AIStateIndicator({
           )}
           {state === "thinking" && (
             <div
-              className={cn(config.icon, "rounded-full border-2 border-accent/30 border-t-accent animate-spin transition-all duration-200")}
-              style={{ animationDuration: "2s" }}
+              className={cn(config.blob, "thinking-blob transition-all duration-200")}
             />
           )}
           {state === "idle" && (
@@ -76,10 +75,6 @@ export function AIStateIndicator({
             />
           )}
         </div>
-
-        {state === "listening" && (
-          <div className="absolute inset-0 rounded-full voice-ripple pointer-events-none" aria-hidden="true" />
-        )}
       </div>
 
       {showLabel && isActive && (

@@ -202,12 +202,10 @@ export function ThreeLineReader({
         data-testid={`line-${type}`}
       >
         {isCurrent && !isUser && isSpeaking && !cameraMode && (
-          <div className="absolute inset-0 rounded-xl gradient-flow pointer-events-none" aria-hidden="true" />
+          <div className="absolute inset-0 rounded-xl energy-directional energy-directional-speaking pointer-events-none" aria-hidden="true" />
         )}
         {isCurrent && isUser && isListening && !cameraMode && (
-          <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none" aria-hidden="true">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/[0.05] to-transparent gradient-flow-fast" />
-          </div>
+          <div className="absolute inset-0 rounded-xl energy-directional energy-directional-listening pointer-events-none" aria-hidden="true" />
         )}
         <div className="flex items-start gap-3 relative">
           {isCurrent && (
@@ -219,7 +217,7 @@ export function ThreeLineReader({
                 !isUser && !cameraMode && "bg-muted/60",
                 !isUser && cameraMode && "bg-white/10",
                 isSpeaking && !isUser && "energy-ring speaking",
-                isListening && isUser && "energy-ring listening"
+                isListening && isUser && "gradient-ripple"
               )}
             >
               {isUser ? (

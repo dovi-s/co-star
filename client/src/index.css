@@ -565,6 +565,315 @@
   opacity: 1;
 }
 
+/* ============================================
+   GEMINI PRINCIPLE 1: DIRECTIONAL GRADIENT ENERGY
+   Sharp leading edge → soft diffusing tail
+   Points users toward what matters
+   ============================================ */
+
+@keyframes directional-sweep {
+  0% { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.energy-directional {
+  position: relative;
+  overflow: hidden;
+}
+
+.energy-directional::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.12) 20%,
+    hsl(var(--primary) / 0.06) 40%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: directional-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.energy-directional-listening::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--success) / 0.10) 20%,
+    hsl(var(--success) / 0.05) 40%,
+    transparent 60%
+  );
+  background-size: 200% 100%;
+  animation: directional-sweep 3s ease-in-out infinite;
+}
+
+.energy-directional-speaking::before {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    hsl(var(--primary) / 0.10) 15%,
+    hsl(var(--primary) / 0.04) 35%,
+    transparent 55%
+  );
+  background-size: 200% 100%;
+  animation: directional-sweep 3.5s ease-in-out infinite;
+}
+
+/* Left-edge accent: sharp energy entering from left */
+.energy-edge-left {
+  position: relative;
+}
+
+.energy-edge-left::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 3px 0 0 3px;
+  background: var(--energy-primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.energy-edge-left.active::after {
+  opacity: 1;
+}
+
+.energy-edge-left.speaking::after {
+  background: var(--energy-primary);
+  opacity: 0.8;
+}
+
+.energy-edge-left.listening::after {
+  background: var(--energy-success);
+  opacity: 0.9;
+}
+
+/* ============================================
+   GEMINI PRINCIPLE 3: ORGANIC THINKING BLOB
+   Morphing gradient that shows active synthesis
+   ============================================ */
+
+@keyframes thinking-morph {
+  0%, 100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    background-position: 0% 50%;
+  }
+  25% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+  50% {
+    border-radius: 50% 60% 30% 60% / 30% 70% 40% 60%;
+    background-position: 100% 50%;
+  }
+  75% {
+    border-radius: 60% 30% 60% 40% / 70% 40% 60% 30%;
+  }
+}
+
+.thinking-blob {
+  background: conic-gradient(
+    from 180deg,
+    hsl(28 35% 54% / 0.6),
+    hsl(47 96% 53% / 0.4),
+    hsl(280 65% 60% / 0.3),
+    hsl(217 89% 51% / 0.4),
+    hsl(28 35% 54% / 0.6)
+  );
+  background-size: 200% 200%;
+  animation: thinking-morph 4s ease-in-out infinite, energy-rotate 8s linear infinite;
+  filter: blur(1px);
+}
+
+.dark .thinking-blob {
+  background: conic-gradient(
+    from 180deg,
+    hsl(28 45% 52% / 0.5),
+    hsl(47 90% 55% / 0.4),
+    hsl(280 60% 65% / 0.3),
+    hsl(214 100% 68% / 0.4),
+    hsl(28 45% 52% / 0.5)
+  );
+}
+
+/* ============================================
+   GEMINI PRINCIPLE 5: RADIAL GRADIENT RIPPLES
+   Concentric gradient rings expanding outward
+   ============================================ */
+
+@keyframes gradient-ripple {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.gradient-ripple {
+  position: relative;
+}
+
+.gradient-ripple::before,
+.gradient-ripple::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    transparent 55%,
+    hsl(var(--success) / 0.25) 65%,
+    hsl(var(--success) / 0.10) 75%,
+    transparent 85%
+  );
+  animation: gradient-ripple 2.5s ease-out infinite;
+  pointer-events: none;
+}
+
+.gradient-ripple::after {
+  animation-delay: 0.8s;
+}
+
+.gradient-ripple-primary::before,
+.gradient-ripple-primary::after {
+  background: radial-gradient(
+    circle,
+    transparent 55%,
+    hsl(var(--primary) / 0.20) 65%,
+    hsl(var(--primary) / 0.08) 75%,
+    transparent 85%
+  );
+}
+
+/* ============================================
+   GEMINI PRINCIPLE 4: PLAY BUTTON EMOTIONAL CENTER
+   State-responsive gradient aura around the transport
+   ============================================ */
+
+@keyframes emotional-aura {
+  0%, 100% {
+    box-shadow: 0 0 0 0 var(--aura-color, hsl(var(--primary) / 0.15)),
+                0 0 24px -4px var(--aura-color, hsl(var(--primary) / 0.08));
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--aura-color, hsl(var(--primary) / 0.06)),
+                0 0 36px -2px var(--aura-color, hsl(var(--primary) / 0.12));
+  }
+}
+
+.transport-emotional {
+  --aura-color: hsl(var(--primary) / 0.12);
+  border-radius: 50%;
+}
+
+.transport-emotional.state-speaking {
+  --aura-color: hsl(var(--primary) / 0.15);
+  animation: emotional-aura 2.5s ease-in-out infinite;
+}
+
+.transport-emotional.state-listening {
+  --aura-color: hsl(var(--success) / 0.15);
+  animation: emotional-aura 3s ease-in-out infinite;
+}
+
+.transport-emotional.state-thinking {
+  --aura-color: hsl(28 35% 54% / 0.15);
+  animation: emotional-aura 4s ease-in-out infinite;
+}
+
+.transport-emotional.state-idle {
+  animation: none;
+}
+
+/* ============================================
+   GEMINI PRINCIPLE 2: SOFT ONBOARDING
+   Welcoming gradient backgrounds that invite exploration
+   ============================================ */
+
+@keyframes soft-ambient {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1) translate(0, 0);
+  }
+  33% {
+    opacity: 0.7;
+    transform: scale(1.1) translate(5%, -3%);
+  }
+  66% {
+    opacity: 0.6;
+    transform: scale(1.05) translate(-3%, 2%);
+  }
+}
+
+.onboarding-glow {
+  position: relative;
+}
+
+.onboarding-glow::before {
+  content: '';
+  position: absolute;
+  top: -20%;
+  left: -10%;
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    hsl(var(--primary) / 0.06) 0%,
+    hsl(var(--primary) / 0.02) 40%,
+    transparent 70%
+  );
+  animation: soft-ambient 12s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.onboarding-glow::after {
+  content: '';
+  position: absolute;
+  bottom: -15%;
+  right: -5%;
+  width: 50%;
+  height: 50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    hsl(28 35% 54% / 0.05) 0%,
+    hsl(28 35% 54% / 0.02) 40%,
+    transparent 70%
+  );
+  animation: soft-ambient 15s ease-in-out infinite;
+  animation-delay: -5s;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.dark .onboarding-glow::before {
+  background: radial-gradient(
+    circle,
+    hsl(214 100% 68% / 0.06) 0%,
+    hsl(214 100% 68% / 0.02) 40%,
+    transparent 70%
+  );
+}
+
+.dark .onboarding-glow::after {
+  background: radial-gradient(
+    circle,
+    hsl(28 45% 52% / 0.05) 0%,
+    hsl(28 45% 52% / 0.02) 40%,
+    transparent 70%
+  );
+}
+
 /* --- Soft Progress: Gradient-filled progress bar --- */
 @keyframes progress-energy {
   0% { background-position: 0% 50%; }
