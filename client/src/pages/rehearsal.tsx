@@ -990,6 +990,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         onToggleDirections={() => setShowDirections(!showDirections)}
         onJumpToLine={handleJumpToLine}
         cameraMode={camera.isEnabled}
+        onToast={(msg) => toast({ description: msg })}
       />
 
       {showCelebration && (() => {
