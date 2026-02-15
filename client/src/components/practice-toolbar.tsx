@@ -1,11 +1,13 @@
 import type { MemorizationMode } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff, Lightbulb, Brain, Video, VideoOff, Circle } from "lucide-react";
+import { Eye, EyeOff, Lightbulb, Brain, Mic, MicOff, Video, VideoOff, Circle } from "lucide-react";
 
 interface PracticeToolbarProps {
   memorizationMode: MemorizationMode;
   onMemorizationChange: (mode: MemorizationMode) => void;
+  micEnabled: boolean;
+  onMicToggle: () => void;
   cameraEnabled: boolean;
   onCameraToggle: () => void;
   isRecording: boolean;
@@ -29,6 +31,8 @@ function formatTime(seconds: number): string {
 export function PracticeToolbar({ 
   memorizationMode, 
   onMemorizationChange,
+  micEnabled,
+  onMicToggle,
   cameraEnabled,
   onCameraToggle,
   isRecording,
@@ -70,12 +74,32 @@ export function PracticeToolbar({
 
       <div className="flex items-center gap-2">
         <Button
+          variant={micEnabled ? "secondary" : "ghost"}
+          size="sm"
+          onClick={onMicToggle}
+          className={cn(
+            "gap-1.5 text-xs h-7 px-2",
+            cameraEnabled && micEnabled && "shadow-sm bg-white/20 text-white",
+            cameraEnabled && !micEnabled && "text-white/70"
+          )}
+          title={micEnabled ? "Turn microphone off" : "Turn microphone on"}
+          data-testid="button-mic-toggle"
+        >
+          {micEnabled ? (
+            <Mic className="h-3.5 w-3.5" />
+          ) : (
+            <MicOff className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden sm:inline">Mic</span>
+        </Button>
+
+        <Button
           variant={cameraEnabled ? "secondary" : "ghost"}
           size="sm"
           onClick={onCameraToggle}
           className={cn(
             "gap-1.5 text-xs h-7 px-2",
-            cameraEnabled && "shadow-sm bg-white/20 text-white hover:bg-white/30"
+            cameraEnabled && "shadow-sm bg-white/20 text-white"
           )}
           title={cameraEnabled ? "Turn camera off" : "Turn camera on"}
           data-testid="button-camera-toggle"

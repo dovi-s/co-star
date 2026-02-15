@@ -75,6 +75,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [userTranscript, setUserTranscript] = useState("");
   const [isUserTurn, setIsUserTurn] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   
@@ -458,7 +459,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     
     // Only try speech recognition if available and not blocked
-    if (speechRecognition.available && !micBlocked) {
+    if (speechRecognition.available && !micBlocked && micEnabled) {
       // Small delay to let audio finish and avoid overlap
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
@@ -485,7 +486,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 5000);
     }
-  }, [micBlocked, advanceAfterUserLine]);
+  }, [micBlocked, micEnabled, advanceAfterUserLine]);
 
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
@@ -1245,6 +1246,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           <PracticeToolbar
             memorizationMode={session.memorizationMode || "off"}
             onMemorizationChange={handleMemorizationChange}
+            micEnabled={micEnabled}
+            onMicToggle={() => {
+              setMicEnabled(prev => {
+                if (prev) speechRecognition.abort();
+                return !prev;
+              });
+            }}
             cameraEnabled={camera.isEnabled}
             onCameraToggle={camera.toggleCamera}
             isRecording={camera.isRecording}
