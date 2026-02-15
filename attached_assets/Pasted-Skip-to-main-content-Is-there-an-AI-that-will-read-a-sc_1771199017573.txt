@@ -1,0 +1,544 @@
+Skip to main content
+Is there an AI that will read a script against you in real-time? : r/artificial
+
+
+r/artificial
+Search in r/artificial
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+r/artificial icon
+Go to artificial
+r/artificial
+•
+3y ago
+Iamacasualwalker
+
+Is there an AI that will read a script against you in real-time?
+A quick explanation. I'm an actor and since the pandemic, all actors have to submit self-tape auditions. Basically, an audition that you shoot your self at home and send to casting. It can sometimes be a pain to find someone you trust to read the other person's lines. But if there is a decent voice Ai that can learn a script and stay on queue. That would make my life and many others' lives easier. If this doesn't exist hopefully this post can inspire someone to make it.
+
+87
+·
+69
+u/OpenAI avatar
+OpenAI
+•
+Promoted
+
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Learn More
+chatgpt.com
+Thumbnail image: Developers & Codex 🩷 Try Codex for free with expanded limits.
+Comments Section
+u/StevenVincentOne avatar
+StevenVincentOne
+•
+3y ago
+readthrough.com and Tableread app.
+
+
+20
+3nails4holes
+•
+2y ago
+AI Act
+
+any idea how to make the ai read one character's lines and not yours but to leave a pause or space for it? i couldn't figure that out.
+
+also, how to designate certain ai voices for certain character roles? for example, nigerian girl ai voice for "thomasina," australian man (announcer) for "stephen," and no ai voice for my character.
+
+
+1
+sandinthecheeks
+•
+1y ago
+I built an app called ScenePartner (https://scenepartner.ai) that lets you read your lines, listens for you to finish, and the AI reads the other parts in a voice that you choose. We've got about 300 users using it right now!
+
+
+3
+kram3582
+•
+1y ago
+Dude, this is so freaking cool. I thought it'd take ages to find something that works well. Bravo!
+
+1
+Oobowo
+•
+9mo ago
+Look no further. This is the one, folks! I’ve been looking for something like this for a while. This is so cool, beats coldread by far. Props to the devs! 👏🏻👏🏻👏🏻👏🏻👏🏻
+
+1
+UncleGingerDad
+•
+8mo ago
+So, I own a software development company and I was thinking of building this as a side project, but you did it so well I don't need to, bravo!
+
+1
+u/Warm_Lack_3131 avatar
+Warm_Lack_3131
+•
+5mo ago
+Do you have to upload the script, or do you need to read all the sides? Also choosing voices, how does this work?
+
+1
+StephenKurry
+•
+2y ago
+I'm creating a GPT for that now will update you soon! Only one voice tho. but that's natural for when you're doing a self tape usually only have one reader anyways!
+
+
+1
+u/patrickjohnmcc avatar
+patrickjohnmcc
+•
+2y ago
+Any progress?
+
+1
+RentConscious7968
+•
+2y ago
+Have you finished? 😃
+
+
+1
+StephenKurry
+•
+2y ago
+it's definitely still in beta mode, but if you want to participate and give me feedback let me know
+
+1
+Continue this thread
+brucebay
+•
+3y ago
+Give elevenlabs a try. People in chatgpt community uses it to give a voice to the responses. I also heard murf is good.
+
+
+9
+Dazzling-Diva100
+•
+3y ago
+This is good to know. Thank you for sharing.
+
+-4
+
+Dazzling-Diva100
+•
+3y ago
+
+Dazzling-Diva100
+•
+3y ago
+
+Dazzling-Diva100
+•
+3y ago
+putdownthekitten
+•
+3y ago
+You should look into AutoGPT. You can add a spoken voice with the elevenlabs api, and you can have it run a task, pause for confirmation, and then once you give the go ahead it moves to the next command. Right now it's limited to 5 goals, so you can't just feed it a script and have each line be it's own goal (this would be tedious anyway), but if you give it access to the whole script and tell it to read the next specified characters line, pause, and then await the next command to read the next one, you can probably get it to do exactly the kind of thing you're lookin for.
+
+Edit: almost forgot to mention, with the elevenlabs api, you get a set amount of free tokens you can use for the free trial with the preset voices, or one you generate with their synthetic tool. For $5/month, you can clone a voice, allowing you to use nearly anyone if you have enough traing data, about a minute and a half's worth. You can probably have it play different characters using different voices, cause I know it used a male voice initially with me, but when it made an agent, she had a female voice.
+
+7
+[deleted]
+•
+3y ago
+Not an AI solution but if you are using a Mac, turn on Speech on selection from Accessibility in system preference, select the text and hit Option ESC, Siri will read anything you highlighted.
+
+4
+
+[deleted]
+•
+3y ago
+Dazzling-Diva100
+•
+3y ago
+I think this more for those who either don’t have the time or partners available.
+
+2
+[deleted]
+•
+3y ago
+Yes, there are AI programs that can read a script and perform it in real-time alongside a human actor. These programs use machine learning and natural language processing to analyze the script and generate appropriate responses based on the context and dialogue.
+
+One example of this technology is "AI Act," a real-time voice recognition and synthesis system developed by researchers at Carnegie Mellon University. AI Act can generate expressive and nuanced performances in response to human actors, making it a useful tool for rehearsals, training, and virtual productions.
+
+Other companies and research institutions are also exploring the use of AI in theater and film. While this technology is still in its early stages, it has the potential to revolutionize the way we create and experience performances.
+
+2
+u/anchorBrowser avatar
+u/anchorBrowser
+•
+Promoted
+
+Finally: Browser Automation That Doesn't Require a DevOps Team
+Finally: Browser Automation That Doesn't Require a DevOps Team
+Finally: Browser Automation That Doesn't Require a DevOps Team
+Finally: Browser Automation That Doesn't Require a DevOps Team
+anchorbrowser.io
+Sign Up
+u/Walrus-Amazing avatar
+Walrus-Amazing
+•
+3y ago
+the actors i know will facetime me to do lines on a recording sometimes. just throwing that out in case you hadn't already thought of it. you might have tho, in that case ignore this comment.
+
+2
+apex1047
+•
+2y ago
+Did you end up finding / using anything?
+
+
+1
+StephenKurry
+•
+2y ago
+I'm creating one now. Will update you! Working out the bugs now
+
+1
+sandinthecheeks
+•
+2y ago
+Actor and developer here. Been working on this exact thing! https://scenepartner.ai
+
+Feel free to give it a try and dm me with any questions/comments
+
+
+1
+tronborg2000
+•
+1y ago
+Just discovered this. This is excellent. Any chance of an English accent voice?
+
+
+1
+sandinthecheeks
+•
+1y ago
+Yeah we can do that! Any particular region or just British RP?
+
+
+1
+tronborg2000
+•
+1y ago
+British RP would be great I'm based in Ireland but get a lot of requests from UK casting agents
+
+
+1
+sandinthecheeks
+•
+1y ago
+Sorry for the late update. British RP in male and female voices is available! https://scenepartner.ai
+
+1
+Continue this thread
+Dazzling-Diva100
+•
+3y ago
+API can do it !
+
+1
+u/frame_io avatar
+u/frame_io
+•
+Promoted
+
+From Capture to Campaign
+Learn More
+frame.io
+Thumbnail image: From Capture to Campaign
+Dazzling-Diva100
+•
+3y ago
+It makes sense that retrofitting would be required but it sounds doable. I would love to actually see how they are able to do it.
+
+0
+[deleted]
+•
+3y ago
+why wouldnt you just find someone to read with?
+
+0
+Dazzling-Diva100
+•
+3y ago
+It’s so cool that AutoGPT with elevenlabs api enables your AI to read a whole script, simply by running the whole script as a task.
+
+1
+Dazzling-Diva100
+•
+3y ago
+Free tokens ! Great tip.
+
+1
+Dazzling-Diva100
+•
+3y ago
+The television industry wouldn’t have to hire people for voice overs.
+
+1
+Dazzling-Diva100
+•
+3y ago
+Cloning a voice is very cool !
+
+1
+Dazzling-Diva100
+•
+3y ago
+Great point ! I guess if you couldn’t find anyone ?
+
+1
+Dazzling-Diva100
+•
+3y ago
+It’s so much easier and faster to practice with AI. It might even be more effective if they can provide feedback.
+
+1
+Dazzling-Diva100
+•
+3y ago
+I guess if you didn’t want to rely on someone else being available to get together and spend the time…. AI would be helpful.
+
+0
+ade5791
+•
+3y ago
+You can message me and can work on making this a reality
+
+1
+Tiamatium
+•
+3y ago
+Right now EvelenLabs is by far the best.
+
+1
+FearlessAd5620
+•
+3y ago
+There are AI-powered tools that can assist with script reading and performance, such as virtual teleprompters or AI-driven voice coaches. These tools can provide real-time feedback on tone, pacing, and delivery, and help actors or presenters improve their performances. However, these tools are not designed to read a script against you in real-time in the way you might be imagining. Rather, they are meant to be used as a helpful tool for individuals to improve their own performances.
+
+1
+
+View more comments
+Related Answers Section
+Related Answers
+Best AI readers for self-tape auditions
+Top script reading apps for actors
+AI audition tools for actors
+Best iPhone teleprompters for auditions
+Latest breakthroughs in AI technology
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+is using an ai reader a “bad look”?
+r/acting icon
+r/acting
+•
+4mo ago
+is using an ai reader a “bad look”?
+3 upvotes · 32 comments
+What are the best tools to get your script read out loud by AI?
+r/Screenwriting icon
+r/Screenwriting
+•
+3y ago
+What are the best tools to get your script read out loud by AI?
+4 comments
+Is there good AI for reading scripts out loud?
+r/Filmmakers
+•
+2y ago
+Is there good AI for reading scripts out loud?
+8 comments
+Using AI as your audition reader?
+r/acting icon
+r/acting
+•
+9mo ago
+Using AI as your audition reader?
+16 comments
+AI script readers ?
+r/Screenwriting icon
+r/Screenwriting
+•
+2y ago
+AI script readers ?
+20 comments
+What AI program is advanced enough to make a 4 minute short video?
+r/artificial icon
+r/artificial
+•
+5mo ago
+What AI program is advanced enough to make a 4 minute short video?
+7 upvotes · 57 comments
+How critical is having a reader for self-tapes these days?
+r/acting icon
+r/acting
+•
+3y ago
+How critical is having a reader for self-tapes these days?
+12 upvotes · 36 comments
+Is there an AI out there into which I can feed a script and have it create an animated "movie" short?
+r/GenAI4all icon
+r/GenAI4all
+•
+9mo ago
+Is there an AI out there into which I can feed a script and have it create an animated "movie" short?
+5 upvotes · 8 comments
+App that reads for self tapes?
+r/acting icon
+r/acting
+•
+1y ago
+App that reads for self tapes?
+2 upvotes · 9 comments
+Is there a way for AI to continuously write my entire book?
+r/writingcirclejerk icon
+r/writingcirclejerk
+•
+5mo ago
+Is there a way for AI to continuously write my entire book?
+206 upvotes · 78 comments
+The secret to human-sounding AI writing (after too many hours of trial and error)
+r/AI_Leaderboard
+•
+4mo ago
+The secret to human-sounding AI writing (after too many hours of trial and error)
+37 upvotes · 6 comments
+how do I use AI to write my book???
+r/writingcirclejerk icon
+r/writingcirclejerk
+•
+19d ago
+how do I use AI to write my book???
+394 upvotes · 131 comments
+Are there any non-AI writing tools?
+r/KeepWriting icon
+r/KeepWriting
+•
+4mo ago
+Are there any non-AI writing tools?
+59 upvotes · 75 comments
+What's currently the best a.i. for writing?
+r/AI_Application icon
+r/AI_Application
+•
+11d ago
+What's currently the best a.i. for writing?
+3 upvotes · 17 comments
+No scene reader advice?
+r/acting icon
+r/acting
+•
+2mo ago
+No scene reader advice?
+4 upvotes · 25 comments
+Scriptwriting with ai : what best tools or tips ?
+r/aitubers icon
+r/aitubers
+•
+5mo ago
+Scriptwriting with ai : what best tools or tips ?
+5 upvotes · 21 comments
+Looking for a reliable free AI transcription tool for meetings
+r/artificial icon
+r/artificial
+•
+3mo ago
+Looking for a reliable free AI transcription tool for meetings
+8 upvotes · 36 comments
+How do I tell if my writing is AI?
+r/writingcirclejerk icon
+r/writingcirclejerk
+•
+5mo ago
+How do I tell if my writing is AI?
+182 upvotes · 25 comments
+Has anyone upgraded from cold read to Chat GBT mobile app for a scene partner?
+r/acting icon
+r/acting
+•
+5mo ago
+Has anyone upgraded from cold read to Chat GBT mobile app for a scene partner?
+9 comments
+A lesson learnt from using ai in writing.
+r/WritersGroup
+•
+4mo ago
+A lesson learnt from using ai in writing.
+27 upvotes · 24 comments
+How We Built a 48-Hour AI Filmmaking Pipeline Using Multi-Model Stacks
+r/artificial icon
+r/artificial
+•
+3mo ago
+How We Built a 48-Hour AI Filmmaking Pipeline Using Multi-Model Stacks
+r/artificial - How We Built a 48-Hour AI Filmmaking Pipeline Using Multi-Model Stacks
+0:23
+15 comments
+Best free AI for email writing, emotions, etc?
+r/artificial icon
+r/artificial
+•
+4mo ago
+Best free AI for email writing, emotions, etc?
+3 upvotes · 11 comments
+Has anyone done a live reading of their script?
+r/Screenwriting icon
+r/Screenwriting
+•
+4y ago
+Has anyone done a live reading of their script?
+12 comments
+Which text-to-speech app(s) are designed to read scripts aloud?
+r/Screenwriting icon
+r/Screenwriting
+•
+2y ago
+Which text-to-speech app(s) are designed to read scripts aloud?
+9 upvotes · 11 comments
+Does anyone use AI for self tapes?
+r/acting icon
+r/acting
+•
+2mo ago
+Does anyone use AI for self tapes?
+14 comments
+View Post in
+Русский
+简体中文
+Community Info Section
+r/artificial
+Join
+Artificial Intelligence (AI)
+Reddit’s home for Artificial Intelligence (AI)
+Public
+Top Posts
+Reddit
+reReddit: Top posts of April 28, 2023
+Reddit
+reReddit: Top posts of April 2023
+Reddit
+reReddit: Top posts of 2023
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Collapse Navigation
