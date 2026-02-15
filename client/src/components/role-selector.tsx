@@ -44,7 +44,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
       )} 
       data-testid="role-selector"
     >
-      <header className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border/40 sticky top-0 z-50 bg-background/95 backdrop-blur-sm safe-top animate-fade-in">
+      <header className="flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top animate-fade-in rounded-none">
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -140,7 +140,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
         </div>
       </div>
 
-      <div className="sticky bottom-0 px-4 pt-3 pb-4 border-t border-border/40 bg-background animate-slide-up z-40 space-y-2">
+      <div className="sticky bottom-0 px-4 pt-3 pb-4 glass-surface animate-slide-up z-40 space-y-2 rounded-none">
         <Button
           onClick={handleContinue}
           disabled={!selectedRoleId}

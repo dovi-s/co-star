@@ -539,9 +539,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       <div
         className={cn(
-          "relative rounded-xl transition-all duration-200 bg-muted/30 textarea-glow",
-          isDragging && "ring-2 ring-foreground/20",
-          script && "bg-muted/20"
+          "relative rounded-xl transition-all duration-200 glass-surface-clear textarea-glow",
+          isDragging && "ring-2 ring-foreground/20"
         )}
         onDrop={handleDrop}
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}

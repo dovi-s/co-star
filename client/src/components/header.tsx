@@ -134,10 +134,10 @@ export function Header({
   };
 
   return (
-    <header className={`flex items-center justify-between gap-3 px-4 py-3 border-b sticky top-0 z-50 safe-top ${
+    <header className={`flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 safe-top rounded-none ${
       cameraMode 
-        ? "bg-black/60 backdrop-blur-xl border-white/10" 
-        : "border-border/40 bg-background/95 backdrop-blur-sm"
+        ? "glass-surface-clear bg-black/40" 
+        : "glass-surface"
     }`}>
       <div className="flex items-center gap-3 min-w-0">
         {onBack && (

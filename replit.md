@@ -20,11 +20,14 @@ Do not change the design system without prior discussion.
 ## System Architecture
 
 ### UI/UX Decisions
-The design philosophy is sophisticated and minimal, inspired by premium companies like Stripe, Linear, and Notion. It emphasizes clean typography, high contrast, and subtle interactions with no jarring animations. The aesthetic is professional, focused, and purposeful.
+The design philosophy is sophisticated and minimal, now using Apple's Liquid Glass design language. Translucent glass materials for navigation and controls, concentric rounded shapes, content-first hierarchy with minimal chrome. Clean monochromatic controls with selective color accents.
 - **Copy Guidelines**: Simple, direct wording; no exclamation marks or em-dashes.
-- **Color Scheme**: High contrast using foreground/background. Light Mode: Background #FFFFFF, Foreground #0F172A. Dark Mode: Background #0E1218, Foreground #E6EDF3. Status colors are green for success, muted tones for secondary elements.
+- **Color Scheme**: High contrast using foreground/background. Light Mode: Background #FFFFFF, Foreground #0F172A. Dark Mode: Background #0E1218, Foreground #E6EDF3. Blue primary (217/214/197 hue), bronze accent (28 hue), gold (47 hue). No purple/pink tones.
 - **Typography**: Inter font family, weight contrast for hierarchy (semibold headings, medium body), minimal text sizes (xs, sm, base).
 - **Motion**: 200ms ease-out transitions, subtle scale effects (0.98) on press, no playful animations.
+- **Liquid Glass Design System**: CSS utility classes `glass-surface`, `glass-surface-heavy`, `glass-surface-clear`, `glass-tint-primary` in `index.css` with light/dark variants and `@supports` fallback for browsers without `backdrop-filter`. Applied to headers, transport bar, overlays (Dialog, Sheet, AlertDialog, DropdownMenu, Popover, Tooltip), script import textarea, role selector footer.
+- **Border Radius**: Concentric system with xl (16px) for panels, lg (12px) for cards/overlays, md (8px) for buttons, sm (4px) for badges.
+- **Overlay Dimming**: `bg-black/60` with `backdrop-blur-sm` for refined glass aesthetic on dialog/sheet/alert overlays.
 - **Audition Mode UI**: When camera is active, UI becomes dark and translucent with glassmorphic styling (e.g., `bg-black/60` with `backdrop-blur-xl`).
 
 ### Technical Implementations

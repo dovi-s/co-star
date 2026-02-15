@@ -37,7 +37,7 @@ export function TransportBar({
   const isComplete = currentLine + 1 === totalLines;
 
   return (
-    <div className="w-full" data-testid="transport-bar">
+    <div className="w-full glass-surface rounded-2xl px-4 py-3" data-testid="transport-bar">
       <div className="flex items-center justify-center gap-3">
         <Button
           variant="ghost"
@@ -70,10 +70,10 @@ export function TransportBar({
             }}
             title="Previous"
             className={cn(
-              "p-3 rounded-full touch-manipulation select-none icon-btn-press",
+              "p-3 rounded-full touch-manipulation select-none icon-btn-press transition-colors",
               cameraMode 
                 ? "hover:bg-white/10 active:bg-white/20" 
-                : "hover:bg-muted active:bg-muted/80",
+                : "hover-elevate active-elevate-2",
               canGoBack 
                 ? (cameraMode ? "text-white" : "text-foreground") 
                 : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
@@ -163,7 +163,7 @@ export function TransportBar({
               variant={isPlaying ? "secondary" : "default"}
               data-testid="button-play-pause"
               className={cn(
-                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full w-11 h-11",
+                "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full",
                 "transition-transform duration-100 active:scale-90"
               )}
             >
@@ -193,10 +193,10 @@ export function TransportBar({
             }}
             title="Next"
             className={cn(
-              "p-3 rounded-full touch-manipulation select-none icon-btn-press",
+              "p-3 rounded-full touch-manipulation select-none icon-btn-press transition-colors",
               cameraMode 
                 ? "hover:bg-white/10 active:bg-white/20" 
-                : "hover:bg-muted active:bg-muted/80",
+                : "hover-elevate active-elevate-2",
               canGoNext 
                 ? (cameraMode ? "text-white" : "text-foreground") 
                 : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
