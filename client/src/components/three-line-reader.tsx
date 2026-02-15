@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ScriptLine, Role, MemorizationMode, Scene } from "@shared/schema";
-import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp } from "lucide-react";
+import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { matchWords } from "@/lib/word-matcher";
@@ -81,6 +81,7 @@ interface ThreeLineReaderProps {
   onToggleBookmark: (lineId: string) => void;
   getRoleById: (roleId: string) => Role | undefined;
   onLineClick?: (line: ScriptLine) => void;
+  onPlayFromHere?: (line: ScriptLine) => void;
   userTranscript?: string;
   isListening?: boolean;
   isSpeaking?: boolean;
@@ -136,6 +137,7 @@ export function ThreeLineReader({
   onToggleBookmark,
   getRoleById,
   onLineClick,
+  onPlayFromHere,
   userTranscript,
   isListening,
   isSpeaking,
@@ -191,7 +193,7 @@ export function ThreeLineReader({
       <div
         onClick={() => onLineClick?.(line)}
         className={cn(
-          "relative py-4 px-4 rounded-xl transition-all duration-300 cursor-pointer",
+          "relative py-4 px-4 rounded-xl transition-all duration-300 cursor-pointer group",
           type === "previous" && "opacity-30 scale-[0.98]",
           type === "next" && "opacity-35 scale-[0.98]",
           isCurrent && isUser && !cameraMode && "bg-foreground text-background",
@@ -297,6 +299,22 @@ export function ThreeLineReader({
                 ) : renderFormattedText(line.text)
               )}
             </p>
+            
+            {!isCurrent && onPlayFromHere && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); onPlayFromHere(line); }}
+                className={cn(
+                  "mt-1.5 gap-1 text-[10px] px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity",
+                  cameraMode ? "text-white/50" : "text-muted-foreground/60"
+                )}
+                data-testid={`button-play-from-${type}`}
+              >
+                <Play className="h-3 w-3" />
+                Play from here
+              </Button>
+            )}
             
             {shouldMask && maskedContent?.hint && (
               <Button

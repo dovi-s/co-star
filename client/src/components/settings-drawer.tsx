@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -34,8 +34,10 @@ interface SettingsDrawerProps {
   userRoleId: string | null;
   ambientEnabled: boolean;
   playbackSpeed: number;
+  readerDelay: number;
   onAmbientToggle: (enabled: boolean) => void;
   onPlaybackSpeedChange: (speed: number) => void;
+  onReaderDelayChange: (delay: number) => void;
   onSceneChange: (index: number) => void;
   onRolePresetChange: (roleId: string, preset: VoicePreset) => void;
   onNewScript: (name: string, rawScript: string) => void;
@@ -51,8 +53,10 @@ export function SettingsDrawer({
   userRoleId,
   ambientEnabled,
   playbackSpeed,
+  readerDelay,
   onAmbientToggle,
   onPlaybackSpeedChange,
+  onReaderDelayChange,
   onSceneChange,
   onRolePresetChange,
   onNewScript,
@@ -147,6 +151,37 @@ export function SettingsDrawer({
                   <span>0.5x</span>
                   <span>1.0x</span>
                   <span>1.5x</span>
+                </div>
+              </div>
+
+              {/* Reader Delay */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                    <Timer className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">
+                      Reader Delay
+                    </label>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before AI speaks
+                    </p>
+                  </div>
+                </div>
+                <Slider
+                  value={[readerDelay]}
+                  onValueChange={([value]) => onReaderDelayChange(value)}
+                  min={0}
+                  max={3}
+                  step={0.5}
+                  className="w-full"
+                  data-testid="slider-reader-delay"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                  <span>0s</span>
+                  <span>1.5s</span>
+                  <span>3s</span>
                 </div>
               </div>
 

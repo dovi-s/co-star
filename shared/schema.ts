@@ -61,6 +61,7 @@ export const sessionSchema = z.object({
   ambientEnabled: z.boolean().default(false),
   memorizationMode: memorizationModeSchema.default("off"),
   playbackSpeed: z.number().min(0.5).max(1.5).default(1.0), // 0.5x to 1.5x speed
+  readerDelay: z.number().min(0).max(3).default(0), // 0-3 seconds delay before AI speaks
   runsCompleted: z.number().default(0),
   linesRehearsed: z.number().default(0),
   createdAt: z.string(),
@@ -95,6 +96,7 @@ export const updateSessionSchema = z.object({
   ambientEnabled: z.boolean().optional(),
   memorizationMode: memorizationModeSchema.optional(),
   playbackSpeed: z.number().min(0.5).max(1.5).optional(),
+  readerDelay: z.number().min(0).max(3).optional(),
   runsCompleted: z.number().optional(),
   linesRehearsed: z.number().optional(),
   name: z.string().optional(),

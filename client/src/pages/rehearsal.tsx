@@ -4,6 +4,7 @@ import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { PracticeToolbar } from "@/components/practice-toolbar";
+import { CountdownOverlay } from "@/components/countdown-overlay";
 import { VideoBackground, type OverlayData } from "@/components/video-background";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -78,6 +79,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [micEnabled, setMicEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
+  const [showCountdown, setShowCountdown] = useState(false);
+  const pendingPlayFromLineRef = useRef<number | null>(null);
   
   // Performance tracking - use ref to avoid closure issues
   const runPerformanceRef = useRef<RunPerformance>({
@@ -614,9 +617,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   useEffect(() => {
     const lineKey = session ? `${session.currentSceneIndex}-${session.currentLineIndex}` : null;
     
+    // Always clear any pending reader delay timeout when line/scene/play state changes
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+    
     if (session?.isPlaying && currentLine) {
-      // Check if we're already handling this exact line
-      // This prevents double-triggering when state updates rapidly
       if (speakingLineRef.current === lineKey) {
         console.log("[Rehearsal] Effect: Already handling line", lineKey);
         return;
@@ -633,8 +640,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         speechRecognition.abort();
         waitingForUserRef.current = false;
         setIsUserTurn(false);
-        console.log("[Rehearsal] Effect: Speaking AI line", lineKey);
-        speakLine();
+        const delay = session.readerDelay ?? 0;
+        if (delay > 0) {
+          console.log("[Rehearsal] Effect: Delaying AI line by", delay, "s", lineKey);
+          speakingLineRef.current = lineKey;
+          const capturedLineKey = lineKey;
+          speakTimeoutRef.current = window.setTimeout(() => {
+            speakTimeoutRef.current = null;
+            if (speakingLineRef.current !== capturedLineKey) {
+              console.log("[Rehearsal] Effect: Stale delay callback, skipping", capturedLineKey);
+              return;
+            }
+            console.log("[Rehearsal] Effect: Speaking AI line after delay", capturedLineKey);
+            speakLine();
+          }, delay * 1000);
+        } else {
+          console.log("[Rehearsal] Effect: Speaking AI line", lineKey);
+          speakLine();
+        }
       }
     } else {
       ttsEngine.stop();
@@ -642,12 +665,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       waitingForUserRef.current = false;
       setIsUserTurn(false);
       speakingLineRef.current = null;
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
-      }
     }
   }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
+
+  const startPlayback = useCallback(() => {
+    speakingLineRef.current = null;
+    if (session?.currentLineIndex === 0) {
+      resetRunPerformance();
+    }
+    setPlaying(true);
+  }, [session?.currentLineIndex, resetRunPerformance, setPlaying]);
 
   const handlePlayPause = () => {
     if (session?.isPlaying) {
@@ -668,14 +695,45 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setSpeakingWordIndex(-1);
       setPlaying(false);
     } else {
-      speakingLineRef.current = null;
-      // Only reset performance if starting from the beginning
-      if (session?.currentLineIndex === 0) {
-        resetRunPerformance();
-      }
-      setPlaying(true);
+      setShowCountdown(true);
     }
   };
+
+  const handleCountdownComplete = useCallback(() => {
+    setShowCountdown(false);
+    const pendingLine = pendingPlayFromLineRef.current;
+    pendingPlayFromLineRef.current = null;
+    if (pendingLine !== null) {
+      goToLine(pendingLine);
+      setTimeout(() => setPlaying(true), 50);
+    } else {
+      startPlayback();
+    }
+  }, [startPlayback, goToLine, setPlaying]);
+
+  const handleCountdownCancel = useCallback(() => {
+    setShowCountdown(false);
+    pendingPlayFromLineRef.current = null;
+  }, []);
+
+  const handlePlayFromLine = useCallback((lineIndex: number) => {
+    if (session?.isPlaying) {
+      ttsEngine.stop();
+      speechRecognition.abort();
+      waitingForUserRef.current = false;
+      setIsUserTurn(false);
+      speakingLineRef.current = null;
+      setIsSpeaking(false);
+      setSpeakingWordIndex(-1);
+      if (speakTimeoutRef.current) {
+        clearTimeout(speakTimeoutRef.current);
+        speakTimeoutRef.current = null;
+      }
+      setPlaying(false);
+    }
+    pendingPlayFromLineRef.current = lineIndex;
+    setShowCountdown(true);
+  }, [session?.isPlaying, setPlaying]);
 
   const handleNext = () => {
     ttsEngine.stop();
@@ -1182,9 +1240,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               if (lineIndex !== -1 && lineIndex !== session.currentLineIndex) {
                 if (session.isPlaying) {
                   ttsEngine.stop();
-                  speechRecognition.stop();
+                  speechRecognition.abort();
+                  waitingForUserRef.current = false;
+                  setIsUserTurn(false);
+                  speakingLineRef.current = null;
+                  setIsSpeaking(false);
+                  setSpeakingWordIndex(-1);
+                  setPlaying(false);
                 }
                 updateSession({ currentLineIndex: lineIndex, isPlaying: false });
+              }
+            }}
+            onPlayFromHere={(line) => {
+              const lineIndex = currentScene?.lines?.findIndex(l => l.id === line.id) ?? -1;
+              if (lineIndex !== -1) {
+                handlePlayFromLine(lineIndex);
               }
             }}
           />
@@ -1285,8 +1355,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           userRoleId={session.userRoleId}
           ambientEnabled={session.ambientEnabled}
           playbackSpeed={session.playbackSpeed ?? 1.0}
+          readerDelay={session.readerDelay ?? 0}
           onAmbientToggle={setAmbient}
           onPlaybackSpeedChange={(speed) => updateSession({ playbackSpeed: speed })}
+          onReaderDelayChange={(delay) => updateSession({ readerDelay: delay })}
           onSceneChange={goToScene}
           onRolePresetChange={handleRolePresetChange}
           onNewScript={handleNewScript}
@@ -1295,6 +1367,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           error={error}
         />
       </footer>
+      {showCountdown && (
+        <CountdownOverlay
+          onComplete={handleCountdownComplete}
+          onCancel={() => {
+            setShowCountdown(false);
+            pendingPlayFromLineRef.current = null;
+          }}
+          cameraMode={camera.isEnabled}
+        />
+      )}
     </div>
   );
 }
