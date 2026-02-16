@@ -58,9 +58,32 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     }
   }, [script]);
 
+  const cleanupAndParse = async (scriptText: string): Promise<{ parsed?: any; script?: string } | null> => {
+    try {
+      const cleanupResp = await fetch("/api/cleanup-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script: scriptText }),
+      });
+      if (!cleanupResp.ok) return null;
+      const cleanupData = await cleanupResp.json();
+      const cleaned = cleanupData.script || scriptText;
+      
+      const parseResp = await fetch("/api/parse-script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script: cleaned }),
+      });
+      if (parseResp.ok) {
+        const d = await parseResp.json();
+        if (d.parsed && d.parsed.roles?.length > 0) return { parsed: d.parsed, script: cleaned };
+      }
+    } catch {}
+    return null;
+  };
+
   const generateRandomScript = async () => {
     setIsGenerating(true);
-    // Clear any stale data from previous PDF uploads
     setServerParsedData(null);
     setUploadedFileName(null);
     try {
@@ -74,11 +97,20 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       const data = await response.json();
       setScript(data.script);
       
-      // If server returned pre-parsed data, use it and auto-proceed
       if (data.parsed && onImportParsed) {
         const sessionName = data.theme?.split(":")[0]?.trim() || "Generated Scene";
         onImportParsed(sessionName, data.parsed);
         return;
+      }
+      
+      if (data.script && onImportParsed) {
+        const retried = await cleanupAndParse(data.script);
+        if (retried?.parsed) {
+          if (retried.script) setScript(retried.script);
+          const sessionName = data.theme?.split(":")[0]?.trim() || "Generated Scene";
+          onImportParsed(sessionName, retried.parsed);
+          return;
+        }
       }
     } catch (e) {
       console.error("Failed to generate script:", e);
@@ -91,7 +123,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     if (!customPrompt.trim()) return;
     
     setIsGenerating(true);
-    // Clear any stale data from previous PDF uploads
     setServerParsedData(null);
     setUploadedFileName(null);
     try {
@@ -106,13 +137,24 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       const data = await response.json();
       setScript(data.script);
       
-      // If server returned pre-parsed data, use it and auto-proceed
       if (data.parsed && onImportParsed) {
         const sessionName = customPrompt.slice(0, 30).trim() || "Generated Scene";
         setShowPromptInput(false);
         setCustomPrompt("");
         onImportParsed(sessionName, data.parsed);
         return;
+      }
+      
+      if (data.script && onImportParsed) {
+        const retried = await cleanupAndParse(data.script);
+        if (retried?.parsed) {
+          if (retried.script) setScript(retried.script);
+          const sessionName = customPrompt.slice(0, 30).trim() || "Generated Scene";
+          setShowPromptInput(false);
+          setCustomPrompt("");
+          onImportParsed(sessionName, retried.parsed);
+          return;
+        }
       }
       
       setShowPromptInput(false);
