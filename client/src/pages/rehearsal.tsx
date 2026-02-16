@@ -159,12 +159,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             autoAdvanceTimeoutRef.current = null;
           }
           
-          // Quick pause then advance (150ms for snappy response)
           autoAdvanceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 150);
+          }, 50);
           return;
         }
       }
@@ -181,12 +180,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             autoAdvanceTimeoutRef.current = null;
           }
           
-          // Quick transition (200ms for snappy response)
           autoAdvanceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 200);
+          }, 50);
         } else {
           console.log("[Rehearsal] Low match on final result, waiting for manual advance");
         }
@@ -260,7 +258,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (isPlayingRef.current) {
           advanceAfterUserLine();
         }
-      }, 400);
+      }, 100);
     }
   }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
 
@@ -463,12 +461,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     // Only try speech recognition if available and not blocked
     if (speechRecognition.available && !micBlocked && micEnabled) {
-      // Small delay to let audio finish and avoid overlap
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
         }
-      }, 200);
+      }, 100);
       
       // Safety timeout: if no result after 60 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
@@ -538,7 +535,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setSpeakingWordIndex(-1);
     };
 
-    // Very brief pause before speaking (natural flow)
     speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) {
         console.log("[Rehearsal] Not playing anymore, skipping TTS");
@@ -556,7 +552,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           // Count this line as rehearsed
           incrementLinesRehearsed();
           
-          // Brief conversational pause before next line
           setTimeout(() => {
             if (!isPlayingRef.current) {
               console.log("[Rehearsal] Stopped during pause");
@@ -580,7 +575,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               console.log("[Rehearsal] Scene complete");
               completeRun();
             }
-          }, 200);
+          }, 100);
         } else {
           console.log("[Rehearsal] TTS callback ignored - state changed");
           speakingLineRef.current = null;
@@ -611,7 +606,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           }
         },
       });
-    }, 100);
+    }, 50);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun]);
 
   useEffect(() => {
@@ -643,12 +638,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         const delay = session.readerDelay ?? 0;
         if (delay > 0) {
           console.log("[Rehearsal] Effect: Delaying AI line by", delay, "s", lineKey);
-          speakingLineRef.current = lineKey;
           const capturedLineKey = lineKey;
-          speakTimeoutRef.current = window.setTimeout(() => {
+          speakTimeoutRef.current = setTimeout(() => {
             speakTimeoutRef.current = null;
-            if (speakingLineRef.current !== capturedLineKey) {
-              console.log("[Rehearsal] Effect: Stale delay callback, skipping", capturedLineKey);
+            if (!isPlayingRef.current) {
+              console.log("[Rehearsal] Effect: Playback stopped during delay, skipping", capturedLineKey);
               return;
             }
             console.log("[Rehearsal] Effect: Speaking AI line after delay", capturedLineKey);
