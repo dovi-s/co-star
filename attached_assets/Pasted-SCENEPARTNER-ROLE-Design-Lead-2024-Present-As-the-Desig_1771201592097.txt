@@ -1,0 +1,149 @@
+SCENEPARTNER
+
+ROLE
+
+Design Lead
+2024 - Present
+As the Design Lead and part of the Founding Team at ScenePartner, I was responsible for the end-to-end design of the brand and product experience. Our mission was to enable actors to record self-tape auditions without needing a reader.
+
+
+
+
+30%
+GROWTH M.O.M.
+28%
+FREE to Paid conversion
+200+
+Subscribers
+
+
+
+THE WORK
+
+
+
+
+Overview
+ScenePartner.ai is an app that helps actors run lines and record auditions without needing a scene partner in the room. Actors upload their script, assign roles, and practice with an AI voice reader. I joined as Design Lead to create the brand identity and design the product experience.
+
+Brand and Identity
+We wanted the brand to feel light, approachable, and a little fun to offset the stress that comes with auditions. Yorick became the face of the product. He’s a happy skull inspired by Shakespeare, but treated in a way that feels modern and simple, not theatrical or intimidating.
+
+
+Personality
+Yorick is the skull from Hamlet. While not full of personality in that scene, we decided it would be a perfect metaphor for actors who are rehearsing and auditioning by themselves. 
+
+To add the playfulness we wanted, we decided to make his eyes come to life and a smile on his face to welcome users into the world of ScenePartner. 
+
+I created a range of stylizations for Yorick to theme different season of the year and ensure there's plenty of collectable sticker opportunities (one of my favorite aspects of a new brand!)
+
+
+Marketing site
+Yorick is the skull from Hamlet. While not full of personality in that scene, we decided it would be a perfect metaphor for actors who are rehearsing and auditioning by themselves. 
+
+To add the playfulness we wanted, we decided to make his eyes come to life and a smile on his face to welcome users into the world of ScenePartner. 
+
+I created a range of stylizations for Yorick to theme different season of the year and ensure there's plenty of collectable sticker opportunities (one of my favorite aspects of a new brand!)
+
+Product Design
+The product had to balance flexibility with clarity. Actors are often juggling a lot while preparing a self-tape, so the experience needed to feel quick and reliable. I designed a clean, distraction-free interface that put the script front and center. Key features included:
+
+
+
+Script Editing: Users can upload and tweak scripts easily.
+
+Voice Options: The AI reader can switch tones and voices to better match a scene.
+
+Teleprompter Mode: Lets actors perform hands-free with smooth scrolling text.
+
+
+Line Editing
+Working with clunky scripts
+Audition sides usually come as PDFs that are hard to edit or mark up. Actors need flexibility to prepare their role cleanly.
+
+
+Design Response: I designed an in-app script editor where users can assign roles, cut or adjust lines, and keep everything organized in one place.
+
+Teleprompter Mode
+Balancing performance and script
+During self-tapes, actors were struggle to see the lines on their device.  Especially if they were on a tablet or mobile device.
+
+
+Design Response: So, we increased type size to make it clear at a glance their line and the following. We also added arrow buttons to navigate their script on the fly.
+
+
+
+
+
+Outcome
+We launched ScenePartner.ai with a clear identity and a functional product that helps actors practice and record self-tapes on their own. The brand feels approachable, the product is easy to use, and the features focus on solving the real pain points of audition prep.
+
+We've grown our consumer base with a focus on word-of-mouth marketing, our product works so well people talk about it. Now, we're in the top drama programs in the country and adding more users everyday!
+
+
+
+
+SKILLSET
+
+
+
+
+Brand Development
+I created the ScenePartner brand, including the Yorick mascot, to give the product a distinct and approachable personality. The identity balanced professionalism with playfulness, making the tool memorable in a crowded space.
+
+
+
+
+
+
+
+Web Design
+I built the marketing site in Framer, handling both the design and development to get us launched quickly. The site introduced the product clearly while staying visually aligned with the brand.
+
+
+
+
+
+
+
+Product Design
+I designed the full journey from onboarding to teleprompter mode, making sure actors could move smoothly from upload to audition. Every step was optimized to reduce friction and keep the focus on performance.
+
+
+
+
+
+
+
+Team Collaboration
+I partnered with the founder and fullstack engineer to bring the product to life in a lean environment. Working closely across disciplines meant design decisions directly supported product strategy and development.
+
+
+
+
+
+About me
+I started out designing by creating custom myspace pages and photoshopping memes of friends. Now the projects are a biiiiit larger, but the joy remains.
+
+Outside of work, I'm always up for competitive play, like playing Rocket League, Spikeball, and Volleyball.
+
+
+
+
+EMail
+
+
+
+
+
+
+Resume
+
+
+
+Let's chat
+
+
+
+
+

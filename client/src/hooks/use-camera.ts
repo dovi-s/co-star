@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { ttsEngine } from '@/lib/tts-engine';
 
 export interface CameraState {
   isEnabled: boolean;
@@ -21,11 +22,14 @@ export function useCamera() {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const screenCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordingChunksRef = useRef<Blob[]>([]);
   const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mimeTypeRef = useRef<string>('video/webm');
+  const recordingAudioContextRef = useRef<AudioContext | null>(null);
+  const recordingMicStreamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -75,6 +79,58 @@ export function useCamera() {
     }
   }, [isEnabled, startCamera, stopCamera]);
 
+  const buildMixedAudioStream = useCallback(async (): Promise<{ stream: MediaStream; cleanup: () => void }> => {
+    const audioContext = new AudioContext();
+    recordingAudioContextRef.current = audioContext;
+    const destination = audioContext.createMediaStreamDestination();
+
+    if (audioContext.state === 'suspended') {
+      await audioContext.resume();
+    }
+
+    let micStream: MediaStream | null = null;
+
+    if (isEnabled && stream) {
+      const audioTracks = stream.getAudioTracks();
+      if (audioTracks.length > 0) {
+        const micSource = audioContext.createMediaStreamSource(new MediaStream(audioTracks));
+        micSource.connect(destination);
+        console.log('[Camera] Mixed mic audio from camera stream');
+      }
+    } else {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordingMicStreamRef.current = micStream;
+        const micSource = audioContext.createMediaStreamSource(micStream);
+        micSource.connect(destination);
+        console.log('[Camera] Mixed mic audio from separate stream');
+      } catch (e) {
+        console.log('[Camera] No mic available for recording:', e);
+      }
+    }
+
+    ttsEngine.initAudioContext();
+    const ttsStream = ttsEngine.getTTSAudioStream();
+    if (ttsStream && ttsStream.getAudioTracks().length > 0) {
+      const ttsSource = audioContext.createMediaStreamSource(ttsStream);
+      ttsSource.connect(destination);
+      console.log('[Camera] Mixed TTS audio into recording');
+    } else {
+      console.log('[Camera] No TTS audio stream available');
+    }
+
+    const cleanup = () => {
+      if (micStream) {
+        micStream.getTracks().forEach(t => t.stop());
+      }
+      recordingMicStreamRef.current = null;
+      audioContext.close().catch(() => {});
+      recordingAudioContextRef.current = null;
+    };
+
+    return { stream: destination.stream, cleanup };
+  }, [isEnabled, stream]);
+
   const startRecording = useCallback(async () => {
     try {
       setError(null);
@@ -83,28 +139,31 @@ export function useCamera() {
       setHasRecording(false);
       setRecordingBlob(null);
 
-      let recordingStream: MediaStream;
-      let isVideoRecording = false;
+      const { stream: mixedAudio, cleanup: audioCleanup } = await buildMixedAudioStream();
 
-      if (isEnabled && stream && canvasRef.current) {
-        // Video + audio recording (camera is on)
+      let recordingStream: MediaStream;
+
+      if (isEnabled && canvasRef.current) {
         const canvasStream = canvasRef.current.captureStream(30);
-        const audioTracks = stream.getAudioTracks();
-        audioTracks.forEach(track => {
-          canvasStream.addTrack(track);
-        });
-        recordingStream = canvasStream;
-        isVideoRecording = true;
-        console.log('[Camera] Starting video + audio recording');
+        recordingStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...mixedAudio.getAudioTracks(),
+        ]);
+        console.log('[Camera] Starting camera video + mixed audio recording');
+      } else if (screenCanvasRef.current) {
+        const canvasStream = screenCanvasRef.current.captureStream(30);
+        recordingStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...mixedAudio.getAudioTracks(),
+        ]);
+        console.log('[Camera] Starting screen canvas + mixed audio recording');
       } else {
-        // Audio-only recording (camera is off)
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recordingStream = audioStream;
-        isVideoRecording = false;
-        console.log('[Camera] Starting audio-only recording');
+        recordingStream = mixedAudio;
+        console.log('[Camera] Starting audio-only recording (no canvas available)');
       }
 
-      const mimeType = isVideoRecording
+      const hasVideo = recordingStream.getVideoTracks().length > 0;
+      const mimeType = hasVideo
         ? (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
           ? 'video/webm;codecs=vp9'
           : MediaRecorder.isTypeSupported('video/webm')
@@ -118,7 +177,7 @@ export function useCamera() {
 
       const mediaRecorder = new MediaRecorder(recordingStream, {
         mimeType,
-        ...(isVideoRecording ? { videoBitsPerSecond: 2500000 } : { audioBitsPerSecond: 128000 }),
+        ...(hasVideo ? { videoBitsPerSecond: 2500000 } : { audioBitsPerSecond: 128000 }),
       });
 
       mediaRecorder.ondataavailable = (event) => {
@@ -132,11 +191,7 @@ export function useCamera() {
         setRecordingBlob(blob);
         setHasRecording(true);
         console.log('[Camera] Recording saved, size:', blob.size);
-        
-        // Stop audio-only stream tracks when done
-        if (!isVideoRecording) {
-          recordingStream.getTracks().forEach(track => track.stop());
-        }
+        audioCleanup();
       };
 
       mediaRecorder.start(1000);
@@ -158,7 +213,7 @@ export function useCamera() {
       }
       return false;
     }
-  }, [isEnabled, stream]);
+  }, [isEnabled, stream, buildMixedAudioStream]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -221,6 +276,12 @@ export function useCamera() {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
         mediaRecorderRef.current.stop();
       }
+      if (recordingAudioContextRef.current) {
+        recordingAudioContextRef.current.close().catch(() => {});
+      }
+      if (recordingMicStreamRef.current) {
+        recordingMicStreamRef.current.getTracks().forEach(t => t.stop());
+      }
     };
   }, []);
 
@@ -234,6 +295,7 @@ export function useCamera() {
     recordingBlob,
     videoRef,
     canvasRef,
+    screenCanvasRef,
     toggleCamera,
     startCamera,
     stopCamera,

@@ -5,7 +5,7 @@ import { TransportBar } from "@/components/transport-bar";
 import { SettingsDrawer } from "@/components/settings-drawer";
 import { PracticeToolbar } from "@/components/practice-toolbar";
 import { CountdownOverlay } from "@/components/countdown-overlay";
-import { VideoBackground, type OverlayData } from "@/components/video-background";
+import { VideoBackground } from "@/components/video-background";
 import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { useCamera } from "@/hooks/use-camera";
@@ -991,6 +991,204 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   };
 
+  const screenRecordingFrameRef = useRef<number | null>(null);
+  useEffect(() => {
+    const canvas = camera.screenCanvasRef.current;
+    if (!canvas || camera.isEnabled) {
+      if (screenRecordingFrameRef.current) {
+        cancelAnimationFrame(screenRecordingFrameRef.current);
+        screenRecordingFrameRef.current = null;
+      }
+      return;
+    }
+    if (!camera.isRecording) {
+      if (screenRecordingFrameRef.current) {
+        cancelAnimationFrame(screenRecordingFrameRef.current);
+        screenRecordingFrameRef.current = null;
+      }
+      return;
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const isDark = document.documentElement.classList.contains('dark');
+    const bgColor = isDark ? '#0E1218' : '#FFFFFF';
+    const fgColor = isDark ? '#E6EDF3' : '#0F172A';
+    const mutedColor = isDark ? 'rgba(230,237,243,0.4)' : 'rgba(15,23,42,0.4)';
+    const userBg = isDark ? '#E6EDF3' : '#0F172A';
+    const userFg = isDark ? '#0E1218' : '#FFFFFF';
+    const aiBg = isDark ? '#1a1f28' : '#f8fafc';
+    const aiBorder = isDark ? 'rgba(230,237,243,0.15)' : 'rgba(15,23,42,0.1)';
+    const primaryColor = 'hsl(217, 91%, 60%)';
+
+    const safeRoundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
+      if (c.roundRect) {
+        c.roundRect(x, y, w, h, r);
+      } else {
+        c.moveTo(x + r, y);
+        c.lineTo(x + w - r, y);
+        c.arcTo(x + w, y, x + w, y + r, r);
+        c.lineTo(x + w, y + h - r);
+        c.arcTo(x + w, y + h, x + w - r, y + h, r);
+        c.lineTo(x + r, y + h);
+        c.arcTo(x, y + h, x, y + h - r, r);
+        c.lineTo(x, y + r);
+        c.arcTo(x, y, x + r, y, r);
+        c.closePath();
+      }
+    };
+
+    const drawScreenFrame = () => {
+      const w = 1280;
+      const h = 720;
+      canvas.width = w;
+      canvas.height = h;
+
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, w, h);
+
+      const prev = previousLine;
+      const curr = currentLine;
+      const next = nextLineData;
+      const isUser = currentIsUserLine;
+
+      const centerY = h / 2;
+      const boxW = Math.min(w - 80, 700);
+      const boxX = (w - boxW) / 2;
+      const padding = 20;
+
+      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
+        ctx.font = font;
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let line = '';
+        for (const word of words) {
+          const test = line ? `${line} ${word}` : word;
+          if (ctx.measureText(test).width > maxWidth) {
+            if (line) lines.push(line);
+            line = word;
+          } else {
+            line = test;
+          }
+        }
+        if (line) lines.push(line);
+        return lines.length ? lines : [''];
+      };
+
+      const drawLineBox = (
+        line: { text: string; roleName: string; direction?: string },
+        y: number,
+        isCurr: boolean,
+        isUserLine: boolean,
+      ): number => {
+        const textFont = isCurr ? '500 20px Inter, system-ui, sans-serif' : '500 17px Inter, system-ui, sans-serif';
+        const wrappedLines = wrapText(line.text, boxW - padding * 2, textFont);
+        const lineH = isCurr ? 30 : 26;
+        const roleH = 28;
+        const boxH = roleH + wrappedLines.length * lineH + padding * 2;
+
+        if (isCurr && isUserLine) {
+          ctx.fillStyle = userBg;
+          ctx.beginPath();
+          safeRoundRect(ctx, boxX, y, boxW, boxH, 12);
+          ctx.fill();
+        } else if (isCurr) {
+          ctx.fillStyle = aiBg;
+          ctx.strokeStyle = aiBorder;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          safeRoundRect(ctx, boxX, y, boxW, boxH, 12);
+          ctx.fill();
+          ctx.stroke();
+        }
+
+        let textY = y + padding;
+
+        ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        const roleBg = isCurr && isUserLine ? 'rgba(255,255,255,0.2)' : (isCurr ? primaryColor : 'transparent');
+        const roleFg = isCurr && isUserLine ? userFg : (isCurr ? '#fff' : mutedColor);
+        const roleW = ctx.measureText(line.roleName.toUpperCase()).width + 14;
+        if (isCurr) {
+          ctx.fillStyle = roleBg;
+          ctx.beginPath();
+          safeRoundRect(ctx, boxX + padding, textY, roleW, 20, 4);
+          ctx.fill();
+        }
+        ctx.fillStyle = roleFg;
+        ctx.fillText(line.roleName.toUpperCase(), boxX + padding + 7, textY + 14);
+
+        if (line.direction && isCurr) {
+          ctx.font = 'italic 11px Inter, system-ui, sans-serif';
+          ctx.fillStyle = isCurr && isUserLine ? `${userFg}aa` : mutedColor;
+          ctx.fillText(`(${line.direction})`, boxX + padding + roleW + 8, textY + 14);
+        }
+
+        textY += roleH;
+
+        ctx.font = textFont;
+        ctx.fillStyle = isCurr && isUserLine ? userFg : (isCurr ? fgColor : mutedColor);
+        for (const wl of wrappedLines) {
+          ctx.fillText(wl, boxX + padding, textY + (isCurr ? 18 : 15));
+          textY += lineH;
+        }
+
+        return boxH;
+      };
+
+      let currH = 0;
+      if (curr) {
+        const tempFont = '500 20px Inter, system-ui, sans-serif';
+        const wrappedCurr = wrapText(curr.text, boxW - padding * 2, tempFont);
+        currH = 28 + wrappedCurr.length * 30 + padding * 2;
+      }
+
+      const gap = 12;
+      let prevH = 0;
+      if (prev) {
+        const tempFont = '500 17px Inter, system-ui, sans-serif';
+        const wrappedPrev = wrapText(prev.text, boxW - padding * 2, tempFont);
+        prevH = 28 + wrappedPrev.length * 26 + padding * 2;
+      }
+
+      const startY = centerY - currH / 2;
+
+      if (prev) {
+        ctx.globalAlpha = 0.35;
+        drawLineBox(prev, startY - gap - prevH, false, false);
+        ctx.globalAlpha = 1;
+      }
+
+      if (curr) {
+        drawLineBox(curr, startY, true, isUser);
+      }
+
+      if (next) {
+        ctx.globalAlpha = 0.35;
+        drawLineBox(next, startY + currH + gap, false, false);
+        ctx.globalAlpha = 1;
+      }
+
+      const scene = session?.scenes?.[session?.currentSceneIndex ?? 0];
+      if (scene) {
+        ctx.font = '500 12px Inter, system-ui, sans-serif';
+        ctx.fillStyle = mutedColor;
+        ctx.fillText(scene.name || '', boxX, h - 30);
+      }
+
+      screenRecordingFrameRef.current = requestAnimationFrame(drawScreenFrame);
+    };
+
+    screenRecordingFrameRef.current = requestAnimationFrame(drawScreenFrame);
+
+    return () => {
+      if (screenRecordingFrameRef.current) {
+        cancelAnimationFrame(screenRecordingFrameRef.current);
+        screenRecordingFrameRef.current = null;
+      }
+    };
+  }, [camera.isRecording, camera.isEnabled, currentLine, previousLine, nextLineData, currentIsUserLine, session?.scenes, session?.currentSceneIndex]);
+
   if (!session) {
     onBack();
     return null;
@@ -1011,28 +1209,20 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       "min-h-screen flex flex-col",
       camera.isEnabled ? "bg-transparent" : "bg-background"
     )} data-testid="rehearsal-page">
+      {!camera.isEnabled && (
+        <canvas
+          ref={camera.screenCanvasRef}
+          className="hidden"
+          width={1280}
+          height={720}
+        />
+      )}
       {camera.isEnabled && (
         <VideoBackground
           stream={camera.stream}
           videoRef={camera.videoRef}
           canvasRef={camera.canvasRef}
           isRecording={camera.isRecording}
-          overlayData={camera.isRecording ? {
-            currentLine: currentLine ? {
-              text: currentLine.text,
-              roleName: currentLine.roleName,
-              direction: currentLine.direction,
-              isUserLine: currentIsUserLine,
-            } : undefined,
-            previousLine: previousLine ? {
-              text: previousLine.text,
-              roleName: previousLine.roleName,
-            } : undefined,
-            nextLine: nextLineData ? {
-              text: nextLineData.text,
-              roleName: nextLineData.roleName,
-            } : undefined,
-          } : undefined}
         />
       )}
       
@@ -1178,7 +1368,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                     Download Recording
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-1.5">
-                    Includes script overlay for review
+                    {camera.isEnabled ? "Camera recording with audio" : "Script view with audio"}
                   </p>
                 </div>
               )}

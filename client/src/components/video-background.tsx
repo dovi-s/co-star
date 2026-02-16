@@ -50,6 +50,7 @@ interface VideoBackgroundProps {
   canvasRef: RefObject<HTMLCanvasElement>;
   isRecording: boolean;
   overlayData?: OverlayData;
+  showOverlayOnCanvas?: boolean;
   className?: string;
 }
 
@@ -59,6 +60,7 @@ export function VideoBackground({
   canvasRef,
   isRecording,
   overlayData,
+  showOverlayOnCanvas = false,
   className 
 }: VideoBackgroundProps) {
   const overlayDataRef = useRef<OverlayData | undefined>(overlayData);
@@ -123,9 +125,8 @@ export function VideoBackground({
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw script overlay when recording
       const overlay = overlayDataRef.current;
-      if (overlay?.currentLine) {
+      if (showOverlayOnCanvas && overlay?.currentLine) {
         const padding = 24;
         const lineHeight = 28;
         const boxWidth = Math.min(canvas.width - padding * 2, 600);
