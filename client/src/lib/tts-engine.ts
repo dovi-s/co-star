@@ -87,6 +87,7 @@ class TTSEngine {
   private fetchController: AbortController | null = null;
   private speakGeneration = 0;
   private browserTTSPollTimer: ReturnType<typeof setInterval> | null = null;
+  private audioUnlocked = false;
   
   // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
   private audioContext: AudioContext | null = null;
@@ -141,6 +142,32 @@ class TTSEngine {
       console.log("[TTS] Audio context initialized for WebRTC streaming");
     } catch (e) {
       console.error("[TTS] Failed to create audio context:", e);
+    }
+  }
+
+  unlockAudio(): void {
+    if (this.audioUnlocked) return;
+    
+    try {
+      const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+      silentAudio.volume = 0.01;
+      silentAudio.play().then(() => {
+        silentAudio.pause();
+        this.audioUnlocked = true;
+        console.log("[TTS] Audio unlocked for mobile playback");
+      }).catch(() => {
+        console.log("[TTS] Silent audio unlock failed (expected if not in gesture)");
+      });
+
+      if (!this.audioContext) {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        this.ttsDestination = this.audioContext.createMediaStreamDestination();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume();
+      }
+    } catch (e) {
+      console.log("[TTS] Audio unlock error:", e);
     }
   }
 
@@ -321,44 +348,44 @@ class TTSEngine {
         audio.src = audioUrl;
         audio.volume = 1;
         
-        audio.play().then(() => {
-          // Also set after play starts (belt and suspenders)
-          audio.playbackRate = targetSpeed;
-          
-          // Route audio through AudioContext for WebRTC streaming
-          // This allows other participants to hear the TTS audio
-          if (this.audioContext && this.ttsDestination) {
-            try {
-              // Resume audio context if suspended (required after user gesture)
-              if (this.audioContext.state === 'suspended') {
-                this.audioContext.resume();
-              }
-              
-              // Create media source from audio element
-              mediaSource = this.audioContext.createMediaElementSource(audio);
-              this.currentMediaSource = mediaSource;
-              
-              // Connect to both speakers (destination) and TTS stream (for WebRTC)
-              mediaSource.connect(this.audioContext.destination); // Local speakers
-              mediaSource.connect(this.ttsDestination); // WebRTC stream
-              
-              console.log("[TTS] Audio routed through AudioContext for WebRTC");
-            } catch (e) {
-              console.log("[TTS] AudioContext routing failed (normal on first play):", e);
-              // Falls back to regular audio playback
-            }
+        const attemptPlay = (retries: number) => {
+          if (this.audioContext?.state === 'suspended') {
+            this.audioContext.resume().catch(() => {});
           }
           
-          const duration = audio.duration || text.length * 0.08; // Estimate ~80ms per char
-          const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
-          console.log("[TTS] Playing audio, duration:", duration, "words:", wordCount);
-          options?.onStart?.(duration, wordCount);
-        }).catch((e) => {
-          console.log("[TTS] Play failed:", e.message);
-          cleanup();
-          this.fireCallback("error", onEnd);
-          resolve(false);
-        });
+          audio.play().then(() => {
+            audio.playbackRate = targetSpeed;
+            
+            if (this.audioContext && this.ttsDestination) {
+              try {
+                mediaSource = this.audioContext.createMediaElementSource(audio);
+                this.currentMediaSource = mediaSource;
+                mediaSource.connect(this.audioContext.destination);
+                mediaSource.connect(this.ttsDestination);
+                console.log("[TTS] Audio routed through AudioContext for WebRTC");
+              } catch (e) {
+                console.log("[TTS] AudioContext routing failed (normal on first play):", e);
+              }
+            }
+            
+            const duration = audio.duration || text.length * 0.08;
+            const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
+            console.log("[TTS] Playing audio, duration:", duration, "words:", wordCount);
+            options?.onStart?.(duration, wordCount);
+          }).catch((e) => {
+            console.log("[TTS] Play failed (attempt " + (3 - retries) + "):", e.message);
+            if (retries > 0) {
+              setTimeout(() => attemptPlay(retries - 1), 100);
+            } else {
+              console.log("[TTS] All play attempts failed, falling back");
+              cleanup();
+              this.fireCallback("error", onEnd);
+              resolve(false);
+            }
+          });
+        };
+        
+        attemptPlay(2);
       });
     } catch (error: any) {
       if (error.name === "AbortError") {

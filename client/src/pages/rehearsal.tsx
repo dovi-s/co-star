@@ -689,6 +689,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       stopAllPlayback();
       setPlaying(false);
     } else {
+      ttsEngine.unlockAudio();
       setShowCountdown(true);
     }
   };
@@ -715,6 +716,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       stopAllPlayback();
       setPlaying(false);
     }
+    ttsEngine.unlockAudio();
     pendingPlayFromLineRef.current = lineIndex;
     setShowCountdown(true);
   }, [session?.isPlaying, setPlaying, stopAllPlayback]);
