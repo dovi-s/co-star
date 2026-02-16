@@ -535,6 +535,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setSpeakingWordIndex(-1);
     };
 
+    ttsEngine.stop();
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+
     speakTimeoutRef.current = setTimeout(() => {
       if (!isPlayingRef.current) {
         console.log("[Rehearsal] Not playing anymore, skipping TTS");
@@ -632,9 +638,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           startListeningForUser();
         }
       } else {
+        ttsEngine.stop();
         speechRecognition.abort();
         waitingForUserRef.current = false;
         setIsUserTurn(false);
+        setIsSpeaking(false);
+        setSpeakingWordIndex(-1);
         const delay = session.readerDelay ?? 0;
         if (delay > 0) {
           console.log("[Rehearsal] Effect: Delaying AI line by", delay, "s", lineKey);
