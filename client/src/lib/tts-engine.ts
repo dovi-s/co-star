@@ -86,6 +86,7 @@ class TTSEngine {
   private callbackFired = false;
   private fetchController: AbortController | null = null;
   private speakGeneration = 0;
+  private browserTTSPollTimer: ReturnType<typeof setInterval> | null = null;
   
   // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
   private audioContext: AudioContext | null = null;
@@ -379,15 +380,26 @@ class TTSEngine {
     this.stop();
 
     if (this.useElevenLabs && options) {
+      const myGeneration = this.speakGeneration;
       this.speakWithElevenLabs(text, options, onEnd).then((success) => {
-        if (!success) {
+        if (!success && this.speakGeneration === myGeneration) {
+          console.log("[TTS] ElevenLabs failed, falling back to browser TTS");
           this.speakWithBrowserTTS(text, prosody, onEnd);
+        } else if (!success) {
+          console.log("[TTS] ElevenLabs failed but generation changed, skipping fallback");
         }
       });
       return true;
     }
 
     return this.speakWithBrowserTTS(text, prosody, onEnd);
+  }
+
+  private clearBrowserTTSPoll() {
+    if (this.browserTTSPollTimer) {
+      clearInterval(this.browserTTSPollTimer);
+      this.browserTTSPollTimer = null;
+    }
   }
 
   private speakWithBrowserTTS(
@@ -428,7 +440,18 @@ class TTSEngine {
     utterance.pitch = Math.max(0, Math.min(2, 1 + prosody.pitch * 0.5));
     utterance.volume = Math.max(0.1, Math.min(1, prosody.volume));
 
-    this.onEndCallback = onEnd ?? null;
+    let browserCallbackFired = false;
+    const fireBrowserCallback = (result: SpeakResult) => {
+      if (browserCallbackFired) return;
+      browserCallbackFired = true;
+      this.clearBrowserTTSPoll();
+      this.currentUtterance = null;
+      if (this.synth?.speaking) {
+        this.synth.cancel();
+      }
+      console.log("[TTS] Browser TTS callback:", result);
+      onEnd?.(result);
+    };
     
     utterance.onstart = () => {
       this.hasSpokenOnce = true;
@@ -436,11 +459,9 @@ class TTSEngine {
     
     utterance.onend = () => {
       if (prosody.breakMs > 0) {
-        setTimeout(() => {
-          this.onEndCallback?.("success");
-        }, prosody.breakMs);
+        setTimeout(() => fireBrowserCallback("success"), prosody.breakMs);
       } else {
-        this.onEndCallback?.("success");
+        fireBrowserCallback("success");
       }
     };
 
@@ -448,7 +469,7 @@ class TTSEngine {
       if (event.error === "canceled") {
         return;
       }
-      this.onEndCallback?.("error");
+      fireBrowserCallback("error");
     };
 
     this.currentUtterance = utterance;
@@ -462,9 +483,41 @@ class TTSEngine {
           this.synth.speak(utterance);
         }
       }, 100);
+
+      this.clearBrowserTTSPoll();
+      let pollCount = 0;
+      let speechStarted = false;
+      const maxPolls = Math.max(40, Math.ceil(text.length * 0.5));
+      this.browserTTSPollTimer = setInterval(() => {
+        pollCount++;
+        const speaking = this.synth?.speaking ?? false;
+        
+        if (speaking) {
+          speechStarted = true;
+        }
+        
+        if (speechStarted && !speaking && !browserCallbackFired) {
+          console.log("[TTS] Poll detected browser TTS finished (onend missed)");
+          fireBrowserCallback("success");
+          return;
+        }
+        
+        if (pollCount > maxPolls) {
+          console.log("[TTS] Browser TTS poll timeout, forcing advance");
+          fireBrowserCallback("success");
+          return;
+        }
+
+        if (pollCount > 10 && !speechStarted && !speaking) {
+          console.log("[TTS] Browser TTS never started after 3s, advancing");
+          fireBrowserCallback("unavailable");
+          return;
+        }
+      }, 300);
       
       return true;
     } catch (e) {
+      this.currentUtterance = null;
       onEnd?.("error");
       return false;
     }
@@ -472,6 +525,7 @@ class TTSEngine {
 
   stop() {
     this.clearWatchdog();
+    this.clearBrowserTTSPoll();
     this.callbackFired = true; // Prevent any pending callbacks
     this.speakGeneration++; // Invalidate any in-flight requests
     
