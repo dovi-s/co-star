@@ -279,7 +279,8 @@ export function ThreeLineReader({
                 !isCurrent && !cameraMode && "text-muted-foreground",
                 !isCurrent && cameraMode && "text-white/50",
                 shouldMask && !showHint && "italic opacity-70",
-                isCurrent && "max-h-[45vh] overflow-y-auto pr-1"
+                isCurrent && "max-h-[45vh] overflow-y-auto pr-1",
+                !isCurrent && "line-clamp-2"
               )}
             >
               {shouldMask && !showHint ? maskedContent?.display : (
