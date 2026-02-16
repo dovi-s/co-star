@@ -204,6 +204,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const audioContextRef = useRef<AudioContext | null>(null);
   const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   
+  const [navNotification, setNavNotification] = useState<string | null>(null);
+  const navNotifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevLineIndexRef = useRef<number | null>(null);
+  const prevSceneIndexRef = useRef<number | null>(null);
+  
   // Completion state
   const [showCompletion, setShowCompletion] = useState(false);
   const [completionStats, setCompletionStats] = useState<{
@@ -487,6 +492,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           ttsSource.connect(destination);
         }
         
+        webrtc.peerStreams.forEach(ps => {
+          const peerAudioTracks = ps.stream.getAudioTracks();
+          if (peerAudioTracks.length > 0) {
+            try {
+              const peerSource = audioCtx.createMediaStreamSource(new MediaStream(peerAudioTracks));
+              peerSource.connect(destination);
+              console.log(`[Recording] Mixed in peer audio from ${ps.participantId}`);
+            } catch (e) {
+              console.warn(`[Recording] Failed to mix peer audio from ${ps.participantId}:`, e);
+            }
+          }
+        });
+        
         const videoTracks = stream.getVideoTracks();
         const mixedStream = new MediaStream([
           ...videoTracks,
@@ -522,7 +540,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         toast({ title: 'Recording failed', variant: 'destructive' });
       }
     }
-  }, [isRecording, webrtc.localStream, toast]);
+  }, [isRecording, webrtc.localStream, webrtc.peerStreams, toast]);
   
   const downloadRecording = useCallback(() => {
     if (!recordingBlobRef.current) return;
@@ -1167,16 +1185,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }
   }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.participantId]);
 
-  // Manual skip handler - stops TTS and clears all timeouts before advancing
-  const handleManualSkip = useCallback(() => {
-    console.log('[Multiplayer] Manual skip - stopping all audio');
-    
-    // Stop TTS immediately
+  const stopAllMultiplayerPlayback = useCallback(() => {
     ttsEngine.stop();
     setIsAiSpeaking(false);
     isAiSpeakingRef.current = false;
     
-    // Clear any pending advance timeouts
     if (aiSpeakTimeoutRef.current) {
       clearTimeout(aiSpeakTimeoutRef.current);
       aiSpeakTimeoutRef.current = null;
@@ -1186,20 +1199,32 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       safetyTimeoutRef.current = null;
     }
     
-    // Stop speech recognition
     speechRecognition.abort();
     waitingForUserRef.current = false;
     if (userTurnTimeoutRef.current) {
       clearTimeout(userTurnTimeoutRef.current);
       userTurnTimeoutRef.current = null;
     }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
     
-    // Reset speaking ref so next line can speak
     speakingLineRef.current = null;
-    
-    // Now advance
+    currentLineIdRef.current = null;
+    setUserTranscript("");
+    advancedForLineRef.current = null;
+  }, []);
+
+  const handleManualSkip = useCallback(() => {
+    stopAllMultiplayerPlayback();
     multiplayer.nextLine();
-  }, [multiplayer]);
+  }, [multiplayer, stopAllMultiplayerPlayback]);
+
+  const handleManualBack = useCallback(() => {
+    stopAllMultiplayerPlayback();
+    multiplayer.prevLine();
+  }, [multiplayer, stopAllMultiplayerPlayback]);
 
   useEffect(() => {
     return () => {
@@ -1209,6 +1234,45 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
     };
   }, []);
+
+  useEffect(() => {
+    const room = multiplayer.room;
+    if (!room || room.state !== 'rehearsing') {
+      prevLineIndexRef.current = null;
+      prevSceneIndexRef.current = null;
+      return;
+    }
+    
+    const curLine = room.currentLineIndex;
+    const curScene = room.currentSceneIndex;
+    const prevLine = prevLineIndexRef.current;
+    const prevScene = prevSceneIndexRef.current;
+    
+    if (prevLine !== null && prevScene !== null) {
+      const sceneChanged = curScene !== prevScene;
+      const wentBack = !sceneChanged && curLine < prevLine;
+      const skippedForward = !sceneChanged && curLine > prevLine + 1;
+      
+      if (wentBack || skippedForward || (sceneChanged && curScene < prevScene)) {
+        const direction = (wentBack || (sceneChanged && curScene < prevScene)) ? 'went back' : 'skipped ahead';
+        setNavNotification(`Script ${direction}`);
+        
+        if (navNotifTimeoutRef.current) clearTimeout(navNotifTimeoutRef.current);
+        navNotifTimeoutRef.current = setTimeout(() => {
+          setNavNotification(null);
+        }, 2500);
+      }
+    }
+    
+    prevLineIndexRef.current = curLine;
+    prevSceneIndexRef.current = curScene;
+    
+    return () => {
+      if (navNotifTimeoutRef.current) {
+        clearTimeout(navNotifTimeoutRef.current);
+      }
+    };
+  }, [multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.room?.state]);
 
   const handleCreateRoom = () => {
     if (!session || !playerName.trim()) return;
@@ -1240,6 +1304,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   };
 
   const handleLeave = () => {
+    stopAllMultiplayerPlayback();
     multiplayer.leaveRoom();
     setView('menu');
   };
@@ -1542,6 +1607,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
           isFirstLineOfScene={!isCountingDown && isFirstLineOfScene}
         />
         
+        {navNotification && (
+          <div className="absolute top-28 left-1/2 -translate-x-1/2 z-40 animate-in fade-in slide-in-from-top-2 duration-300" data-testid="nav-notification">
+            <div className="bg-black/70 backdrop-blur-md rounded-lg px-4 py-2 flex items-center gap-2">
+              {navNotification.includes('back') ? (
+                <SkipBack className="h-3 w-3 text-white/70" />
+              ) : (
+                <SkipForward className="h-3 w-3 text-white/70" />
+              )}
+              <span className="text-white text-sm">{navNotification}</span>
+            </div>
+          </div>
+        )}
+        
         {/* Countdown overlay */}
         {isCountingDown && serverCountdown !== null && (
           <div 
@@ -1670,7 +1748,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => multiplayer.prevLine()}
+                      onClick={handleManualBack}
                       className="bg-white/10 border-white/30 text-white"
                       data-testid="button-prev-line"
                     >
@@ -1678,7 +1756,14 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     </Button>
                     <Button
                       size="icon"
-                      onClick={() => room.state === 'paused' ? multiplayer.resumeRehearsal() : multiplayer.pauseRehearsal()}
+                      onClick={() => {
+                        if (room.state === 'paused') {
+                          multiplayer.resumeRehearsal();
+                        } else {
+                          stopAllMultiplayerPlayback();
+                          multiplayer.pauseRehearsal();
+                        }
+                      }}
                       className="bg-white text-black"
                       data-testid="button-play-pause"
                     >

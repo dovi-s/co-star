@@ -51,7 +51,6 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
   const [videoReady, setVideoReady] = useState(false);
 
   useEffect(() => {
-    // Cleanup previous retry timer
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
@@ -60,63 +59,43 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
     if (!videoRef.current) return;
     const video = videoRef.current;
     
-    // Reset when stream changes
     if (!stream || streamIdRef.current !== stream.id) {
       setVideoReady(false);
       streamIdRef.current = stream?.id || '';
     }
 
     if (stream) {
-      // Always reassign srcObject when stream changes
       video.srcObject = stream;
       
-      // Check if stream has video tracks
       const videoTracks = stream.getVideoTracks();
-      const audioTracks = stream.getAudioTracks();
       const hasVideoTracks = videoTracks.length > 0;
       
-      console.log(`[SmallVideoTile ${participant?.id || 'local'}] Stream details:`, {
-        streamId: stream.id,
-        videoTracks: videoTracks.length,
-        audioTracks: audioTracks.length,
-        videoEnabled: videoTracks[0]?.enabled,
-        videoMuted: videoTracks[0]?.muted,
-        videoReadyState: videoTracks[0]?.readyState,
-      });
-      
-      // If video tracks exist, show video immediately (even if black initially)
       if (hasVideoTracks) {
         setVideoReady(true);
       }
       
-      // Function to check if video is truly ready with dimensions
       const markVideoReady = () => {
         if (video.videoWidth > 0 && video.videoHeight > 0) {
-          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video ready with dimensions ${video.videoWidth}x${video.videoHeight}`);
           setVideoReady(true);
         }
       };
       
-      // Video element events for when frames are available
       const handleCanPlay = () => markVideoReady();
       const handleLoadedMetadata = () => markVideoReady();
       
       video.addEventListener('canplay', handleCanPlay);
       video.addEventListener('loadedmetadata', handleLoadedMetadata);
       
-      // Listen for track additions on stream
       const handleTrackAdd = (e: MediaStreamTrackEvent) => {
         if (e.track.kind === 'video') {
-          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video track added`);
           setVideoReady(true);
-          // Try to play again when new track is added
+          video.srcObject = stream;
           video.play().catch(() => {});
         }
       };
       const handleTrackRemove = (e: MediaStreamTrackEvent) => {
         if (e.track.kind === 'video') {
-          const remainingVideo = stream.getVideoTracks();
-          if (remainingVideo.length === 0) {
+          if (stream.getVideoTracks().length === 0) {
             setVideoReady(false);
           }
         }
@@ -124,41 +103,52 @@ function SmallVideoTile({ stream, participant, isLocal, isMuted, isVideoOff, isS
       stream.addEventListener('addtrack', handleTrackAdd);
       stream.addEventListener('removetrack', handleTrackRemove);
       
-      // If video already has frames, mark ready immediately
       if (video.readyState >= 2 && video.videoWidth > 0) {
         markVideoReady();
       } else if (hasVideoTracks) {
-        // Has tracks - show video element and let it display when ready
         setVideoReady(true);
       }
       
-      // Ensure video plays on mobile with retry
       const attemptPlay = (attempt = 0) => {
         if (!videoRef.current) return;
-        // Reassign srcObject for mobile Safari
         if (videoRef.current.srcObject !== stream) {
           videoRef.current.srcObject = stream;
         }
         videoRef.current.play().then(() => {
-          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Video playing`);
           markVideoReady();
-        }).catch((err) => {
-          console.log(`[SmallVideoTile ${participant?.id || 'local'}] Play attempt ${attempt} failed: ${err.name}`);
-          if (attempt < 15) {
-            retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), 200 * (attempt + 1));
+        }).catch(() => {
+          if (attempt < 20) {
+            retryTimerRef.current = setTimeout(() => attemptPlay(attempt + 1), Math.min(300 * (attempt + 1), 2000));
           }
         });
       };
-      // Multiple initial attempts for mobile
       attemptPlay(0);
-      setTimeout(() => attemptPlay(1), 500);
-      setTimeout(() => attemptPlay(2), 1000);
+      setTimeout(() => attemptPlay(1), 300);
+      setTimeout(() => attemptPlay(2), 800);
+      setTimeout(() => attemptPlay(3), 1500);
+      
+      const pollInterval = setInterval(() => {
+        if (!videoRef.current) return;
+        const tracks = stream.getVideoTracks();
+        if (tracks.length > 0 && tracks[0].readyState === 'live') {
+          if (videoRef.current.srcObject !== stream) {
+            videoRef.current.srcObject = stream;
+          }
+          if (videoRef.current.paused) {
+            videoRef.current.play().catch(() => {});
+          }
+          if (videoRef.current.videoWidth > 0) {
+            setVideoReady(true);
+          }
+        }
+      }, 2000);
       
       return () => {
         video.removeEventListener('canplay', handleCanPlay);
         video.removeEventListener('loadedmetadata', handleLoadedMetadata);
         stream.removeEventListener('addtrack', handleTrackAdd);
         stream.removeEventListener('removetrack', handleTrackRemove);
+        clearInterval(pollInterval);
         if (retryTimerRef.current) {
           clearTimeout(retryTimerRef.current);
         }
@@ -297,21 +287,18 @@ export function MultiplayerVideoBackground({
   const effectiveSpeakerId = currentSpeakerId;
   const isLocalSpeaker = currentSpeakerId === myParticipantId;
   
-  // Always show local stream as main background (like solo mode) - keeps video continuously live
-  const mainStream = localStream;
-  const showLocalAsMain = true;
+  const localHasVideo = localStream && localStream.getVideoTracks().length > 0 
+    && localStream.getVideoTracks().some(t => t.enabled && t.readyState === 'live');
   
-  // Debug logging for video streams
-  useEffect(() => {
-    console.log('[VideoBackground] Stream state:', {
-      localStream: !!localStream,
-      peerStreamsCount: peerStreams.length,
-      peerStreamIds: peerStreams.map(ps => ps.participantId),
-      effectiveSpeakerId,
-      isLocalSpeaker,
-      mainStream: !!mainStream,
-    });
-  }, [localStream, peerStreams, effectiveSpeakerId, isLocalSpeaker, mainStream]);
+  const speakerPeerStream = !isLocalSpeaker && effectiveSpeakerId 
+    ? peerStreams.find(ps => ps.participantId === effectiveSpeakerId)?.stream 
+    : null;
+  const firstPeerStream = peerStreams.length > 0 ? peerStreams[0].stream : null;
+  
+  const mainStream = localHasVideo 
+    ? localStream 
+    : (speakerPeerStream || firstPeerStream || localStream);
+  const showLocalAsMain = mainStream === localStream;
 
   useEffect(() => {
     if (!mainStream || !mainVideoRef.current || !mainCanvasRef.current) return;
@@ -403,9 +390,14 @@ export function MultiplayerVideoBackground({
     };
   }, [mainStream, showLocalAsMain]);
 
-  // Show all remote participants in the strip (local is always main background)
-  // Highlight current speaker with ring effect in the tile
-  const stripParticipants = participants.filter(p => p.id !== myParticipantId);
+  const mainParticipantId = showLocalAsMain 
+    ? myParticipantId 
+    : (effectiveSpeakerId || peerStreams[0]?.participantId || myParticipantId);
+  
+  const stripParticipants = participants.filter(p => {
+    if (showLocalAsMain) return p.id !== myParticipantId;
+    return p.id !== mainParticipantId;
+  });
 
   const toggleFocus = () => {
     setFocusMode(prev => prev === 'script' ? 'face' : 'script');
@@ -462,8 +454,9 @@ export function MultiplayerVideoBackground({
         data-testid="participant-strip"
       >
         {stripParticipants.map(participant => {
+          const isLocalInStrip = participant.id === myParticipantId;
           const peerStream = peerStreams.find(ps => ps.participantId === participant.id);
-          const stream = peerStream?.stream || null;
+          const stream = isLocalInStrip ? localStream : (peerStream?.stream || null);
           const isSpeakingNow = participant.id === effectiveSpeakerId;
           
           return (
@@ -471,9 +464,9 @@ export function MultiplayerVideoBackground({
               key={participant.id}
               stream={stream}
               participant={participant}
-              isLocal={false}
+              isLocal={isLocalInStrip}
               isMuted={false}
-              isVideoOff={false} // Let SmallVideoTile detect video state internally
+              isVideoOff={false}
               isSpeaking={isSpeakingNow}
             />
           );
