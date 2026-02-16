@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
 import { matchWords } from '@/lib/word-matcher';
+import { drawWatermark } from '@/lib/watermark';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff, Download, Star, RefreshCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -203,6 +204,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const recordingBlobRef = useRef<Blob | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
+  const watermarkCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const watermarkVideoRef = useRef<HTMLVideoElement | null>(null);
+  const watermarkAnimFrameRef = useRef<number | null>(null);
   
   const [navNotification, setNavNotification] = useState<string | null>(null);
   const navNotifTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -447,6 +451,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         audioContextRef.current = null;
         mixedDestinationRef.current = null;
       }
+      if (watermarkAnimFrameRef.current) {
+        cancelAnimationFrame(watermarkAnimFrameRef.current);
+        watermarkAnimFrameRef.current = null;
+      }
+      if (watermarkVideoRef.current) {
+        watermarkVideoRef.current.srcObject = null;
+        watermarkVideoRef.current = null;
+      }
+      watermarkCanvasRef.current = null;
       setIsRecording(false);
     } else {
       const stream = webrtc.localStream;
@@ -506,13 +519,54 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         });
         
         const videoTracks = stream.getVideoTracks();
+        let finalVideoTracks = videoTracks;
+        
+        if (videoTracks.length > 0) {
+          try {
+            const wmCanvas = document.createElement('canvas');
+            wmCanvas.width = 1280;
+            wmCanvas.height = 720;
+            watermarkCanvasRef.current = wmCanvas;
+            
+            const wmVideo = document.createElement('video');
+            wmVideo.srcObject = new MediaStream(videoTracks);
+            wmVideo.muted = true;
+            wmVideo.playsInline = true;
+            wmVideo.autoplay = true;
+            wmVideo.play().catch(() => {});
+            watermarkVideoRef.current = wmVideo;
+            
+            const wmCtx = wmCanvas.getContext('2d');
+            if (wmCtx) {
+              const drawWmFrame = () => {
+                if (wmVideo.videoWidth > 0 && wmVideo.videoHeight > 0) {
+                  wmCanvas.width = wmVideo.videoWidth;
+                  wmCanvas.height = wmVideo.videoHeight;
+                  wmCtx.drawImage(wmVideo, 0, 0);
+                  drawWatermark(wmCtx, wmCanvas.width, wmCanvas.height);
+                }
+                watermarkAnimFrameRef.current = requestAnimationFrame(drawWmFrame);
+              };
+              drawWmFrame();
+              
+              const wmStream = wmCanvas.captureStream(30);
+              const wmVideoTracks = wmStream.getVideoTracks();
+              if (wmVideoTracks.length > 0) {
+                finalVideoTracks = wmVideoTracks;
+              }
+            }
+          } catch (wmErr) {
+            console.warn('[Recording] Watermark canvas failed, using original video:', wmErr);
+          }
+        }
+        
         const mixedStream = new MediaStream([
-          ...videoTracks,
+          ...finalVideoTracks,
           ...destination.stream.getAudioTracks()
         ]);
         recordStream = mixedStream;
         
-        const recorder = new MediaRecorder(recordStream, { mimeType });
+        const recorder = new MediaRecorder(recordStream, { mimeType })
         mediaRecorderRef.current = recorder;
         
         recorder.ondataavailable = (e) => {
@@ -568,6 +622,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         audioContextRef.current = null;
         mixedDestinationRef.current = null;
       }
+      if (watermarkAnimFrameRef.current) {
+        cancelAnimationFrame(watermarkAnimFrameRef.current);
+        watermarkAnimFrameRef.current = null;
+      }
+      if (watermarkVideoRef.current) {
+        watermarkVideoRef.current.srcObject = null;
+        watermarkVideoRef.current = null;
+      }
+      watermarkCanvasRef.current = null;
     };
   }, []);
   

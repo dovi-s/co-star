@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import { matchWords } from "@/lib/word-matcher";
+import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
 import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -1111,6 +1112,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         ctx.fillStyle = mutedColor;
         ctx.fillText(scene.name || '', boxX, h - 30);
       }
+
+      drawWatermark(ctx, w, h);
 
       screenRecordingFrameRef.current = requestAnimationFrame(drawScreenFrame);
     };
