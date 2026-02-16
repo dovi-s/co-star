@@ -511,74 +511,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
-      {/* Format tips link */}
-      <div className="flex items-center justify-end px-1">
-        <Dialog>
-          <DialogTrigger asChild>
-            <button
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
-              data-testid="button-format-help"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>Format tips</span>
-            </button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-base font-medium">Script Formatting</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 text-sm">
-              <p className="text-muted-foreground">
-                We accept most standard script formats. Here are the main ones:
-              </p>
-              
-              {/* Screenplay format */}
-              <div className="space-y-1.5">
-                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Screenplay Format</p>
-                <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                  <div className="text-center mb-1">SARAH</div>
-                  <div className="text-muted-foreground mb-2">I can't believe you're leaving.</div>
-                  <div className="text-center mb-1">MICHAEL</div>
-                  <div className="text-muted-foreground">(softly)</div>
-                  <div className="text-muted-foreground">Neither can I.</div>
-                </div>
-              </div>
-              
-              {/* Stage play format */}
-              <div className="space-y-1.5">
-                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Stage Play Format</p>
-                <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                  <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
-                  <div className="text-muted-foreground">MICHAEL: [softly] Neither can I.</div>
-                </div>
-              </div>
-              
-              {/* Tips */}
-              <div className="space-y-2 pt-1">
-                <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Tips</p>
-                <ul className="space-y-1.5 text-muted-foreground text-xs">
-                  <li className="flex gap-2">
-                    <span className="text-foreground font-medium">PDF</span>
-                    <span>Use the Upload button for best results</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-foreground">Names</span>
-                    <span>ALL CAPS or followed by colon</span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-foreground">Directions</span>
-                    <span>Use [brackets] or (parentheses)</span>
-                  </li>
-                </ul>
-                <p className="text-[10px] text-muted-foreground/60 mt-2">
-                  Copy-paste from PDFs often loses formatting. Upload the file directly for better accuracy.
-                </p>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
-      
       <div
         className={cn(
           "relative rounded-xl transition-all duration-200 glass-surface-clear textarea-glow",
@@ -616,43 +548,103 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
         {/* Floating actions - only show when empty */}
         {!script && (
-          <div className="absolute bottom-3 left-3 flex items-center gap-1">
-            <button
-              onClick={handlePaste}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
-                pasteSuccess 
-                  ? "bg-success/15 text-success" 
-                  : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
-              )}
-              data-testid="button-paste"
-            >
-              {pasteSuccess ? <Check className="h-3 w-3" /> : <Clipboard className="h-3 w-3" />}
-              {pasteSuccess ? "Done" : "Paste"}
-            </button>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isParsingFile}
-              className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
-                isParsingFile
-                  ? "bg-primary/10 text-primary"
-                  : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
-              )}
-              data-testid="button-upload-file"
-            >
-              {isParsingFile ? (
-                <>
-                  <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                  {parseProgress.includes("Scanning") ? "Scanning" : "Parsing"}
-                </>
-              ) : (
-                <>
-                  <Upload className="h-3 w-3" />
-                  Upload
-                </>
-              )}
-            </button>
+          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handlePaste}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
+                  pasteSuccess 
+                    ? "bg-success/15 text-success" 
+                    : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
+                )}
+                data-testid="button-paste"
+              >
+                {pasteSuccess ? <Check className="h-3 w-3" /> : <Clipboard className="h-3 w-3" />}
+                {pasteSuccess ? "Done" : "Paste"}
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsingFile}
+                className={cn(
+                  "inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect",
+                  isParsingFile
+                    ? "bg-primary/10 text-primary"
+                    : "bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
+                )}
+                data-testid="button-upload-file"
+              >
+                {isParsingFile ? (
+                  <>
+                    <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                    {parseProgress.includes("Scanning") ? "Scanning" : "Parsing"}
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-3 w-3" />
+                    Upload
+                  </>
+                )}
+              </button>
+            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  data-testid="button-format-help"
+                >
+                  <HelpCircle className="w-3 h-3" />
+                  <span>Formats</span>
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-base font-medium">Script Formatting</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 text-sm">
+                  <p className="text-muted-foreground">
+                    We accept most standard script formats. Here are the main ones:
+                  </p>
+                  <div className="space-y-1.5">
+                    <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Screenplay Format</p>
+                    <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
+                      <div className="text-center mb-1">SARAH</div>
+                      <div className="text-muted-foreground mb-2">I can't believe you're leaving.</div>
+                      <div className="text-center mb-1">MICHAEL</div>
+                      <div className="text-muted-foreground">(softly)</div>
+                      <div className="text-muted-foreground">Neither can I.</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Stage Play Format</p>
+                    <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
+                      <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
+                      <div className="text-muted-foreground">MICHAEL: [softly] Neither can I.</div>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-1">
+                    <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Tips</p>
+                    <ul className="space-y-1.5 text-muted-foreground text-xs">
+                      <li className="flex gap-2">
+                        <span className="text-foreground font-medium">PDF</span>
+                        <span>Use the Upload button for best results</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-foreground">Names</span>
+                        <span>ALL CAPS or followed by colon</span>
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-foreground">Directions</span>
+                        <span>Use [brackets] or (parentheses)</span>
+                      </li>
+                    </ul>
+                    <p className="text-[10px] text-muted-foreground/60 mt-2">
+                      Copy-paste from PDFs often loses formatting. Upload the file directly for better accuracy.
+                    </p>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
         
