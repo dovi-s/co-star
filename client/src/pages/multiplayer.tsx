@@ -9,7 +9,7 @@ import { VideoGrid } from '@/components/video-grid';
 import { MultiplayerVideoBackground } from '@/components/multiplayer-video-background';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { ttsEngine, calculateProsody, SpeakResult } from '@/lib/tts-engine';
+import { ttsEngine, calculateProsody, detectEmotion, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
 import { matchWords } from '@/lib/word-matcher';
 import { drawWatermark } from '@/lib/watermark';
@@ -714,23 +714,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     isAiSpeakingRef.current = isAiSpeaking;
   }, [isAiSpeaking]);
   
-  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean) => {
-    // ALWAYS stop any current audio first to prevent overlap
+  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean, direction?: string, voicePreset?: string) => {
     ttsEngine.stop();
     
-    // Clear any pending safety timeout from previous line
     if (safetyTimeoutRef.current) {
       clearTimeout(safetyTimeoutRef.current);
       safetyTimeoutRef.current = null;
     }
     
-    // Clear any pending advance timeout
     if (aiSpeakTimeoutRef.current) {
       clearTimeout(aiSpeakTimeoutRef.current);
       aiSpeakTimeoutRef.current = null;
     }
     
-    // Prevent duplicate calls for the same line
     if (speakingLineRef.current === lineId) {
       console.log('[Multiplayer TTS] Already speaking this line, skipping');
       return;
@@ -738,11 +734,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     speakingLineRef.current = lineId;
     setIsAiSpeaking(true);
-    isAiSpeakingRef.current = true; // Update ref immediately
+    isAiSpeakingRef.current = true;
     
     console.log('[Multiplayer TTS] Speaking:', roleName, text.substring(0, 30), 'isHost:', isHost);
     
-    const prosody = calculateProsody('neutral', 'natural');
+    const emotion = detectEmotion(text, direction);
+    const preset = (voicePreset as any) || 'natural';
+    const prosody = calculateProsody(emotion, preset);
     
     // Safety timeout: if TTS doesn't complete in reasonable time, advance anyway (host only)
     const estimatedDuration = Math.max(5000, text.length * 100); // ~100ms per character
@@ -887,16 +885,18 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       assignedTo: room.participants.find(p => p.roleId === lineRoleId)?.name || 'AI',
       isHost: multiplayer.isHost,
       speakingLineRef: speakingLineRef.current,
-      willSpeak: !isRoleAssignedToParticipant && multiplayer.isHost,
+      willSpeak: !isRoleAssignedToParticipant,
     });
     
-    // ONLY HOST plays TTS for unassigned roles to avoid sync issues
-    // Joining devices see lines visually and hear through host's speakers/WebRTC
-    if (!isRoleAssignedToParticipant && multiplayer.isHost) {
-      hasStartedRef.current = true; // Mark that we've started
+    // ALL participants play TTS locally for unassigned roles
+    // Host additionally controls line advancement via TTS completion callback
+    // This ensures everyone hears AI voices directly (no WebRTC audio dependency)
+    if (!isRoleAssignedToParticipant) {
+      hasStartedRef.current = true;
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
-      console.log('[Multiplayer] Starting TTS for AI line:', currentLine.roleName, roleIndex);
-      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, true);
+      const role = room.roles.find(r => r.id === lineRoleId);
+      console.log('[Multiplayer] Starting TTS for AI line:', currentLine.roleName, roleIndex, 'isHost:', multiplayer.isHost);
+      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost, currentLine.direction, role?.voicePreset);
     } else if (isRoleAssignedToParticipant) {
       // This is a human player's turn - check if it's MY turn
       const assignedParticipant = room.participants.find(p => p.roleId === lineRoleId);
@@ -1329,12 +1329,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     
     prevLineIndexRef.current = curLine;
     prevSceneIndexRef.current = curScene;
-    
-    return () => {
-      if (navNotifTimeoutRef.current) {
-        clearTimeout(navNotifTimeoutRef.current);
-      }
-    };
   }, [multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, multiplayer.room?.state]);
 
   const handleCreateRoom = () => {
@@ -1745,10 +1739,21 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             </div>
             
             <div className="flex items-center gap-0.5 shrink-0">
+              {hasRecording && !isRecording && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={downloadRecording}
+                  className="text-green-400"
+                  data-testid="button-download-recording"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={hasRecording && !isRecording ? downloadRecording : toggleRecording}
+                onClick={toggleRecording}
                 className={cn(
                   "text-white",
                   isRecording && "text-red-500"
@@ -1759,8 +1764,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                   <div className="relative">
                     <Circle className="h-4 w-4 fill-red-500 text-red-500 animate-pulse" />
                   </div>
-                ) : hasRecording ? (
-                  <Circle className="h-4 w-4 fill-green-500 text-green-500" />
                 ) : (
                   <Circle className="h-4 w-4" />
                 )}

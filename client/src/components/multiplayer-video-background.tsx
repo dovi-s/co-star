@@ -283,9 +283,40 @@ export function MultiplayerVideoBackground({
     return matchWords(currentLine.text, userTranscript);
   }, [isMyTurn, currentLine?.text, userTranscript]);
   
-  // Only use currentSpeakerId if it exists - don't fallback to self
   const effectiveSpeakerId = currentSpeakerId;
   const isLocalSpeaker = currentSpeakerId === myParticipantId;
+  
+  const [peerVideoReady, setPeerVideoReady] = useState(0);
+  
+  useEffect(() => {
+    if (peerStreams.length === 0) return;
+    
+    const checkTracks = () => {
+      const anyLive = peerStreams.some(ps => 
+        ps.stream.getVideoTracks().some(t => t.readyState === 'live')
+      );
+      if (anyLive) {
+        setPeerVideoReady(prev => prev + 1);
+      }
+    };
+    
+    const handlers: Array<() => void> = [];
+    peerStreams.forEach(ps => {
+      ps.stream.getVideoTracks().forEach(track => {
+        const onUnmute = () => setPeerVideoReady(prev => prev + 1);
+        track.addEventListener('unmute', onUnmute);
+        handlers.push(() => track.removeEventListener('unmute', onUnmute));
+      });
+    });
+    
+    const interval = setInterval(checkTracks, 1500);
+    checkTracks();
+    
+    return () => {
+      clearInterval(interval);
+      handlers.forEach(h => h());
+    };
+  }, [peerStreams]);
   
   const localHasVideo = localStream && localStream.getVideoTracks().length > 0 
     && localStream.getVideoTracks().some(t => t.enabled && t.readyState === 'live');
@@ -293,11 +324,25 @@ export function MultiplayerVideoBackground({
   const speakerPeerStream = !isLocalSpeaker && effectiveSpeakerId 
     ? peerStreams.find(ps => ps.participantId === effectiveSpeakerId)?.stream 
     : null;
-  const firstPeerStream = peerStreams.length > 0 ? peerStreams[0].stream : null;
   
-  const mainStream = localHasVideo 
-    ? localStream 
-    : (speakerPeerStream || firstPeerStream || localStream);
+  const peerWithVideo = peerStreams.find(ps => {
+    const videoTracks = ps.stream.getVideoTracks();
+    return videoTracks.length > 0 && videoTracks.some(t => t.readyState === 'live');
+  });
+  const firstPeerStream = peerWithVideo?.stream || (peerStreams.length > 0 ? peerStreams[0].stream : null);
+  
+  const speakerPeerHasVideo = speakerPeerStream && speakerPeerStream.getVideoTracks().length > 0
+    && speakerPeerStream.getVideoTracks().some(t => t.readyState === 'live');
+  
+  void peerVideoReady;
+  
+  const mainStream = speakerPeerHasVideo
+    ? speakerPeerStream
+    : (firstPeerStream && firstPeerStream.getVideoTracks().some(t => t.readyState === 'live'))
+      ? firstPeerStream
+      : localHasVideo
+        ? localStream
+        : (firstPeerStream || localStream);
   const showLocalAsMain = mainStream === localStream;
 
   useEffect(() => {

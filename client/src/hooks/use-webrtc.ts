@@ -6,7 +6,10 @@ const ICE_SERVERS: RTCConfiguration = {
   iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
+    { urls: 'stun:stun2.l.google.com:19302' },
+    { urls: 'stun:stun3.l.google.com:19302' },
   ],
+  iceCandidatePoolSize: 10,
 };
 
 export interface PeerStream {
@@ -139,13 +142,45 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       console.log(`[WebRTC] Connection state with ${participantId}: ${pc.connectionState}`);
       if (pc.connectionState === 'connected') {
         setConnectedPeers(prev => new Set(Array.from(prev).concat(participantId)));
-      } else if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+      } else if (pc.connectionState === 'failed') {
+        console.log(`[WebRTC] Connection failed with ${participantId}, attempting reconnect`);
         setConnectedPeers(prev => {
           const next = new Set(prev);
           next.delete(participantId);
           return next;
         });
         closePeerConnection(participantId);
+        if (localStreamRef.current) {
+          setTimeout(() => {
+            if (localStreamRef.current && !peerConnectionsRef.current.has(participantId)) {
+              console.log(`[WebRTC] Reconnecting to ${participantId}`);
+              createPeerConnection(participantId, true);
+            }
+          }, 1000);
+        }
+      } else if (pc.connectionState === 'disconnected') {
+        setTimeout(() => {
+          if (pc.connectionState === 'disconnected') {
+            console.log(`[WebRTC] Still disconnected from ${participantId}, reconnecting`);
+            setConnectedPeers(prev => {
+              const next = new Set(prev);
+              next.delete(participantId);
+              return next;
+            });
+            closePeerConnection(participantId);
+            if (localStreamRef.current && !peerConnectionsRef.current.has(participantId)) {
+              createPeerConnection(participantId, true);
+            }
+          }
+        }, 3000);
+      }
+    };
+    
+    pc.oniceconnectionstatechange = () => {
+      console.log(`[WebRTC] ICE state with ${participantId}: ${pc.iceConnectionState}`);
+      if (pc.iceConnectionState === 'failed') {
+        console.log(`[WebRTC] ICE failed, restarting ICE for ${participantId}`);
+        pc.restartIce();
       }
     };
 
