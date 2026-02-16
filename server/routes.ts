@@ -194,14 +194,52 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   return voiceType;
 }
 
-function getVoiceSettings(_emotion: string, _preset: string) {
-  // Simple, natural audition-style reads - no theatrical performance
-  // High stability = consistent, calm delivery like a table read
-  // Low style = no dramatic expression, just reading the lines naturally
+function getVoiceSettings(emotion: string, preset: string) {
+  let stability = 0.5;
+  let similarityBoost = 0.85;
+  let style = 0.3;
+
+  switch (emotion) {
+    case "angry":
+    case "fearful":
+    case "urgent":
+    case "excited":
+      stability = 0.0;
+      style = 0.6;
+      break;
+    case "sad":
+      stability = 0.5;
+      style = 0.5;
+      break;
+    case "happy":
+      stability = 0.5;
+      style = 0.5;
+      break;
+    case "whisper":
+      stability = 1.0;
+      style = 0.2;
+      break;
+    case "sarcastic":
+      stability = 0.0;
+      style = 0.4;
+      break;
+    default:
+      stability = 0.5;
+      style = 0.3;
+  }
+
+  if (preset === "theatrical") {
+    stability = 0.0;
+    style = Math.min(1, style + 0.2);
+  } else if (preset === "deadpan") {
+    stability = 1.0;
+    style = Math.max(0, style - 0.2);
+  }
+
   return {
-    stability: 0.85,        // Very stable, consistent delivery
-    similarity_boost: 0.9,  // Stay close to natural voice
-    style: 0.05,            // Minimal expression - just reading lines
+    stability,
+    similarity_boost: similarityBoost,
+    style: Math.max(0, Math.min(1, style)),
     use_speaker_boost: true,
   };
 }
@@ -227,17 +265,16 @@ export async function registerRoutes(
 
   app.post("/api/tts/speak", async (req: Request, res: Response) => {
     try {
-      const { text, characterName, characterIndex, emotion, preset } = req.body;
+      const { text, characterName, characterIndex, emotion, preset, direction } = req.body;
 
       if (!text || typeof text !== "string") {
         return res.status(400).json({ error: "Text is required" });
       }
 
-      // Clean text before TTS - fix common parsing artifacts
       const cleanedText = text
-        .replace(/\s+/g, ' ')           // Normalize multiple spaces to single
-        .replace(/\s+([.,!?;:])/g, '$1') // Remove space before punctuation
-        .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ') // Add space after punctuation if missing
+        .replace(/\s+/g, ' ')
+        .replace(/\s+([.,!?;:])/g, '$1')
+        .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')
         .trim();
 
       const apiKey = process.env.ELEVENLABS_API_KEY;
@@ -256,7 +293,7 @@ export async function registerRoutes(
 
       const audioStream = await client.textToSpeech.convert(voiceId, {
         text: cleanedText,
-        modelId: "eleven_turbo_v2_5",
+        modelId: "eleven_v3",
         voiceSettings: voiceSettings,
       });
 

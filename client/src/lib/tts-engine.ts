@@ -56,9 +56,23 @@ function calculateBreak(emotion: EmotionStyle): number {
   }
 }
 
-export function detectEmotion(_text: string, _direction?: string): EmotionStyle {
-  // Keep it simple - always neutral for natural audition-style reads
-  // No theatrical emotions, just people reading lines naturally
+export function detectEmotion(text: string, direction?: string): EmotionStyle {
+  const dir = (direction || "").toLowerCase();
+  const txt = text.toLowerCase();
+
+  if (/whisper|quietly|softly|under.?breath|hushed|murmur/i.test(dir)) return "whisper";
+  if (/angry|furious|rage|yelling|shouting|snapping|explosive|livid/i.test(dir)) return "angry";
+  if (/urgent|desperate|panicked|frantic|alarmed|hurried/i.test(dir)) return "urgent";
+  if (/scared|terrified|frightened|fearful|trembling|shaking/i.test(dir)) return "fearful";
+  if (/excited|thrilled|ecstatic|elated|enthusiastic|giddy/i.test(dir)) return "excited";
+  if (/happy|laughing|joyful|smiling|cheerful|beaming|delighted/i.test(dir)) return "happy";
+  if (/sad|crying|tearful|grief|mourning|broken|devastated|sobbing/i.test(dir)) return "sad";
+  if (/sarcastic|dry|ironic|mocking|sardonic|wry/i.test(dir)) return "sarcastic";
+
+  if (/!{2,}/.test(text) || /\b(stop|no|don't|shut up|get out|how dare)\b/i.test(txt)) return "angry";
+  if (/\?{2,}/.test(text)) return "urgent";
+  if (/\.{3,}|—/.test(text)) return "sad";
+
   return "neutral";
 }
 
@@ -69,6 +83,7 @@ interface SpeakOptions {
   characterIndex?: number;
   emotion?: EmotionStyle;
   preset?: VoicePreset;
+  direction?: string;
   playbackSpeed?: number; // 0.5 to 1.5
   onStart?: (duration: number, wordCount: number) => void;
 }
@@ -242,8 +257,9 @@ class TTSEngine {
           text: cleanText,
           characterName: options.characterName || "Character",
           characterIndex: options.characterIndex || 0,
-          emotion: "neutral",
-          preset: "natural",
+          emotion: options.emotion || "neutral",
+          preset: options.preset || "natural",
+          direction: options.direction || "",
           playbackSpeed: options.playbackSpeed ?? 1.0,
         }),
         signal: controller.signal,

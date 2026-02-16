@@ -37,7 +37,7 @@ export function useCamera() {
     try {
       setError(null);
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 } },
         audio: true,
       });
       setStream(mediaStream);
@@ -161,20 +161,24 @@ export function useCamera() {
 
       const hasVideo = recordingStream.getVideoTracks().length > 0;
       const mimeType = hasVideo
-        ? (MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
+        ? (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')
+          ? 'video/mp4;codecs=avc1'
+          : MediaRecorder.isTypeSupported('video/mp4')
+          ? 'video/mp4'
+          : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
           ? 'video/webm;codecs=vp9'
-          : MediaRecorder.isTypeSupported('video/webm')
-          ? 'video/webm'
-          : 'video/mp4')
-        : (MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : 'audio/mp4');
+          : 'video/webm')
+        : (MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : 'audio/webm');
 
       mimeTypeRef.current = mimeType;
 
       const mediaRecorder = new MediaRecorder(recordingStream, {
         mimeType,
-        ...(hasVideo ? { videoBitsPerSecond: 2500000 } : { audioBitsPerSecond: 128000 }),
+        ...(hasVideo 
+          ? { videoBitsPerSecond: 5000000, audioBitsPerSecond: 192000 } 
+          : { audioBitsPerSecond: 192000 }),
       });
 
       mediaRecorder.ondataavailable = (event) => {

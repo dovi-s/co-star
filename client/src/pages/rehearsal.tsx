@@ -605,6 +605,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         characterIndex: roleIndex >= 0 ? roleIndex : 0,
         emotion,
         preset,
+        direction: line.direction || "",
         playbackSpeed: session.playbackSpeed ?? 1.0,
         onStart: (duration: number, wordCount: number) => {
           if (wordCount > 0 && duration > 0) {
@@ -943,8 +944,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
 
     const drawScreenFrame = () => {
-      const w = 1280;
-      const h = 720;
+      const w = 1920;
+      const h = 1080;
       canvas.width = w;
       canvas.height = h;
 
@@ -993,9 +994,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const isUser = currentIsUserLine;
 
       const centerY = h / 2;
-      const boxW = Math.min(w - 80, 700);
+      const boxW = Math.min(w - 120, 1050);
       const boxX = (w - boxW) / 2;
-      const padding = 20;
+      const padding = 30;
 
       const wrapText = (text: string, maxWidth: number, font: string): string[] => {
         ctx.font = font;
@@ -1021,10 +1022,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         isCurr: boolean,
         isUserLine: boolean,
       ): number => {
-        const textFont = isCurr ? '500 20px Inter, system-ui, sans-serif' : '500 17px Inter, system-ui, sans-serif';
+        const textFont = isCurr ? '500 30px Inter, system-ui, sans-serif' : '500 25px Inter, system-ui, sans-serif';
         const wrappedLines = wrapText(line.text, boxW - padding * 2, textFont);
-        const lineH = isCurr ? 30 : 26;
-        const roleH = 28;
+        const lineH = isCurr ? 44 : 38;
+        const roleH = 42;
         const boxH = roleH + wrappedLines.length * lineH + padding * 2;
 
         if (isCurr && isUserLine) {
@@ -1044,23 +1045,23 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
         let textY = y + padding;
 
-        ctx.font = 'bold 11px Inter, system-ui, sans-serif';
+        ctx.font = 'bold 16px Inter, system-ui, sans-serif';
         const roleBg = isCurr && isUserLine ? 'rgba(255,255,255,0.2)' : (isCurr ? primaryColor : 'transparent');
         const roleFg = isCurr && isUserLine ? userFg : (isCurr ? '#fff' : mutedColor);
-        const roleW = ctx.measureText(line.roleName.toUpperCase()).width + 14;
+        const roleW = ctx.measureText(line.roleName.toUpperCase()).width + 20;
         if (isCurr) {
           ctx.fillStyle = roleBg;
           ctx.beginPath();
-          safeRoundRect(ctx, boxX + padding, textY, roleW, 20, 4);
+          safeRoundRect(ctx, boxX + padding, textY, roleW, 28, 6);
           ctx.fill();
         }
         ctx.fillStyle = roleFg;
-        ctx.fillText(line.roleName.toUpperCase(), boxX + padding + 7, textY + 14);
+        ctx.fillText(line.roleName.toUpperCase(), boxX + padding + 10, textY + 20);
 
         if (line.direction && isCurr) {
-          ctx.font = 'italic 11px Inter, system-ui, sans-serif';
+          ctx.font = 'italic 16px Inter, system-ui, sans-serif';
           ctx.fillStyle = isCurr && isUserLine ? `${userFg}aa` : mutedColor;
-          ctx.fillText(`(${line.direction})`, boxX + padding + roleW + 8, textY + 14);
+          ctx.fillText(`(${line.direction})`, boxX + padding + roleW + 12, textY + 20);
         }
 
         textY += roleH;
@@ -1068,7 +1069,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         ctx.font = textFont;
         ctx.fillStyle = isCurr && isUserLine ? userFg : (isCurr ? fgColor : mutedColor);
         for (const wl of wrappedLines) {
-          ctx.fillText(wl, boxX + padding, textY + (isCurr ? 18 : 15));
+          ctx.fillText(wl, boxX + padding, textY + (isCurr ? 26 : 22));
           textY += lineH;
         }
 
@@ -1077,17 +1078,17 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
       let currH = 0;
       if (curr) {
-        const tempFont = '500 20px Inter, system-ui, sans-serif';
+        const tempFont = '500 30px Inter, system-ui, sans-serif';
         const wrappedCurr = wrapText(curr.text, boxW - padding * 2, tempFont);
-        currH = 28 + wrappedCurr.length * 30 + padding * 2;
+        currH = 42 + wrappedCurr.length * 44 + padding * 2;
       }
 
-      const gap = 12;
+      const gap = 18;
       let prevH = 0;
       if (prev) {
-        const tempFont = '500 17px Inter, system-ui, sans-serif';
+        const tempFont = '500 25px Inter, system-ui, sans-serif';
         const wrappedPrev = wrapText(prev.text, boxW - padding * 2, tempFont);
-        prevH = 28 + wrappedPrev.length * 26 + padding * 2;
+        prevH = 42 + wrappedPrev.length * 38 + padding * 2;
       }
 
       const startY = centerY - currH / 2;
@@ -1110,9 +1111,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
       const scene = session?.scenes?.[session?.currentSceneIndex ?? 0];
       if (scene) {
-        ctx.font = '500 12px Inter, system-ui, sans-serif';
+        ctx.font = '500 18px Inter, system-ui, sans-serif';
         ctx.fillStyle = mutedColor;
-        ctx.fillText(scene.name || '', boxX, h - 30);
+        ctx.fillText(scene.name || '', boxX, h - 45);
       }
 
       drawWatermark(ctx, w, h);
