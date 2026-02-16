@@ -163,12 +163,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 50);
+          }, 20);
           return;
         }
       }
       
-      // On final result, auto-advance if we have at least some progress (35%+)
       if (result.isFinal && waitingForUserRef.current && line) {
         const match = matchWords(line.text, result.transcript);
         if (match.percentMatched >= 35) {
@@ -184,7 +183,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             if (isPlayingRef.current) {
               advanceAfterUserLine();
             }
-          }, 50);
+          }, 20);
         } else {
           console.log("[Rehearsal] Low match on final result, waiting for manual advance");
         }
@@ -258,7 +257,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (isPlayingRef.current) {
           advanceAfterUserLine();
         }
-      }, 100);
+      }, 20);
     }
   }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
 
@@ -295,8 +294,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         case "Escape":
           e.preventDefault();
           if (session?.isPlaying) {
-            ttsEngine.stop();
-            speechRecognition.abort();
+            stopAllPlayback();
             setPlaying(false);
           }
           break;
@@ -314,9 +312,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   // Centralized run completion handler
   const completeRun = useCallback(() => {
-    // Stop recording if active so user can download
     if (camera.isRecording) {
-      camera.toggleRecording();
+      camera.stopRecording();
     }
     
     // Calculate stats from the ref (always current)
@@ -355,7 +352,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     recordRehearsal(0, 1);
     setShowCelebration(true);
     setSceneCompleted(true);
-  }, [camera.isRecording, camera.toggleRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
+  }, [camera.isRecording, camera.stopRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
 
   // Reset run performance for a new run
   const resetRunPerformance = useCallback(() => {
@@ -465,7 +462,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
         }
-      }, 100);
+      }, 30);
       
       // Safety timeout: if no result after 60 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
@@ -488,6 +485,28 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
   }, [micBlocked, micEnabled, advanceAfterUserLine]);
 
+  const stopAllPlayback = useCallback(() => {
+    ttsEngine.stop();
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    setIsUserTurn(false);
+    speakingLineRef.current = null;
+    if (speakTimeoutRef.current) {
+      clearTimeout(speakTimeoutRef.current);
+      speakTimeoutRef.current = null;
+    }
+    if (wordTimerRef.current) {
+      clearInterval(wordTimerRef.current);
+      wordTimerRef.current = null;
+    }
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
+    setIsSpeaking(false);
+    setSpeakingWordIndex(-1);
+  }, []);
+
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
     if (!line || !session) {
@@ -497,18 +516,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const lineKey = `${session.currentSceneIndex}-${session.currentLineIndex}`;
     
-    // Prevent speaking same line twice
     if (speakingLineRef.current === lineKey) {
       console.log("[Rehearsal] Already speaking this line:", lineKey);
       return;
     }
-    speakingLineRef.current = lineKey;
 
-    // Clear any pending speak timeout
+    ttsEngine.stop();
     if (speakTimeoutRef.current) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
     }
+    if (wordTimerRef.current) {
+      clearInterval(wordTimerRef.current);
+      wordTimerRef.current = null;
+    }
+    setIsSpeaking(false);
+    setSpeakingWordIndex(-1);
+
+    speakingLineRef.current = lineKey;
 
     const isUser = isUserLine(line);
     if (isUser) {
@@ -525,7 +550,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     console.log("[Rehearsal] Speaking AI line:", role?.name, "index:", roleIndex, "emotion:", emotion);
 
-    // Helper to clear word timer
     const clearWordTimer = () => {
       if (wordTimerRef.current) {
         clearInterval(wordTimerRef.current);
@@ -535,16 +559,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setSpeakingWordIndex(-1);
     };
 
-    ttsEngine.stop();
-    if (speakTimeoutRef.current) {
-      clearTimeout(speakTimeoutRef.current);
-      speakTimeoutRef.current = null;
-    }
-
     speakTimeoutRef.current = setTimeout(() => {
+      speakTimeoutRef.current = null;
       if (!isPlayingRef.current) {
         console.log("[Rehearsal] Not playing anymore, skipping TTS");
         speakingLineRef.current = null;
+        return;
+      }
+      if (speakingLineRef.current !== lineKey) {
+        console.log("[Rehearsal] Line changed before speak, skipping");
         return;
       }
       
@@ -552,22 +575,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         console.log("[Rehearsal] TTS complete:", result, "for line:", lineKey);
         clearWordTimer();
         
-        // Only advance if still playing AND this is still the current line we started
-        // This prevents race conditions where callback fires after line already changed
         if (isPlayingRef.current && speakingLineRef.current === lineKey) {
-          // Count this line as rehearsed
           incrementLinesRehearsed();
           
           setTimeout(() => {
             if (!isPlayingRef.current) {
-              console.log("[Rehearsal] Stopped during pause");
               speakingLineRef.current = null;
               return;
             }
-            
-            // Double-check we're still on the same line (prevents double-advance)
             if (speakingLineRef.current !== lineKey) {
-              console.log("[Rehearsal] Line already changed, skipping advance");
               return;
             }
             
@@ -575,15 +591,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             
             const next = getNextLine();
             if (next) {
-              console.log("[Rehearsal] Advancing to next line");
               nextLine();
             } else {
-              console.log("[Rehearsal] Scene complete");
               completeRun();
             }
-          }, 100);
+          }, 30);
         } else {
-          console.log("[Rehearsal] TTS callback ignored - state changed");
           speakingLineRef.current = null;
         }
       }, {
@@ -593,7 +606,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         preset,
         playbackSpeed: session.playbackSpeed ?? 1.0,
         onStart: (duration: number, wordCount: number) => {
-          // Set up word-by-word highlighting timer
           if (wordCount > 0 && duration > 0) {
             const msPerWord = (duration * 1000) / wordCount;
             let currentWord = 0;
@@ -612,13 +624,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           }
         },
       });
-    }, 50);
+    }, 30);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun]);
 
   useEffect(() => {
     const lineKey = session ? `${session.currentSceneIndex}-${session.currentLineIndex}` : null;
     
-    // Always clear any pending reader delay timeout when line/scene/play state changes
     if (speakTimeoutRef.current) {
       clearTimeout(speakTimeoutRef.current);
       speakTimeoutRef.current = null;
@@ -626,48 +637,41 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     if (session?.isPlaying && currentLine) {
       if (speakingLineRef.current === lineKey) {
-        console.log("[Rehearsal] Effect: Already handling line", lineKey);
         return;
       }
       
+      ttsEngine.stop();
+      if (wordTimerRef.current) {
+        clearInterval(wordTimerRef.current);
+        wordTimerRef.current = null;
+      }
+      setIsSpeaking(false);
+      setSpeakingWordIndex(-1);
+      
       if (currentIsUserLine) {
-        ttsEngine.stop();
+        speechRecognition.abort();
         if (!waitingForUserRef.current) {
-          console.log("[Rehearsal] Effect: Starting user turn for", lineKey);
           speakingLineRef.current = lineKey;
           startListeningForUser();
         }
       } else {
-        ttsEngine.stop();
         speechRecognition.abort();
         waitingForUserRef.current = false;
         setIsUserTurn(false);
-        setIsSpeaking(false);
-        setSpeakingWordIndex(-1);
         const delay = session.readerDelay ?? 0;
         if (delay > 0) {
-          console.log("[Rehearsal] Effect: Delaying AI line by", delay, "s", lineKey);
           const capturedLineKey = lineKey;
           speakTimeoutRef.current = setTimeout(() => {
             speakTimeoutRef.current = null;
-            if (!isPlayingRef.current) {
-              console.log("[Rehearsal] Effect: Playback stopped during delay, skipping", capturedLineKey);
-              return;
-            }
-            console.log("[Rehearsal] Effect: Speaking AI line after delay", capturedLineKey);
+            if (!isPlayingRef.current) return;
             speakLine();
           }, delay * 1000);
         } else {
-          console.log("[Rehearsal] Effect: Speaking AI line", lineKey);
           speakLine();
         }
       }
     } else {
-      ttsEngine.stop();
-      speechRecognition.abort();
-      waitingForUserRef.current = false;
-      setIsUserTurn(false);
-      speakingLineRef.current = null;
+      stopAllPlayback();
     }
   }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
 
@@ -681,21 +685,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handlePlayPause = () => {
     if (session?.isPlaying) {
-      ttsEngine.stop();
-      speechRecognition.abort();
-      waitingForUserRef.current = false;
-      setIsUserTurn(false);
-      speakingLineRef.current = null;
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
-      }
-      if (wordTimerRef.current) {
-        clearInterval(wordTimerRef.current);
-        wordTimerRef.current = null;
-      }
-      setIsSpeaking(false);
-      setSpeakingWordIndex(-1);
+      stopAllPlayback();
       setPlaying(false);
     } else {
       setShowCountdown(true);
@@ -721,44 +711,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const handlePlayFromLine = useCallback((lineIndex: number) => {
     if (session?.isPlaying) {
-      ttsEngine.stop();
-      speechRecognition.abort();
-      waitingForUserRef.current = false;
-      setIsUserTurn(false);
-      speakingLineRef.current = null;
-      setIsSpeaking(false);
-      setSpeakingWordIndex(-1);
-      if (speakTimeoutRef.current) {
-        clearTimeout(speakTimeoutRef.current);
-        speakTimeoutRef.current = null;
-      }
+      stopAllPlayback();
       setPlaying(false);
     }
     pendingPlayFromLineRef.current = lineIndex;
     setShowCountdown(true);
-  }, [session?.isPlaying, setPlaying]);
+  }, [session?.isPlaying, setPlaying, stopAllPlayback]);
 
   const handleNext = () => {
-    ttsEngine.stop();
-    speechRecognition.abort();
-    waitingForUserRef.current = false;
-    setIsUserTurn(false);
-    speakingLineRef.current = null;
-    if (speakTimeoutRef.current) {
-      clearTimeout(speakTimeoutRef.current);
-      speakTimeoutRef.current = null;
-    }
-    if (wordTimerRef.current) {
-      clearInterval(wordTimerRef.current);
-      wordTimerRef.current = null;
-    }
-    // Clear any pending auto-advance timeout to prevent double-recording
-    if (autoAdvanceTimeoutRef.current) {
-      clearTimeout(autoAdvanceTimeoutRef.current);
-      autoAdvanceTimeoutRef.current = null;
-    }
-    setIsSpeaking(false);
-    setSpeakingWordIndex(-1);
+    stopAllPlayback();
     
     // Record line performance if user line
     if (currentIsUserLine) {
@@ -790,74 +751,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   };
 
   const handleBack = () => {
-    ttsEngine.stop();
-    speechRecognition.abort();
-    waitingForUserRef.current = false;
-    setIsUserTurn(false);
+    stopAllPlayback();
     setUserTranscript("");
-    speakingLineRef.current = null;
-    if (speakTimeoutRef.current) {
-      clearTimeout(speakTimeoutRef.current);
-      speakTimeoutRef.current = null;
-    }
-    if (wordTimerRef.current) {
-      clearInterval(wordTimerRef.current);
-      wordTimerRef.current = null;
-    }
-    if (autoAdvanceTimeoutRef.current) {
-      clearTimeout(autoAdvanceTimeoutRef.current);
-      autoAdvanceTimeoutRef.current = null;
-    }
-    setIsSpeaking(false);
-    setSpeakingWordIndex(-1);
     prevLine();
   };
 
   const handleRepeat = () => {
-    ttsEngine.stop();
-    speechRecognition.abort();
-    waitingForUserRef.current = false;
-    setIsUserTurn(false);
+    stopAllPlayback();
     setUserTranscript("");
-    speakingLineRef.current = null;
-    if (speakTimeoutRef.current) {
-      clearTimeout(speakTimeoutRef.current);
-      speakTimeoutRef.current = null;
-    }
-    if (wordTimerRef.current) {
-      clearInterval(wordTimerRef.current);
-      wordTimerRef.current = null;
-    }
-    if (autoAdvanceTimeoutRef.current) {
-      clearTimeout(autoAdvanceTimeoutRef.current);
-      autoAdvanceTimeoutRef.current = null;
-    }
-    setIsSpeaking(false);
-    setSpeakingWordIndex(-1);
-    
     goToLine(0);
     setPlaying(false);
   };
 
   const handleJumpToLine = (lineIndex: number, sceneIndex?: number) => {
-    ttsEngine.stop();
-    speechRecognition.abort();
-    waitingForUserRef.current = false;
-    setIsUserTurn(false);
+    stopAllPlayback();
     setUserTranscript("");
-    speakingLineRef.current = null;
-    if (speakTimeoutRef.current) {
-      clearTimeout(speakTimeoutRef.current);
-      speakTimeoutRef.current = null;
-    }
-    if (autoAdvanceTimeoutRef.current) {
-      clearTimeout(autoAdvanceTimeoutRef.current);
-      autoAdvanceTimeoutRef.current = null;
-    }
-    
-    // Use goToLine with both scene and line index to avoid race condition
-    // (goToScene updates state async, so calling goToLine immediately after
-    // would use the old scene index)
     const targetScene = sceneIndex !== undefined ? sceneIndex : session?.currentSceneIndex ?? 0;
     goToLine(targetScene, lineIndex);
   };
@@ -994,7 +902,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const screenRecordingFrameRef = useRef<number | null>(null);
   useEffect(() => {
     const canvas = camera.screenCanvasRef.current;
-    if (!canvas || camera.isEnabled) {
+    if (!canvas) {
       if (screenRecordingFrameRef.current) {
         cancelAnimationFrame(screenRecordingFrameRef.current);
         screenRecordingFrameRef.current = null;
@@ -1012,15 +920,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const isDark = document.documentElement.classList.contains('dark');
-    const bgColor = isDark ? '#0E1218' : '#FFFFFF';
-    const fgColor = isDark ? '#E6EDF3' : '#0F172A';
-    const mutedColor = isDark ? 'rgba(230,237,243,0.4)' : 'rgba(15,23,42,0.4)';
-    const userBg = isDark ? '#E6EDF3' : '#0F172A';
-    const userFg = isDark ? '#0E1218' : '#FFFFFF';
-    const aiBg = isDark ? '#1a1f28' : '#f8fafc';
-    const aiBorder = isDark ? 'rgba(230,237,243,0.15)' : 'rgba(15,23,42,0.1)';
-    const primaryColor = 'hsl(217, 91%, 60%)';
+    const hasCameraFeed = camera.isEnabled && camera.videoRef.current;
 
     const safeRoundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
       if (c.roundRect) {
@@ -1045,8 +945,44 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       canvas.width = w;
       canvas.height = h;
 
-      ctx.fillStyle = bgColor;
-      ctx.fillRect(0, 0, w, h);
+      if (hasCameraFeed) {
+        const video = camera.videoRef.current!;
+        if (video.videoWidth && video.videoHeight) {
+          const videoAspect = video.videoWidth / video.videoHeight;
+          const canvasAspect = w / h;
+          let dw: number, dh: number, dx: number, dy: number;
+          if (canvasAspect > videoAspect) {
+            dw = w; dh = w / videoAspect;
+            dx = 0; dy = (h - dh) / 2;
+          } else {
+            dh = h; dw = h * videoAspect;
+            dx = (w - dw) / 2; dy = 0;
+          }
+          ctx.save();
+          ctx.translate(w, 0);
+          ctx.scale(-1, 1);
+          ctx.drawImage(video, w - dx - dw, dy, dw, dh);
+          ctx.restore();
+          ctx.fillStyle = 'rgba(0,0,0,0.3)';
+          ctx.fillRect(0, 0, w, h);
+        } else {
+          ctx.fillStyle = '#000';
+          ctx.fillRect(0, 0, w, h);
+        }
+      } else {
+        const isDark = document.documentElement.classList.contains('dark');
+        ctx.fillStyle = isDark ? '#0E1218' : '#FFFFFF';
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      const onCamera = hasCameraFeed;
+      const fgColor = onCamera ? '#FFFFFF' : (document.documentElement.classList.contains('dark') ? '#E6EDF3' : '#0F172A');
+      const mutedColor = onCamera ? 'rgba(255,255,255,0.4)' : (document.documentElement.classList.contains('dark') ? 'rgba(230,237,243,0.4)' : 'rgba(15,23,42,0.4)');
+      const userBg = onCamera ? 'rgba(255,255,255,0.9)' : (document.documentElement.classList.contains('dark') ? '#E6EDF3' : '#0F172A');
+      const userFg = onCamera ? '#000' : (document.documentElement.classList.contains('dark') ? '#0E1218' : '#FFFFFF');
+      const aiBg = onCamera ? 'rgba(0,0,0,0.7)' : (document.documentElement.classList.contains('dark') ? '#1a1f28' : '#f8fafc');
+      const aiBorder = onCamera ? 'rgba(255,255,255,0.2)' : (document.documentElement.classList.contains('dark') ? 'rgba(230,237,243,0.15)' : 'rgba(15,23,42,0.1)');
+      const primaryColor = 'hsl(217, 91%, 60%)';
 
       const prev = previousLine;
       const curr = currentLine;
@@ -1187,7 +1123,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         screenRecordingFrameRef.current = null;
       }
     };
-  }, [camera.isRecording, camera.isEnabled, currentLine, previousLine, nextLineData, currentIsUserLine, session?.scenes, session?.currentSceneIndex]);
+  }, [camera.isRecording, camera.isEnabled, camera.videoRef, currentLine, previousLine, nextLineData, currentIsUserLine, session?.scenes, session?.currentSceneIndex]);
 
   if (!session) {
     onBack();
@@ -1209,14 +1145,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       "min-h-screen flex flex-col",
       camera.isEnabled ? "bg-transparent" : "bg-background"
     )} data-testid="rehearsal-page">
-      {!camera.isEnabled && (
-        <canvas
-          ref={camera.screenCanvasRef}
-          className="hidden"
-          width={1280}
-          height={720}
-        />
-      )}
+      <canvas
+        ref={camera.screenCanvasRef}
+        className="hidden"
+        width={1280}
+        height={720}
+      />
       {camera.isEnabled && (
         <VideoBackground
           stream={camera.stream}
@@ -1368,7 +1302,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                     Download Recording
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-1.5">
-                    {camera.isEnabled ? "Camera recording with audio" : "Script view with audio"}
+                    {camera.isEnabled ? "Camera + script recording with audio" : "Script view with audio"}
                   </p>
                 </div>
               )}
@@ -1395,6 +1329,44 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           </div>
         );
       })()}
+
+      {camera.showDiscardPrompt && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-card border shadow-2xl rounded-xl p-5 text-center max-w-xs mx-4" data-testid="discard-prompt">
+            <h3 className="text-base font-semibold mb-1">Stop recording?</h3>
+            <p className="text-sm text-muted-foreground mb-4">Keep the recording or discard it.</p>
+            <div className="flex flex-col gap-2">
+              <Button
+                className="w-full"
+                onClick={() => {
+                  camera.confirmStopAndDownload();
+                }}
+                data-testid="button-keep-recording"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Keep recording
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  camera.confirmStopAndDiscard();
+                }}
+                data-testid="button-discard-recording"
+              >
+                Discard
+              </Button>
+              <button
+                onClick={() => camera.cancelStopRecording()}
+                className="mt-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                data-testid="button-cancel-stop"
+              >
+                continue recording
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className={cn(
         "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10",
@@ -1432,13 +1404,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               const lineIndex = currentScene?.lines?.findIndex(l => l.id === line.id) ?? -1;
               if (lineIndex !== -1 && lineIndex !== session.currentLineIndex) {
                 if (session.isPlaying) {
-                  ttsEngine.stop();
-                  speechRecognition.abort();
-                  waitingForUserRef.current = false;
-                  setIsUserTurn(false);
-                  speakingLineRef.current = null;
-                  setIsSpeaking(false);
-                  setSpeakingWordIndex(-1);
+                  stopAllPlayback();
                   setPlaying(false);
                 }
                 updateSession({ currentLineIndex: lineIndex, isPlaying: false });

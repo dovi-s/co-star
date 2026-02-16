@@ -194,7 +194,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const [joinCode, setJoinCode] = useState('');
   const [copied, setCopied] = useState(false);
   
-  // Recording state
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [hasRecording, setHasRecording] = useState(false);
@@ -202,6 +201,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const recordingChunksRef = useRef<Blob[]>([]);
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const recordingBlobRef = useRef<Blob | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mixedDestinationRef = useRef<MediaStreamAudioDestinationNode | null>(null);
   
   // Completion state
   const [showCompletion, setShowCompletion] = useState(false);
@@ -422,23 +423,30 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     };
   }, [lobbyStream]);
   
-  // Recording functions
   const toggleRecording = useCallback(() => {
     if (isRecording) {
-      // Stop recording
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+        try { mediaRecorderRef.current.requestData(); } catch {}
+        setTimeout(() => {
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+          }
+        }, 100);
       }
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
         recordingTimerRef.current = null;
       }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+        mixedDestinationRef.current = null;
+      }
       setIsRecording(false);
     } else {
-      // Start recording
       const stream = webrtc.localStream;
       if (!stream) {
-        toast({ title: 'No camera stream', description: 'Enable camera to record', variant: 'destructive' });
+        toast({ title: 'No media stream', description: 'Enable camera or microphone to record', variant: 'destructive' });
         return;
       }
       
@@ -446,7 +454,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       setRecordingTime(0);
       setHasRecording(false);
       
-      // Determine supported MIME type
       const mimeTypes = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'];
       let mimeType = 'video/webm';
       for (const type of mimeTypes) {
@@ -457,7 +464,37 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
       
       try {
-        const recorder = new MediaRecorder(stream, { mimeType });
+        let recordStream = stream;
+        
+        const audioCtx = new AudioContext();
+        audioContextRef.current = audioCtx;
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+        const destination = audioCtx.createMediaStreamDestination();
+        mixedDestinationRef.current = destination;
+        
+        const micTracks = stream.getAudioTracks();
+        if (micTracks.length > 0) {
+          const micSource = audioCtx.createMediaStreamSource(new MediaStream(micTracks));
+          micSource.connect(destination);
+        }
+        
+        ttsEngine.initAudioContext();
+        const ttsStream = ttsEngine.getTTSAudioStream();
+        if (ttsStream && ttsStream.getAudioTracks().length > 0) {
+          const ttsSource = audioCtx.createMediaStreamSource(ttsStream);
+          ttsSource.connect(destination);
+        }
+        
+        const videoTracks = stream.getVideoTracks();
+        const mixedStream = new MediaStream([
+          ...videoTracks,
+          ...destination.stream.getAudioTracks()
+        ]);
+        recordStream = mixedStream;
+        
+        const recorder = new MediaRecorder(recordStream, { mimeType });
         mediaRecorderRef.current = recorder;
         
         recorder.ondataavailable = (e) => {
@@ -476,7 +513,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         recorder.start(1000);
         setIsRecording(true);
         
-        // Start timer
         recordingTimerRef.current = setInterval(() => {
           setRecordingTime(t => t + 1);
         }, 1000);
@@ -500,14 +536,19 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     URL.revokeObjectURL(url);
   }, []);
   
-  // Cleanup recording on unmount
   useEffect(() => {
     return () => {
       if (recordingTimerRef.current) {
         clearInterval(recordingTimerRef.current);
       }
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        try { mediaRecorderRef.current.requestData(); } catch {}
         mediaRecorderRef.current.stop();
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {});
+        audioContextRef.current = null;
+        mixedDestinationRef.current = null;
       }
     };
   }, []);
@@ -526,10 +567,20 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     if (room.state === 'completed' && !showCompletion) {
       // Stop recording if active
       if (isRecording && mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
+        try { mediaRecorderRef.current.requestData(); } catch {}
+        setTimeout(() => {
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+          }
+        }, 100);
         if (recordingTimerRef.current) {
           clearInterval(recordingTimerRef.current);
           recordingTimerRef.current = null;
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close().catch(() => {});
+          audioContextRef.current = null;
+          mixedDestinationRef.current = null;
         }
         setIsRecording(false);
       }

@@ -19,6 +19,7 @@ export function useCamera() {
   const [error, setError] = useState<string | null>(null);
   const [hasRecording, setHasRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
+  const [showDiscardPrompt, setShowDiscardPrompt] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -30,6 +31,7 @@ export function useCamera() {
   const mimeTypeRef = useRef<string>('video/webm');
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
   const recordingMicStreamRef = useRef<MediaStream | null>(null);
+  const audioCleanupRef = useRef<(() => void) | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -138,25 +140,20 @@ export function useCamera() {
       setRecordingTime(0);
       setHasRecording(false);
       setRecordingBlob(null);
+      setShowDiscardPrompt(false);
 
       const { stream: mixedAudio, cleanup: audioCleanup } = await buildMixedAudioStream();
+      audioCleanupRef.current = audioCleanup;
 
       let recordingStream: MediaStream;
 
-      if (isEnabled && canvasRef.current) {
-        const canvasStream = canvasRef.current.captureStream(30);
-        recordingStream = new MediaStream([
-          ...canvasStream.getVideoTracks(),
-          ...mixedAudio.getAudioTracks(),
-        ]);
-        console.log('[Camera] Starting camera video + mixed audio recording');
-      } else if (screenCanvasRef.current) {
+      if (screenCanvasRef.current) {
         const canvasStream = screenCanvasRef.current.captureStream(30);
         recordingStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
           ...mixedAudio.getAudioTracks(),
         ]);
-        console.log('[Camera] Starting screen canvas + mixed audio recording');
+        console.log('[Camera] Starting canvas + mixed audio recording');
       } else {
         recordingStream = mixedAudio;
         console.log('[Camera] Starting audio-only recording (no canvas available)');
@@ -187,14 +184,30 @@ export function useCamera() {
       };
 
       mediaRecorder.onstop = () => {
-        const blob = new Blob(recordingChunksRef.current, { type: mimeType });
-        setRecordingBlob(blob);
-        setHasRecording(true);
-        console.log('[Camera] Recording saved, size:', blob.size);
-        audioCleanup();
+        const chunks = recordingChunksRef.current;
+        if (chunks.length > 0) {
+          const blob = new Blob(chunks, { type: mimeType });
+          if (blob.size > 0) {
+            setRecordingBlob(blob);
+            setHasRecording(true);
+            console.log('[Camera] Recording saved, size:', blob.size);
+          } else {
+            console.log('[Camera] Recording blob empty');
+          }
+        } else {
+          console.log('[Camera] No recording chunks captured');
+        }
+        if (audioCleanupRef.current) {
+          audioCleanupRef.current();
+          audioCleanupRef.current = null;
+        }
       };
 
-      mediaRecorder.start(1000);
+      mediaRecorder.onerror = (e) => {
+        console.error('[Camera] MediaRecorder error:', e);
+      };
+
+      mediaRecorder.start(500);
       mediaRecorderRef.current = mediaRecorder;
       setIsRecording(true);
 
@@ -216,27 +229,79 @@ export function useCamera() {
   }, [isEnabled, stream, buildMixedAudioStream]);
 
   const stopRecording = useCallback(() => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
+    }
+
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      try {
+        recorder.requestData();
+      } catch {}
+      setTimeout(() => {
+        try {
+          if (recorder.state !== 'inactive') {
+            recorder.stop();
+          }
+        } catch {}
+        mediaRecorderRef.current = null;
+      }, 100);
+    } else {
+      mediaRecorderRef.current = null;
     }
 
     setIsRecording(false);
     console.log('[Camera] Recording stopped');
   }, []);
 
+  const requestStopRecording = useCallback(() => {
+    if (!isRecording) return;
+    setShowDiscardPrompt(true);
+  }, [isRecording]);
+
+  const confirmStopAndDownload = useCallback(() => {
+    setShowDiscardPrompt(false);
+    stopRecording();
+  }, [stopRecording]);
+
+  const confirmStopAndDiscard = useCallback(() => {
+    setShowDiscardPrompt(false);
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.ondataavailable = null;
+      recorder.onstop = () => {
+        if (audioCleanupRef.current) {
+          audioCleanupRef.current();
+          audioCleanupRef.current = null;
+        }
+      };
+      try { recorder.stop(); } catch {}
+    }
+    mediaRecorderRef.current = null;
+    recordingChunksRef.current = [];
+    setIsRecording(false);
+    setHasRecording(false);
+    setRecordingBlob(null);
+    setRecordingTime(0);
+    console.log('[Camera] Recording discarded');
+  }, []);
+
+  const cancelStopRecording = useCallback(() => {
+    setShowDiscardPrompt(false);
+  }, []);
+
   const toggleRecording = useCallback(() => {
     if (isRecording) {
-      stopRecording();
+      requestStopRecording();
     } else {
       startRecording();
     }
-  }, [isRecording, startRecording, stopRecording]);
+  }, [isRecording, startRecording, requestStopRecording]);
 
   const downloadRecording = useCallback((filename: string = 'castmate-recording') => {
     if (!recordingBlob) return;
@@ -282,6 +347,9 @@ export function useCamera() {
       if (recordingMicStreamRef.current) {
         recordingMicStreamRef.current.getTracks().forEach(t => t.stop());
       }
+      if (audioCleanupRef.current) {
+        audioCleanupRef.current();
+      }
     };
   }, []);
 
@@ -293,6 +361,7 @@ export function useCamera() {
     error,
     hasRecording,
     recordingBlob,
+    showDiscardPrompt,
     videoRef,
     canvasRef,
     screenCanvasRef,
@@ -302,6 +371,10 @@ export function useCamera() {
     toggleRecording,
     startRecording,
     stopRecording,
+    requestStopRecording,
+    confirmStopAndDownload,
+    confirmStopAndDiscard,
+    cancelStopRecording,
     downloadRecording,
     clearRecording,
   };
