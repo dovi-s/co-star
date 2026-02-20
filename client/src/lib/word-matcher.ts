@@ -180,6 +180,7 @@ const NUMBER_WORDS: Record<string, string[]> = {
 function normalizeWord(word: string): string {
   return word
     .toLowerCase()
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035\u0060]/g, "'")
     .replace(/[^a-z0-9']/g, '')
     .trim();
 }
@@ -187,23 +188,31 @@ function normalizeWord(word: string): string {
 // Get all possible forms of a word (including contraction expansions)
 function getWordForms(word: string): string[] {
   const normalized = normalizeWord(word);
-  const forms = [normalized, normalized.replace(/'/g, '')];
+  const withoutApostrophe = normalized.replace(/'/g, '');
+  const forms = new Set([normalized, withoutApostrophe]);
   
   if (CONTRACTIONS[normalized]) {
-    forms.push(...CONTRACTIONS[normalized]);
+    for (const f of CONTRACTIONS[normalized]) forms.add(f);
+  }
+  if (withoutApostrophe !== normalized && CONTRACTIONS[withoutApostrophe]) {
+    for (const f of CONTRACTIONS[withoutApostrophe]) forms.add(f);
   }
   
   for (const [contraction, expansions] of Object.entries(CONTRACTIONS)) {
-    if (expansions.includes(normalized)) {
-      forms.push(contraction, contraction.replace(/'/g, ''));
+    if (expansions.includes(normalized) || expansions.includes(withoutApostrophe)) {
+      forms.add(contraction);
+      forms.add(contraction.replace(/'/g, ''));
     }
   }
   
   if (NUMBER_WORDS[normalized]) {
-    forms.push(...NUMBER_WORDS[normalized]);
+    for (const f of NUMBER_WORDS[normalized]) forms.add(f);
+  }
+  if (NUMBER_WORDS[withoutApostrophe]) {
+    for (const f of NUMBER_WORDS[withoutApostrophe]) forms.add(f);
   }
   
-  return forms;
+  return Array.from(forms);
 }
 
 export function matchWords(expectedText: string, spokenText: string): {
