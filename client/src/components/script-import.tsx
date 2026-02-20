@@ -819,6 +819,15 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           {previewData.roles} roles
           {previewData.scenes > 0 && <span> · {previewData.scenes} scenes</span>}
           {previewData.time && <span> · {previewData.time}</span>}
+          {" · "}
+          <button
+            type="button"
+            onClick={() => { setScript(""); setIsEditingScript(true); }}
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+            data-testid="button-clear-script"
+          >
+            Clear
+          </button>
         </p>
       )}
       
@@ -865,21 +874,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               >
                 Auto-format
               </button>
+              {" · "}
+              <button
+                onClick={() => { setScript(""); setIsEditingScript(true); }}
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
+                data-testid="button-clear-script-alt"
+              >
+                Clear
+              </button>
             </>
           )}
-        </p>
-      )}
-
-      {script && !isCleaning && (
-        <p className="text-center text-xs text-muted-foreground/60 animate-fade-in">
-          <button
-            type="button"
-            onClick={() => { setScript(""); setIsEditingScript(true); }}
-            className="underline underline-offset-2 hover:text-foreground transition-colors"
-            data-testid="button-clear-script-always"
-          >
-            Clear
-          </button>
         </p>
       )}
 
