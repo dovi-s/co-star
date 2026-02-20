@@ -16,12 +16,12 @@ import { drawWatermark } from '@/lib/watermark';
 import { Users, Copy, Check, Play, Crown, UserCircle, ArrowLeft, Loader2, Pause, SkipForward, SkipBack, Volume2, Mic, MicOff, Video, VideoOff, Circle, Camera, CameraOff, Download, Star, RefreshCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-type View = 'menu' | 'create' | 'join' | 'lobby';
+type View = 'create' | 'join' | 'lobby';
 
 interface MultiplayerPageProps {
   onBack: () => void;
   onStartRehearsal?: (room: any) => void;
-  initialView?: View;
+  initialView?: 'create' | 'join';
 }
 
 interface PeerAudioElementProps {
@@ -186,7 +186,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
   );
 }
 
-export default function MultiplayerPage({ onBack, onStartRehearsal, initialView = 'menu' }: MultiplayerPageProps) {
+export default function MultiplayerPage({ onBack, onStartRehearsal, initialView = 'join' }: MultiplayerPageProps) {
   const { session } = useSessionContext();
   const { toast } = useToast();
   
@@ -258,11 +258,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     },
     onKicked: () => {
       toast({ title: 'Removed from room', variant: 'destructive' });
-      setView('menu');
+      onBack();
     },
     onRoomClosed: () => {
       toast({ title: 'Room closed' });
-      setView('menu');
+      onBack();
     },
   });
 
@@ -1363,100 +1363,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
   const handleLeave = () => {
     stopAllMultiplayerPlayback();
     multiplayer.leaveRoom();
-    setView('menu');
+    onBack();
   };
 
   const allReady = multiplayer.room?.participants.every(p => p.isReady) ?? false;
   const canStart = multiplayer.isHost && allReady && (multiplayer.room?.participants.length ?? 0) >= 1;
-
-  if (view === 'menu') {
-    return (
-      <div className="min-h-screen flex flex-col bg-background" data-testid="multiplayer-menu">
-        <header className="flex items-center justify-between gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onBack}
-              className="shrink-0"
-              data-testid="button-back-home"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="min-w-0">
-              <h1 className="font-medium text-sm truncate text-foreground">Table Read</h1>
-              <p className="text-[11px] text-muted-foreground">Multiplayer</p>
-            </div>
-          </div>
-        </header>
-
-        <div className="flex-1 flex flex-col">
-          <div className="px-5 pt-6 pb-4 relative">
-            <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
-            <h2 className="text-lg font-semibold text-foreground relative">
-              Rehearse together
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1 relative">
-              Read through scripts with friends in real-time.
-            </p>
-          </div>
-
-          <div className="flex-1 px-4 pt-2 pb-6 space-y-3">
-            <Card 
-              className="hover-elevate cursor-pointer transition-all duration-150 press-effect" 
-              onClick={() => session ? setView('create') : undefined}
-              data-testid="card-create-room"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "flex items-center justify-center w-10 h-10 rounded-lg",
-                    session ? "bg-primary text-primary-foreground" : "bg-muted"
-                  )}>
-                    <Users className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base">Create Room</CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
-                      {session ? `Host with "${session.name}"` : 'Import a script first'}
-                    </CardDescription>
-                  </div>
-                  {session && <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />}
-                </div>
-              </CardHeader>
-            </Card>
-
-            <Card 
-              className="hover-elevate cursor-pointer transition-all duration-150 press-effect" 
-              onClick={() => setView('join')}
-              data-testid="card-join-room"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted">
-                    <UserCircle className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <CardTitle className="text-base">Join Room</CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
-                      Enter a 6-character room code
-                    </CardDescription>
-                  </div>
-                  <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />
-                </div>
-              </CardHeader>
-            </Card>
-          </div>
-        </div>
-
-        <footer className="px-5 py-6 pb-8 glass-surface safe-bottom">
-          <p className="text-[11px] text-muted-foreground/60 text-center">
-            Video and audio stay between participants.
-          </p>
-        </footer>
-      </div>
-    );
-  }
 
   if (view === 'create') {
     return (
@@ -1466,9 +1377,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setView('menu')}
+              onClick={onBack}
               className="shrink-0"
-              data-testid="button-back-menu"
+              data-testid="button-back-home"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -1537,9 +1448,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setView('menu')}
+              onClick={onBack}
               className="shrink-0"
-              data-testid="button-back-menu"
+              data-testid="button-back-home"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>

@@ -10,7 +10,7 @@ import { RehearsalPage } from "@/pages/rehearsal";
 import MultiplayerPage from "@/pages/multiplayer";
 
 type View = "home" | "rehearsal" | "multiplayer";
-type MultiplayerInitialView = "menu" | "create" | "join";
+type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
   const { session } = useSessionContext();
@@ -18,7 +18,7 @@ function AppContent() {
     // Start at home - session context will have the data
     return "home";
   });
-  const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("menu");
+  const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("join");
 
   const handleSessionReady = useCallback(() => {
     setView("rehearsal");
@@ -34,17 +34,11 @@ function AppContent() {
     setView("multiplayer");
   }, []);
 
-  // From home header: depends on whether we have a script
+  // From home header: go directly to join (skip menu screen)
   const handleMultiplayerFromHome = useCallback(() => {
-    if (session && session.scenes?.length > 0) {
-      // Has script - show menu with both options
-      setMultiplayerInitialView("menu");
-    } else {
-      // No script - go directly to join
-      setMultiplayerInitialView("join");
-    }
+    setMultiplayerInitialView("join");
     setView("multiplayer");
-  }, [session]);
+  }, []);
 
   // Auto-navigate to rehearsal if session is ready with a user role
   // This handles page refresh (though session won't persist for large scripts)
