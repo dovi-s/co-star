@@ -8,10 +8,11 @@ function generateId(): string {
 
 interface SessionContextType {
   session: Session | null;
+  lastRawScript: string;
   isLoading: boolean;
   error: string | null;
   createSession: (name: string, rawScript: string) => Promise<Session | null>;
-  createSessionFromParsed: (name: string, parsed: { roles: Role[], scenes: Scene[] }) => Session | null;
+  createSessionFromParsed: (name: string, parsed: { roles: Role[], scenes: Scene[] }, rawScript?: string) => Session | null;
   setUserRole: (roleId: string) => void;
   clearUserRole: () => void;
   updateSession: (updates: UpdateSession) => void;
@@ -31,6 +32,7 @@ const SessionContext = createContext<SessionContextType | null>(null);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [lastRawScript, setLastRawScript] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,6 +87,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         updatedAt: now,
       };
 
+      setLastRawScript(rawScript);
       setSession(newSession);
       setIsLoading(false);
       return newSession;
@@ -101,7 +104,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const createSessionFromParsed = useCallback((name: string, parsed: { roles: Role[], scenes: Scene[] }) => {
+  const createSessionFromParsed = useCallback((name: string, parsed: { roles: Role[], scenes: Scene[] }, rawScript?: string) => {
     setIsLoading(true);
     setError(null);
 
@@ -139,6 +142,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       };
 
       console.log('[Session] Created session with', newSession.scenes.length, 'scenes');
+      if (rawScript) setLastRawScript(rawScript);
       setSession(newSession);
       setIsLoading(false);
       return newSession;
@@ -267,6 +271,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   return (
     <SessionContext.Provider value={{
       session,
+      lastRawScript,
       isLoading,
       error,
       createSession,
