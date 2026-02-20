@@ -496,19 +496,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const looksLikeBadPdfCopy = useMemo(() => {
     if (!script || script.length < 200) return false;
     
-    const lines = script.split('\n');
-    // Check for very long lines (common when line breaks are lost)
-    const veryLongLines = lines.filter(l => l.length > 200).length;
-    const avgLineLength = script.length / Math.max(lines.length, 1);
-    
-    // Check for merged character names (e.g., "straightWINSLEY." or "atCallie checks")
     const hasMergedNames = /[a-z][A-Z]{3,}\.\s+[A-Z]/.test(script) || 
                            /[a-z][A-Z][a-z]+\s+(?:checks|looks|turns|walks|sits|stands)/.test(script);
     
-    // Check for multiple character lines merged on same line
     const hasMergedDialogue = /[A-Z]{3,}\.\s+[A-Za-z].*[A-Z]{3,}\.\s+[A-Z]/.test(script);
     
-    return (veryLongLines > 3 || avgLineLength > 150 || hasMergedNames || hasMergedDialogue);
+    return (hasMergedNames || hasMergedDialogue);
   }, [script]);
 
   // Use the full parser for accurate preview (with OCR correction and CAST detection)
@@ -782,38 +775,37 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
       {/* Warning for badly formatted text */}
       {script && looksLikeBadPdfCopy && previewData.roles > 0 && !isCleaning && (
-        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 text-center animate-fade-in" data-testid="warning-bad-format">
-          <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
-            This text may have formatting issues from PDF copy-paste. Some lines could be misattributed.
-          </p>
-          <p className="text-xs text-amber-600/80 dark:text-amber-400/70 mb-2">
-            We found {previewData.roles} roles and can still parse this. You can continue, or try these options for better accuracy:
-          </p>
+        <p className="text-xs text-muted-foreground text-center animate-fade-in" data-testid="warning-bad-format">
+          {previewData.roles} roles · Formatting looks off.{" "}
           {script.length <= 30000 && (
             <>
               <button
                 onClick={cleanupScript}
-                className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+                className="underline underline-offset-2 hover:text-foreground transition-colors"
                 data-testid="button-fix-formatting"
               >
                 Auto-format
               </button>
-              <span className="text-amber-600/60 dark:text-amber-400/60 mx-2">or</span>
+              {" or "}
             </>
           )}
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
             data-testid="button-upload-instead"
           >
-            Upload the PDF file directly
+            upload the PDF
           </button>
-          {script.length > 30000 && (
-            <p className="text-[10px] text-amber-600/50 dark:text-amber-400/40 mt-2">
-              Auto-formatting is not available for very long scripts. Upload the original file for best results.
-            </p>
-          )}
-        </div>
+          {" · "}
+          <button
+            type="button"
+            onClick={() => { setScript(""); setIsEditingScript(true); }}
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+            data-testid="button-clear-script-warning"
+          >
+            Clear
+          </button>
+        </p>
       )}
 
       {/* Cleaning in progress indicator */}
