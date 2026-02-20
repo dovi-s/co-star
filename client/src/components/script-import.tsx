@@ -38,7 +38,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const [isCleaning, setIsCleaning] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
-  const [isEditingScript, setIsEditingScript] = useState(false);
+  const [isEditingScript, setIsEditingScript] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -195,6 +195,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       const data = await response.json();
       if (!data.script) throw new Error("No result returned");
       setScript(data.script);
+      setIsEditingScript(false);
     } catch (e: any) {
       console.error("Failed to clean up script:", e);
       if (e.name === "AbortError") {
@@ -218,6 +219,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       const text = await navigator.clipboard.readText();
       if (text) {
         setScript(text);
+        setIsEditingScript(false);
         setPasteSuccess(true);
         setTimeout(() => setPasteSuccess(false), 2000);
       }
@@ -259,6 +261,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     if (file.type === "text/plain" || fileName.endsWith(".txt") || fileName.endsWith(".fountain")) {
       const text = await file.text();
       setScript(text);
+      setIsEditingScript(false);
       return;
     }
     
@@ -352,6 +355,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             });
             setServerParsedData(ocrResult.parsed);
             setScript(ocrResult.rawText || "");
+            setIsEditingScript(false);
             setOcrProgress(null);
             return;
           }
@@ -367,6 +371,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         
         setServerParsedData(data.parsed);
         setScript(data.rawText || "");
+        setIsEditingScript(false);
       } catch (e: any) {
         console.error("File parse error:", e);
         setFileError(e.message || "Failed to parse file");
@@ -398,6 +403,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         
         const data = await response.json();
         setScript(data.text);
+        setIsEditingScript(false);
       } catch (e: any) {
         console.error("File parse error:", e);
         setFileError(e.message || "Failed to parse file");
@@ -861,7 +867,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           {" · "}
           <button
             type="button"
-            onClick={() => { setScript(""); setIsEditingScript(false); }}
+            onClick={() => { setScript(""); setIsEditingScript(true); }}
             className="underline underline-offset-2 hover:text-foreground transition-colors"
             data-testid="button-clear-script"
           >
@@ -915,7 +921,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               </button>
               {" · "}
               <button
-                onClick={() => setScript("")}
+                onClick={() => { setScript(""); setIsEditingScript(true); }}
                 className="underline underline-offset-2 hover:text-foreground transition-colors"
                 data-testid="button-clear-script-alt"
               >
