@@ -76,6 +76,75 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   return "neutral";
 }
 
+export interface ConversationalTiming {
+  aiToAiPauseMs: number;
+  aiToUserPauseMs: number;
+  userToAiPauseMs: number;
+}
+
+export function getConversationalTiming(
+  currentEmotion: EmotionStyle,
+  previousLineText?: string,
+  previousEmotion?: EmotionStyle,
+): ConversationalTiming {
+  const emotionPauseBase: Record<EmotionStyle, number> = {
+    angry: 200,
+    urgent: 180,
+    excited: 250,
+    happy: 300,
+    neutral: 400,
+    sarcastic: 450,
+    fearful: 350,
+    sad: 650,
+    whisper: 700,
+  };
+
+  let aiToAiBase = emotionPauseBase[currentEmotion] ?? 400;
+
+  if (previousLineText) {
+    const trimmed = previousLineText.trim();
+    if (/\?$/.test(trimmed) || /\?["']?$/.test(trimmed)) {
+      aiToAiBase = Math.round(aiToAiBase * 0.6);
+    } else if (/!$/.test(trimmed) || /!["']?$/.test(trimmed)) {
+      aiToAiBase = Math.round(aiToAiBase * 0.75);
+    } else if (/[.…]$/.test(trimmed) || /\.{3}/.test(trimmed)) {
+      aiToAiBase = Math.round(aiToAiBase * 1.2);
+    }
+  }
+
+  if (previousEmotion && previousEmotion !== currentEmotion) {
+    const weight = {
+      angry: 3, urgent: 3, excited: 2, happy: 1,
+      neutral: 0, sarcastic: 1, fearful: 2, sad: 3, whisper: 3,
+    };
+    const shift = Math.abs((weight[previousEmotion] ?? 0) - (weight[currentEmotion] ?? 0));
+    if (shift >= 2) {
+      aiToAiBase = Math.round(aiToAiBase * 1.15);
+    }
+  }
+
+  aiToAiBase = Math.max(150, Math.min(900, aiToAiBase));
+
+  const userToAiBase = Math.round(aiToAiBase * 0.5);
+  const aiToUserBase = Math.max(30, Math.round(aiToAiBase * 0.15));
+
+  return {
+    aiToAiPauseMs: aiToAiBase,
+    aiToUserPauseMs: aiToUserBase,
+    userToAiPauseMs: Math.max(50, Math.min(500, userToAiBase)),
+  };
+}
+
+export function addBreathingPauses(text: string): string {
+  let result = text;
+
+  result = result.replace(/([,;])\s+/g, (_, punct) => `${punct}  `);
+
+  result = result.replace(/(—|–)\s*/g, '— ');
+
+  return result;
+}
+
 export type SpeakResult = "success" | "error" | "unavailable";
 
 interface SpeakOptions {

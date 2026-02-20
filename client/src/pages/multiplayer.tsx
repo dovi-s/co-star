@@ -9,7 +9,7 @@ import { VideoGrid } from '@/components/video-grid';
 import { MultiplayerVideoBackground } from '@/components/multiplayer-video-background';
 import { useSessionContext } from '@/context/session-context';
 import { useToast } from '@/hooks/use-toast';
-import { ttsEngine, calculateProsody, detectEmotion, SpeakResult } from '@/lib/tts-engine';
+import { ttsEngine, calculateProsody, detectEmotion, getConversationalTiming, addBreathingPauses, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
 import { matchWords } from '@/lib/word-matcher';
 import { drawWatermark } from '@/lib/watermark';
@@ -771,9 +771,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const emotion = detectEmotion(text, direction);
     const preset = (voicePreset as any) || 'natural';
     const prosody = calculateProsody(emotion, preset);
+    const ttsText = addBreathingPauses(text);
     
-    // Safety timeout: if TTS doesn't complete in reasonable time, advance anyway (host only)
-    const estimatedDuration = Math.max(5000, text.length * 100); // ~100ms per character
+    const estimatedDuration = Math.max(5000, text.length * 100);
     let hasAdvanced = false;
     
     const advanceToNext = () => {
@@ -794,16 +794,18 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       
       if (isHost) {
         const room = multiplayerRef.current.room;
-        let nextIsHumanTurn = false;
+        let pauseMs = 400;
         if (room) {
           const scene = room.scenes[room.currentSceneIndex];
           const nextIdx = room.currentLineIndex + 1;
           if (scene && nextIdx < scene.lines.length) {
-            const nextLine = scene.lines[nextIdx];
-            nextIsHumanTurn = room.participants.some(p => p.roleId === nextLine.roleId);
+            const nextLineData = scene.lines[nextIdx];
+            const nextIsHumanTurn = room.participants.some(p => p.roleId === nextLineData.roleId);
+            const nextEmotion = detectEmotion(nextLineData.text, nextLineData.direction);
+            const timing = getConversationalTiming(nextEmotion, text, emotion);
+            pauseMs = nextIsHumanTurn ? timing.aiToUserPauseMs : timing.aiToAiPauseMs;
           }
         }
-        const pauseMs = nextIsHumanTurn ? 50 : 400;
         
         aiSpeakTimeoutRef.current = setTimeout(() => {
           console.log('[Multiplayer TTS] Host calling nextLine() via ref');
@@ -822,7 +824,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }
     
     ttsEngine.speak(
-      text, 
+      ttsText, 
       prosody, 
       (result: SpeakResult) => {
         console.log('[Multiplayer TTS] Complete:', result, 'isHost:', isHost);

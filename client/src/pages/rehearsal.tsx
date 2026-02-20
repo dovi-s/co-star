@@ -10,7 +10,7 @@ import { useSession } from "@/hooks/use-session";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { useCamera } from "@/hooks/use-camera";
 import { useToast } from "@/hooks/use-toast";
-import { ttsEngine, calculateProsody, detectEmotion, type SpeakResult } from "@/lib/tts-engine";
+import { ttsEngine, calculateProsody, detectEmotion, getConversationalTiming, addBreathingPauses, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
@@ -103,6 +103,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const ambientGainRef = useRef<GainNode | null>(null);
   const waitingForUserRef = useRef(false);
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const userToAiDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const speakingLineRef = useRef<string | null>(null);
   const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -398,8 +399,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     console.log("[Performance] Recording line:", line?.id, "accuracy:", accuracy);
     
-    // Record line performance - only count as skipped if very low/no accuracy
-    // A "skipped" line is one where the user didn't really attempt to speak it
     if (line) {
       const wasSkipped = accuracy < 20;
       recordLinePerformance({
@@ -410,7 +409,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       });
     }
     
-    // Reset for next line
     currentLineAccuracyRef.current = 0;
     
     incrementLinesRehearsed();
@@ -421,12 +419,26 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     const next = getNextLine();
     if (next) {
-      nextLine();
+      const userEmotion = line ? detectEmotion(line.text, line.direction) : "neutral";
+      const nextEmotion = next.emotionHint || detectEmotion(next.text, next.direction);
+      const timing = getConversationalTiming(nextEmotion, line?.text, userEmotion);
+      const pauseMs = isUserLine(next) ? 30 : timing.userToAiPauseMs;
+      
+      console.log("[Rehearsal] User-to-next pause:", pauseMs + "ms", "nextEmotion:", nextEmotion);
+      
+      if (userToAiDelayRef.current) {
+        clearTimeout(userToAiDelayRef.current);
+      }
+      userToAiDelayRef.current = setTimeout(() => {
+        userToAiDelayRef.current = null;
+        if (isPlayingRef.current) {
+          nextLine();
+        }
+      }, pauseMs);
     } else {
-      // Complete the run
       completeRun();
     }
-  }, [getCurrentLine, getNextLine, incrementLinesRehearsed, nextLine, recordRehearsal, completeRun, recordLinePerformance]);
+  }, [getCurrentLine, getNextLine, incrementLinesRehearsed, nextLine, recordRehearsal, completeRun, recordLinePerformance, isUserLine]);
 
   const startListeningForUser = useCallback(() => {
     console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
@@ -515,6 +527,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
+    if (userToAiDelayRef.current) {
+      clearTimeout(userToAiDelayRef.current);
+      userToAiDelayRef.current = null;
+    }
     setIsSpeaking(false);
     setSpeakingWordIndex(-1);
   }, []);
@@ -561,7 +577,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const preset = role?.voicePreset || "natural";
     const prosody = calculateProsody(emotion, preset);
 
-    console.log("[Rehearsal] Speaking AI line:", role?.name, "index:", roleIndex, "emotion:", emotion);
+    const prev = getPreviousLine();
+    const prevEmotion = prev ? (prev.emotionHint || detectEmotion(prev.text, prev.direction)) : undefined;
+    const timing = getConversationalTiming(emotion, prev?.text, prevEmotion);
+
+    console.log("[Rehearsal] Speaking AI line:", role?.name, "emotion:", emotion, "timing:", timing.aiToAiPauseMs + "ms");
 
     const clearWordTimer = () => {
       if (wordTimerRef.current) {
@@ -571,6 +591,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setIsSpeaking(false);
       setSpeakingWordIndex(-1);
     };
+
+    const ttsText = addBreathingPauses(line.text);
 
     speakTimeoutRef.current = setTimeout(() => {
       speakTimeoutRef.current = null;
@@ -584,7 +606,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         return;
       }
       
-      ttsEngine.speak(line.text, prosody, (result: SpeakResult) => {
+      ttsEngine.speak(ttsText, prosody, (result: SpeakResult) => {
         console.log("[Rehearsal] TTS complete:", result, "for line:", lineKey);
         clearWordTimer();
         
@@ -593,7 +615,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           
           const next = getNextLine();
           const nextIsUser = next ? isUserLine(next) : false;
-          const pauseMs = nextIsUser ? 30 : 400;
+          const nextEmotion = next ? (next.emotionHint || detectEmotion(next.text, next.direction)) : undefined;
+          const nextTiming = next ? getConversationalTiming(nextEmotion || "neutral", line.text, emotion) : null;
+          const pauseMs = nextIsUser
+            ? (nextTiming?.aiToUserPauseMs ?? 30)
+            : (nextTiming?.aiToAiPauseMs ?? 400);
           
           setTimeout(() => {
             if (!isPlayingRef.current) {
