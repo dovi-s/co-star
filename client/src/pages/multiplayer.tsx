@@ -790,14 +790,25 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       }
       
       setIsAiSpeaking(false);
-      isAiSpeakingRef.current = false; // Update ref immediately for callbacks
+      isAiSpeakingRef.current = false;
       
-      // Only HOST advances to prevent race conditions
       if (isHost) {
+        const room = multiplayerRef.current.room;
+        let nextIsHumanTurn = false;
+        if (room) {
+          const scene = room.scenes[room.currentSceneIndex];
+          const nextIdx = room.currentLineIndex + 1;
+          if (scene && nextIdx < scene.lines.length) {
+            const nextLine = scene.lines[nextIdx];
+            nextIsHumanTurn = room.participants.some(p => p.roleId === nextLine.roleId);
+          }
+        }
+        const pauseMs = nextIsHumanTurn ? 50 : 400;
+        
         aiSpeakTimeoutRef.current = setTimeout(() => {
           console.log('[Multiplayer TTS] Host calling nextLine() via ref');
           multiplayerRef.current.nextLine();
-        }, 50);
+        }, pauseMs);
       } else {
         console.log('[Multiplayer TTS] Not host, waiting for host to advance');
       }

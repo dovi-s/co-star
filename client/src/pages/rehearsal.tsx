@@ -591,6 +591,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (isPlayingRef.current && speakingLineRef.current === lineKey) {
           incrementLinesRehearsed();
           
+          const next = getNextLine();
+          const nextIsUser = next ? isUserLine(next) : false;
+          const pauseMs = nextIsUser ? 30 : 400;
+          
           setTimeout(() => {
             if (!isPlayingRef.current) {
               speakingLineRef.current = null;
@@ -602,13 +606,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             
             speakingLineRef.current = null;
             
-            const next = getNextLine();
             if (next) {
               nextLine();
             } else {
               completeRun();
             }
-          }, 30);
+          }, pauseMs);
         } else {
           speakingLineRef.current = null;
         }
