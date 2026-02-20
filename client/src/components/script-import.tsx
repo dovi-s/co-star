@@ -622,6 +622,18 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                       <div className="text-muted-foreground">MICHAEL: [softly] Neither can I.</div>
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Scenes</p>
+                    <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
+                      <div className="text-muted-foreground/60 mb-1">Scene 1: The Kitchen</div>
+                      <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
+                      <div className="text-muted-foreground/60 mt-2 mb-1">Scene 2: The Airport</div>
+                      <div className="text-muted-foreground">MICHAEL: I have to go.</div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                      Lines starting with "Scene", "ACT", or "INT./EXT." create scene breaks during rehearsal.
+                    </p>
+                  </div>
                   <div className="space-y-2 pt-1">
                     <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Tips</p>
                     <ul className="space-y-1.5 text-muted-foreground text-xs">
