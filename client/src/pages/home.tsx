@@ -5,7 +5,7 @@ import { RoleSelector } from "@/components/role-selector";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
-import { Users } from "lucide-react";
+import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -105,6 +105,20 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
           <p className="text-muted-foreground text-sm mt-2 relative leading-relaxed">
             Paste a script. Pick your role. Start rehearsing.
           </p>
+          <div className="flex items-center gap-4 mt-4 relative" data-testid="value-props">
+            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-unlimited-takes">
+              <Repeat className="h-3 w-3" />
+              <span className="text-[11px]">Unlimited takes</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-always-available">
+              <Clock className="h-3 w-3" />
+              <span className="text-[11px]">Always available</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-zero-judgment">
+              <Volume2 className="h-3 w-3" />
+              <span className="text-[11px]">Zero judgment</span>
+            </div>
+          </div>
         </div>
 
         <div className="flex-1 px-4 pb-6 relative z-10">

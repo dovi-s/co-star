@@ -154,7 +154,7 @@ export function ThreeLineReader({
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
-  const fontSizeClass = fontSize === 0 ? "text-base" : fontSize === 1 ? "text-lg" : "text-xl";
+  const fontSizeClass = fontSize === 0 ? "text-base md:text-lg" : fontSize === 1 ? "text-lg md:text-xl" : "text-xl md:text-2xl";
 
   useEffect(() => {
     setShowHint(false);

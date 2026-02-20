@@ -1447,7 +1447,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         {!camera.isEnabled && (
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
         )}
-        <div className="flex-1 flex flex-col justify-center max-w-2xl mx-auto w-full relative">
+        <div className="flex-1 flex flex-col justify-center max-w-2xl lg:max-w-3xl mx-auto w-full relative">
           <ThreeLineReader
             previousLine={previousLine}
             currentLine={currentLine}
@@ -1576,7 +1576,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           />
         </div>
         
-        <div className="px-4 py-5 max-w-md mx-auto">
+        <div className="px-4 py-5 max-w-md lg:max-w-lg mx-auto">
           <TransportBar
             isPlaying={session.isPlaying}
             canGoBack={canGoBack}
