@@ -1303,14 +1303,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             isRecording={camera.isRecording}
             dimmed={cameraFocus === 'script'}
           />
-          {cameraFocus === 'face' && (
-            <button
-              className="fixed inset-0 z-50"
-              onClick={() => setCameraFocus('script')}
-              aria-label="Show script"
-              data-testid="button-show-script"
-            />
-          )}
+          <button
+            className="fixed inset-0 z-[5]"
+            onClick={() => setCameraFocus(prev => prev === 'script' ? 'face' : 'script')}
+            aria-label={cameraFocus === 'script' ? "Focus on face" : "Focus on script"}
+            data-testid="button-toggle-camera-focus"
+          />
         </>
       )}
       
@@ -1533,11 +1531,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           camera.isEnabled && "text-white",
           camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
         )}
-        onClick={camera.isEnabled && cameraFocus === 'script' ? (e: React.MouseEvent) => {
-          const target = e.target as HTMLElement;
-          if (target.closest('button, a, [role="button"], input, [data-testid]')) return;
-          setCameraFocus('face');
-        } : undefined}
       >
         {/* Subtle gradient accent at top - hide when camera is on */}
         {!camera.isEnabled && (
