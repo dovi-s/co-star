@@ -945,6 +945,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         setIsAiSpeaking(false);
         prefetchNextMultiplayerAILine();
         
+        speechRecognition.resetAccumulated();
         setTimeout(() => {
           if (isActivelyRehearsalRef.current && !isAiSpeakingRef.current) {
             waitingForUserRef.current = true;
@@ -1023,6 +1024,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     console.log("[Multiplayer] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
     
     waitingForUserRef.current = true;
+    speechRecognition.resetAccumulated();
 
     if (speechRecognition.available && !micBlocked) {
       setTimeout(() => {
@@ -1224,14 +1226,13 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }
   }, [userTranscript, isActivelyRehearing, getCurrentLineForMatch, advanceAfterUserLine]);
 
-  // Clear transcript and reset when line changes
   useEffect(() => {
     const line = getCurrentLineForMatch();
     if (line) {
-      // Reset for new line
       advancedForLineRef.current = null;
       currentLineAccuracyRef.current = 0;
       setUserTranscript("");
+      speechRecognition.resetAccumulated();
     }
   }, [multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, getCurrentLineForMatch]);
 

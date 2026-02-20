@@ -171,23 +171,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       
       if (result.isFinal && waitingForUserRef.current && line) {
         const match = matchWords(line.text, result.transcript);
-        if (match.percentMatched >= 35) {
-          console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match, advancing");
-          waitingForUserRef.current = false;
-          
-          if (autoAdvanceTimeoutRef.current) {
-            clearTimeout(autoAdvanceTimeoutRef.current);
-            autoAdvanceTimeoutRef.current = null;
-          }
-          
-          autoAdvanceTimeoutRef.current = setTimeout(() => {
-            if (isPlayingRef.current) {
-              advanceAfterUserLine();
-            }
-          }, 20);
-        } else {
-          console.log("[Rehearsal] Low match on final result, waiting for manual advance");
-        }
+        console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match - continuing to listen for 80%+");
       }
     });
 
@@ -450,14 +434,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     waitingForUserRef.current = true;
     setIsUserTurn(true);
     setUserTranscript("");
+    speechRecognition.resetAccumulated();
     
-    // Clear any pending timeouts
     if (autoAdvanceTimeoutRef.current) {
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
     
-    // Only try speech recognition if available and not blocked
     if (speechRecognition.available && !micBlocked && micEnabled) {
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {

@@ -23,6 +23,8 @@ class SpeechRecognitionEngine {
   private hasReceivedSpeech = false;
   private currentState: SpeechRecognitionState = "idle";
   private lastTranscript = "";
+  private accumulatedTranscript = "";
+  private finalizedSegments: string[] = [];
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -38,7 +40,7 @@ class SpeechRecognitionEngine {
         this.recognition.maxAlternatives = 1;
 
         this.recognition.onstart = () => {
-          console.log("[Speech] Recognition started");
+          console.log("[Speech] Recognition started, preserving accumulated:", this.accumulatedTranscript.length, "chars");
           this.isListening = true;
           this.hasReceivedSpeech = false;
           this.lastTranscript = "";
@@ -55,17 +57,20 @@ class SpeechRecognitionEngine {
         };
 
         this.recognition.onend = () => {
-          console.log("[Speech] Recognition ended, had speech:", this.hasReceivedSpeech);
+          console.log("[Speech] Recognition ended, had speech:", this.hasReceivedSpeech, "accumulated:", this.accumulatedTranscript.length, "chars");
           this.isListening = false;
           this.clearSilenceTimeout();
           this.clearMaxListenTimeout();
           this.setState("idle");
           
-          // If we got speech but no final result yet, send the last transcript as final
-          if (this.hasReceivedSpeech && this.lastTranscript) {
-            console.log("[Speech] Sending last transcript as final:", this.lastTranscript);
+          if (this.hasReceivedSpeech && this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
+            this.finalizedSegments.push(this.lastTranscript);
+            this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
+          }
+          
+          if (this.accumulatedTranscript) {
             this.onResultCallback?.({
-              transcript: this.lastTranscript,
+              transcript: this.accumulatedTranscript,
               confidence: 0.8,
               isFinal: true,
             });
@@ -93,28 +98,37 @@ class SpeechRecognitionEngine {
           const confidence = result[0].confidence || 0.9;
           const isFinal = result.isFinal;
           
-          console.log("[Speech] Result:", isFinal ? "FINAL" : "interim", transcript.substring(0, 50));
+          if (isFinal && transcript.length > 0) {
+            this.finalizedSegments.push(transcript);
+          }
+          
+          const accumulated = [
+            ...this.finalizedSegments,
+            ...(isFinal ? [] : (transcript.length > 0 ? [transcript] : []))
+          ].join(" ").trim();
+          
+          this.accumulatedTranscript = accumulated;
+          
+          console.log("[Speech] Result:", isFinal ? "FINAL" : "interim", 
+            "segment:", transcript.substring(0, 30),
+            "accumulated:", accumulated.substring(0, 50));
 
-          // Store for potential recovery
           if (transcript.length > this.lastTranscript.length) {
             this.lastTranscript = transcript;
           }
 
-          // Report all results
-          if (transcript.length > 0) {
+          if (accumulated.length > 0) {
             this.onResultCallback?.({
-              transcript,
+              transcript: accumulated,
               confidence,
               isFinal,
             });
           }
 
-          // On final result, clear timeouts
           if (isFinal) {
             this.clearSilenceTimeout();
-            this.clearMaxListenTimeout();
+            this.resetSilenceTimeout();
           } else {
-            // Reset silence timeout on interim results
             this.resetSilenceTimeout();
           }
         };
@@ -182,6 +196,15 @@ class SpeechRecognitionEngine {
     this.onErrorCallback = callback;
   }
 
+  resetAccumulated() {
+    this.accumulatedTranscript = "";
+    this.finalizedSegments = [];
+  }
+
+  get accumulated(): string {
+    return this.accumulatedTranscript;
+  }
+
   start(): boolean {
     if (!this.recognition) {
       console.log("[Speech] Recognition not available");
@@ -227,6 +250,8 @@ class SpeechRecognitionEngine {
     this.clearMaxListenTimeout();
     this.isListening = false;
     this.lastTranscript = "";
+    this.accumulatedTranscript = "";
+    this.finalizedSegments = [];
     this.setState("idle");
   }
 }
