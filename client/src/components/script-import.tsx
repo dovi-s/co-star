@@ -470,8 +470,10 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           roles: data.parsed.roles.length,
           scenes: data.parsed.scenes.length,
           totalLines: totalLines,
+          suggestedName: data.suggestedName,
         });
-        onImportParsed(sessionName, data.parsed);
+        const finalName = uploadedFileName || data.suggestedName || sessionName;
+        onImportParsed(finalName, data.parsed);
       } catch (e: any) {
         console.error("[Submit] Server parse error:", e);
         // Fall back to client-side parsing

@@ -1113,7 +1113,39 @@ JOHN: We got the contract.`;
         });
       }
 
-      res.json({ parsed: finalScript });
+      // Generate a smart name from the script content
+      let suggestedName: string | null = null;
+      try {
+        const nameAI = new OpenAI({
+          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+        });
+        const snippet = finalScript.scenes
+          .flatMap(s => s.lines.slice(0, 8))
+          .slice(0, 12)
+          .map(l => `${l.roleName}: ${l.text.substring(0, 80)}`)
+          .join('\n');
+        const nameResponse = await nameAI.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{
+            role: "system",
+            content: "Generate a short, descriptive title (2-5 words) for this script scene. If it's from a known show/movie/play, include the source name. Examples: \"Family Guy: TV Debate\", \"Hamlet: The Confrontation\", \"Coffee Shop Breakup\", \"Job Interview Gone Wrong\". Reply with ONLY the title, nothing else."
+          }, {
+            role: "user",
+            content: snippet
+          }],
+          max_tokens: 20,
+          temperature: 0.3,
+        });
+        const raw = nameResponse.choices[0]?.message?.content?.trim().replace(/^["']|["']$/g, '');
+        if (raw && raw.length > 1 && raw.length <= 50) {
+          suggestedName = raw;
+        }
+      } catch (e) {
+        console.log('[Parse Script] Name generation failed, using fallback');
+      }
+
+      res.json({ parsed: finalScript, suggestedName });
     } catch (error: any) {
       console.error("Script parse error:", error.message || error);
       res.status(500).json({ error: "Failed to parse script" });

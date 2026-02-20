@@ -42,7 +42,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       console.log('[Session] Sending script to server for parsing:', rawScript.length, 'chars');
       
       const response = await apiRequest("POST", "/api/parse-script", { script: rawScript });
-      const data = await response.json() as { parsed: ParsedScript; error?: string };
+      const data = await response.json() as { parsed: ParsedScript; suggestedName?: string; error?: string };
       
       if (data.error || !data.parsed) {
         setError(data.error || "Failed to parse script");
@@ -55,7 +55,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       console.log('[Session] Parsed result (with AI cleanup):', {
         roles: parsed.roles.map(r => `${r.name}(${r.lineCount})`),
         scenes: parsed.scenes.length,
-        totalLines: parsed.scenes.reduce((s, sc) => s + sc.lines.length, 0)
+        totalLines: parsed.scenes.reduce((s, sc) => s + sc.lines.length, 0),
+        suggestedName: data.suggestedName,
       });
       
       if (parsed.roles.length === 0) {
@@ -64,10 +65,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
+      const sessionName = data.suggestedName || name;
       const now = new Date().toISOString();
       const newSession: Session = {
         id: generateId(),
-        name,
+        name: sessionName,
         roles: parsed.roles,
         scenes: parsed.scenes,
         userRoleId: null,
