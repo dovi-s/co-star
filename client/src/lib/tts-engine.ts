@@ -180,6 +180,9 @@ class TTSEngine {
   private speakGeneration = 0;
   private browserTTSPollTimer: ReturnType<typeof setInterval> | null = null;
   private audioUnlocked = false;
+  private pendingCanPlayListener: (() => void) | null = null;
+  private pendingCanPlayTimeout: ReturnType<typeof setTimeout> | null = null;
+  private currentBlobUrl: string | null = null;
   
   private prefetchCache: Map<string, PrefetchedAudio> = new Map();
   private prefetchController: AbortController | null = null;
@@ -258,6 +261,7 @@ class TTSEngine {
       if (!this.audioUnlocked) {
         audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
         audio.volume = 0.01;
+        audio.load();
         audio.play().then(() => {
           audio.pause();
           audio.volume = 1;
@@ -284,6 +288,17 @@ class TTSEngine {
       this.initAudioContext();
     }
     return this.ttsDestination?.stream || null;
+  }
+
+  private cleanupCanPlayListener() {
+    if (this.pendingCanPlayListener && this.persistentAudio) {
+      this.persistentAudio.removeEventListener('canplay', this.pendingCanPlayListener);
+      this.pendingCanPlayListener = null;
+    }
+    if (this.pendingCanPlayTimeout) {
+      clearTimeout(this.pendingCanPlayTimeout);
+      this.pendingCanPlayTimeout = null;
+    }
   }
 
   private clearWatchdog() {
@@ -502,27 +517,36 @@ class TTSEngine {
 
       this.startWatchdog(text, onEnd);
 
+      this.cleanupCanPlayListener();
+      
+      if (this.currentBlobUrl) {
+        URL.revokeObjectURL(this.currentBlobUrl);
+      }
+      this.currentBlobUrl = audioUrl;
+
       return new Promise((resolve) => {
         let hasEnded = false;
         
         const cleanup = () => {
           if (!hasEnded) {
             hasEnded = true;
-            URL.revokeObjectURL(audioUrl);
             audio.onended = null;
             audio.onerror = null;
             audio.onstalled = null;
             audio.onabort = null;
             audio.oncanplaythrough = null;
-            if (this.currentAudio === audio) {
-              this.currentAudio = null;
-            }
+            this.cleanupCanPlayListener();
           }
         };
 
         audio.onended = () => {
           console.log("[TTS] Audio finished");
           cleanup();
+          if (this.currentBlobUrl === audioUrl) {
+            URL.revokeObjectURL(audioUrl);
+            this.currentBlobUrl = null;
+          }
+          this.currentAudio = null;
           this.fireCallback("success", onEnd);
           resolve(true);
         };
@@ -530,6 +554,11 @@ class TTSEngine {
         audio.onerror = () => {
           console.log("[TTS] Audio playback error");
           cleanup();
+          if (this.currentBlobUrl === audioUrl) {
+            URL.revokeObjectURL(audioUrl);
+            this.currentBlobUrl = null;
+          }
+          this.currentAudio = null;
           this.fireCallback("error", onEnd);
           resolve(false);
         };
@@ -608,7 +637,6 @@ class TTSEngine {
         
         const startPlayback = () => {
           if (myGeneration !== this.speakGeneration) {
-            cleanup();
             resolve(false);
             return;
           }
@@ -620,11 +648,16 @@ class TTSEngine {
         } else {
           const onCanPlay = () => {
             audio.removeEventListener('canplay', onCanPlay);
+            this.pendingCanPlayListener = null;
             startPlayback();
           };
+          this.pendingCanPlayListener = onCanPlay;
           audio.addEventListener('canplay', onCanPlay);
-          setTimeout(() => {
+          
+          this.pendingCanPlayTimeout = setTimeout(() => {
             audio.removeEventListener('canplay', onCanPlay);
+            this.pendingCanPlayListener = null;
+            this.pendingCanPlayTimeout = null;
             if (!hasEnded) {
               console.log("[TTS] canplay timeout, attempting play anyway");
               startPlayback();
@@ -798,10 +831,10 @@ class TTSEngine {
   stop() {
     this.clearWatchdog();
     this.clearBrowserTTSPoll();
-    this.callbackFired = true; // Prevent any pending callbacks
-    this.speakGeneration++; // Invalidate any in-flight requests
+    this.cleanupCanPlayListener();
+    this.callbackFired = true;
+    this.speakGeneration++;
     
-    // Abort any in-flight fetch
     if (this.fetchController) {
       this.fetchController.abort();
       this.fetchController = null;
@@ -815,6 +848,11 @@ class TTSEngine {
       this.currentAudio.onabort = null;
       this.currentAudio.oncanplaythrough = null;
       this.currentAudio = null;
+    }
+    
+    if (this.currentBlobUrl) {
+      URL.revokeObjectURL(this.currentBlobUrl);
+      this.currentBlobUrl = null;
     }
     
     if (this.synth) {

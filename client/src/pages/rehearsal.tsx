@@ -115,6 +115,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const matchReachedRef = useRef(false);
   const getCurrentLineRef = useRef(getCurrentLine);
   const advanceAfterUserLineRef = useRef<() => void>(() => {});
+  const speakLineRef = useRef<() => void>(() => {});
+  const startListeningForUserRef = useRef<() => void>(() => {});
+  const stopAllPlaybackRef = useRef<() => void>(() => {});
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -493,7 +496,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           console.log("[Rehearsal] User turn safety timeout, advancing");
           speechRecognition.abort();
           waitingForUserRef.current = false;
-          advanceAfterUserLine();
+          advanceAfterUserLineRef.current();
         }
       }, 60000);
     } else {
@@ -502,11 +505,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         if (isPlayingRef.current && waitingForUserRef.current) {
           console.log("[Rehearsal] No mic fallback, advancing");
           waitingForUserRef.current = false;
-          advanceAfterUserLine();
+          advanceAfterUserLineRef.current();
         }
       }, 5000);
     }
-  }, [micBlocked, micEnabled, advanceAfterUserLine]);
+  }, [micBlocked, micEnabled]);
 
   const prefetchNextAILine = useCallback(() => {
     if (!session) return;
@@ -701,6 +704,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }, speakDelay);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun, prefetchNextAILine]);
 
+  useEffect(() => { speakLineRef.current = speakLine; }, [speakLine]);
+  useEffect(() => { startListeningForUserRef.current = startListeningForUser; }, [startListeningForUser]);
+  useEffect(() => { stopAllPlaybackRef.current = stopAllPlayback; }, [stopAllPlayback]);
+
   useEffect(() => {
     const lineKey = session ? `${session.currentSceneIndex}-${session.currentLineIndex}` : null;
     
@@ -726,7 +733,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         speechRecognition.abort();
         if (!waitingForUserRef.current) {
           speakingLineRef.current = lineKey;
-          startListeningForUser();
+          startListeningForUserRef.current();
         }
       } else {
         speechRecognition.abort();
@@ -734,20 +741,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         setIsUserTurn(false);
         const delay = session.readerDelay ?? 0;
         if (delay > 0) {
-          const capturedLineKey = lineKey;
           speakTimeoutRef.current = setTimeout(() => {
             speakTimeoutRef.current = null;
             if (!isPlayingRef.current) return;
-            speakLine();
+            speakLineRef.current();
           }, delay * 1000);
         } else {
-          speakLine();
+          speakLineRef.current();
         }
       }
     } else {
-      stopAllPlayback();
+      stopAllPlaybackRef.current();
     }
-  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
+  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex, currentLine, currentIsUserLine]);
 
   const startPlayback = useCallback(() => {
     speakingLineRef.current = null;

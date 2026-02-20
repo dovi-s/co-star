@@ -155,7 +155,7 @@ class SpeechRecognitionEngine {
         console.log("[Speech] Silence timeout after speech, stopping");
         this.stop();
       }
-    }, 2000);
+    }, 3000);
   }
 
   private clearSilenceTimeout() {
