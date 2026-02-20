@@ -269,11 +269,7 @@ class TTSEngine {
         });
       }
 
-      if (!this.audioContext) {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        this.ttsDestination = this.audioContext.createMediaStreamDestination();
-      }
-      if (this.audioContext.state === 'suspended') {
+      if (this.audioContext?.state === 'suspended') {
         this.audioContext.resume();
       }
     } catch (e) {
@@ -543,22 +539,23 @@ class TTSEngine {
         };
         
         audio.onabort = () => {
-          console.log("[TTS] Audio aborted");
-          cleanup();
+          console.log("[TTS] Audio abort (expected when changing source)");
         };
         
         audio.oncanplaythrough = () => {
           audio.playbackRate = targetSpeed;
-          console.log("[TTS] Applied playback speed:", audio.playbackRate);
         };
 
         audio.src = audioUrl;
         audio.volume = 1;
         
         const connectWebRTC = () => {
-          if (this.audioContext && this.ttsDestination && !this.persistentMediaSource) {
+          if (this.audioContext && this.ttsDestination) {
             try {
-              this.persistentMediaSource = this.audioContext.createMediaElementSource(audio);
+              if (!this.persistentMediaSource) {
+                this.persistentMediaSource = this.audioContext.createMediaElementSource(audio);
+                console.log("[TTS] Created MediaElementSource for WebRTC");
+              }
               this.persistentMediaSource.connect(this.audioContext.destination);
               this.persistentMediaSource.connect(this.ttsDestination);
               this.currentMediaSource = this.persistentMediaSource;
@@ -568,8 +565,6 @@ class TTSEngine {
             }
           }
         };
-        
-        let retryTimer: ReturnType<typeof setTimeout> | null = null;
         
         const attemptPlay = (retries: number) => {
           if (myGeneration !== this.speakGeneration) {
@@ -600,7 +595,7 @@ class TTSEngine {
           }).catch((e) => {
             console.log("[TTS] Play failed (attempt " + (3 - retries) + "):", e.message);
             if (retries > 0 && myGeneration === this.speakGeneration) {
-              retryTimer = setTimeout(() => attemptPlay(retries - 1), 200);
+              setTimeout(() => attemptPlay(retries - 1), 200);
             } else {
               console.log("[TTS] All play attempts failed, falling back");
               cleanup();
@@ -610,7 +605,31 @@ class TTSEngine {
           });
         };
         
-        attemptPlay(2);
+        const startPlayback = () => {
+          if (myGeneration !== this.speakGeneration) {
+            cleanup();
+            resolve(false);
+            return;
+          }
+          attemptPlay(2);
+        };
+        
+        if (audio.readyState >= 3) {
+          startPlayback();
+        } else {
+          const onCanPlay = () => {
+            audio.removeEventListener('canplay', onCanPlay);
+            startPlayback();
+          };
+          audio.addEventListener('canplay', onCanPlay);
+          setTimeout(() => {
+            audio.removeEventListener('canplay', onCanPlay);
+            if (!hasEnded) {
+              console.log("[TTS] canplay timeout, attempting play anyway");
+              startPlayback();
+            }
+          }, 3000);
+        }
       });
     } catch (error: any) {
       if (error.name === "AbortError") {
@@ -789,19 +808,12 @@ class TTSEngine {
     
     if (this.currentAudio) {
       this.currentAudio.pause();
-      this.currentAudio.currentTime = 0;
       this.currentAudio.onended = null;
       this.currentAudio.onerror = null;
       this.currentAudio.onstalled = null;
       this.currentAudio.onabort = null;
       this.currentAudio.oncanplaythrough = null;
       this.currentAudio = null;
-    }
-    
-    if (this.persistentMediaSource) {
-      try { this.persistentMediaSource.disconnect(); } catch (e) { /* ignore */ }
-      this.persistentMediaSource = null;
-      this.currentMediaSource = null;
     }
     
     if (this.synth) {
