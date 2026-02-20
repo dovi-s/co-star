@@ -125,13 +125,13 @@ export function getConversationalTiming(
 
   aiToAiBase = Math.max(150, Math.min(900, aiToAiBase));
 
-  const userToAiBase = Math.round(aiToAiBase * 0.5);
+  const userToAiBase = Math.round(aiToAiBase * 0.35);
   const aiToUserBase = Math.max(30, Math.round(aiToAiBase * 0.15));
 
   return {
     aiToAiPauseMs: aiToAiBase,
     aiToUserPauseMs: aiToUserBase,
-    userToAiPauseMs: Math.max(50, Math.min(500, userToAiBase)),
+    userToAiPauseMs: Math.max(40, Math.min(350, userToAiBase)),
   };
 }
 

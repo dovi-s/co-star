@@ -173,12 +173,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         
         if (result.isFinal) {
           matchReachedRef.current = true;
-          const graceMs = match.percentMatched >= 95 ? 100 : 250;
+          const graceMs = match.percentMatched >= 95 ? 40 : 100;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current) doAdvance();
           }, graceMs);
         } else {
-          const interimGraceMs = match.percentMatched >= 95 ? 300 : 500;
+          const interimGraceMs = match.percentMatched >= 95 ? 150 : 300;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;
@@ -194,13 +194,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       // Speech recognition ended - auto-restart if still user's turn
       if (waitingForUserRef.current && isPlayingRef.current) {
         console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting...");
-        // Brief delay then restart listening
         setTimeout(() => {
           if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
             console.log("[Rehearsal] Restarting speech recognition");
             speechRecognition.start();
           }
-        }, 300);
+        }, 150);
       }
     });
 
