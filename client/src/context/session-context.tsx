@@ -13,6 +13,7 @@ interface SessionContextType {
   createSession: (name: string, rawScript: string) => Promise<Session | null>;
   createSessionFromParsed: (name: string, parsed: { roles: Role[], scenes: Scene[] }) => Session | null;
   setUserRole: (roleId: string) => void;
+  clearUserRole: () => void;
   updateSession: (updates: UpdateSession) => void;
   clearSession: () => void;
   clearError: () => void;
@@ -161,6 +162,13 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearUserRole = useCallback(() => {
+    setSession(prev => {
+      if (!prev) return null;
+      return { ...prev, userRoleId: null };
+    });
+  }, []);
+
   const clearSession = useCallback(() => {
     setSession(null);
   }, []);
@@ -262,6 +270,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       createSession,
       createSessionFromParsed,
       setUserRole,
+      clearUserRole,
       updateSession,
       clearSession,
       clearError,
