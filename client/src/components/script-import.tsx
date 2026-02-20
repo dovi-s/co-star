@@ -38,7 +38,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const [isCleaning, setIsCleaning] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
-  const [isEditingScript, setIsEditingScript] = useState(true);
+  const [isEditingScript, setIsEditingScript] = useState(!initialScript);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -579,9 +579,10 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
       >
-        {script && !isEditingScript ? (
+        {script && !isEditingScript && previewData.roles > 0 ? (
           <div
-            className="min-h-[280px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text"
+            className="min-h-[280px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text cursor-pointer"
+            onClick={() => { setIsEditingScript(true); setTimeout(() => textareaRef.current?.focus(), 0); }}
             data-testid="script-preview"
           >
             {(() => {
@@ -636,7 +637,8 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             placeholder="SARAH: I can't believe you're leaving..."
             value={script}
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
-            onBlur={() => { if (script.trim()) setIsEditingScript(false); }}
+            onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
+            onBlur={() => { if (script.trim() && previewData.roles > 0) setIsEditingScript(false); }}
             className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
             data-testid="textarea-script"
           />
