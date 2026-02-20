@@ -170,6 +170,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }
           }, graceMs);
         } else {
+          const interimGraceMs = match.percentMatched >= 95 ? 300 : 500;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;
@@ -184,7 +185,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 if (isPlayingRef.current) advanceAfterUserLine();
               }, 20);
             }
-          }, 800);
+          }, interimGraceMs);
         }
       }
     });

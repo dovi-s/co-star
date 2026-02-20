@@ -145,13 +145,12 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    // 10 second silence after speaking = done (very generous for long monologues with natural pauses)
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
         console.log("[Speech] Silence timeout after speech, stopping");
         this.stop();
       }
-    }, 10000);
+    }, 3000);
   }
 
   private clearSilenceTimeout() {
