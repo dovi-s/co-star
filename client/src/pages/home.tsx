@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
@@ -18,13 +18,12 @@ interface HomePageProps {
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePageProps) {
   const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const [step, setStep] = useState<Step>(() => {
-    // Start at import - context will have the session if it exists
     return "import";
   });
+  const userWentBackRef = useRef(false);
 
-  // Auto-advance to role-select if we have scenes but no role selected
   useEffect(() => {
-    if (session && session.scenes?.length > 0 && !session.userRoleId) {
+    if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
       setStep("role-select");
     }
   }, [session]);
@@ -36,6 +35,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
   }, [session, onSessionReady]);
 
   const handleImport = async (name: string, rawScript: string) => {
+    userWentBackRef.current = false;
     const newSession = await createSession(name, rawScript);
     if (newSession) {
       setStep("role-select");
@@ -43,6 +43,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
   };
 
   const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }) => {
+    userWentBackRef.current = false;
     const newSession = createSessionFromParsed(name, parsed);
     if (newSession) {
       console.log('[Home] Session created, advancing to role-select');
@@ -55,6 +56,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
   };
 
   const handleBackToImport = () => {
+    userWentBackRef.current = true;
     setStep("import");
   };
 
