@@ -1491,7 +1491,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-card border shadow-2xl rounded-xl p-5 text-center max-w-xs mx-4" data-testid="discard-prompt">
             <h3 className="text-base font-semibold mb-1">Stop recording?</h3>
-            <p className="text-sm text-muted-foreground mb-4">Keep the recording or discard it.</p>
+            <p className="text-sm text-muted-foreground mb-4">Save the recording or discard it.</p>
             <div className="flex flex-col gap-2">
               <Button
                 className="w-full"
@@ -1501,7 +1501,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 data-testid="button-keep-recording"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Keep recording
+                Save recording
               </Button>
               <Button
                 variant="outline"
