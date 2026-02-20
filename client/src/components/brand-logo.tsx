@@ -81,10 +81,7 @@ export function BrandLogo({
       {showWordmark && (
         <div className="flex flex-col leading-none">
           <span className={cn("font-bold tracking-tight", wordmarkSizes[size])}>
-            CastMate
-          </span>
-          <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-[0.15em]">
-            Studio
+            co-star
           </span>
         </div>
       )}

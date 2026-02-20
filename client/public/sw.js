@@ -1,4 +1,4 @@
-const CACHE_NAME = 'castmate-v17';
+const CACHE_NAME = 'costar-v18';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json'

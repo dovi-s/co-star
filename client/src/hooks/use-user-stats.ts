@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { UserStats } from "@shared/schema";
 
-const STATS_KEY = "castmate-user-stats";
+const STATS_KEY = "costar-user-stats";
 
 const defaultStats: UserStats = {
   currentStreak: 0,

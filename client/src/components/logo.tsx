@@ -28,15 +28,14 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
       )}>
         <img 
           src={logoImage} 
-          alt="CastMate" 
+          alt="co-star" 
           className="w-full h-full object-contain dark:invert-0 invert"
         />
       </div>
       
       {showWordmark && (
         <span className={cn("font-semibold tracking-wide", text)}>
-          <span className="font-bold">Cast</span>
-          <span className="font-light">Mate</span>
+          co-star
         </span>
       )}
     </div>
@@ -47,7 +46,7 @@ export function LogoIcon({ className }: { className?: string }) {
   return (
     <img 
       src={logoImage} 
-      alt="CastMate" 
+      alt="co-star" 
       className={cn("w-full h-full object-contain dark:invert-0 invert", className)}
     />
   );
@@ -58,7 +57,7 @@ export function LogoMark({ className }: { className?: string }) {
     <div className={cn("relative", className)}>
       <img 
         src={logoImage} 
-        alt="CastMate" 
+        alt="co-star" 
         className="w-full h-full object-contain dark:invert-0 invert"
       />
     </div>

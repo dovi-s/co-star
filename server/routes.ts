@@ -253,7 +253,7 @@ export async function registerRoutes(
   setupMultiplayer(httpServer);
   
   app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", app: "CastMate Studio" });
+    res.json({ status: "ok", app: "co-star" });
   });
 
   // Clear voice cache on session start (call from client when starting new session)
@@ -684,7 +684,7 @@ JOHN: We got the contract.`;
   });
 
   async function ocrScannedPdf(pdfBuffer: Buffer, fileName: string): Promise<string> {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'castmate-ocr-'));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'costar-ocr-'));
     try {
       const pdfPath = path.join(tmpDir, 'input.pdf');
       await fs.writeFile(pdfPath, pdfBuffer);

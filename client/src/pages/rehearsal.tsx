@@ -1301,7 +1301,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                   <Button
                     variant="outline"
                     className="w-full"
-                    onClick={() => camera.downloadRecording(`castmate-${session.name || 'rehearsal'}`)}
+                    onClick={() => camera.downloadRecording(`costar-${session.name || 'rehearsal'}`)}
                     data-testid="button-download-recording"
                   >
                     <Download className="h-4 w-4 mr-2" />

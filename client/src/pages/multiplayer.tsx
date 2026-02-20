@@ -601,7 +601,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     const url = URL.createObjectURL(recordingBlobRef.current);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `castmate-tableread-${new Date().toISOString().slice(0,10)}.webm`;
+    a.download = `costar-tableread-${new Date().toISOString().slice(0,10)}.webm`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

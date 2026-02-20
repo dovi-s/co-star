@@ -1,6 +1,6 @@
 {
-  "name": "CastMate Studio",
-  "short_name": "CastMate",
+  "name": "co-star",
+  "short_name": "co-star",
   "description": "Your Intelligent Scene Partner - Voice-first rehearsal for actors",
   "start_url": "/",
   "display": "standalone",

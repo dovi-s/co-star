@@ -69,12 +69,9 @@ export function drawWatermark(
   ctx.save();
   
   ctx.font = `700 ${fontSize}px Inter, -apple-system, sans-serif`;
-  const textWidth = ctx.measureText('CastMate').width;
+  const textWidth = ctx.measureText('co-star').width;
   
-  ctx.font = `600 ${studioFontSize}px Inter, -apple-system, sans-serif`;
-  const studioWidth = ctx.measureText('STUDIO').width;
-  
-  const contentWidth = iconSize + gap + Math.max(textWidth, studioWidth);
+  const contentWidth = iconSize + gap + textWidth;
   const contentHeight = iconSize;
   const pillWidth = contentWidth + pillPaddingH * 2;
   const pillHeight = contentHeight + pillPaddingV * 2;
@@ -142,16 +139,7 @@ export function drawWatermark(
   ctx.font = `700 ${fontSize}px Inter, -apple-system, sans-serif`;
   ctx.fillStyle = '#FFFFFF';
   ctx.textBaseline = 'middle';
-  ctx.fillText('CastMate', textX, textY - studioFontSize * 0.3);
-  
-  ctx.font = `600 ${studioFontSize}px Inter, -apple-system, sans-serif`;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-  const studioLetterSpacing = studioFontSize * 0.15;
-  let studioX = textX;
-  for (const letter of 'STUDIO') {
-    ctx.fillText(letter, studioX, textY + fontSize * 0.45);
-    studioX += ctx.measureText(letter).width + studioLetterSpacing;
-  }
+  ctx.fillText('co-star', textX, textY);
   
   ctx.restore();
 }

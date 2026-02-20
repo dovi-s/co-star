@@ -307,7 +307,7 @@ export function useCamera() {
     }
   }, [isRecording, startRecording, requestStopRecording]);
 
-  const downloadRecording = useCallback((filename: string = 'castmate-recording') => {
+  const downloadRecording = useCallback((filename: string = 'costar-recording') => {
     if (!recordingBlob) return;
 
     const isAudio = mimeTypeRef.current.startsWith('audio/');
