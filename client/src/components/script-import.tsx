@@ -512,26 +512,27 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   // Use the full parser for accurate preview (with OCR correction and CAST detection)
   const previewData = useMemo(() => {
     if (!script || script.trim().length < 10) {
-      return { roles: 0, scenes: 0, time: null };
+      return { roles: 0, scenes: 0, time: null, roleNames: [] as string[] };
     }
     
     try {
       const parsed = parseScript(script);
       const roleCount = parsed.roles.length;
       const sceneCount = parsed.scenes.length;
+      const roleNames = parsed.roles.map(r => r.name);
       
       // Estimate reading time
       const words = script.trim().split(/\s+/).filter(w => w.length > 0).length;
       const minutes = Math.ceil(words / 130);
       const time = minutes >= 1 ? `${minutes} min` : null;
       
-      return { roles: roleCount, scenes: sceneCount, time };
+      return { roles: roleCount, scenes: sceneCount, time, roleNames };
     } catch {
-      return { roles: 0, scenes: 0, time: null };
+      return { roles: 0, scenes: 0, time: null, roleNames: [] as string[] };
     }
   }, [script]);
   
-  const characters = previewData.roles > 0 ? Array(previewData.roles).fill(null) : [];
+  const characters = previewData.roleNames;
 
   return (
     <div className="flex flex-col gap-4 max-w-lg mx-auto w-full" data-testid="script-import">
