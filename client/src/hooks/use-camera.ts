@@ -37,6 +37,7 @@ export function useCamera() {
   const recordingAudioContextRef = useRef<AudioContext | null>(null);
   const recordingMicStreamRef = useRef<MediaStream | null>(null);
   const audioCleanupRef = useRef<(() => void) | null>(null);
+  const pendingDownloadRef = useRef(false);
 
   const startCamera = useCallback(async () => {
     try {
@@ -281,6 +282,7 @@ export function useCamera() {
 
   const confirmStopAndDownload = useCallback(() => {
     setShowDiscardPrompt(false);
+    pendingDownloadRef.current = true;
     stopRecording();
   }, [stopRecording]);
 
@@ -345,6 +347,25 @@ export function useCamera() {
     setRecordingTime(0);
     recordingChunksRef.current = [];
   }, []);
+
+  useEffect(() => {
+    if (pendingDownloadRef.current && recordingBlob) {
+      pendingDownloadRef.current = false;
+      const isAudio = mimeTypeRef.current.startsWith('audio/');
+      const extension = mimeTypeRef.current.includes('mp4') 
+        ? (isAudio ? 'm4a' : 'mp4') 
+        : 'webm';
+      const url = URL.createObjectURL(recordingBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `costar-recording.${extension}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      console.log('[Camera] Auto-downloaded recording after save');
+    }
+  }, [recordingBlob]);
 
   useEffect(() => {
     return () => {
