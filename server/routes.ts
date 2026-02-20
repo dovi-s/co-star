@@ -670,11 +670,11 @@ RULES:
 1. Identify all speaking characters and their dialogue
 2. Format each line as: CHARACTER NAME: dialogue text
 3. Character names should be in ALL CAPS
-4. Include stage directions in [brackets] when they appear before or within dialogue
-5. Remove scene headings, action descriptions, and non-dialogue text
-6. Preserve the order of dialogue as it appears
+4. Include inline stage directions in [brackets] within dialogue lines (e.g., [hesitant], [whispering])
+5. PRESERVE standalone stage directions between dialogue as their own lines in [brackets]. These describe scene action, character movement, or atmosphere. Put each on its own line between the relevant dialogue.
+6. Preserve the order of dialogue and stage directions as they appear
 7. If the format is unclear, make your best intelligent guess based on context
-8. Keep emotional parentheticals like (whispering), (angry), (laughing) as [stage directions]
+8. Keep emotional parentheticals like (whispering), (angry), (laughing) as [inline stage directions]
 9. Mark scene changes with: --- SCENE: [Scene Name] ---
 
 SUPPORTED INPUT FORMATS:
@@ -685,13 +685,16 @@ SUPPORTED INPUT FORMATS:
 - Chat/messenger format: Name: message
 - Any other format - extract dialogue intelligently
 
-OUTPUT ONLY the formatted dialogue lines. No explanations or commentary.
+OUTPUT ONLY the formatted dialogue lines and stage directions. No explanations or commentary.
 
 Example output:
 --- SCENE: Scene One ---
+[The office is quiet. Morning light filters through dusty blinds.]
 JOHN: [excited] Did you hear the news?
 MARY: [surprised] What news?
-JOHN: We got the contract.`;
+JOHN: We got the contract.
+[Mary stands up, knocking her chair back.]
+MARY: You're kidding me.`;
 
       // For long scripts, process in chunks to avoid token limits
       const CHUNK_SIZE = 20000; // ~5000 tokens input per chunk

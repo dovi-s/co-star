@@ -487,10 +487,10 @@ function isValidContext(text: string): boolean {
   // CRITICAL: Reject context containing embedded character dialogue
   // Pattern: "CHARACTER. dialogue" or "CHARACTER: dialogue" indicates merged text
   // e.g., "CALLIE. 2:30." or "GEORGE. Kindergarten?"
-  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?\.\s+[A-Z]?[a-z]/i.test(trimmed)) {
+  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?\.\s+[A-Z]?[a-z]/.test(trimmed)) {
     return false; // Contains "NAME. word" pattern = embedded dialogue
   }
-  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?:\s+/i.test(trimmed)) {
+  if (/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?:\s+/.test(trimmed)) {
     return false; // Contains "NAME: " pattern = embedded dialogue
   }
   
@@ -533,8 +533,8 @@ function isValidContext(text: string): boolean {
   // - Scene description: "The room is dark"
   // - Camera directions: "ANGLE ON", "CLOSE UP"
   
-  // Accept bracketed directions
-  if (/^\[.*\]$/.test(trimmed)) return true;
+  // Accept bracketed/parenthetical directions (author explicitly marked these)
+  if (/^\[/.test(trimmed) || /\]$/.test(trimmed)) return true;
   if (/^\(.*\)$/.test(trimmed)) return true;
   
   // Accept clear action patterns
@@ -1502,6 +1502,28 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
 function preprocessScript(rawText: string): string {
   let text = rawText;
   
+  // Handle single-line or few-line scripts with multiple CHARACTER: patterns
+  // When the text has very few newlines but multiple colon-format dialogue entries,
+  // split at each CHARACTER: boundary and separate standalone stage directions
+  const lineCount = (text.match(/\n/g) || []).length;
+  const colonDialogueMatches = text.match(/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?:\s*\[?[a-zA-Z]/g) || [];
+  
+  if (colonDialogueMatches.length >= 2 && lineCount < colonDialogueMatches.length) {
+    // Split long bracketed stage directions (30+ chars) onto their own lines
+    // These are standalone scene/action descriptions, not inline directions like [hesitant]
+    text = text.replace(/(\[[^\]]{30,}\])/g, '\n$1\n');
+    
+    // Split before each CHARACTER: pattern when preceded by text
+    // Handles: "] KAREN:", "? JAMES:", ". KAREN:", etc.
+    text = text.replace(/([\].)!?,;:'"]\s*)([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+    
+    // Also split when CHARACTER: appears after any word boundary (covers remaining cases)
+    text = text.replace(/([a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+    
+    // Clean up any triple+ newlines
+    text = text.replace(/\n{3,}/g, '\n\n');
+  }
+  
   // Remove CAST section entirely (contains character descriptions, not dialogue)
   // Matches "CAST" heading followed by character descriptions until SETTING/TIME/SCENE/ACT
   // e.g., "CAST\nCALLIE-late 20s to early 30s.\nSARA-mid-20s...\n\nSETTING"
@@ -1718,6 +1740,7 @@ export function parseScript(rawText: string): ParsedScript {
   let pendingCharacter: string | null = null;
   let pendingDialogue: string[] = [];
   let pendingContext: string[] = []; // Action lines before dialogue
+  let nextLineContext: string | undefined = undefined; // Context carried forward to next dialogue
   
   // Skip title page / front matter until first scene heading
   let foundFirstScene = false;
@@ -1746,7 +1769,6 @@ export function parseScript(rawText: string): ParsedScript {
         role.lineCount++;
         
         const direction = directions.join("; ");
-        const contextText = pendingContext.join(" ").trim();
         // Direction is already validated during extraction - just check it's not empty
         const validDirection = direction && direction.length > 0 ? direction : undefined;
         const scriptLine: ScriptLine = {
@@ -1756,17 +1778,25 @@ export function parseScript(rawText: string): ParsedScript {
           roleName: pendingCharacter,
           text: cleanText,
           direction: validDirection,
-          context: isValidContext(contextText) ? contextText : undefined, // Only include valid action context
+          context: nextLineContext, // Use context saved from before this dialogue
           isBookmarked: false,
           emotionHint: detectEmotion(cleanText, direction),
         };
         
         currentSceneLines.push(scriptLine);
+        nextLineContext = undefined; // Context consumed by this line
       }
     }
+    // Save any new pending context for the NEXT dialogue line
+    const contextText = pendingContext.join(" ").trim();
+    if (contextText) {
+      nextLineContext = isValidContext(contextText) ? contextText : undefined;
+    }
+    // Don't clear nextLineContext if no new context — let it persist through empty flushes
+    
     pendingCharacter = null;
     pendingDialogue = [];
-    pendingContext = []; // Clear context after attaching to dialogue
+    pendingContext = [];
   };
   
   // Check if a line is action/description (not dialogue, not character, not heading)
@@ -1928,9 +1958,15 @@ export function parseScript(rawText: string): ParsedScript {
           /^(?:by\s+)?[A-Z][a-z]+\s+[A-Z][a-z]+$/.test(trimmed) || // Author names like "Diana Son"
           /^[A-Z\s]+$/.test(trimmed) && trimmed.length < 30; // Short all-caps titles
         
-        if (!isFrontMatter && isActionLine(trimmed)) {
-          // This looks like an opening scene description - capture it as context
-          pendingContext.push(trimmed);
+        if (!isFrontMatter) {
+          if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
+            const cleaned = trimmed.replace(/^\[|\]$|^\(|\)$/g, '').trim();
+            if (cleaned) {
+              pendingContext.push(`[${cleaned}]`);
+            }
+          } else if (isActionLine(trimmed)) {
+            pendingContext.push(trimmed);
+          }
         }
         continue;
       }
@@ -1943,10 +1979,11 @@ export function parseScript(rawText: string): ParsedScript {
     }
     
     // Pure stage direction on its own line - add to context
+    // These are explicitly marked by the author so always valid
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
       const cleaned = trimmed.replace(/^\[|\]$|^\(|\)$/g, '').trim();
       if (cleaned) {
-        pendingContext.push(cleaned);
+        pendingContext.push(`[${cleaned}]`);
       }
       continue;
     }
