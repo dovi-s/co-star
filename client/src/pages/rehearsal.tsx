@@ -753,7 +753,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     } else {
       stopAllPlaybackRef.current();
     }
-  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex, currentLine, currentIsUserLine]);
+  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
 
   const startPlayback = useCallback(() => {
     speakingLineRef.current = null;
