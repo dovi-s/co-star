@@ -83,15 +83,20 @@ export function Header({
   const [titleOverflows, setTitleOverflows] = useState(false);
 
   useEffect(() => {
-    const el = titleRef.current;
-    if (el) {
-      const overflows = el.scrollWidth > el.clientWidth;
-      setTitleOverflows(overflows);
-      if (overflows) {
-        const overflow = el.scrollWidth - el.clientWidth;
-        el.style.setProperty('--marquee-distance', `-${overflow}px`);
+    const checkOverflow = () => {
+      const el = titleRef.current;
+      if (el) {
+        const overflows = el.scrollWidth > el.clientWidth;
+        setTitleOverflows(overflows);
+        if (overflows) {
+          const overflow = el.scrollWidth - el.clientWidth;
+          el.style.setProperty('--marquee-distance', `-${overflow}px`);
+        }
       }
-    }
+    };
+    checkOverflow();
+    const timer = setTimeout(checkOverflow, 100);
+    return () => clearTimeout(timer);
   }, [sessionName]);
 
   const showShareMenu = scenes.length > 0 && scenes.some(s => s.lines.length > 0);

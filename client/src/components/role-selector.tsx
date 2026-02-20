@@ -20,15 +20,20 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
   const [titleOverflows, setTitleOverflows] = useState(false);
 
   useEffect(() => {
-    const el = titleRef.current;
-    if (el) {
-      const overflows = el.scrollWidth > el.clientWidth;
-      setTitleOverflows(overflows);
-      if (overflows) {
-        const overflow = el.scrollWidth - el.clientWidth;
-        el.style.setProperty('--marquee-distance', `-${overflow}px`);
+    const checkOverflow = () => {
+      const el = titleRef.current;
+      if (el) {
+        const overflows = el.scrollWidth > el.clientWidth;
+        setTitleOverflows(overflows);
+        if (overflows) {
+          const overflow = el.scrollWidth - el.clientWidth;
+          el.style.setProperty('--marquee-distance', `-${overflow}px`);
+        }
       }
-    }
+    };
+    checkOverflow();
+    const timer = setTimeout(checkOverflow, 100);
+    return () => clearTimeout(timer);
   }, [scriptName]);
 
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
