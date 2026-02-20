@@ -86,6 +86,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
               onClick={onMultiplayer}
               title="Table Read"
               data-testid="button-multiplayer"
+              className="text-muted-foreground"
             >
               <Users className="h-5 w-5" />
             </Button>
