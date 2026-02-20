@@ -97,22 +97,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       const data = await response.json();
       setScript(data.script);
-      
-      if (data.parsed && onImportParsed) {
-        const sessionName = data.theme?.split(":")[0]?.trim() || "Generated Scene";
-        onImportParsed(sessionName, data.parsed);
-        return;
-      }
-      
-      if (data.script && onImportParsed) {
-        const retried = await cleanupAndParse(data.script);
-        if (retried?.parsed) {
-          if (retried.script) setScript(retried.script);
-          const sessionName = data.theme?.split(":")[0]?.trim() || "Generated Scene";
-          onImportParsed(sessionName, retried.parsed);
-          return;
-        }
-      }
+      setIsEditingScript(false);
     } catch (e) {
       console.error("Failed to generate script:", e);
     } finally {
@@ -137,27 +122,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       const data = await response.json();
       setScript(data.script);
-      
-      if (data.parsed && onImportParsed) {
-        const sessionName = customPrompt.slice(0, 30).trim() || "Generated Scene";
-        setShowPromptInput(false);
-        setCustomPrompt("");
-        onImportParsed(sessionName, data.parsed);
-        return;
-      }
-      
-      if (data.script && onImportParsed) {
-        const retried = await cleanupAndParse(data.script);
-        if (retried?.parsed) {
-          if (retried.script) setScript(retried.script);
-          const sessionName = customPrompt.slice(0, 30).trim() || "Generated Scene";
-          setShowPromptInput(false);
-          setCustomPrompt("");
-          onImportParsed(sessionName, retried.parsed);
-          return;
-        }
-      }
-      
+      setIsEditingScript(false);
       setShowPromptInput(false);
       setCustomPrompt("");
     } catch (e) {
