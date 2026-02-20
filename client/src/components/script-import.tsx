@@ -227,6 +227,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   const [isParsingFile, setIsParsingFile] = useState(false);
   const [parseProgress, setParseProgress] = useState<string>("");
+  const [ocrProgress, setOcrProgress] = useState<{ current: number; total: number } | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
 
   // Extract a clean title from filename
@@ -284,23 +285,73 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         if (!response.ok) {
           const data = await response.json();
           if (data.needsOcr) {
-            setParseProgress("Scanning pages with AI (this may take a few minutes)...");
-            const ocrResponse = await fetch("/api/ocr-pdf-to-session", {
-              method: "POST",
-              body: formData,
+            setParseProgress("Scanning pages with AI...");
+            setOcrProgress(null);
+
+            const ocrResult = await new Promise<{ parsed: any; rawText: string }>((resolve, reject) => {
+              const ocrFormData = new FormData();
+              ocrFormData.append("file", file);
+
+              fetch("/api/ocr-pdf-to-session", {
+                method: "POST",
+                body: ocrFormData,
+                headers: { 'Accept': 'text/event-stream' },
+              }).then(ocrRes => {
+                if (!ocrRes.ok || !ocrRes.body) {
+                  reject(new Error("Failed to start OCR scan"));
+                  return;
+                }
+                const reader = ocrRes.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = "";
+
+                const readStream = (): void => {
+                  reader.read().then(({ done, value }) => {
+                    if (done) {
+                      reject(new Error("OCR stream ended unexpectedly"));
+                      return;
+                    }
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split("\n\n");
+                    buffer = lines.pop() || "";
+
+                    for (const line of lines) {
+                      const dataMatch = line.match(/^data: (.+)$/m);
+                      if (!dataMatch) continue;
+                      try {
+                        const evt = JSON.parse(dataMatch[1]);
+                        if (evt.type === 'progress') {
+                          if (evt.stage === 'scanning' && evt.total) {
+                            setOcrProgress({ current: evt.current, total: evt.total });
+                            setParseProgress(evt.message || `Scanning page ${evt.current} of ${evt.total}`);
+                          } else {
+                            setOcrProgress(null);
+                            setParseProgress(evt.message || "Processing...");
+                          }
+                        } else if (evt.type === 'complete') {
+                          resolve({ parsed: evt.parsed, rawText: evt.rawText });
+                          return;
+                        } else if (evt.type === 'error') {
+                          reject(new Error(evt.error));
+                          return;
+                        }
+                      } catch {}
+                    }
+                    readStream();
+                  }).catch(reject);
+                };
+                readStream();
+              }).catch(reject);
             });
-            if (!ocrResponse.ok) {
-              const ocrData = await ocrResponse.json();
-              throw new Error(ocrData.error || "Failed to scan PDF");
-            }
-            const ocrData = await ocrResponse.json();
+
             console.log('[PDF Import] OCR parsed:', {
-              roles: ocrData.parsed.roles.length,
-              scenes: ocrData.parsed.scenes.length,
-              totalLines: ocrData.parsed.scenes.reduce((s: number, sc: any) => s + sc.lines.length, 0)
+              roles: ocrResult.parsed.roles.length,
+              scenes: ocrResult.parsed.scenes.length,
+              totalLines: ocrResult.parsed.scenes.reduce((s: number, sc: any) => s + sc.lines.length, 0)
             });
-            setServerParsedData(ocrData.parsed);
-            setScript(ocrData.rawText || "");
+            setServerParsedData(ocrResult.parsed);
+            setScript(ocrResult.rawText || "");
+            setOcrProgress(null);
             return;
           }
           throw new Error(data.error || "Failed to parse file");
@@ -322,6 +373,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         if (progressTimer) clearInterval(progressTimer);
         setIsParsingFile(false);
         setParseProgress("");
+        setOcrProgress(null);
       }
       return;
     }
@@ -532,20 +584,34 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
         {isParsingFile && parseProgress && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl glass-surface-heavy z-10" data-testid="overlay-parse-progress">
-            <div className="flex flex-col items-center gap-4 px-6">
-              <div className="relative w-10 h-10">
-                <div className="absolute inset-0 rounded-full border-2 border-primary/10" />
-                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
-                <div className="absolute inset-[6px] rounded-full border-2 border-transparent border-b-primary/40 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
-              </div>
-              <div className="text-center space-y-1">
-                <p className="text-sm font-medium text-foreground/90">
-                  {parseProgress.includes("Scanning") ? "Scanning with AI" : parseProgress.replace("...", "")}
-                </p>
-                {parseProgress.includes("Scanning") && (
-                  <p className="text-xs text-muted-foreground/70 max-w-[200px] leading-relaxed">Scanned PDF detected. Reading each page individually.</p>
-                )}
-              </div>
+            <div className="flex flex-col items-center gap-4 px-6 w-full max-w-[220px]">
+              {ocrProgress ? (
+                <>
+                  <div className="text-center space-y-1.5 w-full">
+                    <p className="text-sm font-medium text-foreground/90 tabular-nums">
+                      Page {ocrProgress.current} of {ocrProgress.total}
+                    </p>
+                    <div className="w-full h-1.5 bg-primary/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-primary rounded-full transition-all duration-500 ease-out"
+                        style={{ width: `${Math.max(3, (ocrProgress.current / ocrProgress.total) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground/60">Scanning with AI</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="relative w-10 h-10">
+                    <div className="absolute inset-0 rounded-full border-2 border-primary/10" />
+                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+                    <div className="absolute inset-[6px] rounded-full border-2 border-transparent border-b-primary/40 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                  </div>
+                  <p className="text-sm font-medium text-foreground/90">
+                    {parseProgress.replace("...", "")}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         )}

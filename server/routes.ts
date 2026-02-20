@@ -762,7 +762,7 @@ JOHN: We got the contract.`;
     }
   });
 
-  async function ocrScannedPdf(pdfBuffer: Buffer, fileName: string): Promise<string> {
+  async function ocrScannedPdf(pdfBuffer: Buffer, fileName: string, onProgress?: (data: Record<string, any>) => void): Promise<string> {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'costar-ocr-'));
     try {
       const pdfPath = path.join(tmpDir, 'input.pdf');
@@ -803,6 +803,8 @@ JOHN: We got the contract.`;
       const BATCH_SIZE = 4;
       const allPageTexts: string[] = [];
       
+      onProgress?.({ type: 'progress', stage: 'scanning', current: 0, total: pageFiles.length, message: `Scanning page 1 of ${pageFiles.length}` });
+
       for (let batchStart = 0; batchStart < pageFiles.length; batchStart += BATCH_SIZE) {
         const batch = pageFiles.slice(batchStart, batchStart + BATCH_SIZE);
         const batchNum = Math.floor(batchStart / BATCH_SIZE) + 1;
@@ -846,6 +848,9 @@ JOHN: We got the contract.`;
         const results = await Promise.all(batchPromises);
         results.sort((a, b) => a.pageNum - b.pageNum);
         allPageTexts.push(...results.map(r => r.text));
+
+        const pagesCompleted = Math.min(batchStart + batch.length, pageFiles.length);
+        onProgress?.({ type: 'progress', stage: 'scanning', current: pagesCompleted, total: pageFiles.length, message: pagesCompleted < pageFiles.length ? `Scanning page ${pagesCompleted + 1} of ${pageFiles.length}` : 'Finishing up' });
       }
       
       const emptyPages = allPageTexts.reduce((count, text, i) => text.length < 10 ? count + 1 : count, 0);
@@ -1297,64 +1302,80 @@ JOHN: We got the contract.`;
       }
 
       const file = req.file;
-      console.log(`[OCR Endpoint] Starting OCR for ${file.originalname}, ${file.buffer.length} bytes`);
+      const useSSE = req.headers.accept === 'text/event-stream';
+      console.log(`[OCR Endpoint] Starting OCR for ${file.originalname}, ${file.buffer.length} bytes, SSE: ${useSSE}`);
 
-      let text = "";
-      try {
-        text = await ocrScannedPdf(file.buffer, file.originalname);
-        text = text
-          .replace(/\r\n/g, "\n")
-          .replace(/\r/g, "\n")
-          .replace(/\n{4,}/g, "\n\n\n")
-          .trim();
-      } catch (ocrErr: any) {
-        console.error(`[OCR Endpoint] OCR failed:`, ocrErr.message);
-        return res.status(500).json({ 
-          error: "AI text recognition failed. Try opening the PDF in a reader, select all text, copy, and paste it here instead." 
+      if (useSSE) {
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
         });
+        const sendProgress = (data: Record<string, any>) => {
+          res.write(`data: ${JSON.stringify(data)}\n\n`);
+        };
+
+        let text = "";
+        try {
+          text = await ocrScannedPdf(file.buffer, file.originalname, sendProgress);
+          text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n{4,}/g, "\n\n\n").trim();
+        } catch (ocrErr: any) {
+          console.error(`[OCR Endpoint] OCR failed:`, ocrErr.message);
+          sendProgress({ type: 'error', error: "AI text recognition failed. Try copy-pasting from the PDF instead." });
+          res.end();
+          return;
+        }
+
+        if (!text || text.length < 10) {
+          sendProgress({ type: 'error', error: "Could not extract text from this PDF. The scan quality may be too low." });
+          res.end();
+          return;
+        }
+
+        sendProgress({ type: 'progress', stage: 'parsing', message: 'Parsing script' });
+        const parsed = parseScript(text);
+
+        sendProgress({ type: 'progress', stage: 'cleanup', message: 'Cleaning up' });
+        const { cleanedScript, removedCount } = await aiCleanupScript(parsed);
+        const finalScript = await aiFilterRoles(cleanedScript);
+
+        if (finalScript.roles.length === 0) {
+          sendProgress({ type: 'error', error: "Could not find character names in the scanned text." });
+          res.end();
+          return;
+        }
+
+        sendProgress({ type: 'complete', parsed: finalScript, rawText: text, fileName: file.originalname });
+        res.end();
+      } else {
+        let text = "";
+        try {
+          text = await ocrScannedPdf(file.buffer, file.originalname);
+          text = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n").replace(/\n{4,}/g, "\n\n\n").trim();
+        } catch (ocrErr: any) {
+          console.error(`[OCR Endpoint] OCR failed:`, ocrErr.message);
+          return res.status(500).json({ error: "AI text recognition failed. Try copy-pasting from the PDF instead." });
+        }
+
+        if (!text || text.length < 10) {
+          return res.status(400).json({ error: "Could not extract text from this PDF. The scan quality may be too low." });
+        }
+
+        const parsed = parseScript(text);
+        const { cleanedScript } = await aiCleanupScript(parsed);
+        const finalScript = await aiFilterRoles(cleanedScript);
+
+        if (finalScript.roles.length === 0) {
+          return res.status(400).json({ error: "Could not find character names in the scanned text." });
+        }
+
+        res.json({ parsed: finalScript, rawText: text, fileName: file.originalname });
       }
-
-      if (!text || text.length < 10) {
-        return res.status(400).json({ 
-          error: "Could not extract text from this PDF. The scan quality may be too low." 
-        });
-      }
-
-      console.log(`[OCR Endpoint] Parsing ${text.length} chars of OCR text...`);
-      const parsed = parseScript(text);
-      console.log(`[OCR Endpoint] Found ${parsed.roles.length} roles, ${parsed.scenes.length} scenes`);
-      
-      let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
-      console.log(`[OCR Endpoint] Total dialogue lines: ${totalLines}`);
-
-      console.log(`[OCR Endpoint] Running AI Smart Cleanup...`);
-      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
-      
-      if (removedCount > 0) {
-        console.log(`[OCR Endpoint] AI removed ${removedCount} non-dialogue lines`);
-        totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
-      }
-
-      console.log(`[OCR Endpoint] Running AI Role Filter...`);
-      const finalScript = await aiFilterRoles(cleanedScript);
-      if (finalScript.roles.length < cleanedScript.roles.length) {
-        console.log(`[OCR Endpoint] AI removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
-      }
-
-      if (finalScript.roles.length === 0) {
-        return res.status(400).json({ 
-          error: "Could not find character names in the scanned text." 
-        });
-      }
-
-      res.json({ 
-        parsed: finalScript,
-        rawText: text,
-        fileName: file.originalname 
-      });
     } catch (error: any) {
       console.error("OCR endpoint error:", error.message || error);
-      res.status(500).json({ error: "Failed to process scanned PDF" });
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to process scanned PDF" });
+      }
     }
   });
 
