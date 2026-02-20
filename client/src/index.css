@@ -2446,15 +2446,17 @@
   background: linear-gradient(
     105deg,
     currentColor 0%,
-    currentColor 40%,
-    hsl(var(--primary) / 0.85) 48%,
-    currentColor 56%,
+    currentColor 35%,
+    hsl(var(--primary)) 46%,
+    hsl(var(--primary) / 0.6) 50%,
+    hsl(var(--primary)) 54%,
+    currentColor 65%,
     currentColor 100%
   );
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: wordmark-sheen 6s ease-in-out infinite;
-  animation-delay: 2s;
+  animation: wordmark-sheen 4s ease-in-out infinite;
+  animation-delay: 1.5s;
 }
