@@ -261,52 +261,55 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
 }
 
 function getVoiceSettings(emotion: string, preset: string) {
-  let stability = 0.5;
-  let similarityBoost = 0.85;
-  let style = 0.3;
+  let stability = 0.55;
+  let similarityBoost = 0.80;
+  let style = 0.15;
 
   switch (emotion) {
     case "angry":
-    case "fearful":
     case "urgent":
+      stability = 0.40;
+      style = 0.35;
+      break;
+    case "fearful":
     case "excited":
-      stability = 0.0;
-      style = 0.6;
+      stability = 0.45;
+      style = 0.30;
       break;
     case "sad":
-      stability = 0.5;
-      style = 0.5;
+      stability = 0.55;
+      style = 0.25;
       break;
     case "happy":
-      stability = 0.5;
-      style = 0.5;
+      stability = 0.50;
+      style = 0.25;
       break;
     case "whisper":
-      stability = 1.0;
-      style = 0.2;
+      stability = 0.70;
+      style = 0.10;
       break;
     case "sarcastic":
-      stability = 0.0;
-      style = 0.4;
+      stability = 0.45;
+      style = 0.25;
       break;
     default:
-      stability = 0.5;
-      style = 0.3;
+      stability = 0.55;
+      style = 0.15;
   }
 
   if (preset === "theatrical") {
-    stability = 0.0;
-    style = Math.min(1, style + 0.2);
+    stability = Math.max(0.30, stability - 0.15);
+    style = Math.min(0.50, style + 0.15);
   } else if (preset === "deadpan") {
-    stability = 1.0;
-    style = Math.max(0, style - 0.2);
+    stability = Math.min(0.80, stability + 0.20);
+    style = Math.max(0, style - 0.10);
   }
 
   return {
     stability,
     similarity_boost: similarityBoost,
     style: Math.max(0, Math.min(1, style)),
-    use_speaker_boost: true,
+    use_speaker_boost: false,
   };
 }
 
@@ -357,20 +360,35 @@ export async function registerRoutes(
       const voiceId = ELEVENLABS_VOICES[voiceType];
       const voiceSettings = getVoiceSettings(emotion || "neutral", preset || "natural");
 
-      const audioStream = await client.textToSpeech.convert(voiceId, {
-        text: cleanedText,
-        modelId: "eleven_v3",
-        voiceSettings: voiceSettings,
-      });
+      const models = ["eleven_flash_v2_5", "eleven_turbo_v2_5", "eleven_multilingual_v2"];
+      let audioBuffer: Buffer | null = null;
+      
+      for (const modelId of models) {
+        try {
+          const audioStream = await client.textToSpeech.convert(voiceId, {
+            text: cleanedText,
+            modelId,
+            voiceSettings: voiceSettings,
+          });
 
-      const chunks: Buffer[] = [];
-      const reader = audioStream.getReader();
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        if (value) chunks.push(Buffer.from(value));
+          const chunks: Buffer[] = [];
+          const reader = audioStream.getReader();
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (value) chunks.push(Buffer.from(value));
+          }
+          audioBuffer = Buffer.concat(chunks);
+          if (audioBuffer.length > 0) break;
+        } catch (modelError: any) {
+          console.log(`[TTS] Model ${modelId} failed, trying next:`, modelError.message);
+          continue;
+        }
       }
-      const audioBuffer = Buffer.concat(chunks);
+      
+      if (!audioBuffer || audioBuffer.length === 0) {
+        throw new Error("All TTS models failed");
+      }
 
       res.set({
         "Content-Type": "audio/mpeg",
