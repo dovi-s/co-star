@@ -1396,7 +1396,7 @@ function inferDirectionFromText(text: string): string[] {
     return cleaned.length >= 2 && cleaned === cleaned.toUpperCase() && /[A-Z]{2,}/.test(cleaned);
   });
   const capsRatio = words.length > 0 ? capsWords.length / words.length : 0;
-  if (capsRatio > 0.4 && capsWords.length >= 2) {
+  if (capsRatio > 0.6 && capsWords.length >= 3) {
     inferred.push("yelling");
   }
   
@@ -1423,7 +1423,7 @@ function inferDirectionFromText(text: string): string[] {
   if (/\b(whisper|whispering|whispers|hushed|quietly|under .* breath)\b/.test(lower)) {
     inferred.push("whispering");
   }
-  if (/\b(oh my god|unbelievable|insane|can't believe|are you serious|no way)\b/.test(lower) && /!/.test(text)) {
+  if (/\b(oh my god|unbelievable|insane|can't believe|are you serious|no way)\b/.test(lower) && /!{2,}/.test(text)) {
     if (!inferred.includes("excited")) inferred.push("excited");
   }
   if (/\b(i love you|so proud|deserve this|couldn't have done it without)\b/.test(lower)) {
@@ -1435,15 +1435,6 @@ function inferDirectionFromText(text: string): string[] {
   
   if (inferred.includes("tearful") && inferred.includes("yelling") && !hasNegativeCues) {
     if (!inferred.includes("excited")) inferred.push("excited");
-  }
-
-  const exclamationCount = (text.match(/!/g) || []).length;
-  const questionCount = (text.match(/\?/g) || []).length;
-  if (exclamationCount >= 3 && inferred.length === 0) {
-    inferred.push("emphatic");
-  }
-  if (questionCount >= 2 && exclamationCount >= 1 && inferred.length === 0) {
-    inferred.push("incredulous");
   }
 
   return inferred;

@@ -10,20 +10,20 @@ export function stripEmphasisMarkers(text: string): string {
 
 const emotionToProsody: Record<EmotionStyle, Partial<ProsodyParams>> = {
   neutral: { rate: 1, pitch: 0, volume: 0.9 },
-  happy: { rate: 1.05, pitch: 0.15, volume: 0.9 },
-  sad: { rate: 0.9, pitch: -0.2, volume: 0.8 },
-  angry: { rate: 1.05, pitch: 0.2, volume: 0.95 },
-  sarcastic: { rate: 0.95, pitch: -0.1, volume: 0.85 },
-  fearful: { rate: 1.05, pitch: 0.15, volume: 0.85 },
-  excited: { rate: 1.08, pitch: 0.2, volume: 0.95 },
-  whisper: { rate: 0.85, pitch: -0.15, volume: 0.6 },
-  urgent: { rate: 1.1, pitch: 0.15, volume: 0.95 },
+  happy: { rate: 1.02, pitch: 0.08, volume: 0.9 },
+  sad: { rate: 0.95, pitch: -0.1, volume: 0.85 },
+  angry: { rate: 1.02, pitch: 0.08, volume: 0.92 },
+  sarcastic: { rate: 0.97, pitch: -0.05, volume: 0.88 },
+  fearful: { rate: 1.02, pitch: 0.05, volume: 0.88 },
+  excited: { rate: 1.03, pitch: 0.08, volume: 0.92 },
+  whisper: { rate: 0.92, pitch: -0.08, volume: 0.65 },
+  urgent: { rate: 1.04, pitch: 0.06, volume: 0.92 },
 };
 
 const presetModifiers: Record<VoicePreset, Partial<ProsodyParams>> = {
   natural: { rate: 1, pitch: 0, volume: 0.9 },
-  deadpan: { rate: 0.9, pitch: -0.3, volume: 0.8 },
-  theatrical: { rate: 1.1, pitch: 0.2, volume: 1 },
+  deadpan: { rate: 0.95, pitch: -0.12, volume: 0.85 },
+  theatrical: { rate: 1.03, pitch: 0.08, volume: 0.95 },
 };
 
 export function calculateProsody(
@@ -75,9 +75,8 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   if (/cold|stern|firm|sharp|bitter|dismissive|flat/i.test(dir)) return "neutral";
   if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) return "neutral";
 
-  if (/!{2,}/.test(text)) return "angry";
-  if (/\b(stop|shut up|get out|how dare)\b/i.test(txt) && /!/.test(text)) return "angry";
-  if (/\?{2,}/.test(text)) return "urgent";
+  if (/\b(stop|shut up|get out|how dare)\b/i.test(txt) && /!{2,}/.test(text)) return "angry";
+  if (/\?{3,}/.test(text)) return "urgent";
 
   return "neutral";
 }

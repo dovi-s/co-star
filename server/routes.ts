@@ -261,78 +261,84 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
 }
 
 function getVoiceSettings(emotion: string, preset: string, text: string = "", direction: string = "") {
-  let stability = 0.55;
-  let similarityBoost = 0.80;
-  let style = 0.15;
+  let stability = 0.62;
+  let similarityBoost = 0.82;
+  let style = 0.08;
 
   switch (emotion) {
     case "angry":
+      stability = 0.52;
+      style = 0.18;
+      break;
     case "urgent":
-      stability = 0.40;
-      style = 0.35;
+      stability = 0.55;
+      style = 0.15;
+      break;
+    case "excited":
+      stability = 0.53;
+      style = 0.17;
       break;
     case "fearful":
-    case "excited":
-      stability = 0.45;
-      style = 0.30;
+      stability = 0.55;
+      style = 0.12;
       break;
     case "sad":
-      stability = 0.55;
-      style = 0.25;
+      stability = 0.58;
+      style = 0.14;
       break;
     case "happy":
-      stability = 0.50;
-      style = 0.25;
+      stability = 0.56;
+      style = 0.14;
       break;
     case "whisper":
-      stability = 0.70;
-      style = 0.10;
+      stability = 0.72;
+      style = 0.05;
       break;
     case "sarcastic":
-      stability = 0.45;
-      style = 0.25;
+      stability = 0.55;
+      style = 0.12;
       break;
     default:
-      stability = 0.60;
-      style = 0.12;
+      stability = 0.62;
+      style = 0.08;
   }
 
   if (preset === "theatrical") {
-    stability = Math.max(0.30, stability - 0.15);
-    style = Math.min(0.50, style + 0.15);
+    stability = Math.max(0.42, stability - 0.10);
+    style = Math.min(0.30, style + 0.10);
   } else if (preset === "deadpan") {
-    stability = Math.min(0.80, stability + 0.20);
-    style = Math.max(0, style - 0.10);
+    stability = Math.min(0.85, stability + 0.15);
+    style = Math.max(0, style - 0.08);
   }
 
   const dir = direction.toLowerCase();
   if (/calm|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) {
-    stability = Math.min(0.80, stability + 0.10);
-    style = Math.max(0, style - 0.05);
+    stability = Math.min(0.80, stability + 0.08);
+    style = Math.max(0, style - 0.03);
   } else if (/cold|stern|firm|sharp|bitter|dismissive/i.test(dir)) {
-    stability = Math.min(0.75, stability + 0.10);
-    style = Math.min(0.40, style + 0.10);
+    stability = Math.min(0.75, stability + 0.05);
+    style = Math.min(0.25, style + 0.05);
   } else if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) {
-    stability = Math.max(0.40, stability - 0.05);
-    style = Math.max(0, style - 0.05);
+    stability = Math.max(0.50, stability - 0.03);
+    style = Math.max(0, style - 0.03);
   } else if (/pleading|begging|imploring/i.test(dir)) {
-    stability = Math.max(0.40, stability - 0.05);
-    style = Math.min(0.40, style + 0.10);
+    stability = Math.max(0.48, stability - 0.03);
+    style = Math.min(0.25, style + 0.05);
   }
 
   const trimmedText = text.trim();
   const wordCount = trimmedText.length > 0 ? trimmedText.split(/\s+/).length : 0;
   if (wordCount >= 1 && wordCount <= 3) {
-    stability = Math.min(0.85, stability + 0.15);
-    style = Math.max(0, style - 0.10);
+    stability = Math.min(0.85, stability + 0.12);
+    style = Math.max(0, style - 0.05);
   } else if (wordCount >= 4 && wordCount <= 6) {
-    stability = Math.min(0.75, stability + 0.05);
+    stability = Math.min(0.75, stability + 0.03);
   }
 
   return {
     stability,
     similarity_boost: similarityBoost,
-    style: Math.max(0, Math.min(1, style)),
+    style: Math.max(0, Math.min(0.30, style)),
     use_speaker_boost: false,
   };
 }
