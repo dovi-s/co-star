@@ -147,37 +147,45 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const match = matchWords(line.text, result.transcript);
       currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
       
-      if (!result.isFinal) return;
-      
-      console.log("[Rehearsal] Final speech:", match.matchedCount, "/", match.totalWords,
-        `(${Math.round(match.percentMatched)}%)`);
-      
       if (match.percentMatched >= 80 && !matchReachedRef.current) {
-        matchReachedRef.current = true;
-        
-        const graceMs = match.percentMatched >= 95 ? 100 : 250;
-        
         if (matchGraceTimeoutRef.current) {
           clearTimeout(matchGraceTimeoutRef.current);
         }
-        matchGraceTimeoutRef.current = setTimeout(() => {
-          if (isPlayingRef.current && waitingForUserRef.current) {
-            speechRecognition.stop();
-            waitingForUserRef.current = false;
-            matchReachedRef.current = false;
-            
-            if (autoAdvanceTimeoutRef.current) {
-              clearTimeout(autoAdvanceTimeoutRef.current);
-              autoAdvanceTimeoutRef.current = null;
-            }
-            
-            autoAdvanceTimeoutRef.current = setTimeout(() => {
-              if (isPlayingRef.current) {
-                advanceAfterUserLine();
+        
+        if (result.isFinal) {
+          matchReachedRef.current = true;
+          const graceMs = match.percentMatched >= 95 ? 100 : 250;
+          matchGraceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current && waitingForUserRef.current) {
+              speechRecognition.stop();
+              waitingForUserRef.current = false;
+              matchReachedRef.current = false;
+              if (autoAdvanceTimeoutRef.current) {
+                clearTimeout(autoAdvanceTimeoutRef.current);
+                autoAdvanceTimeoutRef.current = null;
               }
-            }, 20);
-          }
-        }, graceMs);
+              autoAdvanceTimeoutRef.current = setTimeout(() => {
+                if (isPlayingRef.current) advanceAfterUserLine();
+              }, 20);
+            }
+          }, graceMs);
+        } else {
+          matchGraceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
+              matchReachedRef.current = true;
+              speechRecognition.stop();
+              waitingForUserRef.current = false;
+              matchReachedRef.current = false;
+              if (autoAdvanceTimeoutRef.current) {
+                clearTimeout(autoAdvanceTimeoutRef.current);
+                autoAdvanceTimeoutRef.current = null;
+              }
+              autoAdvanceTimeoutRef.current = setTimeout(() => {
+                if (isPlayingRef.current) advanceAfterUserLine();
+              }, 20);
+            }
+          }, 800);
+        }
       }
     });
 
