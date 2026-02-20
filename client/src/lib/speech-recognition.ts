@@ -25,6 +25,7 @@ class SpeechRecognitionEngine {
   private lastTranscript = "";
   private accumulatedTranscript = "";
   private finalizedSegments: string[] = [];
+  private intentionalStop = false;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -57,23 +58,27 @@ class SpeechRecognitionEngine {
         };
 
         this.recognition.onend = () => {
-          console.log("[Speech] Recognition ended, had speech:", this.hasReceivedSpeech, "accumulated:", this.accumulatedTranscript.length, "chars");
+          const wasIntentional = this.intentionalStop;
+          console.log("[Speech] Recognition ended, intentional:", wasIntentional, "had speech:", this.hasReceivedSpeech, "accumulated:", this.accumulatedTranscript.length, "chars");
           this.isListening = false;
+          this.intentionalStop = false;
           this.clearSilenceTimeout();
           this.clearMaxListenTimeout();
           this.setState("idle");
           
-          if (this.hasReceivedSpeech && this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
-            this.finalizedSegments.push(this.lastTranscript);
-            this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
-          }
-          
-          if (this.accumulatedTranscript) {
-            this.onResultCallback?.({
-              transcript: this.accumulatedTranscript,
-              confidence: 0.8,
-              isFinal: true,
-            });
+          if (wasIntentional) {
+            if (this.hasReceivedSpeech && this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
+              this.finalizedSegments.push(this.lastTranscript);
+              this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
+            }
+            
+            if (this.accumulatedTranscript) {
+              this.onResultCallback?.({
+                transcript: this.accumulatedTranscript,
+                confidence: 0.8,
+                isFinal: true,
+              });
+            }
           }
           
           this.onEndCallback?.();
@@ -229,6 +234,7 @@ class SpeechRecognitionEngine {
 
   stop() {
     console.log("[Speech] Stop requested, isListening:", this.isListening);
+    this.intentionalStop = true;
     if (this.recognition && this.isListening) {
       try {
         this.recognition.stop();

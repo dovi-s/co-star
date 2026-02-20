@@ -229,14 +229,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       console.log("[Rehearsal] Speech error:", error);
       if (error === "not-allowed") {
         setMicBlocked(true);
-      }
-      if (waitingForUserRef.current && isPlayingRef.current) {
-        waitingForUserRef.current = false;
-        setTimeout(() => {
-          if (isPlayingRef.current) {
-            advanceAfterUserLineRef.current();
-          }
-        }, 500);
+        if (waitingForUserRef.current && isPlayingRef.current) {
+          waitingForUserRef.current = false;
+          setTimeout(() => {
+            if (isPlayingRef.current) {
+              advanceAfterUserLineRef.current();
+            }
+          }, 3000);
+        }
       }
     });
 
@@ -431,7 +431,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const userEmotion = line ? detectEmotion(line.text, line.direction) : "neutral";
       const nextEmotion = next.emotionHint || detectEmotion(next.text, next.direction);
       const timing = getConversationalTiming(nextEmotion, line?.text, userEmotion);
-      const pauseMs = isUserLine(next) ? 30 : timing.userToAiPauseMs;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const minPause = isIOS ? 350 : 30;
+      const pauseMs = isUserLine(next) ? minPause : Math.max(timing.userToAiPauseMs, minPause);
       
       console.log("[Rehearsal] User-to-next pause:", pauseMs + "ms", "nextEmotion:", nextEmotion);
       
@@ -477,11 +479,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     
     if (speechRecognition.available && !micBlocked && micEnabled) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const micDelay = isIOS ? 300 : 30;
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
         }
-      }, 30);
+      }, micDelay);
       
       // Safety timeout: if no result after 60 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
@@ -617,6 +621,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const ttsText = addBreathingPauses(line.text);
 
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const speakDelay = isIOS ? 150 : 30;
+    
     speakTimeoutRef.current = setTimeout(() => {
       speakTimeoutRef.current = null;
       if (!isPlayingRef.current) {
@@ -691,7 +698,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           prefetchNextAILine();
         },
       });
-    }, 30);
+    }, speakDelay);
   }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun, prefetchNextAILine]);
 
   useEffect(() => {

@@ -548,6 +548,7 @@ class TTSEngine {
 
         audio.src = audioUrl;
         audio.volume = 1;
+        audio.load();
         
         const connectWebRTC = () => {
           if (this.audioContext && this.ttsDestination) {
