@@ -107,6 +107,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const speakingLineRef = useRef<string | null>(null);
   const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const matchGraceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const matchReachedRef = useRef(false);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -140,39 +142,47 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       console.log("[Rehearsal] Speech result:", result.isFinal ? "FINAL" : "interim", result.transcript.substring(0, 30));
       setUserTranscript(result.transcript);
       
-      // Check word matching against current line
       const line = getCurrentLine();
       if (line && result.transcript.length > 0 && waitingForUserRef.current) {
         const match = matchWords(line.text, result.transcript);
         console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, 
           `(${Math.round(match.percentMatched)}%)`);
         
-        // Track best accuracy for this line
         currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
         
-        // Auto-advance when user has matched 80%+ of the words
-        if (match.percentMatched >= 80) {
-          console.log("[Rehearsal] 80%+ match, advancing now!");
-          speechRecognition.stop();
-          waitingForUserRef.current = false;
+        if (match.percentMatched >= 80 && !matchReachedRef.current) {
+          matchReachedRef.current = true;
+          console.log("[Rehearsal] 80%+ match reached, grace period started (1.5s to finish speaking)");
           
-          if (autoAdvanceTimeoutRef.current) {
-            clearTimeout(autoAdvanceTimeoutRef.current);
-            autoAdvanceTimeoutRef.current = null;
+          if (matchGraceTimeoutRef.current) {
+            clearTimeout(matchGraceTimeoutRef.current);
           }
-          
-          autoAdvanceTimeoutRef.current = setTimeout(() => {
-            if (isPlayingRef.current) {
-              advanceAfterUserLine();
+          matchGraceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current && waitingForUserRef.current) {
+              console.log("[Rehearsal] Grace period ended, advancing");
+              speechRecognition.stop();
+              waitingForUserRef.current = false;
+              matchReachedRef.current = false;
+              
+              if (autoAdvanceTimeoutRef.current) {
+                clearTimeout(autoAdvanceTimeoutRef.current);
+                autoAdvanceTimeoutRef.current = null;
+              }
+              
+              autoAdvanceTimeoutRef.current = setTimeout(() => {
+                if (isPlayingRef.current) {
+                  advanceAfterUserLine();
+                }
+              }, 20);
             }
-          }, 20);
+          }, 1500);
           return;
         }
       }
       
       if (result.isFinal && waitingForUserRef.current && line) {
         const match = matchWords(line.text, result.transcript);
-        console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match - continuing to listen for 80%+");
+        console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match - continuing to listen");
       }
     });
 
@@ -212,45 +222,59 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       if (autoAdvanceTimeoutRef.current) {
         clearTimeout(autoAdvanceTimeoutRef.current);
       }
+      if (matchGraceTimeoutRef.current) {
+        clearTimeout(matchGraceTimeoutRef.current);
+      }
     };
   }, []);
 
-  // Backup watcher: if word match hits 70%+, force advancement
-  // This catches cases where the speech callback didn't trigger properly
   const advancedForLineRef = useRef<string | null>(null);
   useEffect(() => {
     if (!currentLine || !currentIsUserLine || !session?.isPlaying || !userTranscript) {
       return;
     }
     
-    // Don't re-advance for the same line
     if (advancedForLineRef.current === currentLine.id) {
       return;
     }
     
     const match = matchWords(currentLine.text, userTranscript);
-    if (match.percentMatched >= 80 && waitingForUserRef.current) {
-      console.log("[Rehearsal] Backup watcher: 80%+ match detected, forcing advancement");
+    if (match.percentMatched >= 80 && waitingForUserRef.current && !matchReachedRef.current) {
+      console.log("[Rehearsal] Backup watcher: 80%+ match, starting grace period");
       advancedForLineRef.current = currentLine.id;
-      waitingForUserRef.current = false;
-      speechRecognition.stop();
+      matchReachedRef.current = true;
       
-      if (autoAdvanceTimeoutRef.current) {
-        clearTimeout(autoAdvanceTimeoutRef.current);
+      if (matchGraceTimeoutRef.current) {
+        clearTimeout(matchGraceTimeoutRef.current);
       }
-      
-      autoAdvanceTimeoutRef.current = setTimeout(() => {
-        if (isPlayingRef.current) {
-          advanceAfterUserLine();
+      matchGraceTimeoutRef.current = setTimeout(() => {
+        if (isPlayingRef.current && waitingForUserRef.current) {
+          speechRecognition.stop();
+          waitingForUserRef.current = false;
+          matchReachedRef.current = false;
+          
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+          }
+          
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current) {
+              advanceAfterUserLine();
+            }
+          }, 20);
         }
-      }, 20);
+      }, 1500);
     }
   }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
 
-  // Reset the advanced-for-line tracker when line changes
   useEffect(() => {
     if (currentLine?.id !== advancedForLineRef.current) {
       advancedForLineRef.current = null;
+      matchReachedRef.current = false;
+      if (matchGraceTimeoutRef.current) {
+        clearTimeout(matchGraceTimeoutRef.current);
+        matchGraceTimeoutRef.current = null;
+      }
     }
   }, [currentLine?.id]);
 
@@ -444,6 +468,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
     
     waitingForUserRef.current = true;
+    matchReachedRef.current = false;
     setIsUserTurn(true);
     setUserTranscript("");
     speechRecognition.resetAccumulated();
@@ -451,6 +476,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (autoAdvanceTimeoutRef.current) {
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
+    }
+    if (matchGraceTimeoutRef.current) {
+      clearTimeout(matchGraceTimeoutRef.current);
+      matchGraceTimeoutRef.current = null;
     }
     
     if (speechRecognition.available && !micBlocked && micEnabled) {

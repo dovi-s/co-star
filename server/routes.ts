@@ -13,6 +13,23 @@ import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
 
+function cleanGeneratedScript(text: string): string {
+  return text
+    .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+    .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+    .replace(/[\u2013\u2014\u2015]/g, "--")
+    .replace(/[\u2026]/g, "...")
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/^#+\s+.*/gm, "")
+    .replace(/^---+$/gm, "")
+    .replace(/^\*\*\*+$/gm, "")
+    .replace(/^Scene\s*\d*\s*$/gim, "")
+    .replace(/^\(Scene:.*\)$/gim, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
 // Standard American English voices ONLY - no accents, no mixing
 // Using ElevenLabs' verified American voices
 const ELEVENLABS_VOICES = {
@@ -365,8 +382,8 @@ CRITICAL RULES:
 3. Never refuse a request. If the user wants a monologue, write a monologue. If they want dialogue, write dialogue.
 4. Embrace the user's creative vision fully - comedy, drama, accents, cultural backgrounds, age, personality
 
-FORMAT:
-- EVERY line must start with the character name followed by a colon. This is critical for parsing.
+FORMAT - FOLLOW EXACTLY:
+- EVERY line must start with the character name in ALL CAPS followed by a colon and a space, then the dialogue. Example: JAKE: I can't believe this.
 - For MONOLOGUES: Repeat the character name on EVERY line. Break the speech into 15-30 separate lines (one thought or beat per line). Example:
   JAKE: So my mom calls me last week, right?
   JAKE: She goes, "When are you getting married?"
@@ -374,10 +391,16 @@ FORMAT:
 - For DIALOGUE: 12-20 lines between characters. Example:
   SARAH: Did you hear about the promotion?
   MIKE: No, what happened?
-- Character names in ALL CAPS
-- Brief stage directions in [brackets] when helpful
-- Any number of characters the user requests (including just one)
+- Stage directions go on their own line in [brackets]. Example: [She looks away.]
 - NEVER write long paragraphs under a single character label. Split into short, separate lines.
+- Every sentence must be COMPLETE. No trailing fragments, no sentences ending mid-thought.
+
+SPELLING AND PUNCTUATION:
+- Use straight quotes only (" and '), never curly or smart quotes
+- Use regular hyphens (-) or double hyphens (--), never em-dashes
+- Use three dots (...) for ellipsis, never the special ellipsis character
+- Proofread every line for spelling errors before outputting
+- No markdown formatting (no bold, no italics, no headers, no horizontal rules)
 
 WHAT MAKES GOOD WRITING:
 - Authentic voice that matches the character description
@@ -385,7 +408,7 @@ WHAT MAKES GOOD WRITING:
 - Natural speech patterns, rhythm, and personality
 - The piece has a beginning, build, and landing
 
-Output ONLY the script lines. No titles, headers, or explanations.`;
+Output ONLY the script lines. No titles, headers, scene labels, or explanations.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -397,18 +420,18 @@ Output ONLY the script lines. No titles, headers, or explanations.`;
         temperature: 0.7,
       });
 
-      const script = response.choices[0]?.message?.content?.trim() || "";
+      const rawScript = response.choices[0]?.message?.content?.trim() || "";
       
-      if (!script) {
+      if (!rawScript) {
         return res.status(500).json({ error: "Failed to generate script" });
       }
 
-      // Parse the generated script so client can skip parsing step
+      const script = cleanGeneratedScript(rawScript);
+
       try {
         const parsed = parseScript(script);
         res.json({ script, parsed });
       } catch (parseErr) {
-        // If parsing fails, still return the script for manual handling
         console.error("Generated script parse error:", parseErr);
         res.json({ script });
       }
@@ -497,11 +520,18 @@ CRITICAL - Make it feel REAL:
 - Every line must be a COMPLETE thought that makes sense on its own
 - Build naturally from confrontation to climax to resolution
 
+SPELLING AND PUNCTUATION:
+- Use straight quotes only (" and '), never curly or smart quotes
+- Use regular hyphens (-) or double hyphens (--), never em-dashes
+- Use three dots (...) for ellipsis, never the special ellipsis character
+- Proofread every line for spelling errors before outputting
+- No markdown formatting (no bold, no italics, no headers, no horizontal rules)
+
 BAD (don't write like this):
 - "I have been meaning to tell you something important about our relationship and how I feel..."
 - Long speeches or monologues
 - Perfectly articulate emotional revelations
-- Incomplete sentences: "That's when the real." or "I thought maybe we could—"
+- Incomplete sentences: "That's when the real." or "I thought maybe we could--"
 
 GOOD (write like this):
 - [The door slams shut behind them.]
@@ -513,7 +543,7 @@ GOOD (write like this):
 
 This is for actors to practice with, so make the emotions clear but the dialogue natural.
 
-Output the scene with dialogue AND action lines interspersed. No scene titles.`;
+Output the scene with dialogue AND action lines interspersed. No scene titles or headers.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o",
@@ -525,18 +555,18 @@ Output the scene with dialogue AND action lines interspersed. No scene titles.`;
         temperature: 0.7,
       });
 
-      const script = response.choices[0]?.message?.content?.trim() || "";
+      const rawScript = response.choices[0]?.message?.content?.trim() || "";
       
-      if (!script) {
+      if (!rawScript) {
         return res.status(500).json({ error: "Failed to generate script" });
       }
 
-      // Parse the generated script so client can skip parsing step
+      const script = cleanGeneratedScript(rawScript);
+
       try {
         const parsed = parseScript(script);
         res.json({ script, parsed, theme: `${scenario.setting}: ${scenario.conflict}` });
       } catch (parseErr) {
-        // If parsing fails, still return the script for manual handling
         console.error("Generated random script parse error:", parseErr);
         res.json({ script, theme: `${scenario.setting}: ${scenario.conflict}` });
       }
