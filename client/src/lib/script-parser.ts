@@ -1387,6 +1387,68 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
   return { cleanText, directions };
 }
 
+function inferDirectionFromText(text: string): string[] {
+  const inferred: string[] = [];
+  const words = text.split(/\s+/);
+  
+  const capsWords = words.filter(w => {
+    const cleaned = w.replace(/[^A-Za-z]/g, "");
+    return cleaned.length >= 2 && cleaned === cleaned.toUpperCase() && /[A-Z]{2,}/.test(cleaned);
+  });
+  const capsRatio = words.length > 0 ? capsWords.length / words.length : 0;
+  if (capsRatio > 0.4 && capsWords.length >= 2) {
+    inferred.push("yelling");
+  }
+  
+  const lower = text.toLowerCase();
+
+  const hasPositiveCues = /\b(yes|love|amazing|wonderful|great|congratulat|happy|proud|can't wait|beautiful|incredible|awesome|perfect|thank|welcome)\b/.test(lower);
+  const hasNegativeCues = /\b(hate|kill|die|shut up|get out|leave|stop it|damn|hell|never|worst)\b/.test(lower);
+
+  if (inferred.includes("yelling") && !hasNegativeCues) {
+    if (hasPositiveCues) {
+      inferred.push("excited");
+    }
+  }
+
+  if (/\b(i'm crying|i'm gonna cry|crying|tears|sobbing|weeping|sniffles?|teary)\b/.test(lower)) {
+    inferred.push("tearful");
+  }
+  if (/\b(laughing|laughs?|lmao|haha|hilarious|cracking up|losing it|burst.* into laughter)\b/.test(lower)) {
+    inferred.push("laughing");
+  }
+  if (/\b(scream|screaming|screams|screamed|howl|howling)\b/.test(lower)) {
+    if (!inferred.includes("yelling")) inferred.push("yelling");
+  }
+  if (/\b(whisper|whispering|whispers|hushed|quietly|under .* breath)\b/.test(lower)) {
+    inferred.push("whispering");
+  }
+  if (/\b(oh my god|unbelievable|insane|can't believe|are you serious|no way)\b/.test(lower) && /!/.test(text)) {
+    if (!inferred.includes("excited")) inferred.push("excited");
+  }
+  if (/\b(i love you|so proud|deserve this|couldn't have done it without)\b/.test(lower)) {
+    inferred.push("warm");
+  }
+  if (/\b(calm down|settle down|relax|easy|shh)\b/.test(lower)) {
+    inferred.push("calming");
+  }
+  
+  if (inferred.includes("tearful") && inferred.includes("yelling") && !hasNegativeCues) {
+    if (!inferred.includes("excited")) inferred.push("excited");
+  }
+
+  const exclamationCount = (text.match(/!/g) || []).length;
+  const questionCount = (text.match(/\?/g) || []).length;
+  if (exclamationCount >= 3 && inferred.length === 0) {
+    inferred.push("emphatic");
+  }
+  if (questionCount >= 2 && exclamationCount >= 1 && inferred.length === 0) {
+    inferred.push("incredulous");
+  }
+
+  return inferred;
+}
+
 // Patterns that indicate camera/action directions (not dialogue)
 // BE CONSERVATIVE - only catch obvious camera/technical directions
 const CAMERA_ACTION_PATTERNS = [
@@ -1774,8 +1836,9 @@ export function parseScript(rawText: string): ParsedScript {
         const role = roles.get(pendingCharacter)!;
         role.lineCount++;
         
-        const direction = directions.join("; ");
-        // Direction is already validated during extraction - just check it's not empty
+        const inferred = inferDirectionFromText(cleanText);
+        const allDirections = [...directions, ...inferred.filter(d => !directions.some(existing => existing.toLowerCase().includes(d.toLowerCase())))];
+        const direction = allDirections.join("; ");
         const validDirection = direction && direction.length > 0 ? direction : undefined;
         const scriptLine: ScriptLine = {
           id: generateId(),
@@ -1784,7 +1847,7 @@ export function parseScript(rawText: string): ParsedScript {
           roleName: pendingCharacter,
           text: cleanText,
           direction: validDirection,
-          context: nextLineContext, // Use context saved from before this dialogue
+          context: nextLineContext,
           isBookmarked: false,
           emotionHint: detectEmotion(cleanText, direction),
         };

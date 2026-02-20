@@ -60,16 +60,18 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   const dir = (direction || "").toLowerCase();
   const txt = text.toLowerCase();
 
-  if (/whisper|quietly|softly|under.?breath|hushed|murmur/i.test(dir)) return "whisper";
-  if (/angry|furious|rage|yelling|shouting|snapping|explosive|livid/i.test(dir)) return "angry";
-  if (/urgent|desperate|panicked|frantic|alarmed|hurried/i.test(dir)) return "urgent";
+  if (/whisper|whispering|quietly|softly|under.?breath|hushed|murmur/i.test(dir)) return "whisper";
+  if (/excited|thrilled|ecstatic|elated|enthusiastic|giddy|emphatic/i.test(dir)) return "excited";
+  if (/angry|furious|rage|snapping|explosive|livid/i.test(dir)) return "angry";
+  if (/yelling|shouting/i.test(dir) && !/excited|happy|laughing|warm/i.test(dir)) return "angry";
+  if (/yelling|shouting/i.test(dir)) return "excited";
+  if (/urgent|desperate|panicked|frantic|alarmed|hurried|incredulous/i.test(dir)) return "urgent";
   if (/scared|terrified|frightened|fearful|trembling|shaking/i.test(dir)) return "fearful";
-  if (/excited|thrilled|ecstatic|elated|enthusiastic|giddy/i.test(dir)) return "excited";
   if (/happy|laughing|joyful|smiling|cheerful|beaming|delighted/i.test(dir)) return "happy";
   if (/sad|crying|tearful|grief|mourning|broken|devastated|sobbing/i.test(dir)) return "sad";
   if (/sarcastic|dry|ironic|mocking|sardonic|wry/i.test(dir)) return "sarcastic";
 
-  if (/calm|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) return "neutral";
+  if (/calm|calming|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) return "neutral";
   if (/cold|stern|firm|sharp|bitter|dismissive|flat/i.test(dir)) return "neutral";
   if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) return "neutral";
 
