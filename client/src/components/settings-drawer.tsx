@@ -367,6 +367,18 @@ export function SettingsDrawer({
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
+
+              <div className="pt-6 pb-4">
+                <Button
+                  variant="ghost"
+                  size="lg"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setIsOpen(false)}
+                  data-testid="button-close-settings"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
         </div>
