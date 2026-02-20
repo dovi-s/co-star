@@ -38,6 +38,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const [isCleaning, setIsCleaning] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
+  const [isEditingScript, setIsEditingScript] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
@@ -572,15 +573,68 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
         onDragLeave={() => setIsDragging(false)}
       >
-        <Textarea
-          ref={textareaRef}
-          id="script-text"
-          placeholder="SARAH: I can't believe you're leaving..."
-          value={script}
-          onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
-          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
-          data-testid="textarea-script"
-        />
+        {script && !isEditingScript ? (
+          <div
+            className="min-h-[280px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text"
+            data-testid="script-preview"
+          >
+            {(() => {
+              const lines = script.split('\n');
+              const elements: JSX.Element[] = [];
+              let lastWasDialogue = false;
+
+              for (let i = 0; i < lines.length; i++) {
+                const trimmed = lines[i].trim();
+                if (!trimmed) continue;
+
+                const colonMatch = trimmed.match(/^([A-Z][A-Z\s'.\-()]{0,30}?)(?:\s*[:.])\s*(.*)/);
+                const isStageDirection = /^[\[(]/.test(trimmed);
+                const isSceneHeader = /^(?:SCENE|ACT|INT\.|EXT\.)/i.test(trimmed);
+
+                if (isSceneHeader) {
+                  if (elements.length > 0) elements.push(<div key={`sp-${i}`} className="h-4" />);
+                  elements.push(
+                    <div key={i} className="leading-[1.85] text-foreground/50 font-semibold text-[12px] uppercase tracking-wider">{trimmed}</div>
+                  );
+                  lastWasDialogue = false;
+                } else if (colonMatch) {
+                  const charName = colonMatch[1].trim();
+                  const dialogue = colonMatch[2];
+                  if (lastWasDialogue) elements.push(<div key={`sp-${i}`} className="h-3" />);
+                  elements.push(
+                    <div key={i} className="leading-[1.85]">
+                      <span className="font-semibold text-foreground">{charName}:</span>{" "}
+                      <span className="text-foreground/75">{dialogue}</span>
+                    </div>
+                  );
+                  lastWasDialogue = true;
+                } else if (isStageDirection) {
+                  elements.push(
+                    <div key={i} className="leading-[1.85] text-foreground/40 italic text-[12.5px]">{trimmed}</div>
+                  );
+                  lastWasDialogue = false;
+                } else {
+                  elements.push(
+                    <div key={i} className="leading-[1.85] text-foreground/60">{trimmed}</div>
+                  );
+                  lastWasDialogue = false;
+                }
+              }
+              return elements;
+            })()}
+          </div>
+        ) : (
+          <Textarea
+            ref={textareaRef}
+            id="script-text"
+            placeholder="SARAH: I can't believe you're leaving..."
+            value={script}
+            onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
+            onBlur={() => { if (script.trim()) setIsEditingScript(false); }}
+            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
+            data-testid="textarea-script"
+          />
+        )}
 
         {isParsingFile && parseProgress && (
           <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl glass-surface-heavy z-10" data-testid="overlay-parse-progress">
@@ -795,7 +849,19 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           {" · "}
           <button
             type="button"
-            onClick={() => setScript("")}
+            onClick={() => {
+              setIsEditingScript(true);
+              setTimeout(() => textareaRef.current?.focus(), 0);
+            }}
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+            data-testid="button-edit-script"
+          >
+            Edit
+          </button>
+          {" · "}
+          <button
+            type="button"
+            onClick={() => { setScript(""); setIsEditingScript(false); }}
             className="underline underline-offset-2 hover:text-foreground transition-colors"
             data-testid="button-clear-script"
           >
