@@ -1355,8 +1355,34 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
     return match;
   });
   
+  // Clean orphaned brackets/braces that remain after direction extraction
+  cleanText = cleanText.replace(/^\]+\s*/, '');
+  cleanText = cleanText.replace(/\s*\]+\s*$/, '');
+  cleanText = cleanText.replace(/\s*\]+\s*/g, ' ');
+  cleanText = cleanText.replace(/^\}+\s*/, '');
+  cleanText = cleanText.replace(/\s*\}+\s*$/, '');
+
   // Clean up multiple spaces
   cleanText = cleanText.replace(/\s+/g, " ").trim();
+
+  // Fix truncated words at the end (1-2 chars after a space, not a real word)
+  // e.g. "You think I can ju" -> "You think I can"
+  if (cleanText.length > 10) {
+    const truncatedEnd = cleanText.match(/\s+[a-zA-Z]{1,2}$/);
+    if (truncatedEnd) {
+      const fragment = truncatedEnd[0].trim().toLowerCase();
+      const validShortWords = new Set([
+        "i", "a", "an", "am", "as", "at", "be", "by", "do", "go", "ha", "he",
+        "if", "in", "is", "it", "me", "my", "no", "of", "oh", "ok", "on", "or",
+        "so", "to", "up", "us", "we", "ah", "eh", "hi", "hm", "ow", "ox", "um",
+      ]);
+      if (!validShortWords.has(fragment)) {
+        cleanText = cleanText.substring(0, cleanText.length - truncatedEnd[0].length).trim();
+        // Also clean trailing punctuation that's now dangling
+        cleanText = cleanText.replace(/[,;:\s]+$/, '').trim();
+      }
+    }
+  }
   
   return { cleanText, directions };
 }
