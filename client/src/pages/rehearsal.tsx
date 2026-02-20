@@ -216,15 +216,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     speechRecognition.onEnd(() => {
       console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
-      // Speech recognition ended - auto-restart if still user's turn
       if (waitingForUserRef.current && isPlayingRef.current) {
-        console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting...");
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const restartDelay = isMobile ? 400 : 150;
+        console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting in", restartDelay, "ms");
         setTimeout(() => {
           if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
             console.log("[Rehearsal] Restarting speech recognition");
             speechRecognition.start();
           }
-        }, 150);
+        }, restartDelay);
       }
     });
 
@@ -483,7 +484,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     if (speechRecognition.available && !micBlocked && micEnabled) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const micDelay = isIOS ? 300 : 30;
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const micDelay = isIOS ? 500 : (isAndroid ? 400 : 50);
+      console.log("[Rehearsal] Mic delay:", micDelay, "ms, iOS:", isIOS, "Android:", isAndroid);
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
@@ -625,7 +628,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const ttsText = addBreathingPauses(line.text);
 
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const speakDelay = isIOS ? 150 : 30;
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const speakDelay = isIOS ? 200 : (isAndroid ? 150 : 30);
     
     speakTimeoutRef.current = setTimeout(() => {
       speakTimeoutRef.current = null;

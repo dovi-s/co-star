@@ -26,6 +26,8 @@ class SpeechRecognitionEngine {
   private accumulatedTranscript = "";
   private finalizedSegments: string[] = [];
   private intentionalStop = false;
+  private isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  private noSpeechRestartCount = 0;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -59,7 +61,7 @@ class SpeechRecognitionEngine {
 
         this.recognition.onend = () => {
           const wasIntentional = this.intentionalStop;
-          console.log("[Speech] Recognition ended, intentional:", wasIntentional, "had speech:", this.hasReceivedSpeech, "accumulated:", this.accumulatedTranscript.length, "chars");
+          console.log("[Speech] Recognition ended, intentional:", wasIntentional, "had speech:", this.hasReceivedSpeech, "accumulated:", this.accumulatedTranscript.length, "chars", "mobile:", this.isMobile);
           this.isListening = false;
           this.intentionalStop = false;
           this.clearSilenceTimeout();
@@ -85,8 +87,46 @@ class SpeechRecognitionEngine {
         };
 
         this.recognition.onerror = (event: any) => {
-          console.log("[Speech] Error:", event.error);
-          if (event.error !== "no-speech" && event.error !== "aborted") {
+          console.log("[Speech] Error:", event.error, "mobile:", this.isMobile);
+          
+          if (event.error === "no-speech") {
+            this.isListening = false;
+            this.clearSilenceTimeout();
+            this.clearMaxListenTimeout();
+            this.setState("idle");
+            
+            this.noSpeechRestartCount++;
+            if (this.noSpeechRestartCount < 5) {
+              console.log("[Speech] no-speech on mobile, auto-restart attempt:", this.noSpeechRestartCount);
+              const delay = this.isMobile ? 300 : 150;
+              setTimeout(() => {
+                if (!this.isListening) {
+                  this.startInternal();
+                }
+              }, delay);
+            } else {
+              console.log("[Speech] Too many no-speech restarts, giving up");
+              this.noSpeechRestartCount = 0;
+              this.onEndCallback?.();
+            }
+            return;
+          }
+          
+          if (event.error === "network") {
+            this.isListening = false;
+            this.clearSilenceTimeout();
+            this.clearMaxListenTimeout();
+            this.setState("idle");
+            console.log("[Speech] Network error, attempting restart");
+            setTimeout(() => {
+              if (!this.isListening) {
+                this.startInternal();
+              }
+            }, 500);
+            return;
+          }
+          
+          if (event.error !== "aborted") {
             this.onErrorCallback?.(event.error);
           }
           this.isListening = false;
@@ -97,6 +137,7 @@ class SpeechRecognitionEngine {
 
         this.recognition.onresult = (event: any) => {
           this.hasReceivedSpeech = true;
+          this.noSpeechRestartCount = 0;
           
           const result = event.results[event.results.length - 1];
           const transcript = result[0].transcript.trim();
@@ -209,6 +250,21 @@ class SpeechRecognitionEngine {
     return this.accumulatedTranscript;
   }
 
+  private startInternal(): boolean {
+    if (!this.recognition) return false;
+    if (this.isListening) return true;
+    try {
+      this.hasReceivedSpeech = false;
+      this.lastTranscript = "";
+      this.recognition.start();
+      console.log("[Speech] Starting recognition (internal)");
+      return true;
+    } catch (e) {
+      console.error("[Speech] Failed to start:", e);
+      return false;
+    }
+  }
+
   start(): boolean {
     if (!this.recognition) {
       console.log("[Speech] Recognition not available");
@@ -220,16 +276,8 @@ class SpeechRecognitionEngine {
       return true;
     }
 
-    try {
-      this.hasReceivedSpeech = false;
-      this.lastTranscript = "";
-      this.recognition.start();
-      console.log("[Speech] Starting recognition");
-      return true;
-    } catch (e) {
-      console.error("[Speech] Failed to start:", e);
-      return false;
-    }
+    this.noSpeechRestartCount = 0;
+    return this.startInternal();
   }
 
   stop() {

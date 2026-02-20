@@ -257,20 +257,28 @@ class TTSEngine {
       }
       
       const audio = this.persistentAudio;
+      audio.setAttribute('playsinline', 'true');
+      audio.setAttribute('webkit-playsinline', 'true');
       
       if (!this.audioUnlocked) {
         audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
         audio.volume = 0.01;
         audio.load();
-        audio.play().then(() => {
-          audio.pause();
-          audio.volume = 1;
-          audio.currentTime = 0;
-          this.audioUnlocked = true;
-          console.log("[TTS] Persistent audio element unlocked for iOS");
-        }).catch(() => {
-          console.log("[TTS] Audio unlock failed (expected if not in gesture)");
-        });
+        
+        const playPromise = audio.play();
+        if (playPromise) {
+          playPromise.then(() => {
+            audio.pause();
+            audio.volume = 1;
+            audio.currentTime = 0;
+            audio.src = '';
+            audio.load();
+            this.audioUnlocked = true;
+            console.log("[TTS] Persistent audio element unlocked");
+          }).catch(() => {
+            console.log("[TTS] Audio unlock failed (expected if not in gesture)");
+          });
+        }
       }
 
       if (this.audioContext?.state === 'suspended') {
@@ -510,6 +518,8 @@ class TTSEngine {
         this.persistentAudio = audio;
       }
       audio.preload = "auto";
+      audio.setAttribute('playsinline', 'true');
+      audio.setAttribute('webkit-playsinline', 'true');
       this.currentAudio = audio;
       
       const targetSpeed = options.playbackSpeed ?? 1.0;
