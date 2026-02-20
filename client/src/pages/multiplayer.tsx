@@ -744,7 +744,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     }
   }, [multiplayer.room]);
 
-  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean, direction?: string, voicePreset?: string) => {
+  const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean, direction?: string, voicePreset?: string, prevText?: string, nxtText?: string) => {
     ttsEngine.stop();
     
     if (safetyTimeoutRef.current) {
@@ -838,6 +838,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         emotion,
         preset,
         direction: direction || "",
+        previousText: prevText || "",
+        nextText: nxtText || "",
         onStart: () => {
           prefetchNextMultiplayerAILine();
         },
@@ -944,7 +946,10 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       const roleIndex = room.roles.findIndex(r => r.id === lineRoleId);
       const role = room.roles.find(r => r.id === lineRoleId);
       console.log('[Multiplayer] Starting TTS for AI line:', currentLine.roleName, roleIndex, 'isHost:', multiplayer.isHost);
-      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost, currentLine.direction, role?.voicePreset);
+      const scene = room.scenes[room.currentSceneIndex];
+      const prevLineData = room.currentLineIndex > 0 ? scene?.lines[room.currentLineIndex - 1] : null;
+      const nextLineData = scene && room.currentLineIndex + 1 < scene.lines.length ? scene.lines[room.currentLineIndex + 1] : null;
+      speakAiLine(currentLine.id, currentLine.text, currentLine.roleName, roleIndex >= 0 ? roleIndex : 0, multiplayer.isHost, currentLine.direction, role?.voicePreset, prevLineData?.text, nextLineData?.text);
     } else if (isRoleAssignedToParticipant) {
       // This is a human player's turn - check if it's MY turn
       const assignedParticipant = room.participants.find(p => p.roleId === lineRoleId);

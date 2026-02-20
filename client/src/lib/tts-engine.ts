@@ -69,9 +69,13 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   if (/sad|crying|tearful|grief|mourning|broken|devastated|sobbing/i.test(dir)) return "sad";
   if (/sarcastic|dry|ironic|mocking|sardonic|wry/i.test(dir)) return "sarcastic";
 
-  if (/!{2,}/.test(text) || /\b(stop|no|don't|shut up|get out|how dare)\b/i.test(txt)) return "angry";
+  if (/calm|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) return "neutral";
+  if (/cold|stern|firm|sharp|bitter|dismissive|flat/i.test(dir)) return "neutral";
+  if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) return "neutral";
+
+  if (/!{2,}/.test(text)) return "angry";
+  if (/\b(stop|shut up|get out|how dare)\b/i.test(txt) && /!/.test(text)) return "angry";
   if (/\?{2,}/.test(text)) return "urgent";
-  if (/\.{3,}|—/.test(text)) return "sad";
 
   return "neutral";
 }
@@ -154,6 +158,8 @@ interface SpeakOptions {
   preset?: VoicePreset;
   direction?: string;
   playbackSpeed?: number; // 0.5 to 1.5
+  previousText?: string;
+  nextText?: string;
   onStart?: (duration: number, wordCount: number) => void;
 }
 
@@ -381,6 +387,8 @@ class TTSEngine {
         preset: options.preset || "natural",
         direction: options.direction || "",
         playbackSpeed: options.playbackSpeed ?? 1.0,
+        previousText: options.previousText || "",
+        nextText: options.nextText || "",
       }),
       signal: controller.signal,
     })
@@ -478,6 +486,8 @@ class TTSEngine {
             preset: options.preset || "natural",
             direction: options.direction || "",
             playbackSpeed: options.playbackSpeed ?? 1.0,
+            previousText: options.previousText || "",
+            nextText: options.nextText || "",
           }),
           signal: controller.signal,
         });

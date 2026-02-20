@@ -578,6 +578,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const emotion = line.emotionHint || detectEmotion(line.text, line.direction);
       const preset = role?.voicePreset || "natural";
       
+      const prevLine = i > 0 ? scene.lines[i - 1] : null;
+      const nextLine = i + 1 < scene.lines.length ? scene.lines[i + 1] : null;
       ttsEngine.prefetch(line.text, {
         characterName: role?.name || "Character",
         characterIndex: roleIndex >= 0 ? roleIndex : 0,
@@ -585,6 +587,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         preset,
         direction: line.direction || "",
         playbackSpeed: session.playbackSpeed ?? 1.0,
+        previousText: prevLine?.text || "",
+        nextText: nextLine?.text || "",
       });
       break;
     }
@@ -734,6 +738,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         preset,
         direction: line.direction || "",
         playbackSpeed: session.playbackSpeed ?? 1.0,
+        previousText: prev?.text || "",
+        nextText: getNextLine()?.text || "",
         onStart: (duration: number, wordCount: number) => {
           if (wordCount > 0 && duration > 0) {
             const msPerWord = (duration * 1000) / wordCount;

@@ -260,7 +260,7 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   return voiceType;
 }
 
-function getVoiceSettings(emotion: string, preset: string) {
+function getVoiceSettings(emotion: string, preset: string, text: string = "", direction: string = "") {
   let stability = 0.55;
   let similarityBoost = 0.80;
   let style = 0.15;
@@ -293,8 +293,8 @@ function getVoiceSettings(emotion: string, preset: string) {
       style = 0.25;
       break;
     default:
-      stability = 0.55;
-      style = 0.15;
+      stability = 0.60;
+      style = 0.12;
   }
 
   if (preset === "theatrical") {
@@ -303,6 +303,30 @@ function getVoiceSettings(emotion: string, preset: string) {
   } else if (preset === "deadpan") {
     stability = Math.min(0.80, stability + 0.20);
     style = Math.max(0, style - 0.10);
+  }
+
+  const dir = direction.toLowerCase();
+  if (/calm|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) {
+    stability = Math.min(0.80, stability + 0.10);
+    style = Math.max(0, style - 0.05);
+  } else if (/cold|stern|firm|sharp|bitter|dismissive/i.test(dir)) {
+    stability = Math.min(0.75, stability + 0.10);
+    style = Math.min(0.40, style + 0.10);
+  } else if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) {
+    stability = Math.max(0.40, stability - 0.05);
+    style = Math.max(0, style - 0.05);
+  } else if (/pleading|begging|imploring/i.test(dir)) {
+    stability = Math.max(0.40, stability - 0.05);
+    style = Math.min(0.40, style + 0.10);
+  }
+
+  const trimmedText = text.trim();
+  const wordCount = trimmedText.length > 0 ? trimmedText.split(/\s+/).length : 0;
+  if (wordCount >= 1 && wordCount <= 3) {
+    stability = Math.min(0.85, stability + 0.15);
+    style = Math.max(0, style - 0.10);
+  } else if (wordCount >= 4 && wordCount <= 6) {
+    stability = Math.min(0.75, stability + 0.05);
   }
 
   return {
@@ -334,7 +358,7 @@ export async function registerRoutes(
 
   app.post("/api/tts/speak", async (req: Request, res: Response) => {
     try {
-      const { text, characterName, characterIndex, emotion, preset, direction } = req.body;
+      const { text, characterName, characterIndex, emotion, preset, direction, previousText, nextText } = req.body;
 
       if (!text || typeof text !== "string") {
         return res.status(400).json({ error: "Text is required" });
@@ -358,18 +382,27 @@ export async function registerRoutes(
       
       const voiceType = assignVoiceToCharacter(characterName || "Character", characterIndex || 0);
       const voiceId = ELEVENLABS_VOICES[voiceType];
-      const voiceSettings = getVoiceSettings(emotion || "neutral", preset || "natural");
+      const voiceSettings = getVoiceSettings(emotion || "neutral", preset || "natural", cleanedText, direction || "");
+
+      const prevText = typeof previousText === "string" ? previousText.slice(0, 200) : "";
+      const nxtText = typeof nextText === "string" ? nextText.slice(0, 200) : "";
+
+      console.log(`[TTS] ${characterName}: "${cleanedText.substring(0, 40)}" emotion=${emotion} stability=${voiceSettings.stability} style=${voiceSettings.style}${direction ? ` dir="${direction}"` : ""}`);
 
       const models = ["eleven_flash_v2_5", "eleven_turbo_v2_5", "eleven_multilingual_v2"];
       let audioBuffer: Buffer | null = null;
       
       for (const modelId of models) {
         try {
-          const audioStream = await client.textToSpeech.convert(voiceId, {
+          const convertParams: any = {
             text: cleanedText,
             modelId,
             voiceSettings: voiceSettings,
-          });
+          };
+          if (prevText) convertParams.previousText = prevText;
+          if (nxtText) convertParams.nextText = nxtText;
+
+          const audioStream = await client.textToSpeech.convert(voiceId, convertParams);
 
           const chunks: Buffer[] = [];
           const reader = audioStream.getReader();
