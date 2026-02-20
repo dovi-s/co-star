@@ -17,12 +17,8 @@ interface HomePageProps {
 
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePageProps) {
   const { session, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
-  const [step, setStep] = useState<Step>(() => {
-    if (session && session.scenes?.length > 0 && !session.userRoleId) {
-      return "role-select";
-    }
-    return "import";
-  });
+  const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
+  const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
   const lastRawScriptRef = useRef("");
 
