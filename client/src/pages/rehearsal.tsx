@@ -15,7 +15,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, Eye, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -1295,14 +1295,43 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         height={720}
       />
       {camera.isEnabled && (
-        <VideoBackground
-          stream={camera.stream}
-          videoRef={camera.videoRef}
-          canvasRef={camera.canvasRef}
-          isRecording={camera.isRecording}
-          dimmed={cameraFocus === 'script'}
-          onTap={() => setCameraFocus(prev => prev === 'script' ? 'face' : 'script')}
-        />
+        <>
+          <VideoBackground
+            stream={camera.stream}
+            videoRef={camera.videoRef}
+            canvasRef={camera.canvasRef}
+            isRecording={camera.isRecording}
+            dimmed={cameraFocus === 'script'}
+          />
+          {cameraFocus === 'face' && (
+            <button
+              className="fixed inset-0 z-50"
+              onClick={() => setCameraFocus('script')}
+              aria-label="Show script"
+              data-testid="button-show-script"
+            />
+          )}
+          <button
+            className={cn(
+              "fixed bottom-36 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-300",
+              "bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/60 active:scale-95"
+            )}
+            onClick={() => setCameraFocus(prev => prev === 'script' ? 'face' : 'script')}
+            data-testid="button-camera-focus-toggle"
+          >
+            {cameraFocus === 'script' ? (
+              <>
+                <Eye className="w-3.5 h-3.5" />
+                <span>Face focus</span>
+              </>
+            ) : (
+              <>
+                <FileText className="w-3.5 h-3.5" />
+                <span>Script focus</span>
+              </>
+            )}
+          </button>
+        </>
       )}
       
       <div className={cn(
