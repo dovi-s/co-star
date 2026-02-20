@@ -1,0 +1,12 @@
+<svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .main { fill: #0F172A; }
+    .companion { fill: #0F172A; opacity: 0.55; }
+    @media (prefers-color-scheme: dark) {
+      .main { fill: #E6EDF3; }
+      .companion { fill: #E6EDF3; }
+    }
+  </style>
+  <path class="main" d="M21 7 Q25 17 35 21 Q25 25 21 35 Q17 25 7 21 Q17 17 21 7 Z"/>
+  <path class="companion" d="M35 29.5 Q36.5 33.5 40.5 35 Q36.5 36.5 35 40.5 Q33.5 36.5 29.5 35 Q33.5 33.5 35 29.5 Z"/>
+</svg>
