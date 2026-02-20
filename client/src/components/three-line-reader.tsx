@@ -370,7 +370,7 @@ export function ThreeLineReader({
                   data-testid="button-show-context"
                 >
                   <Film className="w-3 h-3" />
-                  <span>Action</span>
+                  <span>Preceding action</span>
                   {showContext ? (
                     <ChevronUp className="w-3 h-3" />
                   ) : (
