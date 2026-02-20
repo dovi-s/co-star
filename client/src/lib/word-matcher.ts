@@ -1,6 +1,7 @@
 export interface WordMatch {
   word: string;
   matched: boolean;
+  status: 'matched' | 'skipped' | 'ahead';
 }
 
 // Contraction mappings - both directions
@@ -236,7 +237,7 @@ export function matchWords(expectedText: string, spokenText: string): {
   const words: WordMatch[] = expectedWords.map(word => {
     const forms = getWordForms(word);
     const matched = forms.some(form => spokenForms.has(form));
-    return { word, matched };
+    return { word, matched, status: matched ? 'matched' as const : 'ahead' as const };
   });
   
   const matchedCount = words.filter(w => w.matched).length;
@@ -261,41 +262,88 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
   totalWords: number;
   percentMatched: number;
   isComplete: boolean;
+  highWaterMark: number;
 } {
   const expectedWords = expectedText.split(/\s+/).filter(w => w.length > 0);
-  const spokenNormalized = spokenText.toLowerCase();
-  
-  let matchedUpTo = 0;
-  
-  for (let i = 0; i < expectedWords.length; i++) {
-    const expectedNorm = normalizeWord(expectedWords[i]);
+  const spokenWords = spokenText.split(/\s+/).filter(w => w.length > 0);
+  const totalWords = expectedWords.length;
+
+  if (spokenWords.length === 0 || totalWords === 0) {
+    return {
+      words: expectedWords.map(word => ({ word, matched: false, status: 'ahead' as const })),
+      matchedCount: 0,
+      totalWords,
+      percentMatched: 0,
+      isComplete: false,
+      highWaterMark: -1,
+    };
+  }
+
+  const spokenForms: Set<string>[] = spokenWords.map(w => {
+    const forms = getWordForms(w);
+    return new Set(forms);
+  });
+
+  const matched = new Array(totalWords).fill(false);
+  let si = 0;
+  let highWaterMark = -1;
+
+  for (let ei = 0; ei < totalWords; ei++) {
+    const expectedNorm = normalizeWord(expectedWords[ei]);
     if (expectedNorm.length === 0) {
-      matchedUpTo = i + 1;
+      matched[ei] = true;
+      highWaterMark = ei;
       continue;
     }
-    
-    if (spokenNormalized.includes(expectedNorm)) {
-      matchedUpTo = i + 1;
+
+    const expectedForms = getWordForms(expectedWords[ei]);
+    let found = false;
+
+    const lookahead = Math.min(si + 4, spokenWords.length);
+    for (let sj = si; sj < lookahead; sj++) {
+      const isMatch = expectedForms.some(f => spokenForms[sj].has(f));
+      if (isMatch) {
+        matched[ei] = true;
+        highWaterMark = ei;
+        si = sj + 1;
+        found = true;
+        break;
+      }
+    }
+
+    if (!found && si < spokenWords.length) {
+      for (let sj = si; sj < spokenWords.length; sj++) {
+        const isMatch = expectedForms.some(f => spokenForms[sj].has(f));
+        if (isMatch) {
+          matched[ei] = true;
+          highWaterMark = ei;
+          si = sj + 1;
+          break;
+        }
+      }
     }
   }
-  
-  const words: WordMatch[] = expectedWords.map((word, i) => ({
-    word,
-    matched: i < matchedUpTo,
-  }));
-  
-  const matchedCount = matchedUpTo;
-  const totalWords = expectedWords.length;
+
+  const words: WordMatch[] = expectedWords.map((word, i) => {
+    if (matched[i]) {
+      return { word, matched: true, status: 'matched' as const };
+    }
+    if (i <= highWaterMark) {
+      return { word, matched: false, status: 'skipped' as const };
+    }
+    return { word, matched: false, status: 'ahead' as const };
+  });
+
+  const matchedCount = matched.filter(Boolean).length;
   const percentMatched = totalWords > 0 ? (matchedCount / totalWords) * 100 : 0;
-  
-  // Require 80% match for auto-complete, or all words for short lines
   const isComplete = percentMatched >= 80 || (totalWords <= 3 && matchedCount >= totalWords);
-  
+
   return {
     words,
     matchedCount,
     totalWords,
     percentMatched,
     isComplete,
+    highWaterMark,
   };
 }

@@ -3,7 +3,7 @@ import type { ScriptLine, Role, MemorizationMode, Scene } from "@shared/schema";
 import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { matchWords } from "@/lib/word-matcher";
+import { matchWordsSequential } from "@/lib/word-matcher";
 
 // Parse and render text with emphasis formatting
 // Supports _underlined_, *bold*, ALL CAPS, and {stage directions} / (parentheticals)
@@ -160,7 +160,7 @@ export function ThreeLineReader({
 
   const wordMatchResult = useMemo(() => {
     if (!currentLine || !isUserLine || !userTranscript) return null;
-    return matchWords(currentLine.text, userTranscript);
+    return matchWordsSequential(currentLine.text, userTranscript);
   }, [currentLine, isUserLine, userTranscript]);
 
   const renderLine = (
@@ -285,14 +285,22 @@ export function ThreeLineReader({
             >
               {shouldMask && !showHint ? maskedContent?.display : (
                 isCurrent && isUser && wordMatchResult && isListening ? (
-                  // User speaking - highlight matched words (no layout shift)
                   wordMatchResult.words.map((w, i) => (
                     <span
                       key={i}
                       className={cn(
-                        "transition-opacity duration-150",
-                        w.matched ? "opacity-100" : "opacity-50"
+                        "transition-opacity duration-200",
+                        w.status === 'matched' && "opacity-100",
+                        w.status === 'skipped' && "opacity-70",
+                        w.status === 'ahead' && "opacity-40"
                       )}
+                      style={w.status === 'skipped' ? {
+                        textDecorationLine: 'underline',
+                        textDecorationStyle: 'dotted',
+                        textDecorationColor: 'currentColor',
+                        textUnderlineOffset: '4px',
+                        textDecorationThickness: '1.5px',
+                      } : undefined}
                     >
                       {w.word}{i < wordMatchResult.words.length - 1 ? " " : ""}
                     </span>
