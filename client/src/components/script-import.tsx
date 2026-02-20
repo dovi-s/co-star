@@ -578,7 +578,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           placeholder="SARAH: I can't believe you're leaving..."
           value={script}
           onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
-          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13px] rounded-xl bg-transparent leading-relaxed px-4 py-4 placeholder:text-muted-foreground/50 font-mono"
+          className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
           data-testid="textarea-script"
         />
 
