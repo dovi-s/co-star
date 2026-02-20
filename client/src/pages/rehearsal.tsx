@@ -486,8 +486,36 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
   }, [micBlocked, micEnabled, advanceAfterUserLine]);
 
+  const prefetchNextAILine = useCallback(() => {
+    if (!session) return;
+    const scene = session.scenes[session.currentSceneIndex];
+    if (!scene) return;
+    
+    const startIdx = session.currentLineIndex + 1;
+    for (let i = startIdx; i < Math.min(startIdx + 3, scene.lines.length); i++) {
+      const line = scene.lines[i];
+      if (!line || line.roleId === session.userRoleId) continue;
+      
+      const role = getRoleById(line.roleId);
+      const roleIndex = session.roles.findIndex(r => r.id === line.roleId);
+      const emotion = line.emotionHint || detectEmotion(line.text, line.direction);
+      const preset = role?.voicePreset || "natural";
+      
+      ttsEngine.prefetch(line.text, {
+        characterName: role?.name || "Character",
+        characterIndex: roleIndex >= 0 ? roleIndex : 0,
+        emotion,
+        preset,
+        direction: line.direction || "",
+        playbackSpeed: session.playbackSpeed ?? 1.0,
+      });
+      break;
+    }
+  }, [session, getRoleById]);
+
   const stopAllPlayback = useCallback(() => {
     ttsEngine.stop();
+    ttsEngine.clearPrefetchCache();
     speechRecognition.abort();
     waitingForUserRef.current = false;
     setIsUserTurn(false);
@@ -540,6 +568,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (isUser) {
       console.log("[Rehearsal] User's line, starting listening");
       startListeningForUser();
+      prefetchNextAILine();
       return;
     }
 
@@ -624,10 +653,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               }
             }, msPerWord);
           }
+          prefetchNextAILine();
         },
       });
     }, 30);
-  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun]);
+  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun, prefetchNextAILine]);
 
   useEffect(() => {
     const lineKey = session ? `${session.currentSceneIndex}-${session.currentLineIndex}` : null;

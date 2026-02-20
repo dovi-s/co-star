@@ -88,6 +88,13 @@ interface SpeakOptions {
   onStart?: (duration: number, wordCount: number) => void;
 }
 
+interface PrefetchedAudio {
+  blob: Blob;
+  url: string;
+  key: string;
+  timestamp: number;
+}
+
 class TTSEngine {
   private synth: SpeechSynthesis | null = null;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
@@ -103,6 +110,10 @@ class TTSEngine {
   private speakGeneration = 0;
   private browserTTSPollTimer: ReturnType<typeof setInterval> | null = null;
   private audioUnlocked = false;
+  
+  private prefetchCache: Map<string, PrefetchedAudio> = new Map();
+  private prefetchController: AbortController | null = null;
+  private prefetchInFlight: string | null = null;
   
   // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
   private audioContext: AudioContext | null = null;
@@ -226,76 +237,178 @@ class TTSEngine {
     }
   }
 
+  private makePrefetchKey(text: string, options: SpeakOptions): string {
+    const cleanText = stripEmphasisMarkers(text);
+    return `${cleanText}::${options.characterName || ""}::${options.characterIndex || 0}::${options.emotion || "neutral"}`;
+  }
+
+  prefetch(text: string, options: SpeakOptions): void {
+    if (!this.useElevenLabs || !text) return;
+    
+    const key = this.makePrefetchKey(text, options);
+    
+    if (this.prefetchCache.has(key)) {
+      return;
+    }
+    if (this.prefetchInFlight === key) {
+      return;
+    }
+    
+    if (this.prefetchController) {
+      this.prefetchController.abort();
+    }
+    
+    const controller = new AbortController();
+    this.prefetchController = controller;
+    this.prefetchInFlight = key;
+    
+    const cleanText = stripEmphasisMarkers(text);
+    console.log("[TTS Prefetch] Starting for:", options.characterName, cleanText.substring(0, 40));
+    
+    const timeout = setTimeout(() => controller.abort(), 12000);
+    
+    fetch("/api/tts/speak", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text: cleanText,
+        characterName: options.characterName || "Character",
+        characterIndex: options.characterIndex || 0,
+        emotion: options.emotion || "neutral",
+        preset: options.preset || "natural",
+        direction: options.direction || "",
+        playbackSpeed: options.playbackSpeed ?? 1.0,
+      }),
+      signal: controller.signal,
+    })
+    .then(res => {
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error("Prefetch failed");
+      return res.blob();
+    })
+    .then(blob => {
+      if (blob.size === 0) return;
+      const url = URL.createObjectURL(blob);
+      
+      const staleKeys: string[] = [];
+      this.prefetchCache.forEach((cached, oldKey) => {
+        if (oldKey !== key && Date.now() - cached.timestamp > 60000) {
+          URL.revokeObjectURL(cached.url);
+          staleKeys.push(oldKey);
+        }
+      });
+      staleKeys.forEach(k => this.prefetchCache.delete(k));
+      
+      this.prefetchCache.set(key, { blob, url, key, timestamp: Date.now() });
+      console.log("[TTS Prefetch] Cached:", options.characterName, `(${Math.round(blob.size / 1024)}KB)`);
+    })
+    .catch(e => {
+      if (e.name !== "AbortError") {
+        console.log("[TTS Prefetch] Failed:", e.message);
+      }
+    })
+    .finally(() => {
+      clearTimeout(timeout);
+      if (this.prefetchInFlight === key) {
+        this.prefetchInFlight = null;
+      }
+    });
+  }
+
+  clearPrefetchCache(): void {
+    this.prefetchCache.forEach(cached => URL.revokeObjectURL(cached.url));
+    this.prefetchCache.clear();
+    if (this.prefetchController) {
+      this.prefetchController.abort();
+      this.prefetchController = null;
+    }
+    this.prefetchInFlight = null;
+  }
+
+  private consumePrefetched(text: string, options: SpeakOptions): PrefetchedAudio | null {
+    const key = this.makePrefetchKey(text, options);
+    const cached = this.prefetchCache.get(key);
+    if (cached) {
+      this.prefetchCache.delete(key);
+      console.log("[TTS] Using prefetched audio for:", options.characterName);
+      return cached;
+    }
+    return null;
+  }
+
   async speakWithElevenLabs(
     text: string,
     options: SpeakOptions,
     onEnd?: (result: SpeakResult) => void
   ): Promise<boolean> {
     try {
-      console.log("[TTS] Fetching audio for:", options.characterName);
-      
-      // Strip emphasis markers before sending to TTS
       const cleanText = stripEmphasisMarkers(text);
-      
-      // Capture the current generation so we can detect if stop() was called during fetch
       const myGeneration = this.speakGeneration;
       
-      // Abort any previous in-flight fetch
-      if (this.fetchController) {
-        this.fetchController.abort();
-      }
+      const prefetched = this.consumePrefetched(text, options);
+      let audioBlob: Blob;
+      let audioUrl: string;
       
-      // Create a new controller for this request (combines timeout + cancellation)
-      const controller = new AbortController();
-      this.fetchController = controller;
-      const fetchTimeout = setTimeout(() => controller.abort(), 15000);
-      
-      const response = await fetch("/api/tts/speak", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          text: cleanText,
-          characterName: options.characterName || "Character",
-          characterIndex: options.characterIndex || 0,
-          emotion: options.emotion || "neutral",
-          preset: options.preset || "natural",
-          direction: options.direction || "",
-          playbackSpeed: options.playbackSpeed ?? 1.0,
-        }),
-        signal: controller.signal,
-      });
-      
-      clearTimeout(fetchTimeout);
-      
-      // If stop() was called while we were fetching, discard this response
-      if (myGeneration !== this.speakGeneration) {
-        console.log("[TTS] Generation changed during fetch, discarding response");
-        return false;
-      }
-
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        console.log("[TTS] API error:", error);
-        if (error.fallback) {
+      if (prefetched) {
+        audioBlob = prefetched.blob;
+        audioUrl = prefetched.url;
+        console.log("[TTS] Instant play from prefetch cache");
+      } else {
+        console.log("[TTS] Fetching audio for:", options.characterName);
+        
+        if (this.fetchController) {
+          this.fetchController.abort();
+        }
+        
+        const controller = new AbortController();
+        this.fetchController = controller;
+        const fetchTimeout = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch("/api/tts/speak", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: cleanText,
+            characterName: options.characterName || "Character",
+            characterIndex: options.characterIndex || 0,
+            emotion: options.emotion || "neutral",
+            preset: options.preset || "natural",
+            direction: options.direction || "",
+            playbackSpeed: options.playbackSpeed ?? 1.0,
+          }),
+          signal: controller.signal,
+        });
+        
+        clearTimeout(fetchTimeout);
+        
+        if (myGeneration !== this.speakGeneration) {
+          console.log("[TTS] Generation changed during fetch, discarding response");
           return false;
         }
-        throw new Error(error.error || "TTS request failed");
-      }
 
-      const audioBlob = await response.blob();
-      if (audioBlob.size === 0) {
-        console.log("[TTS] Empty audio blob");
-        this.fireCallback("error", onEnd);
-        return false;
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          console.log("[TTS] API error:", error);
+          if (error.fallback) {
+            return false;
+          }
+          throw new Error(error.error || "TTS request failed");
+        }
+
+        audioBlob = await response.blob();
+        if (audioBlob.size === 0) {
+          console.log("[TTS] Empty audio blob");
+          this.fireCallback("error", onEnd);
+          return false;
+        }
+        
+        if (myGeneration !== this.speakGeneration) {
+          console.log("[TTS] Generation changed during blob load, discarding");
+          return false;
+        }
+        
+        audioUrl = URL.createObjectURL(audioBlob);
       }
-      
-      // Check generation again after blob loaded
-      if (myGeneration !== this.speakGeneration) {
-        console.log("[TTS] Generation changed during blob load, discarding");
-        return false;
-      }
-      
-      const audioUrl = URL.createObjectURL(audioBlob);
       
       // Create audio element
       const audio = new Audio();

@@ -714,6 +714,36 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     isAiSpeakingRef.current = isAiSpeaking;
   }, [isAiSpeaking]);
   
+  const prefetchNextMultiplayerAILine = useCallback(() => {
+    const room = multiplayer.room;
+    if (!room) return;
+    const scene = room.scenes[room.currentSceneIndex];
+    if (!scene) return;
+    
+    const startIdx = room.currentLineIndex + 1;
+    for (let i = startIdx; i < Math.min(startIdx + 3, scene.lines.length); i++) {
+      const line = scene.lines[i];
+      if (!line) continue;
+      const isAssignedToHuman = room.participants.some(p => p.roleId === line.roleId);
+      if (isAssignedToHuman) continue;
+      
+      const roleIndex = room.roles.findIndex(r => r.id === line.roleId);
+      const emotion = detectEmotion(line.text, line.direction);
+      const role = room.roles.find(r => r.id === line.roleId);
+      const preset = (role?.voicePreset as any) || 'natural';
+      
+      ttsEngine.prefetch(line.text, {
+        characterName: line.roleName,
+        characterIndex: roleIndex >= 0 ? roleIndex : 0,
+        emotion,
+        preset,
+        direction: line.direction || "",
+        playbackSpeed: 1.0,
+      });
+      break;
+    }
+  }, [multiplayer.room]);
+
   const speakAiLine = useCallback((lineId: string, text: string, roleName: string, characterIndex: number, isHost: boolean, direction?: string, voicePreset?: string) => {
     ttsEngine.stop();
     
@@ -766,9 +796,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       if (isHost) {
         aiSpeakTimeoutRef.current = setTimeout(() => {
           console.log('[Multiplayer TTS] Host calling nextLine() via ref');
-          // Use ref to ensure we always call the latest multiplayer.nextLine
           multiplayerRef.current.nextLine();
-        }, 200);
+        }, 50);
       } else {
         console.log('[Multiplayer TTS] Not host, waiting for host to advance');
       }
@@ -793,9 +822,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       {
         characterName: roleName,
         characterIndex,
+        emotion,
+        preset,
+        direction: direction || "",
+        onStart: () => {
+          prefetchNextMultiplayerAILine();
+        },
       }
     );
-  }, []);
+  }, [prefetchNextMultiplayerAILine]);
 
   const currentLineIdRef = useRef<string | null>(null);
 
@@ -905,12 +940,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       console.log('[Multiplayer] User turn detected for:', currentLine.roleName, 'isMyTurn:', isMyTurn);
       
       if (isMyTurn) {
-        // Directly trigger speech recognition here, don't rely on separate effect
         console.log('[Multiplayer] MY TURN - triggering speech recognition directly');
-        isAiSpeakingRef.current = false; // Ensure this is false
+        isAiSpeakingRef.current = false;
         setIsAiSpeaking(false);
+        prefetchNextMultiplayerAILine();
         
-        // Small delay to let any audio finish
         setTimeout(() => {
           if (isActivelyRehearsalRef.current && !isAiSpeakingRef.current) {
             waitingForUserRef.current = true;
@@ -921,11 +955,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               console.log('[Multiplayer] Speech recognition start result:', started);
             }
             
-            // Set up timeout for auto-advance
             if (userTurnTimeoutRef.current) {
               clearTimeout(userTurnTimeoutRef.current);
             }
-            // Safety timeout: 60 seconds like solo mode (generous time for user)
             userTurnTimeoutRef.current = setTimeout(() => {
               if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
                 console.log("[Multiplayer] User turn safety timeout, advancing");
@@ -936,7 +968,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               }
             }, 60000);
           }
-        }, 300);
+        }, 100);
       }
     }
     
@@ -944,11 +976,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     // when this effect re-runs because it may contain the nextLine() call that 
     // advances to the next line. Clearing it would break auto-advance.
     // IMPORTANT: Use specific line/scene indices as dependencies for reliable re-trigger
-  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, speakAiLine, multiplayer.isHost, multiplayer.participantId, webrtc.allPeersConnected, webrtc.allPeersHaveStreams, webrtc.connectedPeersCount]);
+  }, [isActivelyRehearing, multiplayer.room, multiplayer.room?.currentLineIndex, multiplayer.room?.currentSceneIndex, speakAiLine, multiplayer.isHost, multiplayer.participantId, webrtc.allPeersConnected, webrtc.allPeersHaveStreams, webrtc.connectedPeersCount, prefetchNextMultiplayerAILine]);
 
   useEffect(() => {
     return () => {
       ttsEngine.stop();
+      ttsEngine.clearPrefetchCache();
       if (aiSpeakTimeoutRef.current) {
         clearTimeout(aiSpeakTimeoutRef.current);
       }
@@ -993,7 +1026,6 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
     if (speechRecognition.available && !micBlocked) {
       setTimeout(() => {
-        // Use ref to check current state, not stale closure
         if (waitingForUserRef.current && !isAiSpeakingRef.current) {
           const started = speechRecognition.start();
           if (!started) {
@@ -1002,7 +1034,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             console.log("[Multiplayer] Speech recognition started successfully");
           }
         }
-      }, 200);
+      }, 50);
     }
 
     if (userTurnTimeoutRef.current) {
