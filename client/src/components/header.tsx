@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
@@ -79,6 +79,21 @@ export function Header({
 }: HeaderProps) {
   const [shareOpen, setShareOpen] = useState(false);
 
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [titleOverflows, setTitleOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (el) {
+      const overflows = el.scrollWidth > el.clientWidth;
+      setTitleOverflows(overflows);
+      if (overflows) {
+        const overflow = el.scrollWidth - el.clientWidth;
+        el.style.setProperty('--marquee-distance', `-${overflow}px`);
+      }
+    }
+  }, [sessionName]);
+
   const showShareMenu = scenes.length > 0 && scenes.some(s => s.lines.length > 0);
 
   const getExportText = () => formatScriptForExport(sessionName, scenes);
@@ -155,8 +170,16 @@ export function Header({
           </Button>
         )}
         
-        <div className="min-w-0">
-          <h1 className={`font-medium text-sm truncate ${cameraMode ? "text-white" : "text-foreground"}`} data-testid="text-session-name">
+        <div className="min-w-0 overflow-hidden">
+          <h1
+            ref={titleRef}
+            className={cn(
+              "font-medium text-sm whitespace-nowrap",
+              cameraMode ? "text-white" : "text-foreground",
+              titleOverflows ? "animate-marquee" : "truncate"
+            )}
+            data-testid="text-session-name"
+          >
             {sessionName}
           </h1>
         </div>

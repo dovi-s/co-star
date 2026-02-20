@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Check, User, ChevronLeft, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,6 +16,21 @@ interface RoleSelectorProps {
 }
 
 export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptName }: RoleSelectorProps) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const [titleOverflows, setTitleOverflows] = useState(false);
+
+  useEffect(() => {
+    const el = titleRef.current;
+    if (el) {
+      const overflows = el.scrollWidth > el.clientWidth;
+      setTitleOverflows(overflows);
+      if (overflows) {
+        const overflow = el.scrollWidth - el.clientWidth;
+        el.style.setProperty('--marquee-distance', `-${overflow}px`);
+      }
+    }
+  }, [scriptName]);
+
   const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
     roles.length === 1 ? roles[0].id : null
   );
@@ -59,8 +74,14 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="min-w-0">
-            <h1 className="font-medium text-sm truncate text-foreground">
+          <div className="min-w-0 overflow-hidden">
+            <h1
+              ref={titleRef}
+              className={cn(
+                "font-medium text-sm text-foreground whitespace-nowrap",
+                titleOverflows ? "animate-marquee" : "truncate"
+              )}
+            >
               {scriptName || "Your Script"}
             </h1>
             <p className="text-[11px] text-muted-foreground">
