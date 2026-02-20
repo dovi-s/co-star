@@ -834,9 +834,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     try {
       speechRecognition.abort();
     } catch {}
-    clearUserRole();
+    clearSession();
     onBack();
-  }, [clearUserRole, onBack]);
+  }, [clearSession, onBack]);
 
   const handleClearSession = () => {
     ttsEngine.stop();
