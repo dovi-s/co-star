@@ -1614,7 +1614,7 @@ function preprocessScript(rawText: string): string {
   // Split when mixed-case character name + action verb appears after lowercase (PDF merge)
   // e.g., "...house atCallie checks her watch" -> "...house at\nCallie checks her watch"
   // This handles stage directions where character name is mixed case (not all caps)
-  text = text.replace(/([a-z]{2,})([A-Z][a-z]+)\s+(checks?|looks?|turns?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|walks?|runs?|sits?|stands?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|pauses?|hesitates?|buzzes?|dials?|hangs?\s+up|answers?|reads?|writes?)\s/gi, '$1\n$2 $3 ');
+  text = text.replace(/([a-z]{2,})([A-Z][a-z]+)\s+(checks?|looks?|turns?|picks?\s+up|puts?\s+down|sets?\s+down|grabs?|takes?|hands?|reaches?|pulls?|pushes?|opens?|closes?|walks?|runs?|sits?|stands?|moves?|crosses?|enters?|exits?|leaves?|goes?|comes?|starts?|stops?|begins?|continues?|pauses?|hesitates?|buzzes?|dials?|hangs?\s+up|answers?|reads?|writes?)\s/g, '$1\n$2 $3 ');
   
   // Split on parenthetical stage direction appearing mid-line (not at start)
   // e.g., "...to you. (Beverly cries.) She..." -> "...to you.\n(Beverly cries.)\nShe..."
