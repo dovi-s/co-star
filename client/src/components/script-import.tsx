@@ -531,12 +531,22 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         />
 
         {isParsingFile && parseProgress && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-background/90 backdrop-blur-sm z-10" data-testid="overlay-parse-progress">
-            <div className="w-8 h-8 rounded-full border-3 border-primary/20 border-t-primary animate-spin mb-3" />
-            <p className="text-sm font-medium text-foreground">{parseProgress}</p>
-            {parseProgress.includes("Scanning") && (
-              <p className="text-xs text-muted-foreground mt-1">Scanned PDF detected. Reading each page with AI.</p>
-            )}
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl glass-surface-heavy z-10" data-testid="overlay-parse-progress">
+            <div className="flex flex-col items-center gap-4 px-6">
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 rounded-full border-2 border-primary/10" />
+                <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+                <div className="absolute inset-[6px] rounded-full border-2 border-transparent border-b-primary/40 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+              </div>
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium text-foreground/90">
+                  {parseProgress.includes("Scanning") ? "Scanning with AI" : parseProgress.replace("...", "")}
+                </p>
+                {parseProgress.includes("Scanning") && (
+                  <p className="text-xs text-muted-foreground/70 max-w-[200px] leading-relaxed">Scanned PDF detected. Reading each page individually.</p>
+                )}
+              </div>
+            </div>
           </div>
         )}
 
