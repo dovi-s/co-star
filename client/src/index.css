@@ -2433,30 +2433,3 @@
   animation: star-burst 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-@keyframes wordmark-sheen {
-  0%, 85% {
-    background-position: -200% center;
-  }
-  100% {
-    background-position: 200% center;
-  }
-}
-
-.wordmark-shimmer {
-  background: linear-gradient(
-    105deg,
-    currentColor 0%,
-    currentColor 35%,
-    hsl(var(--primary)) 46%,
-    hsl(var(--primary) / 0.6) 50%,
-    hsl(var(--primary)) 54%,
-    currentColor 65%,
-    currentColor 100%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: wordmark-sheen 4s ease-in-out infinite;
-  animation-delay: 1.5s;
-}
