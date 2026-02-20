@@ -101,6 +101,77 @@ const CONTRACTIONS: Record<string, string[]> = {
   "well": ["uh", "um", "so"],
 };
 
+const NUMBER_WORDS: Record<string, string[]> = {
+  "0": ["zero", "oh", "o"],
+  "1": ["one", "won"],
+  "2": ["two", "to", "too"],
+  "3": ["three"],
+  "4": ["four", "for", "fore"],
+  "5": ["five"],
+  "6": ["six"],
+  "7": ["seven"],
+  "8": ["eight", "ate"],
+  "9": ["nine"],
+  "10": ["ten"],
+  "11": ["eleven"],
+  "12": ["twelve"],
+  "13": ["thirteen"],
+  "14": ["fourteen"],
+  "15": ["fifteen"],
+  "16": ["sixteen"],
+  "17": ["seventeen"],
+  "18": ["eighteen"],
+  "19": ["nineteen"],
+  "20": ["twenty"],
+  "30": ["thirty"],
+  "40": ["forty"],
+  "50": ["fifty"],
+  "60": ["sixty"],
+  "70": ["seventy"],
+  "80": ["eighty"],
+  "90": ["ninety"],
+  "100": ["hundred"],
+  "1000": ["thousand"],
+  "1000000": ["million"],
+  "zero": ["0"],
+  "one": ["1", "won"],
+  "two": ["2", "to", "too"],
+  "three": ["3"],
+  "four": ["4", "for", "fore"],
+  "five": ["5"],
+  "six": ["6"],
+  "seven": ["7"],
+  "eight": ["8", "ate"],
+  "nine": ["9"],
+  "ten": ["10"],
+  "eleven": ["11"],
+  "twelve": ["12"],
+  "thirteen": ["13"],
+  "fourteen": ["14"],
+  "fifteen": ["15"],
+  "sixteen": ["16"],
+  "seventeen": ["17"],
+  "eighteen": ["18"],
+  "nineteen": ["19"],
+  "twenty": ["20"],
+  "thirty": ["30"],
+  "forty": ["40"],
+  "fifty": ["50"],
+  "sixty": ["60"],
+  "seventy": ["70"],
+  "eighty": ["80"],
+  "ninety": ["90"],
+  "hundred": ["100"],
+  "thousand": ["1000"],
+  "million": ["1000000"],
+  "first": ["1st"],
+  "second": ["2nd"],
+  "third": ["3rd"],
+  "1st": ["first"],
+  "2nd": ["second"],
+  "3rd": ["third"],
+};
+
 function normalizeWord(word: string): string {
   return word
     .toLowerCase()
@@ -113,16 +184,18 @@ function getWordForms(word: string): string[] {
   const normalized = normalizeWord(word);
   const forms = [normalized, normalized.replace(/'/g, '')];
   
-  // Check if this word is a contraction
   if (CONTRACTIONS[normalized]) {
     forms.push(...CONTRACTIONS[normalized]);
   }
   
-  // Check if spoken words might be the expanded form of a contraction
   for (const [contraction, expansions] of Object.entries(CONTRACTIONS)) {
     if (expansions.includes(normalized)) {
       forms.push(contraction, contraction.replace(/'/g, ''));
     }
+  }
+  
+  if (NUMBER_WORDS[normalized]) {
+    forms.push(...NUMBER_WORDS[normalized]);
   }
   
   return forms;
