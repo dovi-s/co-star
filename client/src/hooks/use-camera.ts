@@ -176,17 +176,26 @@ export function useCamera() {
       }
 
       const hasVideo = recordingStream.getVideoTracks().length > 0;
-      const mimeType = hasVideo
-        ? (MediaRecorder.isTypeSupported('video/mp4;codecs=avc1')
-          ? 'video/mp4;codecs=avc1'
-          : MediaRecorder.isTypeSupported('video/mp4')
-          ? 'video/mp4'
-          : MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-          ? 'video/webm;codecs=vp9'
-          : 'video/webm')
-        : (MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : 'audio/webm');
+      
+      const videoFormats = [
+        'video/mp4;codecs=avc1,mp4a.40.2',
+        'video/mp4;codecs=avc1',
+        'video/mp4',
+        'video/webm;codecs=vp9,opus',
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp9',
+        'video/webm',
+      ];
+      const audioFormats = [
+        'audio/mp4;codecs=mp4a.40.2',
+        'audio/mp4',
+        'audio/webm;codecs=opus',
+        'audio/webm',
+      ];
+      
+      const candidates = hasVideo ? videoFormats : audioFormats;
+      const mimeType = candidates.find(fmt => MediaRecorder.isTypeSupported(fmt)) || candidates[candidates.length - 1];
+      console.log('[Camera] Selected recording format:', mimeType);
 
       mimeTypeRef.current = mimeType;
 
