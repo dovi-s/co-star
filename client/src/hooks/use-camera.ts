@@ -9,6 +9,7 @@ export interface CameraState {
   error: string | null;
   hasRecording: boolean;
   recordingBlob: Blob | null;
+  earbudsOnly: boolean;
 }
 
 export function useCamera() {
@@ -20,6 +21,10 @@ export function useCamera() {
   const [hasRecording, setHasRecording] = useState(false);
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [showDiscardPrompt, setShowDiscardPrompt] = useState(false);
+  const [earbudsOnly, setEarbudsOnly] = useState(() => {
+    try { return localStorage.getItem("costar-earbuds-only") === "true"; } catch { return false; }
+  });
+  const earbudsOnlyRef = useRef(earbudsOnly);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -81,6 +86,12 @@ export function useCamera() {
     }
   }, [isEnabled, startCamera, stopCamera]);
 
+  const toggleEarbudsOnly = useCallback((enabled: boolean) => {
+    setEarbudsOnly(enabled);
+    earbudsOnlyRef.current = enabled;
+    try { localStorage.setItem("costar-earbuds-only", String(enabled)); } catch {}
+  }, []);
+
   const buildMixedAudioStream = useCallback(async (): Promise<{ stream: MediaStream; cleanup: () => void }> => {
     const audioContext = new AudioContext();
     recordingAudioContextRef.current = audioContext;
@@ -111,14 +122,18 @@ export function useCamera() {
       }
     }
 
-    ttsEngine.initAudioContext();
-    const ttsStream = ttsEngine.getTTSAudioStream();
-    if (ttsStream && ttsStream.getAudioTracks().length > 0) {
-      const ttsSource = audioContext.createMediaStreamSource(ttsStream);
-      ttsSource.connect(destination);
-      console.log('[Camera] Mixed TTS audio into recording');
+    if (earbudsOnlyRef.current) {
+      console.log('[Camera] Earbuds-only mode: TTS audio excluded from recording');
     } else {
-      console.log('[Camera] No TTS audio stream available');
+      ttsEngine.initAudioContext();
+      const ttsStream = ttsEngine.getTTSAudioStream();
+      if (ttsStream && ttsStream.getAudioTracks().length > 0) {
+        const ttsSource = audioContext.createMediaStreamSource(ttsStream);
+        ttsSource.connect(destination);
+        console.log('[Camera] Mixed TTS audio into recording');
+      } else {
+        console.log('[Camera] No TTS audio stream available');
+      }
     }
 
     const cleanup = () => {
@@ -366,6 +381,8 @@ export function useCamera() {
     hasRecording,
     recordingBlob,
     showDiscardPrompt,
+    earbudsOnly,
+    toggleEarbudsOnly,
     videoRef,
     canvasRef,
     screenCanvasRef,

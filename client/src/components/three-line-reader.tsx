@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ScriptLine, Role, MemorizationMode, Scene } from "@shared/schema";
-import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play } from "lucide-react";
+import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play, Hand } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { matchWordsSequential } from "@/lib/word-matcher";
@@ -90,6 +90,8 @@ interface ThreeLineReaderProps {
   isFirstLineOfScene?: boolean;
   onRestartListening?: () => void;
   cameraMode?: boolean;
+  tapMode?: boolean;
+  onTapAdvance?: () => void;
 }
 
 function maskText(text: string, mode: MemorizationMode): { display: string; hint?: string } {
@@ -146,6 +148,8 @@ export function ThreeLineReader({
   isFirstLineOfScene = false,
   onRestartListening,
   cameraMode = false,
+  tapMode = false,
+  onTapAdvance,
 }: ThreeLineReaderProps) {
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
@@ -387,48 +391,61 @@ export function ThreeLineReader({
             {/* User's turn indicator with transcript feedback */}
             {isCurrent && isUser && isPlaying && !shouldMask && (
               <div className="mt-3 space-y-2">
-                {/* Listening status */}
-                <div className="flex items-center gap-2">
-                  {isListening ? (
-                    <>
-                      <div className="speaking-energy speaking-energy-success">
-                        <span />
-                        <span />
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                      <span className="text-xs text-background/90 font-medium">
-                        Listening
-                      </span>
-                    </>
-                  ) : (
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); onRestartListening?.(); }}
-                      className="flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded hover:bg-background/10 transition-colors"
-                      data-testid="button-restart-listening"
-                    >
-                      <Mic className="w-3 h-3 text-background/60" />
-                      <span className="text-xs text-background/70">
-                        Tap to speak
-                      </span>
-                    </button>
-                  )}
-                </div>
-                
-                {/* Show progress */}
-                {wordMatchResult && userTranscript && (
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 h-1.5 bg-background/20 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-green-400 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(100, wordMatchResult.percentMatched)}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-background/70 font-medium">
-                      {Math.round(wordMatchResult.percentMatched)}%
+                {tapMode ? (
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); onTapAdvance?.(); }}
+                    className="flex items-center gap-2 px-3 py-2 -mx-2 rounded-lg bg-background/15 hover:bg-background/25 active:bg-background/30 transition-colors"
+                    data-testid="button-tap-advance"
+                  >
+                    <Hand className="w-3.5 h-3.5 text-background/80" />
+                    <span className="text-xs text-background/90 font-medium">
+                      Tap when ready
                     </span>
-                  </div>
+                  </button>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      {isListening ? (
+                        <>
+                          <div className="speaking-energy speaking-energy-success">
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                            <span />
+                          </div>
+                          <span className="text-xs text-background/90 font-medium">
+                            Listening
+                          </span>
+                        </>
+                      ) : (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); onRestartListening?.(); }}
+                          className="flex items-center gap-2 px-2 py-1 -mx-2 -my-1 rounded hover:bg-background/10 transition-colors"
+                          data-testid="button-restart-listening"
+                        >
+                          <Mic className="w-3 h-3 text-background/60" />
+                          <span className="text-xs text-background/70">
+                            Tap to speak
+                          </span>
+                        </button>
+                      )}
+                    </div>
+                    
+                    {wordMatchResult && userTranscript && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1.5 bg-background/20 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-green-400 rounded-full transition-all duration-300"
+                            style={{ width: `${Math.min(100, wordMatchResult.percentMatched)}%` }}
+                          />
+                        </div>
+                        <span className="text-[10px] text-background/70 font-medium">
+                          {Math.round(wordMatchResult.percentMatched)}%
+                        </span>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

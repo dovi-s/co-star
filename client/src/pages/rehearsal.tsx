@@ -15,7 +15,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -78,6 +78,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [isUserTurn, setIsUserTurn] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
   const [micEnabled, setMicEnabled] = useState(true);
+  const [tapMode, setTapMode] = useState(() => {
+    try { return localStorage.getItem("costar-tap-mode") === "true"; } catch { return false; }
+  });
+  const tapModeRef = useRef(tapMode);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const [showCountdown, setShowCountdown] = useState(false);
@@ -119,6 +123,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const globalLineNumber = getGlobalLineNumber(); // Current position in entire script
   const userRole = session?.userRoleId ? getRoleById(session.userRoleId) : null;
   const currentIsUserLine = isUserLine(currentLine);
+
+  const handleTapModeChange = useCallback((enabled: boolean) => {
+    setTapMode(enabled);
+    tapModeRef.current = enabled;
+    try { localStorage.setItem("costar-tap-mode", String(enabled)); } catch {}
+  }, []);
+
+  const tapAdvance = useCallback(() => {
+    if (!tapModeRef.current || !waitingForUserRef.current || !isPlayingRef.current) return;
+    speechRecognition.abort();
+    waitingForUserRef.current = false;
+    if (autoAdvanceTimeoutRef.current) {
+      clearTimeout(autoAdvanceTimeoutRef.current);
+      autoAdvanceTimeoutRef.current = null;
+    }
+    currentLineAccuracyRef.current = 100;
+    advanceAfterUserLineRef.current();
+  }, []);
 
   useEffect(() => {
     isPlayingRef.current = session?.isPlaying ?? false;
@@ -246,7 +268,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       switch (e.code) {
         case "Space":
           e.preventDefault();
-          handlePlayPause();
+          if (tapModeRef.current && waitingForUserRef.current && isPlayingRef.current) {
+            tapAdvance();
+          } else {
+            handlePlayPause();
+          }
           break;
         case "ArrowRight":
           e.preventDefault();
@@ -428,7 +454,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   }, [advanceAfterUserLine]);
 
   const startListeningForUser = useCallback(() => {
-    console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
+    console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked, "tapMode:", tapModeRef.current);
     
     waitingForUserRef.current = true;
     matchReachedRef.current = false;
@@ -443,6 +469,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (matchGraceTimeoutRef.current) {
       clearTimeout(matchGraceTimeoutRef.current);
       matchGraceTimeoutRef.current = null;
+    }
+    
+    if (tapModeRef.current) {
+      console.log("[Rehearsal] Tap mode active, waiting for tap/spacebar to advance");
+      return;
     }
     
     if (speechRecognition.available && !micBlocked && micEnabled) {
@@ -1435,6 +1466,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             currentScene={currentScene}
             isFirstLineOfScene={session.currentLineIndex === 0}
             cameraMode={camera.isEnabled}
+            tapMode={tapMode}
+            onTapAdvance={tapAdvance}
             onRestartListening={() => {
               if (!speechRecognition.listening && waitingForUserRef.current) {
                 speechRecognition.start();
@@ -1460,31 +1493,44 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           
           {showUserTurnIndicator && (
             <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
-              <div className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border relative",
-                isListening 
-                  ? "bg-primary/10 border-primary/20 pulse-ring text-primary" 
-                  : "bg-foreground/5 border-foreground/10 animate-breathe"
-              )}>
-                {isListening ? (
-                  <>
-                    <div className="relative">
-                      <Mic className="h-4 w-4 text-primary" />
-                      <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                    </div>
-                    <span className="text-sm text-primary font-medium">Listening...</span>
-                  </>
-                ) : (
-                  <>
-                    <Mic className="h-4 w-4 text-foreground/70" />
-                    <span className="text-sm text-foreground font-medium">Your line</span>
-                  </>
-                )}
-              </div>
-              {userTranscript && (
-                <p className="mt-3 text-sm text-muted-foreground/80 max-w-xs text-center transition-opacity duration-300">
-                  {userTranscript}
-                </p>
+              {tapMode ? (
+                <button
+                  onClick={tapAdvance}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full border bg-foreground/5 border-foreground/10 animate-breathe active:scale-[0.97] transition-transform"
+                  data-testid="button-tap-advance-main"
+                >
+                  <Hand className="h-4 w-4 text-foreground/70" />
+                  <span className="text-sm text-foreground font-medium">Tap when ready</span>
+                </button>
+              ) : (
+                <>
+                  <div className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full border relative",
+                    isListening 
+                      ? "bg-primary/10 border-primary/20 pulse-ring text-primary" 
+                      : "bg-foreground/5 border-foreground/10 animate-breathe"
+                  )}>
+                    {isListening ? (
+                      <>
+                        <div className="relative">
+                          <Mic className="h-4 w-4 text-primary" />
+                          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                        </div>
+                        <span className="text-sm text-primary font-medium">Listening...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Mic className="h-4 w-4 text-foreground/70" />
+                        <span className="text-sm text-foreground font-medium">Your line</span>
+                      </>
+                    )}
+                  </div>
+                  {userTranscript && (
+                    <p className="mt-3 text-sm text-muted-foreground/80 max-w-xs text-center transition-opacity duration-300">
+                      {userTranscript}
+                    </p>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1555,9 +1601,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           ambientEnabled={session.ambientEnabled}
           playbackSpeed={session.playbackSpeed ?? 1.0}
           readerDelay={session.readerDelay ?? 0}
+          tapMode={tapMode}
+          earbudsOnly={camera.earbudsOnly}
+          onEarbudsOnlyChange={camera.toggleEarbudsOnly}
+          cameraEnabled={camera.isEnabled}
           onAmbientToggle={setAmbient}
           onPlaybackSpeedChange={(speed) => updateSession({ playbackSpeed: speed })}
           onReaderDelayChange={(delay) => updateSession({ readerDelay: delay })}
+          onTapModeChange={handleTapModeChange}
           onSceneChange={goToScene}
           onRolePresetChange={handleRolePresetChange}
           onNewScript={handleNewScript}

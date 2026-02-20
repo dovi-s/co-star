@@ -930,7 +930,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       roleName: currentLine.roleName,
       roleId: lineRoleId,
       isRoleAssignedToParticipant,
-      assignedTo: room.participants.find(p => p.roleId === lineRoleId)?.name || 'AI',
+      assignedTo: room.participants.find(p => p.roleId === lineRoleId)?.name || 'Reader',
       isHost: multiplayer.isHost,
       speakingLineRef: speakingLineRef.current,
       willSpeak: !isRoleAssignedToParticipant,
@@ -1664,7 +1664,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <Volume2 className="h-16 w-16 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-white mb-2">Enable Audio</h2>
               <p className="text-lg text-white/70 mb-6">
-                Tap anywhere to hear AI voices and other participants
+                Tap anywhere to hear voices and other participants
               </p>
               <Button variant="default" size="lg" onClick={unlockAudio}>
                 Enable Audio

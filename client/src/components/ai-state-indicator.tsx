@@ -33,7 +33,7 @@ export function AIStateIndicator({
   const isActive = state !== "idle";
 
   return (
-    <div className={cn("flex items-center gap-2", className)} data-testid="ai-state-indicator" role="status" aria-label={stateLabels[state] || "AI idle"}>
+    <div className={cn("flex items-center gap-2", className)} data-testid="ai-state-indicator" role="status" aria-label={stateLabels[state] || "Idle"}>
       <div
         className={cn(
           "relative flex items-center justify-center rounded-full transition-all duration-300",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer, Hand, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -35,9 +35,14 @@ interface SettingsDrawerProps {
   ambientEnabled: boolean;
   playbackSpeed: number;
   readerDelay: number;
+  tapMode: boolean;
   onAmbientToggle: (enabled: boolean) => void;
   onPlaybackSpeedChange: (speed: number) => void;
   onReaderDelayChange: (delay: number) => void;
+  onTapModeChange: (enabled: boolean) => void;
+  earbudsOnly?: boolean;
+  onEarbudsOnlyChange?: (enabled: boolean) => void;
+  cameraEnabled?: boolean;
   onSceneChange: (index: number) => void;
   onRolePresetChange: (roleId: string, preset: VoicePreset) => void;
   onNewScript: (name: string, rawScript: string) => void;
@@ -54,9 +59,14 @@ export function SettingsDrawer({
   ambientEnabled,
   playbackSpeed,
   readerDelay,
+  tapMode,
   onAmbientToggle,
   onPlaybackSpeedChange,
   onReaderDelayChange,
+  onTapModeChange,
+  earbudsOnly = false,
+  onEarbudsOnlyChange,
+  cameraEnabled = false,
   onSceneChange,
   onRolePresetChange,
   onNewScript,
@@ -123,6 +133,60 @@ export function SettingsDrawer({
                 />
               </div>
 
+              {/* Tap Mode Toggle */}
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className={cn(
+                    "w-9 h-9 rounded-lg flex items-center justify-center",
+                    tapMode ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
+                  )}>
+                    <Hand className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <label htmlFor="tapMode" className="text-sm font-medium cursor-pointer">
+                      Tap to Advance
+                    </label>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      Tap or press space to advance your lines
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="tapMode"
+                  checked={tapMode}
+                  onCheckedChange={onTapModeChange}
+                  data-testid="switch-tap-mode"
+                />
+              </div>
+
+              {/* Earbuds-Only Recording - only show when camera is enabled */}
+              {cameraEnabled && onEarbudsOnlyChange && (
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center",
+                      earbudsOnly ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
+                    )}>
+                      <Headphones className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <label htmlFor="earbudsOnly" className="text-sm font-medium cursor-pointer">
+                        Earbuds Only
+                      </label>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        Reader voice in earbuds, not in recording
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="earbudsOnly"
+                    checked={earbudsOnly}
+                    onCheckedChange={onEarbudsOnlyChange}
+                    data-testid="switch-earbuds-only"
+                  />
+                </div>
+              )}
+
               {/* Playback Speed */}
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
@@ -165,7 +229,7 @@ export function SettingsDrawer({
                       Reader Delay
                     </label>
                     <p className="text-[11px] text-muted-foreground/60">
-                      {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before AI speaks
+                      {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before reader speaks
                     </p>
                   </div>
                 </div>

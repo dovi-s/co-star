@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Upload, Clipboard, X, Loader2, Check, HelpCircle } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -199,7 +199,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     } catch (e: any) {
       console.error("Failed to clean up script:", e);
       if (e.name === "AbortError") {
-        setCleanupError("This script is too large for AI formatting. Try uploading the PDF directly instead.");
+        setCleanupError("This script is too large for auto-formatting. Try uploading the PDF directly instead.");
       } else {
         setCleanupError(e.message || true);
       }
@@ -289,7 +289,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         if (!response.ok) {
           const data = await response.json();
           if (data.needsOcr) {
-            setParseProgress("Scanning pages with AI...");
+            setParseProgress("Scanning pages...");
             setOcrProgress(null);
 
             const ocrResult = await new Promise<{ parsed: any; rawText: string }>((resolve, reject) => {
@@ -657,7 +657,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                         style={{ width: `${Math.max(3, (ocrProgress.current / ocrProgress.total) * 100)}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground/60">Scanning with AI</p>
+                    <p className="text-[10px] text-muted-foreground/60">Scanning pages</p>
                   </div>
                 </>
               ) : (
@@ -826,7 +826,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 className="text-sm font-medium text-amber-700 dark:text-amber-400 underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-300 transition-colors"
                 data-testid="button-fix-formatting"
               >
-                Fix with AI
+                Auto-format
               </button>
               <span className="text-amber-600/60 dark:text-amber-400/60 mx-2">or</span>
             </>
@@ -840,7 +840,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           </button>
           {script.length > 30000 && (
             <p className="text-[10px] text-amber-600/50 dark:text-amber-400/40 mt-2">
-              AI formatting is not available for very long scripts. Upload the original file for best results.
+              Auto-formatting is not available for very long scripts. Upload the original file for best results.
             </p>
           )}
         </div>
@@ -878,12 +878,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       
       {/* Cleaning in progress indicator */}
       {isCleaning && (
-        <div className="flex flex-col items-center gap-2 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting with AI">
+        <div className="flex flex-col items-center gap-2 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting">
           <div className="flex items-center gap-3">
             <div className="circle-badge w-6 h-6 energy-ring thinking" aria-hidden="true">
               <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
             </div>
-            <span className="text-sm">Fixing formatting with AI</span>
+            <span className="text-sm">Fixing formatting</span>
           </div>
           {script.length > 10000 && (
             <span className="text-xs text-muted-foreground/60">Large script, this may take up to a minute</span>
@@ -962,6 +962,11 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           </div>
         </div>
       )}
+
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/50" data-testid="text-privacy-badge">
+        <Lock className="h-3 w-3" />
+        <span>Your script stays on your device. Nothing is stored on our servers.</span>
+      </div>
 
       <Button
         onClick={handleSubmit}

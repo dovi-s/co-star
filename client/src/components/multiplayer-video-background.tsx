@@ -531,8 +531,8 @@ export function MultiplayerVideoBackground({
               : currentSpeaker 
                 ? `${currentSpeaker.name}'s turn` 
                 : currentLine?.roleName 
-                  ? `${currentLine.roleName} (AI)` 
-                  : 'AI speaking'}
+                  ? `${currentLine.roleName} (reader)` 
+                  : 'Reader speaking'}
           </span>
         </div>
       </div>
