@@ -1,0 +1,347 @@
+Skip to main content
+Im building an AI scene partner for actors to run audition lines with ease : r/Actors
+
+
+r/Actors
+Search in r/Actors
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+r/Actors icon
+Go to Actors
+r/Actors
+•
+2y ago
+Fine-Engineering-460
+
+Im building an AI scene partner for actors to run audition lines with ease
+
+2:31 / 2:37
+
+
+
+
+This is a demo video of how AuditionLead works. The goal is to make recording a self-tape a pleasant & fun experience. To help you concentrate on acting only.
+
+Features supported:
+
+Import/drop your audition scripts
+
+Actively listens and replies back on cue
+
+Sharing/saving your scene to come back to
+
+English language
+
+Features in development:
+
+AI voice effects
+
+AI avatars / human faces to speak to
+
+Teleprompter
+
+Anything else you wish to add
+
+I’d like to get feedback from all actors, from beginners to pros, to make sure that I am building something that actors really need. If you like the idea, leave a comment, show support. It’s really appreciated!
+
+Read more
+10
+·
+17
+u/Weglot avatar
+Weglot
+•
+Promoted
+
+If you can vibe-code your site with Lovable, you can vibe-translate it too with Weglot.
+Learn More
+weglot.com
+Thumbnail image: If you can vibe-code your site with Lovable, you can vibe-translate it too with Weglot.
+Comments Section
+u/Spiritual-Tangelo-66 avatar
+Spiritual-Tangelo-66
+•
+1y ago
+This is a great tool since I often don't have an English speaking reader available. I gave it a try and an important function that was missing for me was to be able to delay lines. E.g. I had a script where I had to say a few lines in a fantasy language. So speech recognition is not going to recognize it and it would have been nice if I could have delayed the other character's lines while doing the rest of the scene based on speech recognition.
+Also, it would be great if you could add other languages. (German, French, Spanish)
+
+
+1
+u/Fine-Engineering-460 avatar
+Fine-Engineering-460
+OP
+•
+1y ago
+Thanks for the feedback, I appreciate it.
+
+There is an option to trigger your lines by timer - have you tried it?
+
+This might be a work-around for non English languages.
+
+If you have any requests, just leave a comment here, or use the contact form.
+
+I’m glad you found it useful. Hopefully next time, your experience will be even better as features are improved.
+
+
+1
+u/Spiritual-Tangelo-66 avatar
+Spiritual-Tangelo-66
+•
+1y ago
+Yes, thank you I've tried that option but prefer a tool with voice recognition as it makes the scene flow better and leaves more room for experimenting.
+
+
+1
+u/Fine-Engineering-460 avatar
+Fine-Engineering-460
+OP
+•
+1y ago
+That makes sense. The voice recognition is very accurate for the English language (it’s constantly worked on). Once English is perfect, other languages will also be added (Spanish/German).
+
+
+1
+u/Spiritual-Tangelo-66 avatar
+Spiritual-Tangelo-66
+•
+1y ago
+Great, looking forward to it.
+
+1
+u/Extreme_Ad4234 avatar
+Extreme_Ad4234
+•
+1y ago
+Hello from Seattle. I really love your app and have been using it for countless auditions however it has a few glitches and im not sure if they are browser related , Mac versus PC or something else. In the beginning it worked flawlessly, I would copy and paste a PDF of a scene or in some cases copy and paste line by line. Once I completed all the steps adding an AI voice etc I would run the scene without issue. Lately however the app (which Im running on a Mac using both safari and chrome) has been glitchy, and is skipping the next persons line altogether and I have to start over. It has been doing this almost every time I run a scene . I tried adjusting my input volume, changed browsers retyped the lines word for word yet it still is doing the same thing and will skip the other characters next line. I also noticed at times it will not start the next line after I provided the cue word. I've tried everything to try and remedy this however it still continues bypassing the next characters line and skips to my next line.
+
+1
+Economy_Bad5230
+•
+1y ago
+I wish I could connect my earbuds! Otherwise I would be so happy with this fantastic invention, thank you for your time and precise effort.
+
+1
+Related Answers Section
+Related Answers
+Building an AI scene partner for actors
+Top audition apps for actors
+Best self-tape reader apps
+AI script readers for auditions
+Virtual readers for audition practice
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+Talent Management Companies in LA for development actors
+r/acting icon
+r/acting
+•
+4mo ago
+Talent Management Companies in LA for development actors
+5 upvotes · 5 comments
+2025 Audition Stats from a working actor
+r/acting icon
+r/acting
+•
+2mo ago
+2025 Audition Stats from a working actor
+r/acting - 2025 Audition Stats from a working actor
+95 upvotes · 32 comments
+Being an actor actually isn’t the most sought after job.
+r/acting icon
+r/acting
+•
+1mo ago
+Being an actor actually isn’t the most sought after job.
+r/acting - Being an actor actually isn’t the most sought after job.
+342 upvotes · 112 comments
+How do Casting Directors Decide who to request auditions from for tv shows & films? What do they take into consideration typically?
+r/acting icon
+r/acting
+•
+5mo ago
+How do Casting Directors Decide who to request auditions from for tv shows & films? What do they take into consideration typically?
+17 upvotes · 16 comments
+Let's keep each other honest and motivated with auditions
+r/VoiceActing icon
+r/VoiceActing
+•
+1mo ago
+Let's keep each other honest and motivated with auditions
+r/VoiceActing - Let's keep each other honest and motivated with auditions
+31 upvotes · 12 comments
+LA acting class recs
+r/acting icon
+r/acting
+•
+10mo ago
+LA acting class recs
+5 upvotes · 14 comments
+Looking for fast-paced acting classes in LA where everyone works and learns intensely
+r/acting icon
+r/acting
+•
+8mo ago
+Looking for fast-paced acting classes in LA where everyone works and learns intensely
+18 upvotes · 11 comments
+Actors who are WOC or POC, what has your experience in the industry been like?
+r/acting icon
+r/acting
+•
+2mo ago
+Actors who are WOC or POC, what has your experience in the industry been like?
+22 upvotes · 24 comments
+At what price point would you consider a beginner acting class to be “expensive”?
+r/acting icon
+r/acting
+•
+22d ago
+At what price point would you consider a beginner acting class to be “expensive”?
+8 upvotes · 22 comments
+At what point did you start auditioning?
+r/acting icon
+r/acting
+•
+28d ago
+At what point did you start auditioning?
+31 upvotes · 26 comments
+How long do you have to learn acting in order to be a good actor?
+r/acting icon
+r/acting
+•
+4mo ago
+How long do you have to learn acting in order to be a good actor?
+9 upvotes · 23 comments
+Struggling with in-person auditions
+r/acting icon
+r/acting
+•
+28d ago
+Struggling with in-person auditions
+14 upvotes · 24 comments
+Some audition advice from a casting director
+r/VoiceActing icon
+r/VoiceActing
+•
+8mo ago
+Some audition advice from a casting director
+335 upvotes · 39 comments
+Could you date a actor or actress
+r/Actors icon
+r/Actors
+•
+6mo ago
+Could you date a actor or actress
+8 upvotes · 33 comments
+When casting teams are sifting through auditions and picking actors for roles, how do they talk to each other?
+r/acting icon
+r/acting
+•
+5mo ago
+When casting teams are sifting through auditions and picking actors for roles, how do they talk to each other?
+43 upvotes · 15 comments
+Why do you want to be an actor?
+r/acting icon
+r/acting
+•
+3mo ago
+Why do you want to be an actor?
+79 upvotes · 124 comments
+How to be a background actor?
+r/acting icon
+r/acting
+•
+6d ago
+How to be a background actor?
+2 upvotes · 9 comments
+Is there another sub for experienced actors in the biz?
+r/acting icon
+r/acting
+•
+2mo ago
+Is there another sub for experienced actors in the biz?
+269 upvotes · 109 comments
+Can anyone become an actor if they learn it?
+r/acting icon
+r/acting
+•
+9mo ago
+Can anyone become an actor if they learn it?
+82 upvotes · 66 comments
+To all you actors out there famous or not, are you still able to be immersed in movies? Like singers can enjoy music? Or do you watch movies not for the story but for the production?
+r/acting icon
+r/acting
+•
+3mo ago
+To all you actors out there famous or not, are you still able to be immersed in movies? Like singers can enjoy music? Or do you watch movies not for the story but for the production?
+28 upvotes · 35 comments
+What Are Some Traits That Would Make Someone Good At Acting?
+r/acting icon
+r/acting
+•
+1mo ago
+What Are Some Traits That Would Make Someone Good At Acting?
+89 upvotes · 73 comments
+Tell me what made you want (need) to be an actor
+r/acting icon
+r/acting
+•
+6mo ago
+Tell me what made you want (need) to be an actor
+42 upvotes · 66 comments
+Where Are You Finding Roles or Talent Outside the Big Casting Sites?
+r/acting icon
+r/acting
+•
+1mo ago
+Where Are You Finding Roles or Talent Outside the Big Casting Sites?
+13 upvotes · 15 comments
+Forming an acting group
+r/acting icon
+r/acting
+•
+1mo ago
+Forming an acting group
+33 upvotes · 33 comments
+I love acting while acting
+r/acting icon
+r/acting
+•
+2mo ago
+I love acting while acting
+48 upvotes · 16 comments
+View Post in
+Français
+Community Info Section
+r/Actors
+Verified
+Join
+Actor World Stay Updated on New, Updates & Releases!
+A vibrant group where actors and enthusiasts can share, learn, and connect. This is a place for you to discuss everything related to the craft and business of acting.
+
+Show more
+Public
+Top Posts
+Reddit
+reReddit: Top posts of June 22, 2024
+Reddit
+reReddit: Top posts of June 2024
+Reddit
+reReddit: Top posts of 2024
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Expand Navigation
