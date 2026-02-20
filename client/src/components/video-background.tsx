@@ -51,6 +51,8 @@ interface VideoBackgroundProps {
   isRecording: boolean;
   overlayData?: OverlayData;
   showOverlayOnCanvas?: boolean;
+  dimmed?: boolean;
+  onTap?: () => void;
   className?: string;
 }
 
@@ -61,6 +63,8 @@ export function VideoBackground({
   isRecording,
   overlayData,
   showOverlayOnCanvas = false,
+  dimmed = false,
+  onTap,
   className 
 }: VideoBackgroundProps) {
   const overlayDataRef = useRef<OverlayData | undefined>(overlayData);
@@ -257,7 +261,11 @@ export function VideoBackground({
       />
       <canvas
         ref={canvasRef}
-        className="w-full h-full object-cover"
+        className={cn(
+          "w-full h-full object-cover transition-all duration-300 ease-out",
+          dimmed && "brightness-75"
+        )}
+        onClick={onTap}
       />
       
       {isRecording && (

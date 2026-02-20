@@ -90,6 +90,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const [showCountdown, setShowCountdown] = useState(false);
   const pendingPlayFromLineRef = useRef<number | null>(null);
+  const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
+  
+  useEffect(() => {
+    if (!camera.isEnabled) setCameraFocus('script');
+  }, [camera.isEnabled]);
   
   // Performance tracking - use ref to avoid closure issues
   const runPerformanceRef = useRef<RunPerformance>({
@@ -1295,27 +1300,34 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           videoRef={camera.videoRef}
           canvasRef={camera.canvasRef}
           isRecording={camera.isRecording}
+          dimmed={cameraFocus === 'script'}
+          onTap={() => setCameraFocus(prev => prev === 'script' ? 'face' : 'script')}
         />
       )}
       
-      <Header
-        sessionName={session.name}
-        userRole={userRole ?? null}
-        showReaderMenu
-        fontSize={fontSize}
-        showDirections={showDirections}
-        scenes={session.scenes}
-        currentSceneIndex={session.currentSceneIndex}
-        streak={stats.currentStreak}
-        dailyGoal={stats.dailyGoal}
-        todayLines={stats.todayLines}
-        onBack={handleBackToHome}
-        onFontSizeChange={setFontSize}
-        onToggleDirections={() => setShowDirections(!showDirections)}
-        onJumpToLine={handleJumpToLine}
-        cameraMode={camera.isEnabled}
-        onToast={(msg) => toast({ description: msg })}
-      />
+      <div className={cn(
+        "transition-opacity duration-300",
+        camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
+      )}>
+        <Header
+          sessionName={session.name}
+          userRole={userRole ?? null}
+          showReaderMenu
+          fontSize={fontSize}
+          showDirections={showDirections}
+          scenes={session.scenes}
+          currentSceneIndex={session.currentSceneIndex}
+          streak={stats.currentStreak}
+          dailyGoal={stats.dailyGoal}
+          todayLines={stats.todayLines}
+          onBack={handleBackToHome}
+          onFontSizeChange={setFontSize}
+          onToggleDirections={() => setShowDirections(!showDirections)}
+          onJumpToLine={handleJumpToLine}
+          cameraMode={camera.isEnabled}
+          onToast={(msg) => toast({ description: msg })}
+        />
+      </div>
 
       {showCelebration && (() => {
         const feedback = getPerformanceFeedback();
@@ -1507,8 +1519,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       )}
 
       <main className={cn(
-        "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10",
-        camera.isEnabled && "text-white"
+        "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
+        camera.isEnabled && "text-white",
+        camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
       )}>
         {/* Subtle gradient accent at top - hide when camera is on */}
         {!camera.isEnabled && (
@@ -1619,10 +1632,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       )}
 
       <footer className={cn(
-        "sticky bottom-0 border-t safe-bottom z-40",
+        "sticky bottom-0 border-t safe-bottom z-40 transition-opacity duration-300",
         camera.isEnabled 
           ? "bg-black/60 backdrop-blur-xl border-white/10" 
-          : "glass"
+          : "glass",
+        camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
       )}>
         <div className="px-4 py-2">
           <PracticeToolbar
