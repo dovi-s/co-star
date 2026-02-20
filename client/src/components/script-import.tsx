@@ -965,7 +965,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/50" data-testid="text-privacy-badge">
         <Lock className="h-3 w-3" />
-        <span>Your script stays on your device. Nothing is stored on our servers.</span>
+        <span>Your script stays on your device</span>
       </div>
 
       <Button
