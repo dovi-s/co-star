@@ -139,6 +139,32 @@ const MALE_NAMES = new Set([
   "eric", "kelso", "hyde", "bob", "red", "pastor", "fenton"
 ]);
 
+// Simple edit distance 1 check (handles transpositions, insertions, deletions, substitutions)
+function fuzzyMatch(a: string, b: string): boolean {
+  if (a === b) return true;
+  if (Math.abs(a.length - b.length) > 1) return false;
+  let diffs = 0;
+  if (a.length === b.length) {
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) diffs++;
+      if (diffs > 1) return false;
+    }
+    return true;
+  }
+  const longer = a.length > b.length ? a : b;
+  const shorter = a.length > b.length ? b : a;
+  let j = 0;
+  for (let i = 0; i < longer.length && j < shorter.length; i++) {
+    if (longer[i] !== shorter[j]) {
+      diffs++;
+      if (diffs > 1) return false;
+    } else {
+      j++;
+    }
+  }
+  return true;
+}
+
 // Cache voice assignments to ensure consistency within a session
 const voiceAssignmentCache = new Map<string, VoiceType>();
 
@@ -161,10 +187,33 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   // Simple gender detection
   let isFemale = false;
   
-  // Check against name lists
+  // Check against name lists (with fuzzy matching for common misspellings)
   for (const word of words) {
-    if (FEMALE_NAMES.has(word)) isFemale = true;
-    if (MALE_NAMES.has(word)) isFemale = false; // Male takes precedence if both
+    if (FEMALE_NAMES.has(word)) {
+      isFemale = true;
+    } else if (MALE_NAMES.has(word)) {
+      isFemale = false;
+    } else if (word.length >= 4) {
+      // Fuzzy: check if any known name is within edit distance 1
+      const femaleArr = Array.from(FEMALE_NAMES);
+      const maleArr = Array.from(MALE_NAMES);
+      let foundFemale = false;
+      let foundMale = false;
+      for (let i = 0; i < femaleArr.length; i++) {
+        if (Math.abs(femaleArr[i].length - word.length) <= 1 && fuzzyMatch(word, femaleArr[i])) {
+          foundFemale = true;
+          break;
+        }
+      }
+      for (let i = 0; i < maleArr.length; i++) {
+        if (Math.abs(maleArr[i].length - word.length) <= 1 && fuzzyMatch(word, maleArr[i])) {
+          foundMale = true;
+          break;
+        }
+      }
+      if (foundFemale) isFemale = true;
+      if (foundMale) isFemale = false;
+    }
   }
   
   // Title/keyword checks (includes common profession stereotypes for voice assignment)
