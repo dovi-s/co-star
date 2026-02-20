@@ -109,6 +109,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const matchGraceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchReachedRef = useRef(false);
+  const getCurrentLineRef = useRef(getCurrentLine);
+  const advanceAfterUserLineRef = useRef<() => void>(() => {});
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -121,6 +123,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   useEffect(() => {
     isPlayingRef.current = session?.isPlaying ?? false;
   }, [session?.isPlaying]);
+
+  useEffect(() => {
+    getCurrentLineRef.current = getCurrentLine;
+  }, [getCurrentLine]);
 
   useEffect(() => {
     if (camera.error) {
@@ -141,7 +147,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     speechRecognition.onResult((result) => {
       setUserTranscript(result.transcript);
       
-      const line = getCurrentLine();
+      const line = getCurrentLineRef.current();
       if (!line || result.transcript.length === 0 || !waitingForUserRef.current) return;
       
       const match = matchWords(line.text, result.transcript);
@@ -152,38 +158,31 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           clearTimeout(matchGraceTimeoutRef.current);
         }
         
+        const doAdvance = () => {
+          speechRecognition.stop();
+          waitingForUserRef.current = false;
+          matchReachedRef.current = false;
+          if (autoAdvanceTimeoutRef.current) {
+            clearTimeout(autoAdvanceTimeoutRef.current);
+            autoAdvanceTimeoutRef.current = null;
+          }
+          autoAdvanceTimeoutRef.current = setTimeout(() => {
+            if (isPlayingRef.current) advanceAfterUserLineRef.current();
+          }, 20);
+        };
+        
         if (result.isFinal) {
           matchReachedRef.current = true;
           const graceMs = match.percentMatched >= 95 ? 100 : 250;
           matchGraceTimeoutRef.current = setTimeout(() => {
-            if (isPlayingRef.current && waitingForUserRef.current) {
-              speechRecognition.stop();
-              waitingForUserRef.current = false;
-              matchReachedRef.current = false;
-              if (autoAdvanceTimeoutRef.current) {
-                clearTimeout(autoAdvanceTimeoutRef.current);
-                autoAdvanceTimeoutRef.current = null;
-              }
-              autoAdvanceTimeoutRef.current = setTimeout(() => {
-                if (isPlayingRef.current) advanceAfterUserLine();
-              }, 20);
-            }
+            if (isPlayingRef.current && waitingForUserRef.current) doAdvance();
           }, graceMs);
         } else {
           const interimGraceMs = match.percentMatched >= 95 ? 300 : 500;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;
-              speechRecognition.stop();
-              waitingForUserRef.current = false;
-              matchReachedRef.current = false;
-              if (autoAdvanceTimeoutRef.current) {
-                clearTimeout(autoAdvanceTimeoutRef.current);
-                autoAdvanceTimeoutRef.current = null;
-              }
-              autoAdvanceTimeoutRef.current = setTimeout(() => {
-                if (isPlayingRef.current) advanceAfterUserLine();
-              }, 20);
+              doAdvance();
             }
           }, interimGraceMs);
         }
@@ -210,12 +209,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       if (error === "not-allowed") {
         setMicBlocked(true);
       }
-      // On error, still try to advance if we're waiting
       if (waitingForUserRef.current && isPlayingRef.current) {
         waitingForUserRef.current = false;
         setTimeout(() => {
           if (isPlayingRef.current) {
-            advanceAfterUserLine();
+            advanceAfterUserLineRef.current();
           }
         }, 500);
       }
@@ -425,6 +423,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       completeRun();
     }
   }, [getCurrentLine, getNextLine, incrementLinesRehearsed, nextLine, recordRehearsal, completeRun, recordLinePerformance, isUserLine]);
+
+  useEffect(() => {
+    advanceAfterUserLineRef.current = advanceAfterUserLine;
+  }, [advanceAfterUserLine]);
 
   const startListeningForUser = useCallback(() => {
     console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked);
