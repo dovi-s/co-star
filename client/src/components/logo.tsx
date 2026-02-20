@@ -1,5 +1,4 @@
 import { cn } from "@/lib/utils";
-import logoImage from "@assets/castmate_icon_transparent_512_1769295148528.png";
 
 interface LogoProps {
   size?: "xs" | "sm" | "md" | "lg" | "xl";
@@ -16,6 +15,27 @@ const sizeClasses = {
   xl: { container: "w-22 h-22", text: "text-3xl" },
 };
 
+function CoStarMark({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 48 48"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+    >
+      <path
+        d="M21 7 Q25 17 35 21 Q25 25 21 35 Q17 25 7 21 Q17 17 21 7 Z"
+        fill="currentColor"
+      />
+      <path
+        d="M35 29.5 Q36.5 33.5 40.5 35 Q36.5 36.5 35 40.5 Q33.5 36.5 29.5 35 Q33.5 33.5 35 29.5 Z"
+        fill="currentColor"
+        opacity="0.55"
+      />
+    </svg>
+  );
+}
+
 export function Logo({ size = "md", animated = true, showWordmark = false, className }: LogoProps) {
   const { container, text } = sizeClasses[size];
   
@@ -26,11 +46,7 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
         "relative flex items-center justify-center",
         animated && "transition-transform duration-200 hover:scale-105"
       )}>
-        <img 
-          src={logoImage} 
-          alt="co-star" 
-          className="w-full h-full object-contain dark:invert-0 invert"
-        />
+        <CoStarMark className="w-full h-full text-foreground" />
       </div>
       
       {showWordmark && (
@@ -44,22 +60,14 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
 
 export function LogoIcon({ className }: { className?: string }) {
   return (
-    <img 
-      src={logoImage} 
-      alt="co-star" 
-      className={cn("w-full h-full object-contain dark:invert-0 invert", className)}
-    />
+    <CoStarMark className={cn("w-full h-full text-foreground", className)} />
   );
 }
 
 export function LogoMark({ className }: { className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <img 
-        src={logoImage} 
-        alt="co-star" 
-        className="w-full h-full object-contain dark:invert-0 invert"
-      />
+      <CoStarMark className="w-full h-full text-foreground" />
     </div>
   );
 }
