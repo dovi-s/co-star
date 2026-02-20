@@ -813,24 +813,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         </div>
       )}
 
-      {/* Character preview with clear option */}
-      {script && previewData.roles > 0 && !looksLikeBadPdfCopy && (
-        <p className="text-xs text-muted-foreground text-center mt-2 mb-4">
-          {previewData.roles} roles
-          {previewData.scenes > 0 && <span> · {previewData.scenes} scenes</span>}
-          {previewData.time && <span> · {previewData.time}</span>}
-          {" · "}
-          <button
-            type="button"
-            onClick={() => { setScript(""); setIsEditingScript(true); }}
-            className="underline underline-offset-2 hover:text-foreground transition-colors"
-            data-testid="button-clear-script"
-          >
-            Clear
-          </button>
-        </p>
-      )}
-      
       {/* Cleaning in progress indicator */}
       {isCleaning && (
         <div className="flex flex-col items-center gap-2 py-3 text-muted-foreground animate-fade-in" role="status" aria-label="Fixing formatting">
@@ -845,14 +827,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           )}
         </div>
       )}
-      
-      {script && previewData.roles === 0 && script.trim().length > 50 && (
-        <p className="text-center text-sm text-muted-foreground/70 animate-fade-in" data-testid="text-cleanup-hint">
-          {isCleaning ? (
-            <span className="inline-flex items-center gap-1.5" data-testid="text-cleanup-loading">
-              <div className="w-3 h-3 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
-              Formatting
-            </span>
+
+      {/* Script status line — always visible when there's text */}
+      {script && !isCleaning && !looksLikeBadPdfCopy && (
+        <p className="text-xs text-muted-foreground text-center mt-2 mb-4" data-testid="text-script-status">
+          {previewData.roles > 0 ? (
+            <>
+              {previewData.roles} roles
+              {previewData.scenes > 0 && <span> · {previewData.scenes} scenes</span>}
+              {previewData.time && <span> · {previewData.time}</span>}
+            </>
           ) : cleanupError ? (
             <span data-testid="text-cleanup-error">
               {typeof cleanupError === "string" ? cleanupError : "Formatting failed."}{" "}
@@ -866,24 +850,30 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             </span>
           ) : (
             <>
-              Can't find dialogue.{" "}
-              <button
-                onClick={cleanupScript}
-                className="underline underline-offset-2 hover:text-foreground transition-colors"
-                data-testid="button-cleanup-script"
-              >
-                Auto-format
-              </button>
-              {" · "}
-              <button
-                onClick={() => { setScript(""); setIsEditingScript(true); }}
-                className="underline underline-offset-2 hover:text-foreground transition-colors"
-                data-testid="button-clear-script-alt"
-              >
-                Clear
-              </button>
+              No dialogue detected
+              {script.trim().length > 50 && (
+                <>
+                  {" · "}
+                  <button
+                    onClick={cleanupScript}
+                    className="underline underline-offset-2 hover:text-foreground transition-colors"
+                    data-testid="button-cleanup-script"
+                  >
+                    Auto-format
+                  </button>
+                </>
+              )}
             </>
           )}
+          {" · "}
+          <button
+            type="button"
+            onClick={() => { setScript(""); setIsEditingScript(true); }}
+            className="underline underline-offset-2 hover:text-foreground transition-colors"
+            data-testid="button-clear-script"
+          >
+            Clear
+          </button>
         </p>
       )}
 
