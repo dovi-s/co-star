@@ -201,7 +201,7 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
-                className={cn("shrink-0", cameraMode && "text-white hover:bg-white/10")}
+                className={cn("shrink-0 text-muted-foreground", cameraMode && "text-white hover:bg-white/10")}
                 data-testid="button-share-menu"
               >
                 <Share2 className="h-4 w-4" />
