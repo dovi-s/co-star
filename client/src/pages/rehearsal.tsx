@@ -152,14 +152,22 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         
         if (match.percentMatched >= 80 && !matchReachedRef.current) {
           matchReachedRef.current = true;
-          console.log("[Rehearsal] 80%+ match reached, grace period started (1.5s to finish speaking)");
+          
+          const graceMs = match.percentMatched >= 95
+            ? 150
+            : match.totalWords <= 6
+              ? 300
+              : match.totalWords <= 12
+                ? 500
+                : 700;
+          
+          console.log("[Rehearsal]", Math.round(match.percentMatched) + "% match,", graceMs + "ms grace");
           
           if (matchGraceTimeoutRef.current) {
             clearTimeout(matchGraceTimeoutRef.current);
           }
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current) {
-              console.log("[Rehearsal] Grace period ended, advancing");
               speechRecognition.stop();
               waitingForUserRef.current = false;
               matchReachedRef.current = false;
@@ -175,7 +183,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 }
               }, 20);
             }
-          }, 1500);
+          }, graceMs);
           return;
         }
       }
@@ -240,9 +248,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     const match = matchWords(currentLine.text, userTranscript);
     if (match.percentMatched >= 80 && waitingForUserRef.current && !matchReachedRef.current) {
-      console.log("[Rehearsal] Backup watcher: 80%+ match, starting grace period");
       advancedForLineRef.current = currentLine.id;
       matchReachedRef.current = true;
+      
+      const graceMs = match.percentMatched >= 95
+        ? 150
+        : match.totalWords <= 6
+          ? 300
+          : match.totalWords <= 12
+            ? 500
+            : 700;
       
       if (matchGraceTimeoutRef.current) {
         clearTimeout(matchGraceTimeoutRef.current);
@@ -263,7 +278,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }
           }, 20);
         }
-      }, 1500);
+      }, graceMs);
     }
   }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
 
