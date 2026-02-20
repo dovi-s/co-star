@@ -21,6 +21,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
     return "import";
   });
   const userWentBackRef = useRef(false);
+  const lastRawScriptRef = useRef("");
 
   useEffect(() => {
     if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
@@ -36,14 +37,16 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
 
   const handleImport = async (name: string, rawScript: string) => {
     userWentBackRef.current = false;
+    lastRawScriptRef.current = rawScript;
     const newSession = await createSession(name, rawScript);
     if (newSession) {
       setStep("role-select");
     }
   };
 
-  const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }) => {
+  const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }, rawScript?: string) => {
     userWentBackRef.current = false;
+    if (rawScript) lastRawScriptRef.current = rawScript;
     const newSession = createSessionFromParsed(name, parsed);
     if (newSession) {
       console.log('[Home] Session created, advancing to role-select');
@@ -130,9 +133,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
             isLoading={isLoading} 
             error={error}
             onClearError={clearError}
-            initialScript={session?.scenes.map(s => 
-              s.lines.map(l => `${l.roleName}: ${l.direction ? `[${l.direction}] ` : ''}${l.text}`).join('\n')
-            ).join('\n\n') || ''}
+            initialScript={lastRawScriptRef.current || ''}
           />
         </div>
       </main>

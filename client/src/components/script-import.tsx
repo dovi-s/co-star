@@ -20,7 +20,7 @@ interface ParsedScript {
 
 interface ScriptImportProps {
   onImport: (name: string, rawScript: string) => void;
-  onImportParsed?: (name: string, parsed: ParsedScript) => void;
+  onImportParsed?: (name: string, parsed: ParsedScript, rawScript?: string) => void;
   isLoading?: boolean;
   error?: string | null;
   onClearError?: () => void;
@@ -442,7 +442,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       console.log('[Submit] Using server-parsed data with', serverParsedData.scenes.length, 'scenes');
       const totalLines = serverParsedData.scenes.reduce((sum: number, s: any) => sum + s.lines.length, 0);
       console.log('[Submit] Total lines in parsed data:', totalLines);
-      onImportParsed(sessionName, serverParsedData);
+      onImportParsed(sessionName, serverParsedData, script);
       return;
     }
     
@@ -473,7 +473,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           suggestedName: data.suggestedName,
         });
         const finalName = uploadedFileName || data.suggestedName || sessionName;
-        onImportParsed(finalName, data.parsed);
+        onImportParsed(finalName, data.parsed, script);
       } catch (e: any) {
         console.error("[Submit] Server parse error:", e);
         // Fall back to client-side parsing

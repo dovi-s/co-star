@@ -563,8 +563,8 @@ function isValidContext(text: string): boolean {
   // - Scene description: "The room is dark"
   // - Camera directions: "ANGLE ON", "CLOSE UP"
   
-  // Accept bracketed directions
-  if (/^\[.*\]$/.test(trimmed)) return true;
+  // Accept bracketed/parenthetical directions (author explicitly marked these)
+  if (/^\[/.test(trimmed) || /\]$/.test(trimmed)) return true;
   if (/^\(.*\)$/.test(trimmed)) return true;
   
   // Accept clear action patterns
@@ -1949,10 +1949,11 @@ export function parseScript(rawText: string): ParsedScript {
     }
     
     // Pure stage direction on its own line - add to context
+    // These are explicitly marked by the author so always valid
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
       const cleaned = trimmed.replace(/^\[|\]$|^\(|\)$/g, '').trim();
       if (cleaned) {
-        pendingContext.push(cleaned);
+        pendingContext.push(`[${cleaned}]`);
       }
       continue;
     }
