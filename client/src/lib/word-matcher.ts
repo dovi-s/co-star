@@ -226,17 +226,29 @@ export function matchWords(expectedText: string, spokenText: string): {
   const expectedWords = expectedText.split(/\s+/).filter(w => w.length > 0);
   const spokenWords = spokenText.split(/\s+/).filter(w => w.length > 0);
   
-  // Build a set of all spoken word forms (including contraction variants)
   const spokenForms = new Set<string>();
+  const spokenNorms: string[] = [];
   for (const word of spokenWords) {
+    const norm = normalizeWord(word);
+    spokenNorms.push(norm);
     for (const form of getWordForms(word)) {
       spokenForms.add(form);
     }
   }
-  
-  const words: WordMatch[] = expectedWords.map(word => {
+
+  for (let i = 0; i < spokenNorms.length - 1; i++) {
+    spokenForms.add(spokenNorms[i] + spokenNorms[i + 1]);
+  }
+
+  const words: WordMatch[] = expectedWords.map((word, idx) => {
     const forms = getWordForms(word);
-    const matched = forms.some(form => spokenForms.has(form));
+    let matched = forms.some(form => spokenForms.has(form));
+    if (!matched && idx + 1 < expectedWords.length) {
+      const combined = normalizeWord(word) + normalizeWord(expectedWords[idx + 1]);
+      if (combined.length >= 3 && spokenForms.has(combined)) {
+        matched = true;
+      }
+    }
     return { word, matched, status: matched ? 'matched' as const : 'ahead' as const };
   });
   
@@ -284,6 +296,8 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
     return new Set(forms);
   });
 
+  const spokenNorms = spokenWords.map(w => normalizeWord(w));
+
   const matched = new Array(totalWords).fill(false);
   let si = 0;
   let highWaterMark = -1;
@@ -318,6 +332,36 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
           matched[ei] = true;
           highWaterMark = ei;
           si = sj + 1;
+          found = true;
+          break;
+        }
+      }
+    }
+
+    if (!found && ei + 1 < totalWords) {
+      const nextNorm = normalizeWord(expectedWords[ei + 1]);
+      const combined = expectedNorm + nextNorm;
+      if (combined.length >= 3) {
+        for (let sj = si; sj < spokenWords.length; sj++) {
+          if (spokenNorms[sj] === combined || spokenForms[sj].has(combined)) {
+            matched[ei] = true;
+            matched[ei + 1] = true;
+            highWaterMark = ei + 1;
+            si = sj + 1;
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!found) {
+      for (let sj = si; sj < Math.min(si + 4, spokenWords.length - 1); sj++) {
+        const spokenCombined = spokenNorms[sj] + spokenNorms[sj + 1];
+        if (spokenCombined === expectedNorm || expectedForms.some(f => f === spokenCombined)) {
+          matched[ei] = true;
+          highWaterMark = ei;
+          si = sj + 2;
           break;
         }
       }
