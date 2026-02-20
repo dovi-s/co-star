@@ -139,58 +139,45 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     });
 
     speechRecognition.onResult((result) => {
-      console.log("[Rehearsal] Speech result:", result.isFinal ? "FINAL" : "interim", result.transcript.substring(0, 30));
       setUserTranscript(result.transcript);
       
       const line = getCurrentLine();
-      if (line && result.transcript.length > 0 && waitingForUserRef.current) {
-        const match = matchWords(line.text, result.transcript);
-        console.log("[Rehearsal] Word match:", match.matchedCount, "/", match.totalWords, 
-          `(${Math.round(match.percentMatched)}%)`);
-        
-        currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
-        
-        if (match.percentMatched >= 80 && !matchReachedRef.current) {
-          matchReachedRef.current = true;
-          
-          const graceMs = match.percentMatched >= 95
-            ? 150
-            : match.totalWords <= 6
-              ? 300
-              : match.totalWords <= 12
-                ? 500
-                : 700;
-          
-          console.log("[Rehearsal]", Math.round(match.percentMatched) + "% match,", graceMs + "ms grace");
-          
-          if (matchGraceTimeoutRef.current) {
-            clearTimeout(matchGraceTimeoutRef.current);
-          }
-          matchGraceTimeoutRef.current = setTimeout(() => {
-            if (isPlayingRef.current && waitingForUserRef.current) {
-              speechRecognition.stop();
-              waitingForUserRef.current = false;
-              matchReachedRef.current = false;
-              
-              if (autoAdvanceTimeoutRef.current) {
-                clearTimeout(autoAdvanceTimeoutRef.current);
-                autoAdvanceTimeoutRef.current = null;
-              }
-              
-              autoAdvanceTimeoutRef.current = setTimeout(() => {
-                if (isPlayingRef.current) {
-                  advanceAfterUserLine();
-                }
-              }, 20);
-            }
-          }, graceMs);
-          return;
-        }
-      }
+      if (!line || result.transcript.length === 0 || !waitingForUserRef.current) return;
       
-      if (result.isFinal && waitingForUserRef.current && line) {
-        const match = matchWords(line.text, result.transcript);
-        console.log("[Rehearsal] Final result with", Math.round(match.percentMatched), "% match - continuing to listen");
+      const match = matchWords(line.text, result.transcript);
+      currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
+      
+      if (!result.isFinal) return;
+      
+      console.log("[Rehearsal] Final speech:", match.matchedCount, "/", match.totalWords,
+        `(${Math.round(match.percentMatched)}%)`);
+      
+      if (match.percentMatched >= 80 && !matchReachedRef.current) {
+        matchReachedRef.current = true;
+        
+        const graceMs = match.percentMatched >= 95 ? 100 : 250;
+        
+        if (matchGraceTimeoutRef.current) {
+          clearTimeout(matchGraceTimeoutRef.current);
+        }
+        matchGraceTimeoutRef.current = setTimeout(() => {
+          if (isPlayingRef.current && waitingForUserRef.current) {
+            speechRecognition.stop();
+            waitingForUserRef.current = false;
+            matchReachedRef.current = false;
+            
+            if (autoAdvanceTimeoutRef.current) {
+              clearTimeout(autoAdvanceTimeoutRef.current);
+              autoAdvanceTimeoutRef.current = null;
+            }
+            
+            autoAdvanceTimeoutRef.current = setTimeout(() => {
+              if (isPlayingRef.current) {
+                advanceAfterUserLine();
+              }
+            }, 20);
+          }
+        }, graceMs);
       }
     });
 
@@ -236,60 +223,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, []);
 
-  const advancedForLineRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!currentLine || !currentIsUserLine || !session?.isPlaying || !userTranscript) {
-      return;
-    }
-    
-    if (advancedForLineRef.current === currentLine.id) {
-      return;
-    }
-    
-    const match = matchWords(currentLine.text, userTranscript);
-    if (match.percentMatched >= 80 && waitingForUserRef.current && !matchReachedRef.current) {
-      advancedForLineRef.current = currentLine.id;
-      matchReachedRef.current = true;
-      
-      const graceMs = match.percentMatched >= 95
-        ? 150
-        : match.totalWords <= 6
-          ? 300
-          : match.totalWords <= 12
-            ? 500
-            : 700;
-      
-      if (matchGraceTimeoutRef.current) {
-        clearTimeout(matchGraceTimeoutRef.current);
-      }
-      matchGraceTimeoutRef.current = setTimeout(() => {
-        if (isPlayingRef.current && waitingForUserRef.current) {
-          speechRecognition.stop();
-          waitingForUserRef.current = false;
-          matchReachedRef.current = false;
-          
-          if (autoAdvanceTimeoutRef.current) {
-            clearTimeout(autoAdvanceTimeoutRef.current);
-          }
-          
-          autoAdvanceTimeoutRef.current = setTimeout(() => {
-            if (isPlayingRef.current) {
-              advanceAfterUserLine();
-            }
-          }, 20);
-        }
-      }, graceMs);
-    }
-  }, [currentLine, currentIsUserLine, session?.isPlaying, userTranscript]);
-
-  useEffect(() => {
-    if (currentLine?.id !== advancedForLineRef.current) {
-      advancedForLineRef.current = null;
-      matchReachedRef.current = false;
-      if (matchGraceTimeoutRef.current) {
-        clearTimeout(matchGraceTimeoutRef.current);
-        matchGraceTimeoutRef.current = null;
-      }
+    matchReachedRef.current = false;
+    if (matchGraceTimeoutRef.current) {
+      clearTimeout(matchGraceTimeoutRef.current);
+      matchGraceTimeoutRef.current = null;
     }
   }, [currentLine?.id]);
 
