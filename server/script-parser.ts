@@ -678,7 +678,9 @@ function cleanDialogueText(text: string): string {
   cleaned = cleaned.replace(/\\/g, ''); // Remove stray backslashes
   
   // Fix hyphenated line breaks from PDF extraction: "sar- castic" -> "sarcastic"
-  cleaned = cleaned.replace(/(\w+)-\s+(\w+)/g, '$1$2');
+  // Only merge when second part starts lowercase (broken word), not uppercase (new word/sentence)
+  // Also skip if the first part is a common word that uses hyphens in dialogue (stuttering, interruption)
+  cleaned = cleaned.replace(/([a-zA-Z]+)-\s+([a-z])/g, '$1$2');
   
   // Fix common OCR word merge issues where spaces were lost
   // "Iyou" -> "I you", "myfriend" -> "my friend", etc.
