@@ -172,6 +172,7 @@ class TTSEngine {
   private isReady = false;
   private hasSpokenOnce = false;
   private currentAudio: HTMLAudioElement | null = null;
+  private persistentAudio: HTMLAudioElement | null = null;
   private useElevenLabs = true;
   private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
   private callbackFired = false;
@@ -184,10 +185,10 @@ class TTSEngine {
   private prefetchController: AbortController | null = null;
   private prefetchInFlight: string | null = null;
   
-  // Audio mixing for WebRTC - allows TTS audio to be streamed to other participants
   private audioContext: AudioContext | null = null;
   private ttsDestination: MediaStreamAudioDestinationNode | null = null;
   private currentMediaSource: MediaElementAudioSourceNode | null = null;
+  private persistentMediaSource: MediaElementAudioSourceNode | null = null;
 
   constructor() {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
@@ -205,6 +206,11 @@ class TTSEngine {
         this.loadVoices();
         this.isReady = true;
       }, 100);
+    }
+    
+    if (typeof window !== "undefined") {
+      this.persistentAudio = new Audio();
+      this.persistentAudio.preload = "auto";
     }
   }
 
@@ -241,18 +247,27 @@ class TTSEngine {
   }
 
   unlockAudio(): void {
-    if (this.audioUnlocked) return;
-    
     try {
-      const silentAudio = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
-      silentAudio.volume = 0.01;
-      silentAudio.play().then(() => {
-        silentAudio.pause();
-        this.audioUnlocked = true;
-        console.log("[TTS] Audio unlocked for mobile playback");
-      }).catch(() => {
-        console.log("[TTS] Silent audio unlock failed (expected if not in gesture)");
-      });
+      if (!this.persistentAudio) {
+        this.persistentAudio = new Audio();
+        this.persistentAudio.preload = "auto";
+      }
+      
+      const audio = this.persistentAudio;
+      
+      if (!this.audioUnlocked) {
+        audio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+        audio.volume = 0.01;
+        audio.play().then(() => {
+          audio.pause();
+          audio.volume = 1;
+          audio.currentTime = 0;
+          this.audioUnlocked = true;
+          console.log("[TTS] Persistent audio element unlocked for iOS");
+        }).catch(() => {
+          console.log("[TTS] Audio unlock failed (expected if not in gesture)");
+        });
+      }
 
       if (!this.audioContext) {
         this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -479,32 +494,30 @@ class TTSEngine {
         audioUrl = URL.createObjectURL(audioBlob);
       }
       
-      // Create audio element
-      const audio = new Audio();
+      const audio = this.persistentAudio || new Audio();
+      if (!this.persistentAudio) {
+        this.persistentAudio = audio;
+      }
       audio.preload = "auto";
       this.currentAudio = audio;
       
       const targetSpeed = options.playbackSpeed ?? 1.0;
       console.log("[TTS] Target playback speed:", targetSpeed);
 
-      // Start watchdog timer
       this.startWatchdog(text, onEnd);
 
       return new Promise((resolve) => {
         let hasEnded = false;
-        let mediaSource: MediaElementAudioSourceNode | null = null;
         
         const cleanup = () => {
           if (!hasEnded) {
             hasEnded = true;
             URL.revokeObjectURL(audioUrl);
-            // Disconnect media source to free resources
-            if (mediaSource) {
-              try { mediaSource.disconnect(); } catch (e) { /* ignore */ }
-              if (this.currentMediaSource === mediaSource) {
-                this.currentMediaSource = null;
-              }
-            }
+            audio.onended = null;
+            audio.onerror = null;
+            audio.onstalled = null;
+            audio.onabort = null;
+            audio.oncanplaythrough = null;
             if (this.currentAudio === audio) {
               this.currentAudio = null;
             }
@@ -525,7 +538,6 @@ class TTSEngine {
           resolve(false);
         };
         
-        // Handle stalled/stuck audio
         audio.onstalled = () => {
           console.log("[TTS] Audio stalled");
         };
@@ -533,38 +545,53 @@ class TTSEngine {
         audio.onabort = () => {
           console.log("[TTS] Audio aborted");
           cleanup();
-          // Don't fire callback on abort - let watchdog handle it
         };
         
-        // Apply playback speed after audio is ready to play
         audio.oncanplaythrough = () => {
           audio.playbackRate = targetSpeed;
           console.log("[TTS] Applied playback speed:", audio.playbackRate);
         };
 
-        // Set source and play
         audio.src = audioUrl;
         audio.volume = 1;
         
+        const connectWebRTC = () => {
+          if (this.audioContext && this.ttsDestination && !this.persistentMediaSource) {
+            try {
+              this.persistentMediaSource = this.audioContext.createMediaElementSource(audio);
+              this.persistentMediaSource.connect(this.audioContext.destination);
+              this.persistentMediaSource.connect(this.ttsDestination);
+              this.currentMediaSource = this.persistentMediaSource;
+              console.log("[TTS] Audio routed through AudioContext for WebRTC");
+            } catch (e) {
+              console.log("[TTS] AudioContext routing skipped:", (e as Error).message);
+            }
+          }
+        };
+        
+        let retryTimer: ReturnType<typeof setTimeout> | null = null;
+        
         const attemptPlay = (retries: number) => {
+          if (myGeneration !== this.speakGeneration) {
+            console.log("[TTS] Generation changed during retry, aborting");
+            cleanup();
+            resolve(false);
+            return;
+          }
+          
           if (this.audioContext?.state === 'suspended') {
             this.audioContext.resume().catch(() => {});
           }
           
           audio.play().then(() => {
-            audio.playbackRate = targetSpeed;
-            
-            if (this.audioContext && this.ttsDestination) {
-              try {
-                mediaSource = this.audioContext.createMediaElementSource(audio);
-                this.currentMediaSource = mediaSource;
-                mediaSource.connect(this.audioContext.destination);
-                mediaSource.connect(this.ttsDestination);
-                console.log("[TTS] Audio routed through AudioContext for WebRTC");
-              } catch (e) {
-                console.log("[TTS] AudioContext routing failed (normal on first play):", e);
-              }
+            if (myGeneration !== this.speakGeneration) {
+              audio.pause();
+              cleanup();
+              resolve(false);
+              return;
             }
+            audio.playbackRate = targetSpeed;
+            connectWebRTC();
             
             const duration = audio.duration || text.length * 0.08;
             const wordCount = text.split(/\s+/).filter(w => w.length > 0).length;
@@ -572,8 +599,8 @@ class TTSEngine {
             options?.onStart?.(duration, wordCount);
           }).catch((e) => {
             console.log("[TTS] Play failed (attempt " + (3 - retries) + "):", e.message);
-            if (retries > 0) {
-              setTimeout(() => attemptPlay(retries - 1), 100);
+            if (retries > 0 && myGeneration === this.speakGeneration) {
+              retryTimer = setTimeout(() => attemptPlay(retries - 1), 200);
             } else {
               console.log("[TTS] All play attempts failed, falling back");
               cleanup();
@@ -763,7 +790,18 @@ class TTSEngine {
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
+      this.currentAudio.onended = null;
+      this.currentAudio.onerror = null;
+      this.currentAudio.onstalled = null;
+      this.currentAudio.onabort = null;
+      this.currentAudio.oncanplaythrough = null;
       this.currentAudio = null;
+    }
+    
+    if (this.persistentMediaSource) {
+      try { this.persistentMediaSource.disconnect(); } catch (e) { /* ignore */ }
+      this.persistentMediaSource = null;
+      this.currentMediaSource = null;
     }
     
     if (this.synth) {
