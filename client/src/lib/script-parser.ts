@@ -1586,7 +1586,7 @@ function preprocessScript(rawText: string): string {
   // e.g., "Like, a LUCY: You're disgusting." -> "Like, a\nLUCY: You're disgusting."
   // Only split after sentence-ending punctuation or comma, NOT inside quoted dialogue
   // Pattern: punctuation/bracket + space + ALLCAPS NAME (3+ chars) + colon + space
-  text = text.replace(/([\].!?,;])\s+([A-Z]{3,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+  text = text.replace(/([\].!?,;])[ ]+([A-Z]{3,}(?:[ ]+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
   
   // Split when lowercase dialogue ends and all-caps name starts directly
   // e.g., "...phone. KEVIN McCALLISTER enters." -> "...phone.\nKEVIN McCALLISTER enters."
@@ -1614,20 +1614,20 @@ function preprocessScript(rawText: string): string {
   // e.g., "...empatheric. (Beuerly starts to lose her composure.) BEVERLY. Itt what" 
   // -> "...empatheric.\n(Beuerly starts to lose her composure.)\nBEVERLY. Itt what"
   // IMPORTANT: Keep the period and dialogue together with the character name
-  text = text.replace(/(\([^)]+\))\s*([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  text = text.replace(/(\([^)]+\))[ ]*([A-Z]{2,}(?:[ ]+[A-Z]{2,})?)\.[ ]+([A-Z][a-z])/g, '$1\n$2. $3');
   
   // Split when stage play character name appears after closing paren or lowercase text
   // e.g., "...composure.) BEVERLY. It's what" -> "...composure.)\nBEVERLY. It's what"
   // IMPORTANT: Keep the period and dialogue together with the character name
-  text = text.replace(/([)a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  text = text.replace(/([)a-z])[ ]+([A-Z]{2,}(?:[ ]+[A-Z]{2,})?)\.[ ]+([A-Z][a-z])/g, '$1\n$2. $3');
   
   // Split when stage play character name appears after sentence-ending punctuation
   // e.g., "...great. WINSLEY. How are you" -> "...great.\nWINSLEY. How are you"
   // IMPORTANT: Don't split titles like "DET. COLE." - use negative lookbehind for title abbreviations
   // The period after a title abbreviation is NOT sentence-ending punctuation
-  text = text.replace(/(?<!(?:MR|MRS|MS|DR|DET|SGT|LT|CAPT))([.!?])\s+([A-Z]{2,})\.\s+([A-Z][a-z])/gi, '$1\n$2. $3');
+  text = text.replace(/(?<!(?:MR|MRS|MS|DR|DET|SGT|LT|CAPT))([.!?])[ ]+([A-Z]{2,})\.[ ]+([A-Z][a-z])/g, '$1\n$2. $3');
   // Handle titled character names: "...8:00. MRS. WINSLEY. Should we..." -> "...8:00.\nMRS. WINSLEY. Should we..."
-  text = text.replace(/([.!?])\s+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?\s+[A-Z]{2,})\.\s+([A-Z][a-z])/g, '$1\n$2. $3');
+  text = text.replace(/([.!?])[ ]+((?:MR|MRS|MS|DR|DET|SGT|LT|CAPT)\.?[ ]+[A-Z]{2,})\.[ ]+([A-Z][a-z])/g, '$1\n$2. $3');
   
   // Split when ALL-CAPS character name appears after any lowercase text (mid-line)
   // e.g., "...came straight WINSLEY. It's fine" -> "...came straight\nWINSLEY. It's fine"
