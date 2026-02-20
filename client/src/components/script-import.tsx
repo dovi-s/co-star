@@ -822,18 +822,6 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           {" · "}
           <button
             type="button"
-            onClick={() => {
-              setIsEditingScript(true);
-              setTimeout(() => textareaRef.current?.focus(), 0);
-            }}
-            className="underline underline-offset-2 hover:text-foreground transition-colors"
-            data-testid="button-edit-script"
-          >
-            Edit
-          </button>
-          {" · "}
-          <button
-            type="button"
             onClick={() => { setScript(""); setIsEditingScript(true); }}
             className="underline underline-offset-2 hover:text-foreground transition-colors"
             data-testid="button-clear-script"
