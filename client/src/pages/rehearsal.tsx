@@ -15,7 +15,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, Eye, FileText } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -1311,26 +1311,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               data-testid="button-show-script"
             />
           )}
-          <button
-            className={cn(
-              "fixed bottom-36 right-4 z-50 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-300",
-              "bg-black/50 backdrop-blur-sm text-white/80 hover:text-white hover:bg-black/60 active:scale-95"
-            )}
-            onClick={() => setCameraFocus(prev => prev === 'script' ? 'face' : 'script')}
-            data-testid="button-camera-focus-toggle"
-          >
-            {cameraFocus === 'script' ? (
-              <>
-                <Eye className="w-3.5 h-3.5" />
-                <span>Face focus</span>
-              </>
-            ) : (
-              <>
-                <FileText className="w-3.5 h-3.5" />
-                <span>Script focus</span>
-              </>
-            )}
-          </button>
         </>
       )}
       
@@ -1547,11 +1527,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         </div>
       )}
 
-      <main className={cn(
-        "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
-        camera.isEnabled && "text-white",
-        camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
-      )}>
+      <main
+        className={cn(
+          "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
+          camera.isEnabled && "text-white",
+          camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
+        )}
+        onClick={camera.isEnabled && cameraFocus === 'script' ? (e: React.MouseEvent) => {
+          const target = e.target as HTMLElement;
+          if (target.closest('button, a, [role="button"], input, [data-testid]')) return;
+          setCameraFocus('face');
+        } : undefined}
+      >
         {/* Subtle gradient accent at top - hide when camera is on */}
         {!camera.isEnabled && (
           <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
