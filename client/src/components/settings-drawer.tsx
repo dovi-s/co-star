@@ -83,7 +83,10 @@ export function SettingsDrawer({
         <Button
           variant="ghost"
           size="sm"
-          className="w-full gap-2"
+          className={cn(
+            "w-full gap-2",
+            cameraEnabled && "text-white/90 hover:text-white hover:bg-white/10"
+          )}
           data-testid="button-settings-drawer"
         >
           <Settings className="h-3.5 w-3.5" />
