@@ -365,7 +365,8 @@ export function ThreeLineReader({
                   onClick={(e) => { e.stopPropagation(); setShowContext(!showContext); }}
                   className={cn(
                     "gap-1 text-[10px]",
-                    isUser && "text-background/60"
+                    isUser && !cameraMode && "text-background/60",
+                    cameraMode && "text-white/60"
                   )}
                   data-testid="button-show-context"
                 >
@@ -380,9 +381,11 @@ export function ThreeLineReader({
                 {showContext && (
                   <p className={cn(
                     "mt-2 text-xs italic leading-relaxed px-3 py-2 rounded-md",
-                    isUser 
-                      ? "bg-background/10 text-background/70" 
-                      : "bg-muted/40 text-muted-foreground/80"
+                    cameraMode
+                      ? "bg-white/10 text-white/70"
+                      : isUser 
+                        ? "bg-background/10 text-background/70" 
+                        : "bg-muted/40 text-muted-foreground/80"
                   )}>
                     {line.context}
                   </p>
