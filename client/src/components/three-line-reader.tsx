@@ -261,11 +261,13 @@ export function ThreeLineReader({
               )}
               {showDirections && line.direction && (
                 <span className={cn(
-                  "text-[10px] italic px-1.5 py-0.5 rounded",
-                  isCurrent && isUser && !cameraMode && "bg-background/10 text-background/70",
-                  isCurrent && isUser && cameraMode && "bg-white/10 text-white/70",
-                  isCurrent && !isUser && !cameraMode && "bg-muted/50 text-muted-foreground/70",
-                  isCurrent && !isUser && cameraMode && "bg-white/10 text-white/60"
+                  "text-[11px] italic",
+                  isCurrent && isUser && !cameraMode && "text-background/60",
+                  isCurrent && isUser && cameraMode && "text-white/60",
+                  isCurrent && !isUser && !cameraMode && "text-muted-foreground/60",
+                  isCurrent && !isUser && cameraMode && "text-white/50",
+                  !isCurrent && !cameraMode && "text-muted-foreground/40",
+                  !isCurrent && cameraMode && "text-white/30"
                 )}>
                   {line.direction}
                 </span>
