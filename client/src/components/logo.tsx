@@ -8,8 +8,8 @@ interface LogoProps {
 }
 
 const sizeClasses = {
-  xs: { container: "w-8 h-8", text: "text-sm" },
-  sm: { container: "w-12 h-12", text: "text-lg" },
+  xs: { container: "w-7 h-7", text: "text-base" },
+  sm: { container: "w-10 h-10", text: "text-lg" },
   md: { container: "w-14 h-14", text: "text-xl" },
   lg: { container: "w-18 h-18", text: "text-2xl" },
   xl: { container: "w-22 h-22", text: "text-3xl" },
@@ -50,7 +50,7 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
       </div>
       
       {showWordmark && (
-        <span className={cn("font-semibold tracking-wide", text)}>
+        <span className={cn("font-medium tracking-[0.08em] text-foreground/90", text)}>
           co-star
         </span>
       )}
