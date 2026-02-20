@@ -511,7 +511,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   // Use the full parser for accurate preview (with OCR correction and CAST detection)
   const previewData = useMemo(() => {
-    if (!script || script.trim().length < 50) {
+    if (!script || script.trim().length < 10) {
       return { roles: 0, scenes: 0, time: null };
     }
     
