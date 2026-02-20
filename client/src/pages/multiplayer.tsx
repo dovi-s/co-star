@@ -1040,6 +1040,9 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
     speechRecognition.resetAccumulated();
 
     if (speechRecognition.available && !micBlocked) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const micDelay = isIOS ? 500 : (isAndroid ? 400 : 50);
       setTimeout(() => {
         if (waitingForUserRef.current && !isAiSpeakingRef.current) {
           const started = speechRecognition.start();
@@ -1049,7 +1052,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             console.log("[Multiplayer] Speech recognition started successfully");
           }
         }
-      }, 50);
+      }, micDelay);
     }
 
     if (userTurnTimeoutRef.current) {
@@ -1160,13 +1163,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
     const handleEnd = () => {
       if (waitingForUserRef.current && isActivelyRehearsalRef.current) {
-        console.log("[Multiplayer] Speech ended but still user's turn, auto-restarting...");
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+        const restartDelay = isMobile ? 400 : 200;
+        console.log("[Multiplayer] Speech ended but still user's turn, auto-restarting in", restartDelay, "ms");
         setTimeout(() => {
           if (waitingForUserRef.current && !speechRecognition.listening && isActivelyRehearsalRef.current) {
             console.log("[Multiplayer] Restarting speech recognition");
             speechRecognition.start();
           }
-        }, 300);
+        }, restartDelay);
       }
     };
 

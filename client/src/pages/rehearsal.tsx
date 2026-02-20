@@ -77,7 +77,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [userTranscript, setUserTranscript] = useState("");
   const [isUserTurn, setIsUserTurn] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(true);
+  const [micPermissionGranted, setMicPermissionGranted] = useState(false);
+  const [micEnabled, setMicEnabled] = useState(() => {
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    return !isMobile;
+  });
   const [tapMode, setTapMode] = useState(() => {
     try { return localStorage.getItem("costar-tap-mode") === "true"; } catch { return false; }
   });
@@ -133,6 +137,33 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     try { localStorage.setItem("costar-tap-mode", String(enabled)); } catch {}
   }, []);
 
+  const requestMicPermission = useCallback(async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      console.log('[Rehearsal] getUserMedia not available');
+      setMicEnabled(true);
+      return true;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermissionGranted(true);
+      setMicBlocked(false);
+      setMicEnabled(true);
+      console.log('[Rehearsal] Mic permission granted');
+      return true;
+    } catch (err) {
+      console.error('[Rehearsal] Mic permission denied:', err);
+      setMicBlocked(true);
+      setMicEnabled(false);
+      toast({
+        title: "Microphone Blocked",
+        description: "Please allow microphone access in your browser settings to use voice recognition.",
+        variant: "destructive",
+      });
+      return false;
+    }
+  }, [toast]);
+
   const tapAdvance = useCallback(() => {
     if (!tapModeRef.current || !waitingForUserRef.current || !isPlayingRef.current) return;
     speechRecognition.abort();
@@ -143,6 +174,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     currentLineAccuracyRef.current = 100;
     advanceAfterUserLineRef.current();
+  }, []);
+
+  useEffect(() => {
+    if (navigator.permissions) {
+      navigator.permissions.query({ name: 'microphone' as PermissionName }).then(result => {
+        if (result.state === 'granted') {
+          setMicPermissionGranted(true);
+          setMicEnabled(true);
+        } else if (result.state === 'denied') {
+          setMicBlocked(true);
+        }
+      }).catch(() => {});
+    }
   }, []);
 
   useEffect(() => {
@@ -767,12 +811,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setPlaying(true);
   }, [session?.currentLineIndex, resetRunPerformance, setPlaying]);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
     if (session?.isPlaying) {
       stopAllPlayback();
       setPlaying(false);
     } else {
       ttsEngine.unlockAudio();
+      if (!micPermissionGranted && !micBlocked) {
+        await requestMicPermission();
+      }
       setShowCountdown(true);
     }
   };
@@ -794,15 +841,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     pendingPlayFromLineRef.current = null;
   }, []);
 
-  const handlePlayFromLine = useCallback((lineIndex: number) => {
+  const handlePlayFromLine = useCallback(async (lineIndex: number) => {
     if (session?.isPlaying) {
       stopAllPlayback();
       setPlaying(false);
     }
     ttsEngine.unlockAudio();
+    if (!micPermissionGranted && !micBlocked) {
+      await requestMicPermission();
+    }
     pendingPlayFromLineRef.current = lineIndex;
     setShowCountdown(true);
-  }, [session?.isPlaying, setPlaying, stopAllPlayback]);
+  }, [session?.isPlaying, setPlaying, stopAllPlayback, micPermissionGranted, micBlocked, requestMicPermission]);
 
   const handleNext = () => {
     stopAllPlayback();
@@ -1579,11 +1629,17 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             memorizationMode={session.memorizationMode || "off"}
             onMemorizationChange={handleMemorizationChange}
             micEnabled={micEnabled}
-            onMicToggle={() => {
-              setMicEnabled(prev => {
-                if (prev) speechRecognition.abort();
-                return !prev;
-              });
+            onMicToggle={async () => {
+              if (micEnabled) {
+                speechRecognition.abort();
+                setMicEnabled(false);
+              } else {
+                if (micPermissionGranted) {
+                  setMicEnabled(true);
+                } else {
+                  await requestMicPermission();
+                }
+              }
             }}
             cameraEnabled={camera.isEnabled}
             onCameraToggle={camera.toggleCamera}
