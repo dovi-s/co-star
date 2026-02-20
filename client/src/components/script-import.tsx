@@ -393,6 +393,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   const detectSceneName = (text: string, detectedChars: string[]): string => {
     const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    const titleCase = (s: string) => s.split(' ').filter(w => w.length > 0).map(w =>
+      w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+    ).join(' ');
     
     const sceneHeading = lines.find(line => 
       /^(INT\.|EXT\.|INT\/EXT\.|I\/E\.)\s+/i.test(line)
@@ -403,25 +406,22 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         .replace(/\s*[-–—]\s*(DAY|NIGHT|MORNING|EVENING|LATER|CONTINUOUS|SAME).*$/i, '')
         .trim();
       if (name.length > 3 && name.length <= 40) {
-        return name.split(' ').filter(w => w && w.length > 0).map(w => 
-          w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
-        ).join(' ');
+        return titleCase(name);
       }
     }
-    
-    // Filter out null/undefined values from character array
+
     const validChars = detectedChars.filter(c => c && typeof c === 'string' && c.length > 0);
-    
+
     if (validChars.length >= 2) {
-      const top2 = validChars.slice(0, 2).map(c => 
-        c.charAt(0).toUpperCase() + c.slice(1).toLowerCase()
-      );
-      return `${top2[0]} & ${top2[1]}`;
+      const charList = validChars.slice(0, 3).map(c => titleCase(c));
+      if (charList.length === 3) {
+        return `${charList[0]}, ${charList[1]} & ${charList[2]}`;
+      }
+      return `${charList[0]} & ${charList[1]}`;
     }
     
     if (validChars.length === 1) {
-      const name = validChars[0];
-      return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase() + "'s Scene";
+      return titleCase(validChars[0]) + "'s Scene";
     }
     
     return "Untitled Scene";
