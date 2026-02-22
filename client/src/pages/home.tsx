@@ -22,7 +22,7 @@ interface HomePageProps {
 
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
@@ -173,10 +173,14 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         <div className="px-5 pt-10 pb-5 relative z-10">
           <div className="absolute -top-6 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
-            Your on demand scene partner.
+            {isAuthenticated && user?.firstName
+              ? `What are we rehearsing today, ${user.firstName}?`
+              : "Your on demand scene partner."}
           </h1>
           <p className="text-muted-foreground text-sm mt-2 relative leading-relaxed">
-            Paste a script. Pick your role. Start rehearsing.
+            {isAuthenticated && user?.firstName
+              ? "Paste a script, upload a file, or pick up where you left off."
+              : "Paste a script. Pick your role. Start rehearsing."}
           </p>
           <div className="flex items-center gap-4 mt-4 relative" data-testid="value-props">
             <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-unlimited-takes">
