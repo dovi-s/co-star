@@ -86,12 +86,12 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
       <div className="flex items-center justify-between p-3 safe-top">
         <Button
           variant="ghost"
-          size="icon"
-          className="text-white/80"
+          className="text-white/90 gap-1.5 text-sm"
           onClick={handleClose}
           data-testid="button-close-scanner"
         >
-          <X className="h-5 w-5" />
+          <X className="h-4 w-4" />
+          Close
         </Button>
         <span className="text-white/60 text-xs font-medium">Scan script page</span>
         <Button
@@ -107,8 +107,11 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
 
       <div className="flex-1 relative overflow-hidden">
         {error ? (
-          <div className="flex items-center justify-center h-full px-6">
+          <div className="flex flex-col items-center justify-center h-full px-6 gap-4">
             <p className="text-white/60 text-sm text-center">{error}</p>
+            <Button variant="outline" className="text-white border-white/30" onClick={handleClose}>
+              Go back
+            </Button>
           </div>
         ) : (
           <video
