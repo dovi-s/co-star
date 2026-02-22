@@ -16,6 +16,15 @@ import {
   Briefcase,
   Theater,
   MessageSquare,
+  Camera,
+  Brain,
+  Keyboard,
+  BookOpen,
+  Layers,
+  Bookmark,
+  Globe,
+  Smartphone,
+  Wifi,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,18 +39,28 @@ interface RoadmapItem {
 
 const items: RoadmapItem[] = [
   { title: "Solo Rehearsal", description: "Run scenes with AI reading every other part.", icon: Mic, status: "live" },
-  { title: "AI Voices (ElevenLabs)", description: "Realistic character voices powered by ElevenLabs.", icon: Volume2, status: "live" },
-  { title: "Script Upload & OCR", description: "Upload PDFs, photos, or paste text — we parse it all.", icon: FileUp, status: "live" },
-  { title: "Multiplayer Table Read", description: "Read with friends or cast members in real time.", icon: Users, status: "live" },
-  { title: "Self-Tape Recording", description: "Record your performance with picture-in-picture camera.", icon: Video, status: "live" },
-  { title: "Performance Feedback", description: "Get AI-powered notes on delivery, pacing, and emotion.", icon: BarChart3, status: "live" },
-  { title: "Actor Profiles", description: "Save your headshot, resume, and preferences.", icon: User, status: "in-progress" },
-  { title: "Cloud Script Library", description: "Store and organize scripts across devices.", icon: Cloud, status: "in-progress" },
-  { title: "Subscription System", description: "Pro tier with premium features and no watermarks.", icon: CreditCard, status: "in-progress" },
-  { title: "Scene Library", description: "Browse and rehearse from a curated collection of scenes.", icon: Library, status: "coming-soon" },
-  { title: "Performance Analytics", description: "Track progress over time with detailed metrics.", icon: TrendingUp, status: "coming-soon" },
-  { title: "Services Directory", description: "Find coaches, readers, and industry professionals.", icon: Briefcase, status: "coming-soon" },
-  { title: "Casting Board", description: "Discover open casting calls and submit self-tapes.", icon: Theater, status: "coming-soon" },
+  { title: "AI Voices", description: "Six realistic ElevenLabs voices with emotion detection and SSML prosody.", icon: Volume2, status: "live" },
+  { title: "Script Import", description: "Paste text, upload PDF/TXT, or snap a photo. AI-powered OCR for scanned scripts.", icon: FileUp, status: "live" },
+  { title: "Smart Parsing", description: "Automatic character detection, stage directions, scene breaks, and action line context.", icon: Layers, status: "live" },
+  { title: "Three-Line Reader", description: "Previous, current, and next lines with visual cues for your turns.", icon: BookOpen, status: "live" },
+  { title: "Performance Feedback", description: "Word accuracy tracking, skip detection, and color-coded results after each run.", icon: BarChart3, status: "live" },
+  { title: "Line Memorization", description: "Four progressive levels: Full, Partial, Cue, and Memory.", icon: Brain, status: "live" },
+  { title: "Self-Tape Recording", description: "Record with front camera and watermark. Audio-only mode when camera is off.", icon: Video, status: "live" },
+  { title: "Audition Mode", description: "Dark translucent UI with glassmorphic styling when camera is active.", icon: Camera, status: "live" },
+  { title: "Multiplayer Table Read", description: "Real-time remote rehearsals with WebSocket rooms, host controls, and role selection.", icon: Users, status: "live" },
+  { title: "Video Calls", description: "Peer-to-peer WebRTC video and audio during table reads with speaker highlighting.", icon: Wifi, status: "live" },
+  { title: "Keyboard Shortcuts", description: "Space, arrows, R to repeat, Escape to stop. Full keyboard control.", icon: Keyboard, status: "live" },
+  { title: "Bookmarks", description: "Mark and return to specific lines during rehearsal.", icon: Bookmark, status: "live" },
+  { title: "PWA Ready", description: "Install as an app on any device. Offline support with service worker.", icon: Smartphone, status: "live" },
+  { title: "Dark and Light Mode", description: "System-aware theme with Liquid Glass design throughout.", icon: Globe, status: "live" },
+  { title: "Actor Profiles", description: "Set your headshot, name, and preferences.", icon: User, status: "in-progress" },
+  { title: "Accounts and Auth", description: "Sign up with Google, Apple, or email. Sync across devices.", icon: User, status: "in-progress" },
+  { title: "Cloud Script Library", description: "Save and organize scripts that persist between sessions.", icon: Cloud, status: "in-progress" },
+  { title: "Pro Subscription", description: "$9/mo or $69/yr for watermark-free recordings, saved scripts, and history.", icon: CreditCard, status: "in-progress" },
+  { title: "Scene Library", description: "Browse and rehearse from a curated collection of monologues and scenes.", icon: Library, status: "coming-soon" },
+  { title: "Performance Analytics", description: "Track your accuracy, pace, and growth over time with detailed charts.", icon: TrendingUp, status: "coming-soon" },
+  { title: "Services Directory", description: "Find acting coaches, readers, and industry professionals.", icon: Briefcase, status: "coming-soon" },
+  { title: "Casting Board", description: "Discover open casting calls and submit self-tapes directly.", icon: Theater, status: "coming-soon" },
 ];
 
 const statusConfig: Record<Status, { label: string; className: string }> = {
@@ -58,6 +77,11 @@ const groups: { status: Status; title: string }[] = [
 
 export function RoadmapPage({ onBack }: { onBack: () => void }) {
   let animIndex = 0;
+
+  const liveCount = items.filter(i => i.status === "live").length;
+  const inProgressCount = items.filter(i => i.status === "in-progress").length;
+  const totalCount = items.length;
+  const completedPercent = Math.round((liveCount / totalCount) * 100);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -76,6 +100,36 @@ export function RoadmapPage({ onBack }: { onBack: () => void }) {
 
       <main className="flex-1 px-5 py-8">
         <div className="max-w-lg mx-auto">
+          <div className="mb-8 animate-fade-in-up" data-testid="roadmap-progress">
+            <div className="glass-surface rounded-md p-4">
+              <div className="flex items-baseline justify-between mb-2">
+                <span className="text-sm font-semibold text-foreground">Overall progress</span>
+                <span className="text-xs text-muted-foreground">{completedPercent}% shipped</span>
+              </div>
+              <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-3">
+                <div
+                  className="h-full rounded-full bg-green-600 transition-all duration-500"
+                  style={{ width: `${completedPercent}%` }}
+                  data-testid="progress-bar-shipped"
+                />
+              </div>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5" data-testid="stat-live">
+                  <span className="w-2 h-2 rounded-full bg-green-600" />
+                  <span>{liveCount} live</span>
+                </div>
+                <div className="flex items-center gap-1.5" data-testid="stat-in-progress">
+                  <span className="w-2 h-2 rounded-full bg-primary" />
+                  <span>{inProgressCount} in progress</span>
+                </div>
+                <div className="flex items-center gap-1.5" data-testid="stat-coming-soon">
+                  <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
+                  <span>{totalCount - liveCount - inProgressCount} planned</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {groups.map((group) => {
             const groupItems = items.filter((item) => item.status === group.status);
             const config = statusConfig[group.status];
@@ -100,15 +154,17 @@ export function RoadmapPage({ onBack }: { onBack: () => void }) {
                         data-testid={`card-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
                       >
                         <div className="flex items-start gap-3">
-                          <div className="flex items-center justify-center w-9 h-9 rounded-md bg-primary/10 text-primary shrink-0">
+                          <div className={cn(
+                            "flex items-center justify-center w-9 h-9 rounded-md shrink-0",
+                            item.status === "live" ? "bg-green-600/10 text-green-600" :
+                            item.status === "in-progress" ? "bg-primary/10 text-primary" :
+                            "bg-muted text-muted-foreground"
+                          )}>
                             <item.icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-sm font-medium text-foreground">{item.title}</span>
-                              <Badge variant="secondary" className={cn("no-default-hover-elevate text-[10px]", config.className)}>
-                                {config.label}
-                              </Badge>
                             </div>
                             <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{item.description}</p>
                           </div>
