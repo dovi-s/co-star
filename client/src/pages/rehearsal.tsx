@@ -344,15 +344,20 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     speechRecognition.onEnd(() => {
       console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
       if (waitingForUserRef.current && isPlayingRef.current) {
-        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        const restartDelay = isMobile ? 400 : 150;
+        const isMobile = speechRecognition.isMobileDevice;
+        const restartDelay = isMobile ? 500 : 150;
         console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting in", restartDelay, "ms");
-        setTimeout(() => {
-          if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
-            console.log("[Rehearsal] Restarting speech recognition");
-            speechRecognition.start();
+        
+        const attemptRestart = (attempt: number) => {
+          if (!waitingForUserRef.current || !isPlayingRef.current || speechRecognition.listening) return;
+          console.log("[Rehearsal] Restarting speech recognition, attempt:", attempt);
+          const started = speechRecognition.start();
+          if (!started && attempt < 3 && isMobile) {
+            setTimeout(() => attemptRestart(attempt + 1), 800);
           }
-        }, restartDelay);
+        };
+        
+        setTimeout(() => attemptRestart(1), restartDelay);
       }
     });
 
@@ -642,11 +647,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       return;
     }
     
-    if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const isAndroid = /Android/i.test(navigator.userAgent);
-      const micDelay = isIOS ? 500 : (isAndroid ? 400 : 50);
-      console.log("[Rehearsal] Mic delay:", micDelay, "ms, iOS:", isIOS, "Android:", isAndroid);
+    const isIOSPWA = speechRecognition.isIOSPWA;
+    if (isIOSPWA) {
+      console.log("[Rehearsal] iOS PWA mode detected, speech recognition may be unreliable");
+    }
+    
+    if (speechRecognition.available && !micBlocked && micEnabledRef.current && !isIOSPWA) {
+      const micDelay = speechRecognition.isMobileDevice ? 500 : 50;
+      console.log("[Rehearsal] Mic delay:", micDelay, "ms, mobile:", speechRecognition.isMobileDevice);
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
@@ -663,7 +671,21 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 60000);
     } else {
-      // Fallback: auto-advance after 5 seconds if no speech recognition
+      const speechUnavailable = !speechRecognition.available || isIOSPWA;
+      if (speechUnavailable && speechRecognition.isMobileDevice) {
+        console.log("[Rehearsal] Speech recognition not available on this device, isIOSPWA:", isIOSPWA);
+        if (!tapModeRef.current) {
+          setTapMode(true);
+          tapModeRef.current = true;
+          toast({
+            title: "Voice recognition unavailable",
+            description: isIOSPWA
+              ? "Voice input isn't supported in app mode on this device. Tap mode enabled — tap the screen to advance through your lines."
+              : "Tap mode enabled. Tap the screen to advance through your lines.",
+          });
+          return;
+        }
+      }
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           console.log("[Rehearsal] No mic fallback, advancing");
@@ -672,7 +694,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 5000);
     }
-  }, [micBlocked]);
+  }, [micBlocked, toast]);
 
   const prefetchNextAILine = useCallback(() => {
     if (!session) return;
