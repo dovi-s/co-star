@@ -1,0 +1,189 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  ChevronLeft,
+  FileText,
+  Trash2,
+  Play,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { SavedScript } from "@shared/models/auth";
+
+type ScriptSummary = Pick<SavedScript, "id" | "name" | "userRoleId" | "lastPosition" | "lastScene" | "createdAt" | "updatedAt">;
+
+export function LibraryPage({
+  onBack,
+  onLoadScript,
+}: {
+  onBack: () => void;
+  onLoadScript: (script: SavedScript) => void;
+}) {
+  const { isAuthenticated } = useAuth();
+  const [deleteTarget, setDeleteTarget] = useState<ScriptSummary | null>(null);
+
+  const { data: scripts, isLoading } = useQuery<ScriptSummary[]>({
+    queryKey: ["/api/scripts"],
+    enabled: isAuthenticated,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/scripts/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scripts"] });
+      setDeleteTarget(null);
+    },
+  });
+
+  const loadMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await apiRequest("GET", `/api/scripts/${id}`);
+      return res.json() as Promise<SavedScript>;
+    },
+    onSuccess: (script) => {
+      onLoadScript(script);
+    },
+  });
+
+  function formatDate(date: string | Date | null | undefined) {
+    if (!date) return "";
+    const d = new Date(date);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="flex items-center gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          data-testid="button-back"
+          className="shrink-0 -ml-1"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="font-semibold text-sm text-foreground">Saved Scripts</h1>
+      </header>
+
+      <main className="flex-1 px-5 py-6">
+        <div className="max-w-lg mx-auto">
+          {isLoading && (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!isLoading && (!scripts || scripts.length === 0) && (
+            <div className="text-center py-16 animate-fade-in-up" data-testid="empty-library">
+              <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+              <p className="text-sm font-medium text-foreground mb-1">No saved scripts yet</p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                After importing a script, use the save button to keep it here.
+              </p>
+            </div>
+          )}
+
+          {scripts && scripts.length > 0 && (
+            <div className="space-y-3">
+              {scripts.map((script, i) => (
+                <div
+                  key={script.id}
+                  className="glass-surface rounded-md p-4 animate-fade-in-up"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                  data-testid={`card-script-${script.id}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <button
+                      className="flex-1 text-left min-w-0"
+                      onClick={() => loadMutation.mutate(script.id)}
+                      disabled={loadMutation.isPending}
+                      data-testid={`button-load-script-${script.id}`}
+                    >
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {script.name}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock className="h-3 w-3 text-muted-foreground/50" />
+                        <span className="text-[11px] text-muted-foreground">
+                          {formatDate(script.updatedAt)}
+                        </span>
+                      </div>
+                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => loadMutation.mutate(script.id)}
+                        disabled={loadMutation.isPending}
+                        data-testid={`button-play-script-${script.id}`}
+                      >
+                        {loadMutation.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Play className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleteTarget(script)}
+                        data-testid={`button-delete-script-${script.id}`}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete script</AlertDialogTitle>
+            <AlertDialogDescription>
+              Remove "{deleteTarget?.name}" from your saved scripts? This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteTarget && deleteMutation.mutate(deleteTarget.id)}
+              data-testid="button-confirm-delete"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}

@@ -13,12 +13,15 @@ import { HowItWorksPage } from "@/pages/how-it-works";
 import { ComparePage } from "@/pages/compare";
 import { RoadmapPage } from "@/pages/roadmap";
 import { AuthPage } from "@/pages/auth";
+import { LibraryPage } from "@/pages/library";
+import { HistoryPage } from "@/pages/history";
+import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
-  const { session } = useSessionContext();
+  const { session, createSessionFromParsed, setUserRole } = useSessionContext();
   const [view, setView] = useState<View>(() => {
     return "home";
   });
@@ -43,13 +46,27 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin") {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history") {
       setView(page as View);
     }
     if (page === "signup") {
       window.location.href = "/api/login";
     }
   }, []);
+
+  const handleLoadScript = useCallback((script: SavedScript) => {
+    if (script.rolesJson && script.scenesJson) {
+      const loaded = createSessionFromParsed(
+        script.name,
+        { roles: script.rolesJson as any, scenes: script.scenesJson as any },
+        script.rawScript,
+      );
+      if (loaded && script.userRoleId) {
+        setUserRole(script.userRoleId);
+      }
+      setView("rehearsal");
+    }
+  }, [createSessionFromParsed, setUserRole]);
 
   if (view === "home" && session?.userRoleId) {
     setView("rehearsal");
@@ -87,6 +104,12 @@ function AppContent() {
       )}
       {view === "signin" && (
         <AuthPage onBack={handleBackToHome} />
+      )}
+      {view === "library" && (
+        <LibraryPage onBack={handleBackToHome} onLoadScript={handleLoadScript} />
+      )}
+      {view === "history" && (
+        <HistoryPage onBack={handleBackToHome} />
       )}
     </div>
   );

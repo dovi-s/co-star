@@ -7,7 +7,9 @@ import { PracticeToolbar } from "@/components/practice-toolbar";
 import { CountdownOverlay } from "@/components/countdown-overlay";
 import { VideoBackground } from "@/components/video-background";
 import { useSession } from "@/hooks/use-session";
+import { useSessionContext } from "@/context/session-context";
 import { useUserStats } from "@/hooks/use-user-stats";
+import { useAuth } from "@/hooks/use-auth";
 import { useCamera } from "@/hooks/use-camera";
 import { useToast } from "@/hooks/use-toast";
 import { ttsEngine, calculateProsody, detectEmotion, getConversationalTiming, addBreathingPauses, type SpeakResult } from "@/lib/tts-engine";
@@ -15,7 +17,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -65,6 +67,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     isLoading,
     error,
   } = useSession();
+  const { isAuthenticated, user } = useAuth();
+  const { lastRawScript } = useSessionContext();
 
   const { stats, recordRehearsal } = useUserStats();
   const camera = useCamera();
@@ -111,6 +115,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     skippedLines: number;
     duration: number;
   } | null>(null);
+  const [savingScript, setSavingScript] = useState(false);
+  const [scriptSaved, setScriptSaved] = useState(false);
   const currentLineAccuracyRef = useRef<number>(0);
   const isPlayingRef = useRef(false);
   const ambientRef = useRef<AudioContext | null>(null);
@@ -406,7 +412,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     recordRehearsal(0, 1);
     setShowCelebration(true);
     setSceneCompleted(true);
-  }, [camera.isRecording, camera.stopRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId]);
+
+    if (isAuthenticated && session?.name) {
+      fetch("/api/performance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          scriptName: session.name,
+          accuracy: avgAccuracy,
+          linesTotal: totalUserLines,
+          linesCorrect: perfectLines,
+          linesSkipped: skippedLines,
+          durationSeconds: duration,
+          memorizationMode: session.memorizationMode ?? null,
+        }),
+      }).catch((err) => console.warn("[Performance] Failed to save run:", err));
+    }
+  }, [camera.isRecording, camera.stopRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId, isAuthenticated, session?.name, session?.memorizationMode]);
 
   // Reset run performance for a new run
   const resetRunPerformance = useCallback(() => {
@@ -956,6 +979,36 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setMemorizationMode(mode);
   };
 
+  const handleSaveScript = async () => {
+    if (!session || savingScript) return;
+    setSavingScript(true);
+    try {
+      const res = await fetch("/api/scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: session.name || "Untitled Script",
+          rawScript: lastRawScript || "",
+          rolesJson: session.roles,
+          scenesJson: session.scenes,
+          userRoleId: session.userRoleId ?? null,
+          lastPosition: session.currentLineIndex ?? 0,
+          lastScene: session.currentSceneIndex ?? 0,
+        }),
+      });
+      if (res.ok) {
+        setScriptSaved(true);
+      } else {
+        toast({ title: "Could not save script", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Could not save script", variant: "destructive" });
+    } finally {
+      setSavingScript(false);
+    }
+  };
+
   const handleTryAgain = () => {
     setShowCelebration(false);
     setSceneCompleted(false);
@@ -1320,6 +1373,30 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                 </div>
               )}
               
+              {isAuthenticated && session && !scriptSaved && (
+                <div className="mb-3">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleSaveScript}
+                    disabled={savingScript}
+                    data-testid="button-save-script"
+                  >
+                    {savingScript ? (
+                      <span className="text-xs">Saving...</span>
+                    ) : (
+                      <>
+                        <FileText className="h-4 w-4 mr-2" />
+                        Save Script
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+              {scriptSaved && (
+                <p className="text-xs text-green-600 mb-3">Script saved to your library</p>
+              )}
+
               {/* Primary action */}
               <Button
                 className="w-full"

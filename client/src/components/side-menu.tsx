@@ -28,6 +28,7 @@ import {
   ChevronRight,
   Crown,
   Camera,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -224,6 +225,14 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             onClick={() => navigate("library")}
             disabled={!isSignedIn}
             testId="menu-item-library"
+          />
+          <MenuItem
+            icon={<BarChart3 className="h-4 w-4" />}
+            label="Performance History"
+            description={isSignedIn ? "Track your accuracy over time" : "Sign in to track progress"}
+            onClick={() => navigate("history")}
+            disabled={!isSignedIn}
+            testId="menu-item-history"
           />
 
           {isSignedIn && (
