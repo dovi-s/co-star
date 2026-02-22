@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Co-Star Studio",
-  "short_name": "Co-Star Studio",
+  "name": "Co-star Studio",
+  "short_name": "Co-star Studio",
   "description": "Your on demand scene partner. Run lines anytime, anywhere.",
   "start_url": "/",
   "scope": "/",

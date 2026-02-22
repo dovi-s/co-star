@@ -208,7 +208,7 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
 
       <input
         type="text"
-        placeholder="What would make Co-Star Studio better?"
+        placeholder="What would make Co-star Studio better?"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -363,7 +363,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
                 No requests yet
               </h3>
               <p className="text-xs text-muted-foreground max-w-[240px] mb-4">
-                Be the first to suggest a feature. What would make Co-Star Studio better for you?
+                Be the first to suggest a feature. What would make Co-star Studio better for you?
               </p>
               <Button
                 size="sm"

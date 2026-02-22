@@ -53,7 +53,7 @@ export function drawWatermark(
   ctx.save();
   
   ctx.font = `700 ${fontSize}px Inter, -apple-system, sans-serif`;
-  const textWidth = ctx.measureText('Co-Star Studio').width;
+  const textWidth = ctx.measureText('Co-star Studio').width;
   
   const contentWidth = iconSize + gap + textWidth;
   const contentHeight = iconSize;
@@ -114,7 +114,7 @@ export function drawWatermark(
   ctx.font = `700 ${fontSize}px Inter, -apple-system, sans-serif`;
   ctx.fillStyle = '#FFFFFF';
   ctx.textBaseline = 'middle';
-  ctx.fillText('Co-Star Studio', textX, textY);
+  ctx.fillText('Co-star Studio', textX, textY);
   
   ctx.restore();
 }

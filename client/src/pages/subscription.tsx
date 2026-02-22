@@ -157,7 +157,7 @@ export function SubscriptionPage({ onBack }: { onBack: () => void }) {
             <div className="text-center space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
                 <Crown className="w-3.5 h-3.5" />
-                Co-Star Pro
+                Co-star Pro
               </div>
               <h2 className="text-xl font-semibold">Upgrade your rehearsals</h2>
               <p className="text-sm text-muted-foreground">
@@ -307,7 +307,7 @@ function ActiveSubscription({
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
           <Crown className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-xl font-semibold">Co-Star Pro</h2>
+        <h2 className="text-xl font-semibold">Co-star Pro</h2>
         <p className="text-sm text-muted-foreground">
           {subscription.cancelAtPeriodEnd
             ? `Access until ${periodEnd}`

@@ -47,7 +47,7 @@ const features: Feature[] = [
 
 const competitors: Competitor[] = [
   {
-    name: "Co-Star Studio",
+    name: "Co-star Studio",
     price: "Free / $9 mo",
     platform: "Web, PWA",
     features: {
@@ -347,7 +347,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
             <div className="mt-4 glass-surface rounded-md p-4 flex items-start gap-3" data-testid="card-workaround-summary">
               <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-foreground leading-relaxed">
-                <span className="font-semibold">Co-Star Studio replaces all of this.</span>
+                <span className="font-semibold">Co-star Studio replaces all of this.</span>
                 <span className="text-muted-foreground"> Paste your script, pick your role, and start rehearsing with a scene partner who listens, responds, and reads with emotion. No setup. No scheduling. No second device.</span>
               </p>
             </div>
@@ -356,7 +356,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
           <section className="mb-12">
             <h2 className="text-lg font-semibold text-foreground mb-1 animate-fade-in-up" data-testid="text-section-comparison">How we stack up</h2>
             <p className="text-sm text-muted-foreground mb-5 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-              Most apps do one thing well. Co-Star Studio does all of them.
+              Most apps do one thing well. Co-star Studio does all of them.
             </p>
 
             <div className="glass-surface rounded-md overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="comparison-table">
@@ -372,12 +372,12 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                           key={comp.name}
                           className={cn(
                             "text-xs font-semibold px-3 py-3 text-center min-w-[75px]",
-                            comp.name === "Co-Star Studio" ? "text-primary" : "text-foreground"
+                            comp.name === "Co-star Studio" ? "text-primary" : "text-foreground"
                           )}
                           data-testid={`text-competitor-${comp.name.toLowerCase().replace(/\s+/g, "-")}`}
                         >
                           <div className="flex flex-col items-center gap-0.5">
-                            {comp.name === "Co-Star Studio" && (
+                            {comp.name === "Co-star Studio" && (
                               <Crown className="h-3 w-3 text-primary mb-0.5" />
                             )}
                             <span className="whitespace-nowrap">{comp.name}</span>
@@ -404,7 +404,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                         {competitors.map((comp) => (
                           <td key={comp.name} className={cn(
                             "px-3 py-2 text-center",
-                            comp.name === "Co-Star Studio" && "bg-primary/[0.03]"
+                            comp.name === "Co-star Studio" && "bg-primary/[0.03]"
                           )}>
                             <SupportIcon value={comp.features[feature.name]} />
                           </td>

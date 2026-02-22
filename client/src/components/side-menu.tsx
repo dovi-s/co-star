@@ -146,7 +146,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             <Logo size="xs" />
             <div>
               <SheetTitle className="text-base">
-                <span className="font-normal">Co-Star</span>{" "}
+                <span className="font-normal">Co-star</span>{" "}
                 <span className="font-semibold">Studio</span>
               </SheetTitle>
               <SheetDescription className="text-[11px] text-muted-foreground mt-0">
@@ -262,7 +262,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           <MenuItem
             icon={<Sparkles className="h-4 w-4" />}
             label="How It Works"
-            description="See Co-Star Studio in action"
+            description="See Co-star Studio in action"
             onClick={() => navigate("how-it-works")}
             testId="menu-item-how-it-works"
           />
@@ -335,8 +335,8 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
-                  title: "Co-Star Studio",
-                  text: "Check out Co-Star Studio, your on demand scene partner",
+                  title: "Co-star Studio",
+                  text: "Check out Co-star Studio, your on demand scene partner",
                   url: window.location.origin,
                 }).catch(() => {});
               } else {

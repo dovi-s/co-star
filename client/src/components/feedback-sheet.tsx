@@ -58,7 +58,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       ? `${message}\n\n--- Attached script data ---\n${attachment === "full-script" ? lastRawScript : attachmentText}`
       : message;
 
-    const subject = encodeURIComponent("Co-Star Studio feedback");
+    const subject = encodeURIComponent("Co-star Studio feedback");
     const body = encodeURIComponent(fullMessage);
     window.open(`mailto:support@co-star.app?subject=${subject}&body=${body}`, "_blank");
 
