@@ -1,11 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
+import { RecentScripts } from "@/components/recent-scripts";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
 import { Users, Repeat, Clock, Volume2, CircleUser } from "lucide-react";
+import { getRecentScripts, saveRecentScript, type RecentScript } from "@/lib/recent-scripts";
 
 type Step = "import" | "role-select";
 
@@ -20,6 +22,11 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
+  const [recentScripts, setRecentScripts] = useState<RecentScript[]>(() => getRecentScripts());
+
+  const refreshRecent = useCallback(() => {
+    setRecentScripts(getRecentScripts());
+  }, []);
 
   useEffect(() => {
     if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
@@ -37,6 +44,14 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
     userWentBackRef.current = false;
     const newSession = await createSession(name, rawScript);
     if (newSession) {
+      const totalLines = newSession.scenes.reduce((s, sc) => s + sc.lines.length, 0);
+      saveRecentScript({
+        name: newSession.name,
+        rawScript,
+        roleCount: newSession.roles.length,
+        lineCount: totalLines,
+      });
+      refreshRecent();
       setStep("role-select");
     }
   };
@@ -45,13 +60,44 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
     userWentBackRef.current = false;
     const newSession = createSessionFromParsed(name, parsed, rawScript);
     if (newSession) {
+      const totalLines = newSession.scenes.reduce((s, sc) => s + sc.lines.length, 0);
+      saveRecentScript({
+        name: newSession.name,
+        rawScript: rawScript || "",
+        roleCount: newSession.roles.length,
+        lineCount: totalLines,
+      });
+      refreshRecent();
       console.log('[Home] Session created, advancing to role-select');
       setStep("role-select");
     }
   };
 
   const handleRoleSelect = (roleId: string) => {
+    if (session) {
+      const role = session.roles.find(r => r.id === roleId);
+      if (role) {
+        const existing = recentScripts.find(
+          s => s.rawScript.substring(0, 200) === (lastRawScript || "").substring(0, 200)
+        );
+        if (existing) {
+          saveRecentScript({
+            name: existing.name,
+            rawScript: existing.rawScript,
+            roleCount: existing.roleCount,
+            lineCount: existing.lineCount,
+            lastRole: role.name,
+          });
+          refreshRecent();
+        }
+      }
+    }
     setUserRole(roleId);
+  };
+
+  const handleSelectRecent = (script: RecentScript) => {
+    userWentBackRef.current = false;
+    handleImport(script.name, script.rawScript);
   };
 
   const handleBackToImport = () => {
@@ -142,6 +188,16 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
             initialScript={lastRawScript}
           />
         </div>
+
+        {recentScripts.length > 0 && (
+          <div className="px-4 pb-6 relative z-10">
+            <RecentScripts
+              scripts={recentScripts}
+              onSelect={handleSelectRecent}
+              onChanged={refreshRecent}
+            />
+          </div>
+        )}
       </main>
 
       <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom">
