@@ -1104,6 +1104,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       });
       if (res.ok) {
         setScriptSaved(true);
+        toast({ description: "Script saved to your library" });
       } else {
         toast({ title: "Could not save script", variant: "destructive" });
       }
@@ -1382,6 +1383,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           onJumpToLine={handleJumpToLine}
           cameraMode={camera.isEnabled}
           onToast={(msg) => toast({ description: msg })}
+          onSaveScript={isAuthenticated ? handleSaveScript : undefined}
+          savingScript={savingScript}
+          scriptSaved={scriptSaved}
         />
       </div>
 

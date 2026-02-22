@@ -9,10 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronLeft, Share2, Download, Copy, Send } from "lucide-react";
+import { ChevronLeft, Share2, Download, Copy, Send, Save, Check } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import type { Role, Scene } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import { DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 function formatScriptForExport(sessionName: string, scenes: Scene[]): string {
   const output: string[] = [];
@@ -62,6 +63,9 @@ interface HeaderProps {
   cameraMode?: boolean;
   onToast?: (msg: string) => void;
   onNavigate?: (page: string) => void;
+  onSaveScript?: () => void;
+  savingScript?: boolean;
+  scriptSaved?: boolean;
 }
 
 export function Header({
@@ -79,6 +83,9 @@ export function Header({
   cameraMode = false,
   onToast,
   onNavigate,
+  onSaveScript,
+  savingScript = false,
+  scriptSaved = false,
 }: HeaderProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -233,6 +240,28 @@ export function Header({
                 <Send className="h-4 w-4 mr-2" />
                 Send to...
               </DropdownMenuItem>
+              {onSaveScript && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={scriptSaved ? undefined : onSaveScript}
+                    disabled={savingScript || scriptSaved}
+                    data-testid="button-save-script-menu"
+                  >
+                    {scriptSaved ? (
+                      <>
+                        <Check className="h-4 w-4 mr-2 text-green-600 dark:text-green-400" />
+                        <span className="text-green-600 dark:text-green-400">Saved to library</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        {savingScript ? "Saving..." : "Save to library"}
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )}
