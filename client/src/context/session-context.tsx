@@ -67,7 +67,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         return null;
       }
 
-      const sessionName = data.suggestedName || name;
+      const sessionName = name || data.suggestedName || "Untitled Script";
       const now = new Date().toISOString();
       const newSession: Session = {
         id: generateId(),
