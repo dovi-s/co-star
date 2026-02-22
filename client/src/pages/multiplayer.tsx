@@ -1702,7 +1702,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               )}>
                 {room.state === 'paused' ? 'Paused' : 'Live'}
               </Badge>
-              {myRole && <Badge className="bg-primary/80 text-white text-xs truncate max-w-[100px]">{myRole.name}</Badge>}
+              {myRole && <Badge className="bg-primary/80 text-white text-xs whitespace-nowrap">{myRole.name}</Badge>}
             </div>
             
             <div className="flex items-center gap-0.5 shrink-0">
