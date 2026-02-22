@@ -52,7 +52,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "usage", label: "Usage", icon: Activity },
   { id: "features", label: "Features", icon: MousePointerClick },
   { id: "revenue", label: "Revenue", icon: DollarSign },
-  { id: "feedback", label: "Inbox", icon: MessageSquare },
+  { id: "feedback", label: "Bug Reports", icon: MessageSquare },
   { id: "errors", label: "Errors", icon: AlertTriangle },
   { id: "integrations", label: "Integrations", icon: Settings },
 ];
@@ -1004,16 +1004,15 @@ function FeedbackTab() {
         </select>
         <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} className="px-3 py-2 text-sm rounded-lg border border-border/50 bg-background" data-testid="select-feedback-type">
           <option value="">All types</option>
-          <option value="feedback">Feedback</option>
           <option value="bug">Bug Report</option>
-          <option value="feature">Feature Request</option>
+          <option value="feedback">General</option>
         </select>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
       ) : (data?.messages || []).length === 0 ? (
-        <EmptyState icon={MessageSquare} message="No feedback messages yet" />
+        <EmptyState icon={MessageSquare} message="No bug reports yet" />
       ) : (
         <div className="space-y-3">
           {data.messages.map((msg: any) => (
@@ -1199,7 +1198,7 @@ function IntegrationsTab() {
             { name: "Pageview Tracking", description: "Automatic tracking of all page visits with device, browser, and referrer data" },
             { name: "Event Tracking", description: "Custom event tracking for clicks, feature usage, and user interactions" },
             { name: "Error Logging", description: "Automatic capture of client-side JavaScript errors with stack traces" },
-            { name: "Feedback Inbox", description: "Centralized inbox for user feedback, bug reports, and feature requests" },
+            { name: "Bug Reports", description: "Centralized inbox for user-reported bugs and issues" },
             { name: "User Profiles", description: "Detailed user profiles with activity history, scripts, and rehearsal data" },
           ].map((item) => (
             <div key={item.name} className="flex items-center gap-3 p-2">

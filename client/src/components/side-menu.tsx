@@ -327,7 +327,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           <MenuItem
             icon={<MessageCircle className="h-4 w-4" />}
             label="Support"
-            description="Get help or share feedback"
+            description="Report a bug or issue"
             onClick={() => setFeedbackOpen(true)}
             testId="menu-item-support"
           />

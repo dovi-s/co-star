@@ -62,8 +62,8 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        type: "feedback",
-        subject: "Co-star Studio feedback",
+        type: "bug",
+        subject: "Bug report",
         message: fullMessage,
         attachmentData: attachmentText || null,
         path: window.location.pathname,
@@ -71,7 +71,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       credentials: "include",
     }).catch(() => {});
 
-    const subject = encodeURIComponent("Co-star Studio feedback");
+    const subject = encodeURIComponent("Co-star Studio bug report");
     const body = encodeURIComponent(fullMessage);
     window.open(`mailto:support@co-star.app?subject=${subject}&body=${body}`, "_blank");
 
@@ -95,9 +95,9 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
     <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent side="bottom" className="rounded-t-xl max-h-[85vh] flex flex-col">
         <SheetHeader className="text-left pb-2">
-          <SheetTitle className="text-base font-semibold">Support</SheetTitle>
+          <SheetTitle className="text-base font-semibold">Report an Issue</SheetTitle>
           <SheetDescription className="text-xs text-muted-foreground">
-            Describe your issue or share feedback. You can optionally include your script for context.
+            Something not working right? Describe what happened and we will look into it. You can optionally include your script for context.
           </SheetDescription>
         </SheetHeader>
 
@@ -177,7 +177,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
               data-testid="button-send-feedback"
             >
               <Send className="h-3.5 w-3.5 mr-1.5" />
-              Send feedback
+              Send report
             </Button>
           </div>
         )}
