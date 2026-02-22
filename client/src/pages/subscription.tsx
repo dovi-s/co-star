@@ -52,10 +52,12 @@ const proFeatures = [
 ];
 
 const freeFeatures = [
-  "3 scripts",
+  "Unlimited scripts and scenes",
   "Browser voices",
-  "Basic rehearsal controls",
-  "Dark mode",
+  "Full rehearsal controls",
+  "Performance feedback",
+  "Dark and light mode",
+  "Keyboard shortcuts",
 ];
 
 export function SubscriptionPage({ onBack }: { onBack: () => void }) {
