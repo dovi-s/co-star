@@ -5,6 +5,7 @@ import { RecentScripts } from "@/components/recent-scripts";
 import { SideMenu } from "@/components/side-menu";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
@@ -21,6 +22,7 @@ interface HomePageProps {
 
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
+  const { isAuthenticated } = useAuth();
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
@@ -217,7 +219,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
 
       <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom">
         <p className="text-[11px] text-muted-foreground/60 text-center">
-          All data stays on your device.
+          {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
         </p>
       </footer>
     </div>
