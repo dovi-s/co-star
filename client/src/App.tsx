@@ -1,11 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SessionProvider, useSessionContext } from "@/context/session-context";
-import { ProfileProvider } from "@/context/profile-context";
+import { ProfileProvider, useProfile } from "@/context/profile-context";
+import { useAuth } from "@/hooks/use-auth";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
 import MultiplayerPage from "@/pages/multiplayer";
@@ -25,9 +26,18 @@ type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
   const { session, createSessionFromParsed, setUserRole } = useSessionContext();
+  const { syncFromServer } = useProfile();
+  const { user } = useAuth();
   const [view, setView] = useState<View>(() => {
     return "home";
   });
+
+  useEffect(() => {
+    if (user) {
+      const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      syncFromServer(user.profileImageUrl || null, name || undefined);
+    }
+  }, [user, syncFromServer]);
   const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("join");
 
   const handleSessionReady = useCallback(() => {

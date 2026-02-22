@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useMutation } from "@tanstack/react-query";
 import { ProfileAvatar } from "@/components/profile-avatar";
-import { useProfile } from "@/context/profile-context";
+import { useProfile, compressPhoto } from "@/context/profile-context";
 import {
   ChevronRight,
   ChevronLeft,
@@ -99,10 +99,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = async (ev) => {
       const dataUrl = ev.target?.result as string;
-      setPhotoPreview(dataUrl);
-      setPhoto(dataUrl);
+      const compressed = await compressPhoto(dataUrl);
+      setPhotoPreview(compressed);
+      setPhoto(compressed);
     };
     reader.readAsDataURL(file);
   };
