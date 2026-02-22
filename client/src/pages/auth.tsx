@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 
 const benefits = [
-  { icon: Mic, text: "AI voices that read with emotion" },
+  { icon: Mic, text: "Voices that read with emotion" },
   { icon: Users, text: "Multiplayer table reads" },
   { icon: Video, text: "Self-tape recording" },
   { icon: BarChart3, text: "Performance tracking" },
@@ -41,7 +41,7 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
               Welcome to co-star
             </h1>
             <p className="text-sm text-muted-foreground mt-1 text-center">
-              Your AI rehearsal partner
+              Your on demand scene partner
             </p>
           </div>
 

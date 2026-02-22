@@ -30,7 +30,7 @@ const sections: FeatureSection[] = [
     number: 1,
     title: "Import your script",
     subtitle: "Any format, any source",
-    description: "Paste text, upload a PDF or TXT file, or snap a photo of a printed page. Our AI-powered parser handles it all.",
+    description: "Paste text, upload a PDF or TXT file, or snap a photo of a printed page. The parser handles it all.",
     details: [
       "Automatic character and scene detection",
       "Stage directions and action lines preserved",
@@ -44,7 +44,7 @@ const sections: FeatureSection[] = [
     number: 2,
     title: "Pick your role",
     subtitle: "Smart casting for the rest",
-    description: "Select which character you want to play. The AI automatically assigns distinct voices to every other part.",
+    description: "Select which character you want to play. co-star automatically assigns distinct voices to every other part.",
     details: [
       "Line counts shown per character",
       "Six ElevenLabs voices with emotion detection",
@@ -58,7 +58,7 @@ const sections: FeatureSection[] = [
     number: 3,
     title: "Rehearse your scene",
     subtitle: "The three-line reader",
-    description: "See previous, current, and next lines at a glance. Your turn is highlighted. The AI listens and responds with realistic timing.",
+    description: "See previous, current, and next lines at a glance. Your turn is highlighted. co-star listens and responds with realistic timing.",
     details: [
       "Speech recognition waits for your lines",
       "Natural pauses adapt to scene tension",
@@ -131,7 +131,7 @@ export function HowItWorksPage({ onBack }: { onBack: () => void }) {
       <main className="flex-1 px-4 py-8">
         <div className="max-w-lg mx-auto">
           <div className="mb-8 animate-fade-in-up">
-            <h2 className="text-xl font-semibold text-foreground mb-1">Your AI scene partner</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-1">Your scene partner, on demand</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
               From script to stage-ready in six steps. No signup required.
             </p>

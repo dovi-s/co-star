@@ -25,9 +25,9 @@ interface Competitor {
 }
 
 const features: Feature[] = [
-  { name: "AI Voices", description: "Natural text-to-speech for scene partners" },
+  { name: "Voices", description: "Natural text-to-speech for scene partners" },
   { name: "Emotion Detection", description: "Reads tone from script context and stage directions" },
-  { name: "Cue Mode", description: "AI listens and waits for your lines" },
+  { name: "Cue Mode", description: "Listens and waits for your lines" },
   { name: "Script Upload", description: "Import scripts from files" },
   { name: "PDF Support", description: "Parse formatted PDF scripts" },
   { name: "OCR / Photo Scan", description: "Snap a photo of a printed script page" },
@@ -51,7 +51,7 @@ const competitors: Competitor[] = [
     price: "Free / $9 mo",
     platform: "Web, PWA",
     features: {
-      "AI Voices": true,
+      "Voices": true,
       "Emotion Detection": true,
       "Cue Mode": true,
       "Script Upload": true,
@@ -76,7 +76,7 @@ const competitors: Competitor[] = [
     price: "~$15 mo",
     platform: "Web",
     features: {
-      "AI Voices": true,
+      "Voices": true,
       "Emotion Detection": false,
       "Cue Mode": true,
       "Script Upload": true,
@@ -101,7 +101,7 @@ const competitors: Competitor[] = [
     price: "$10 mo",
     platform: "iOS, Android",
     features: {
-      "AI Voices": true,
+      "Voices": true,
       "Emotion Detection": false,
       "Cue Mode": true,
       "Script Upload": true,
@@ -126,7 +126,7 @@ const competitors: Competitor[] = [
     price: "$11 mo",
     platform: "iOS",
     features: {
-      "AI Voices": false,
+      "Voices": false,
       "Emotion Detection": false,
       "Cue Mode": true,
       "Script Upload": false,
@@ -151,7 +151,7 @@ const competitors: Competitor[] = [
     price: "$15 mo + fees",
     platform: "iOS, Web",
     features: {
-      "AI Voices": false,
+      "Voices": false,
       "Emotion Detection": false,
       "Cue Mode": false,
       "Script Upload": true,
@@ -176,7 +176,7 @@ const competitors: Competitor[] = [
     price: "$19.99",
     platform: "iOS, Android",
     features: {
-      "AI Voices": false,
+      "Voices": false,
       "Emotion Detection": false,
       "Cue Mode": false,
       "Script Upload": true,
@@ -201,7 +201,7 @@ const competitors: Competitor[] = [
     price: "$15 mo",
     platform: "Web",
     features: {
-      "AI Voices": true,
+      "Voices": true,
       "Emotion Detection": false,
       "Cue Mode": true,
       "Script Upload": true,
@@ -226,7 +226,7 @@ const competitors: Competitor[] = [
     price: "Free / $5 mo",
     platform: "iOS, Android",
     features: {
-      "AI Voices": true,
+      "Voices": true,
       "Emotion Detection": false,
       "Cue Mode": "partial",
       "Script Upload": true,
@@ -288,7 +288,7 @@ function SupportIcon({ value }: { value: Support }) {
 
 const freeTierFeatures = [
   "All core features",
-  "ElevenLabs AI voices",
+  "ElevenLabs voices",
   "Multiplayer table reads",
   "Self-tape recording (watermark)",
   "Performance feedback",
@@ -348,7 +348,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-foreground leading-relaxed">
                 <span className="font-semibold">co-star replaces all of this.</span>
-                <span className="text-muted-foreground"> Paste your script, pick your role, and start rehearsing with an AI scene partner who listens, responds, and reads with emotion. No setup. No scheduling. No second device.</span>
+                <span className="text-muted-foreground"> Paste your script, pick your role, and start rehearsing with a scene partner who listens, responds, and reads with emotion. No setup. No scheduling. No second device.</span>
               </p>
             </div>
           </section>

@@ -21,7 +21,7 @@ Do not change the design system without prior discussion.
 
 ### UI/UX Decisions
 The design philosophy is sophisticated and minimal, now using Apple's Liquid Glass design language. Translucent glass materials for navigation and controls, concentric rounded shapes, content-first hierarchy with minimal chrome. Clean monochromatic controls with selective color accents.
-- **Copy Guidelines**: Simple, direct wording; no exclamation marks or em-dashes.
+- **Copy Guidelines**: Simple, direct wording; no exclamation marks or em-dashes. Never use the word "AI" in any user-facing copy. Refer to the product as "co-star" or "your scene partner" instead. Internal code comments and logs are fine.
 - **Color Scheme**: High contrast using foreground/background. Light Mode: Background #FFFFFF, Foreground #0F172A. Dark Mode: Background #0E1218, Foreground #E6EDF3. Blue primary (217/214/197 hue), bronze accent (28 hue), gold (47 hue). No purple/pink tones.
 - **Typography**: Inter font family, weight contrast for hierarchy (semibold headings, medium body), minimal text sizes (xs, sm, base).
 - **Motion**: 200ms ease-out transitions, subtle scale effects (0.98) on press, no playful animations.

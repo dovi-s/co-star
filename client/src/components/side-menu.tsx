@@ -310,7 +310,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
               if (navigator.share) {
                 navigator.share({
                   title: "co-star",
-                  text: "Check out co-star, your AI rehearsal partner",
+                  text: "Check out co-star, your on demand scene partner",
                   url: window.location.origin,
                 }).catch(() => {});
               } else {
