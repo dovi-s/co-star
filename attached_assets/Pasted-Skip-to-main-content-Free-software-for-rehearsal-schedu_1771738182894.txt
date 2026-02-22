@@ -1,0 +1,330 @@
+Skip to main content
+Free software for rehearsal scheduling (and audition management) : r/Theatre
+
+
+r/Theatre
+Search in r/Theatre
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+r/Theatre icon
+Go to Theatre
+r/Theatre
+•
+2y ago
+salsasymphony
+
+Free software for rehearsal scheduling (and audition management)
+I built an online tool for schools and small theatre companies to use hoping to take the burden off director teams who deal with dozens or even hundreds of conflict calendars every show. I wanted to share it with y’all…
+
+It is called Cast98 and while its mission is to simplify rehearsal scheduling, in so doing I found the easiest way to solve for conflict calendars was to capture them directly from performers (auditionees and cast members).
+
+Then I thought… if capturing conflicts from these folks already, why not have a whole audition form? As a performer I know I’m sick of filling out the same freakin form at every single audition, so Cast98 saves my form as an audition profile that I can reuse on later shows. Two burdens eased with one project!
+
+So beyond a scheduling tool it has now become a whole logistics platform for managing auditions, casting, and rehearsals.
+
+It is free for small-ish shows (is 100 auditionees and 50 cast members small?) and there’s a paid upgrade for bigger productions.
+
+I’d be glad to answer any questions here AMA style but I don’t wanna say too much more unprompted for fear of mods.
+
+5
+·
+7
+u/ExploreSEToyota avatar
+ExploreSEToyota
+•
+Promoted
+
+Great MPG + massive cargo space = more fun money in the new 2026 Corolla Cross.
+Learn More
+exploresetoyota.com
+Thumbnail image: Great MPG + massive cargo space = more fun money in the new 2026 Corolla Cross.
+Comments Section
+u/AutoModerator avatar
+AutoModerator
+MOD
+•
+2y ago
+Your submission in r/Theatre was automatically removed because it appears to be asking for audition help. In order to keep clutter down and remove duplicate posts (see rule 3), we ask that you search the subreddit first for monologues and then post in the pinned monthly thread if you still need assistance. You can also take a look at our FAQ on auditions.
+
+If your post was regarding auditioning but not about finding audition material, or you otherwise believe this was removed in error, please message the moderators to see about restoring it.
+
+I am a bot, and this action was performed automatically. Please contact the moderators of this subreddit if you have any questions or concerns.
+
+1
+MessyButKind713
+•
+1y ago
+I'm trying to use it, I would LOVE to be able to put the cast in myself. I have to take paper audition forms, and my SM would be uploading all the conflicts and schedules. Is this possible and I just missed it?
+
+
+1
+salsasymphony
+OP
+•
+1y ago
+You’re asking to do all the work yourself but Cast98 was designed to lighten your load. So to capture conflicts, your cast members would submit them to your show. Then you would build the cast list yourself and have total control of the rehearsal schedule. Your cast, in turn, is able to use the schedule filters and one-click export which they love.
+
+It’s the difference between you and your SM spending hours inputting conflicts for everyone or your cast spending 5-6 minutes each inputting their own.
+
+
+1
+Sad_Tart5531
+•
+6mo ago
+I'm in the same boat, found out about this after we already did a Google Form and have auditions tomorrow. I would love to use it for the future and it would've been awesome to use now to see conflicts for scheduling, but I can't ask all the kids to resubmit their sheets now :/ thanks for this tool, hoping to use it next year
+
+
+2
+salsasymphony
+OP
+•
+6mo ago
+I hear ya.
+
+For what it’s worth there is a lot more in the app that you’re missing out on since I posted this thread last year…
+
+chat groups
+
+costumer tools
+
+playbill creator
+
+inventory management
+
+More tools launch every month based on what I hear from directors would be helpful.
+
+2
+rinnybell210
+•
+11d ago
+It's probably user error, but I am having the hardest time figuring anything out. I have my cast already, and I want to add them so I can start making the rehearsal schedule with their conflicts. There doesn't seem to be a way to add students at all, as auditioners or as cast. What am I missing??
+
+1
+valleygirl80s
+•
+3d ago
+I am really interested in this, but when I tried to do the director demo, it went to page not found.
+
+1
+Related Answers Section
+Related Answers
+Tips for managing musical rehearsals
+Understanding designer run in theatre
+Blocking rehearsal tips for directors
+Effective time scheduling for rehearsals
+Best theatre venue management software
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+Free software for rehearsal scheduling (and audition management)
+r/techtheatre
+•
+2y ago
+Free software for rehearsal scheduling (and audition management)
+22 upvotes · 11 comments
+Looking for rehearsal Scheduling Software
+r/techtheatre
+•
+9y ago
+Looking for rehearsal Scheduling Software
+9 upvotes · 10 comments
+What is a “normal” profession rehearsal schedule like?
+r/Theatre icon
+r/Theatre
+•
+2y ago
+What is a “normal” profession rehearsal schedule like?
+20 upvotes · 21 comments
+Promoted
+
+sidebar promoted post thumbnail
+Auditions and Rehearsal schedules for your theatre company?
+r/Theatre icon
+r/Theatre
+•
+9mo ago
+Auditions and Rehearsal schedules for your theatre company?
+3 upvotes · 6 comments
+Rehearsal Schedule Advice for a first-time Producer
+r/Theatre icon
+r/Theatre
+•
+3y ago
+Rehearsal Schedule Advice for a first-time Producer
+16 upvotes · 10 comments
+Planning rehearsals
+r/Theatre icon
+r/Theatre
+•
+2y ago
+Planning rehearsals
+1 upvote · 4 comments
+Need advice on creating a rehearsal schedule
+r/Theatre icon
+r/Theatre
+•
+1y ago
+Need advice on creating a rehearsal schedule
+1 upvote · 6 comments
+What is the most effective rehearsal schedule for you?
+r/Theatre icon
+r/Theatre
+•
+4y ago
+What is the most effective rehearsal schedule for you?
+29 upvotes · 14 comments
+Promoted
+
+sidebar promoted post thumbnail
+Alternative to Rehearsal pro App
+r/Theatre icon
+r/Theatre
+•
+2y ago
+Alternative to Rehearsal pro App
+2 upvotes · 8 comments
+What app do you use for your script in rehearsal?
+r/Theatre icon
+r/Theatre
+•
+1y ago
+What app do you use for your script in rehearsal?
+21 upvotes · 40 comments
+Who has the best Scheduling Software?
+r/techtheatre
+•
+5y ago
+Who has the best Scheduling Software?
+6 upvotes · 4 comments
+Audition Help: Is ANY editing of music allowed?
+r/Theatre icon
+r/Theatre
+•
+1y ago
+Audition Help: Is ANY editing of music allowed?
+1 upvote · 3 comments
+Switched to only free software for a week
+r/freesoftware icon
+r/freesoftware
+•
+4mo ago
+Switched to only free software for a week
+23 upvotes · 17 comments
+Free online audio editing software - query
+r/podcasting icon
+r/podcasting
+•
+5mo ago
+Free online audio editing software - query
+7 upvotes · 23 comments
+What DAW or other software would you reccomend?
+r/GameAudio
+•
+9mo ago
+What DAW or other software would you reccomend?
+8 upvotes · 36 comments
+Project Management Software
+r/improv icon
+r/improv
+•
+2y ago
+Project Management Software
+9 upvotes · 8 comments
+Rehearsals before a show opens
+r/Broadway icon
+r/Broadway
+•
+1mo ago
+Rehearsals before a show opens
+5 upvotes · 10 comments
+Directors and stage managers what programs do you use
+r/Theatre icon
+r/Theatre
+•
+3y ago
+Directors and stage managers what programs do you use
+22 upvotes · 26 comments
+Looking for a free video recording software. What's your choice?
+r/screenrecorders icon
+r/screenrecorders
+•
+3mo ago
+Looking for a free video recording software. What's your choice?
+8 upvotes · 47 comments
+What Software do you guys use to record ?
+r/VoiceActing icon
+r/VoiceActing
+•
+2mo ago
+What Software do you guys use to record ?
+27 upvotes · 34 comments
+Tips and equipment for online auditions?
+r/MusicalTheatre
+•
+3y ago
+Tips and equipment for online auditions?
+8 upvotes · 6 comments
+Software used by talent management companies
+r/acting icon
+r/acting
+•
+2y ago
+Software used by talent management companies
+2 upvotes · 1 comment
+Question - what software do talent agents use?
+r/acting icon
+r/acting
+•
+1y ago
+Question - what software do talent agents use?
+3 upvotes · 6 comments
+Good Calendar Software for Theaters??
+r/techtheatre
+•
+2y ago
+Good Calendar Software for Theaters??
+13 upvotes · 18 comments
+How often does your community theater rehearse?
+r/Theatre icon
+r/Theatre
+•
+2y ago
+How often does your community theater rehearse?
+32 upvotes · 59 comments
+View Post in
+Tiếng Việt
+Português (Brasil)
+简体中文
+Community Info Section
+r/Theatre
+Join
+Theatre
+Theatre theory, design, news and community. This sub is aimed at professionals in the theatre community working in the industry, but is open to everyone, including students, community artists, and fans of the artform.
+
+Show more
+Public
+Top Posts
+Reddit
+reReddit: Top posts of July 9, 2024
+Reddit
+reReddit: Top posts of July 2024
+Reddit
+reReddit: Top posts of 2024
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Expand Navigation
