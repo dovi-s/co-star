@@ -284,13 +284,6 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             testId="menu-item-roadmap"
           />
           <MenuItem
-            icon={<Lightbulb className="h-4 w-4" />}
-            label="Feature Board"
-            description="Vote on what we build next"
-            onClick={() => navigate("feature-board")}
-            testId="menu-item-feature-board"
-          />
-          <MenuItem
             icon={<Palette className="h-4 w-4" />}
             label="Brand"
             description="Logos, colors, and guidelines"
@@ -324,6 +317,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
               />
             </button>
           </div>
+          <MenuItem
+            icon={<Lightbulb className="h-4 w-4" />}
+            label="Feature Board"
+            description="Vote on what we build next"
+            onClick={() => navigate("feature-board")}
+            testId="menu-item-feature-board"
+          />
           <MenuItem
             icon={<MessageCircle className="h-4 w-4" />}
             label="Support"
