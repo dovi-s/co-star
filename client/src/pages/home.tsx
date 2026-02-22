@@ -5,7 +5,7 @@ import { RoleSelector } from "@/components/role-selector";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
-import { Users, Repeat, Clock, Volume2 } from "lucide-react";
+import { Users, Repeat, Clock, Volume2, CircleUser } from "lucide-react";
 
 type Step = "import" | "role-select";
 
@@ -89,6 +89,15 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
             </Button>
           )}
           <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Profile"
+            data-testid="button-profile"
+            className="text-muted-foreground"
+          >
+            <CircleUser className="h-5 w-5" />
+          </Button>
         </div>
       </header>
 

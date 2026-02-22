@@ -9,7 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronLeft, Share2, Download, Copy, Send } from "lucide-react";
+import { ChevronLeft, Share2, Download, Copy, Send, CircleUser } from "lucide-react";
 import type { Role, Scene } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -244,6 +244,15 @@ export function Header({
           />
         )}
         <ThemeToggle />
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Profile"
+          data-testid="button-profile"
+          className={`shrink-0 ${cameraMode ? "text-white" : "text-muted-foreground"}`}
+        >
+          <CircleUser className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );
