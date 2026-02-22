@@ -1,8 +1,13 @@
 import type { Express, RequestHandler } from "express";
 import { isAuthenticated } from "./replitAuth";
 import { db } from "../../db";
-import { savedScripts, performanceRuns, users, featureRequests, featureVotes } from "@shared/models/auth";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { savedScripts, performanceRuns, users, featureRequests, featureVotes, recentScripts } from "@shared/models/auth";
+import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import crypto from "crypto";
+
+function scriptFingerprint(rawScript: string): string {
+  return crypto.createHash("sha256").update(rawScript || "").digest("hex").substring(0, 32);
+}
 
 export function registerProRoutes(app: Express): void {
   // --- Saved Scripts ---
@@ -317,6 +322,133 @@ export function registerProRoutes(app: Express): void {
     } catch (error) {
       console.error("Error voting:", error);
       res.status(500).json({ message: "Failed to vote" });
+    }
+  });
+
+  // --- Recent Scripts (per-account) ---
+
+  app.get("/api/recent-scripts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const scripts = await db
+        .select()
+        .from(recentScripts)
+        .where(eq(recentScripts.userId, userId))
+        .orderBy(desc(recentScripts.lastUsed))
+        .limit(8);
+      res.json(scripts);
+    } catch (error) {
+      console.error("Error fetching recent scripts:", error);
+      res.status(500).json({ message: "Failed to fetch recent scripts" });
+    }
+  });
+
+  app.post("/api/recent-scripts", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, rawScript, roleCount, lineCount, lastRole } = req.body;
+
+      if (!name || typeof name !== "string") {
+        return res.status(400).json({ message: "Name is required" });
+      }
+
+      const fp = scriptFingerprint(rawScript || "");
+
+      const [match] = await db
+        .select()
+        .from(recentScripts)
+        .where(and(eq(recentScripts.userId, userId), eq(recentScripts.scriptFingerprint, fp)));
+
+      if (match) {
+        const [updated] = await db
+          .update(recentScripts)
+          .set({
+            name,
+            roleCount: roleCount ?? match.roleCount,
+            lineCount: lineCount ?? match.lineCount,
+            lastRole: lastRole || match.lastRole,
+            lastUsed: new Date(),
+          })
+          .where(eq(recentScripts.id, match.id))
+          .returning();
+        return res.json(updated);
+      }
+
+      const [script] = await db
+        .insert(recentScripts)
+        .values({
+          userId,
+          name,
+          rawScript: rawScript || "",
+          scriptFingerprint: fp,
+          roleCount: roleCount || 0,
+          lineCount: lineCount || 0,
+          lastRole: lastRole || null,
+        })
+        .returning();
+
+      const allScripts = await db
+        .select({ id: recentScripts.id })
+        .from(recentScripts)
+        .where(eq(recentScripts.userId, userId))
+        .orderBy(desc(recentScripts.lastUsed));
+
+      if (allScripts.length > 8) {
+        const toDelete = allScripts.slice(8).map(s => s.id);
+        await db.delete(recentScripts).where(inArray(recentScripts.id, toDelete));
+      }
+
+      res.json(script);
+    } catch (error) {
+      console.error("Error saving recent script:", error);
+      res.status(500).json({ message: "Failed to save recent script" });
+    }
+  });
+
+  app.patch("/api/recent-scripts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, lastRole } = req.body;
+
+      const updateData: Record<string, any> = {};
+      if (name !== undefined) updateData.name = name;
+      if (lastRole !== undefined) updateData.lastRole = lastRole;
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ message: "Nothing to update" });
+      }
+
+      const [updated] = await db
+        .update(recentScripts)
+        .set(updateData)
+        .where(and(eq(recentScripts.id, req.params.id), eq(recentScripts.userId, userId)))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({ message: "Script not found" });
+      }
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating recent script:", error);
+      res.status(500).json({ message: "Failed to update recent script" });
+    }
+  });
+
+  app.delete("/api/recent-scripts/:id", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const [deleted] = await db
+        .delete(recentScripts)
+        .where(and(eq(recentScripts.id, req.params.id), eq(recentScripts.userId, userId)))
+        .returning();
+
+      if (!deleted) {
+        return res.status(404).json({ message: "Script not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting recent script:", error);
+      res.status(500).json({ message: "Failed to delete recent script" });
     }
   });
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { RecentScripts } from "@/components/recent-scripts";
@@ -9,7 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
-import { getRecentScripts, saveRecentScript, type RecentScript } from "@/lib/recent-scripts";
+import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 
 type Step = "import" | "role-select";
 
@@ -26,12 +26,8 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
-  const [recentScripts, setRecentScripts] = useState<RecentScript[]>(() => getRecentScripts());
+  const { scripts: recentScripts, refresh: refreshRecent, save: saveRecentScript, update: recentUpdate, remove: recentRemove } = useRecentScripts();
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const refreshRecent = useCallback(() => {
-    setRecentScripts(getRecentScripts());
-  }, []);
 
   useEffect(() => {
     if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
@@ -86,8 +82,9 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
     if (session) {
       const role = session.roles.find(r => r.id === roleId);
       if (role) {
+        const currentRaw = lastRawScript || "";
         const existing = recentScripts.find(
-          s => s.rawScript.substring(0, 200) === (lastRawScript || "").substring(0, 200)
+          s => s.rawScript === currentRaw
         );
         if (existing) {
           saveRecentScript({
@@ -215,7 +212,8 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             <RecentScripts
               scripts={recentScripts}
               onSelect={handleSelectRecent}
-              onChanged={refreshRecent}
+              onUpdate={recentUpdate}
+              onDelete={recentRemove}
             />
           </div>
         )}

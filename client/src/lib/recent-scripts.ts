@@ -31,7 +31,7 @@ export function saveRecentScript(entry: Omit<RecentScript, "id" | "lastUsed">): 
   try {
     const scripts = getRecentScripts();
     const existingIndex = scripts.findIndex(
-      (s) => s.rawScript.substring(0, 200) === entry.rawScript.substring(0, 200)
+      (s) => s.rawScript === entry.rawScript
     );
 
     const now = new Date().toISOString();

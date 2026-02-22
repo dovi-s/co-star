@@ -12,15 +12,15 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save } from "lucide-react";
-import type { RecentScript } from "@/lib/recent-scripts";
-import { deleteRecentScript, updateRecentScript } from "@/lib/recent-scripts";
+import type { RecentScript } from "@/hooks/use-recent-scripts";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 
 interface RecentScriptsProps {
   scripts: RecentScript[];
   onSelect: (script: RecentScript) => void;
-  onChanged: () => void;
+  onUpdate: (id: string, updates: Partial<Pick<RecentScript, "name" | "lastRole">>) => void;
+  onDelete: (id: string) => void;
 }
 
 function timeAgo(dateStr: string): string {
@@ -39,7 +39,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
-export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsProps) {
+export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentScriptsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<RecentScript | null>(null);
@@ -85,8 +85,7 @@ export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsPro
 
   const confirmEdit = () => {
     if (editingId && editName.trim()) {
-      updateRecentScript(editingId, { name: editName.trim() });
-      onChanged();
+      onUpdate(editingId, { name: editName.trim() });
     }
     setEditingId(null);
   };
@@ -97,8 +96,7 @@ export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsPro
 
   const confirmDelete = () => {
     if (deleteTarget) {
-      deleteRecentScript(deleteTarget.id);
-      onChanged();
+      onDelete(deleteTarget.id);
       setDeleteTarget(null);
     }
   };

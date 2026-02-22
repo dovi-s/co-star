@@ -110,3 +110,20 @@ export const featureVotes = pgTable("feature_votes", {
 ]);
 
 export type FeatureVote = typeof featureVotes.$inferSelect;
+
+export const recentScripts = pgTable("recent_scripts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  name: varchar("name").notNull(),
+  rawScript: text("raw_script").notNull(),
+  scriptFingerprint: varchar("script_fingerprint").notNull().default(""),
+  roleCount: integer("role_count").default(0),
+  lineCount: integer("line_count").default(0),
+  lastRole: varchar("last_role"),
+  lastUsed: timestamp("last_used").defaultNow(),
+}, (table) => [
+  index("IDX_recent_scripts_user").on(table.userId),
+  index("IDX_recent_scripts_user_last_used").on(table.userId, table.lastUsed),
+]);
+
+export type RecentScriptRow = typeof recentScripts.$inferSelect;
