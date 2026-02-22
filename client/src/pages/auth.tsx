@@ -53,11 +53,11 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
                 data-testid="button-sign-in"
               >
                 <LogIn className="h-4 w-4 mr-2" />
-                Sign in
+                Continue
               </Button>
             </a>
             <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
-              Takes 10 seconds. Use any account you already have.
+              Sign in or create an account. Takes 10 seconds.
             </p>
           </div>
 
