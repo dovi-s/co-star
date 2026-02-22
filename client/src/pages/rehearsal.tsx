@@ -17,7 +17,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -96,7 +96,36 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [showCountdown, setShowCountdown] = useState(false);
   const pendingPlayFromLineRef = useRef<number | null>(null);
   const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
+  const [handsFreeMode, setHandsFreeMode] = useState(false);
+  const handsFreeModeRef = useRef(false);
+  const wakeLockRef = useRef<any>(null);
   
+  useEffect(() => {
+    handsFreeModeRef.current = handsFreeMode;
+  }, [handsFreeMode]);
+
+  useEffect(() => {
+    if (handsFreeMode) {
+      const requestWakeLock = async () => {
+        try {
+          if ('wakeLock' in navigator) {
+            wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
+            console.log("[Rehearsal] Wake lock acquired for hands-free mode");
+          }
+        } catch (e) {
+          console.log("[Rehearsal] Wake lock not available:", e);
+        }
+      };
+      requestWakeLock();
+      return () => {
+        if (wakeLockRef.current) {
+          wakeLockRef.current.release().catch(() => {});
+          wakeLockRef.current = null;
+        }
+      };
+    }
+  }, [handsFreeMode]);
+
   useEffect(() => {
     if (!camera.isEnabled) setCameraFocus('script');
   }, [camera.isEnabled]);
@@ -134,6 +163,9 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const speakLineRef = useRef<() => void>(() => {});
   const startListeningForUserRef = useRef<() => void>(() => {});
   const stopAllPlaybackRef = useRef<() => void>(() => {});
+
+  const hintPlayingRef = useRef(false);
+  const hintUsedForLineRef = useRef(false);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -231,10 +263,40 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     });
 
     speechRecognition.onResult((result) => {
-      setUserTranscript(result.transcript);
+      const transcript = result.transcript.trim();
+      setUserTranscript(transcript);
       
       const line = getCurrentLineRef.current();
-      if (!line || result.transcript.length === 0 || !waitingForUserRef.current) return;
+      if (!line || transcript.length === 0 || !waitingForUserRef.current) return;
+
+      const lastWord = transcript.split(/\s+/).pop()?.toLowerCase() || "";
+      if (
+        (lastWord === "line" || lastWord === "line!" || lastWord === "line?") &&
+        !hintPlayingRef.current &&
+        result.isFinal
+      ) {
+        const cleanTranscript = transcript.replace(/\bline[!?]?\s*$/i, "").trim();
+        const isJustLine = cleanTranscript.length === 0;
+        if (isJustLine || matchWords(line.text, cleanTranscript).percentMatched < 40) {
+          console.log("[Rehearsal] LINE command detected, whispering hint");
+          hintPlayingRef.current = true;
+          hintUsedForLineRef.current = true;
+          speechRecognition.stop();
+          speechRecognition.resetAccumulated();
+          setUserTranscript("");
+          ttsEngine.speakHint(line.text, () => {
+            hintPlayingRef.current = false;
+            if (waitingForUserRef.current && isPlayingRef.current) {
+              setTimeout(() => {
+                if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
+                  speechRecognition.start();
+                }
+              }, 300);
+            }
+          });
+          return;
+        }
+      }
       
       const match = matchWords(line.text, result.transcript);
       currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
@@ -410,8 +472,23 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setPlaying(false);
     incrementRunsCompleted();
     recordRehearsal(0, 1);
-    setShowCelebration(true);
-    setSceneCompleted(true);
+    
+    if (handsFreeModeRef.current) {
+      setSceneCompleted(true);
+      setTimeout(() => {
+        setSceneCompleted(false);
+        setCompletedRunStats(null);
+        goToLine(0);
+        resetRunPerformance();
+        setTimeout(() => {
+          speakingLineRef.current = null;
+          setPlaying(true);
+        }, 1000);
+      }, 3000);
+    } else {
+      setShowCelebration(true);
+      setSceneCompleted(true);
+    }
 
     if (isAuthenticated && session?.name) {
       fetch("/api/performance", {
@@ -495,12 +572,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       recordLinePerformance({
         lineId: line.id,
         accuracy,
-        usedHint: false,
+        usedHint: hintUsedForLineRef.current,
         skipped: wasSkipped,
       });
     }
     
     currentLineAccuracyRef.current = 0;
+    hintUsedForLineRef.current = false;
     
     incrementLinesRehearsed();
     recordRehearsal(1, 0);
@@ -907,10 +985,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         recordLinePerformance({
           lineId: line.id,
           accuracy,
-          usedHint: false,
+          usedHint: hintUsedForLineRef.current,
           skipped: wasSkipped,
         });
         currentLineAccuracyRef.current = 0;
+        hintUsedForLineRef.current = false;
       }
       incrementLinesRehearsed();
       recordRehearsal(1, 0);
@@ -1007,6 +1086,32 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     } finally {
       setSavingScript(false);
     }
+  };
+
+  const enterHandsFreeMode = async () => {
+    const currentScene = session.scenes[session.currentSceneIndex];
+    if (!currentScene || currentScene.lines.length === 0) {
+      toast({ description: "Load a script first to use hands-free mode" });
+      return;
+    }
+    setHandsFreeMode(true);
+    if (!micEnabled) {
+      if (micPermissionGranted) {
+        setMicEnabled(true);
+      } else {
+        await requestMicPermission();
+      }
+    }
+    if (!session.isPlaying) {
+      setTimeout(() => {
+        speakingLineRef.current = null;
+        setPlaying(true);
+      }, 500);
+    }
+  };
+
+  const exitHandsFreeMode = () => {
+    setHandsFreeMode(false);
   };
 
   const handleTryAgain = () => {
@@ -1458,6 +1563,87 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         </div>
       )}
 
+      {handsFreeMode && (
+        <div className="fixed inset-0 z-[70] bg-black flex flex-col items-center justify-center text-white" data-testid="hands-free-overlay">
+          <button
+            onClick={exitHandsFreeMode}
+            className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors safe-top"
+            data-testid="button-exit-hands-free"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 max-w-sm">
+            {sceneCompleted ? (
+              <div className="text-center space-y-4 animate-fade-in">
+                <div className="w-20 h-20 rounded-full flex items-center justify-center bg-white/10 mx-auto">
+                  <Check className="h-8 w-8 text-white/70" />
+                </div>
+                <p className="text-lg text-white/60">Run complete</p>
+                <p className="text-sm text-white/30">Restarting...</p>
+              </div>
+            ) : currentLine ? (
+              <>
+                <div className={cn(
+                  "w-20 h-20 rounded-full flex items-center justify-center",
+                  currentIsUserLine
+                    ? isListening
+                      ? "bg-primary/20 ring-2 ring-primary/50 pulse-ring"
+                      : "bg-white/10"
+                    : isSpeaking
+                      ? "bg-white/10"
+                      : "bg-white/5"
+                )}>
+                  {currentIsUserLine ? (
+                    <Mic className={cn(
+                      "h-8 w-8",
+                      isListening ? "text-primary" : "text-white/70"
+                    )} />
+                  ) : (
+                    <Volume2 className={cn(
+                      "h-8 w-8",
+                      isSpeaking ? "text-white" : "text-white/40"
+                    )} />
+                  )}
+                </div>
+
+                <div className="text-center space-y-2">
+                  <p className="text-sm uppercase tracking-widest text-white/40">
+                    {currentIsUserLine ? "Your line" : (
+                      getRoleById(currentLine.roleId)?.name || "Scene partner"
+                    )}
+                  </p>
+                  {currentIsUserLine && userTranscript && (
+                    <p className="text-lg text-white/60 mt-2 max-w-xs">{userTranscript}</p>
+                  )}
+                </div>
+
+                <div className="w-full max-w-xs">
+                  <div className="h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-white/30 rounded-full transition-all duration-300"
+                      style={{ width: `${totalLines > 0 ? (globalLineNumber / totalLines) * 100 : 0}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-white/30 text-center mt-2">
+                    {globalLineNumber} of {totalLines}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="text-center space-y-3">
+                <Headphones className="h-12 w-12 text-white/30 mx-auto" />
+                <p className="text-white/50">Ready to rehearse</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pb-8 safe-bottom text-center">
+            <p className="text-xs text-white/20">Hands-free mode</p>
+          </div>
+        </div>
+      )}
+
       <main
         className={cn(
           "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
@@ -1646,6 +1832,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           onClearSession={handleClearSession}
           isLoading={isLoading}
           error={error}
+          onHandsFreeMode={enterHandsFreeMode}
         />
       </footer>
       {showCountdown && (

@@ -1,0 +1,26 @@
+i wanna know what youre thinking. my only thought is maybe it could be cool to have it where a user can say "LINE" out loud so while thyre driving fi they forget its still hands free - like it stubyly whispers it to the user? not sure. what esle wdyt? re: Great market research. Here's what jumps out from these threads:
+
+What actors are actually struggling with:
+
+Robotic-sounding voices in existing apps (Script Rehearser, ColdRead) - actors consistently complain about this
+WeAudition solves the "real reader" problem but costs pile up ($10/mo subscription + tips per reading)
+Most good apps are iOS-only (ColdRead, Run Lines With Me) leaving Android users underserved
+PDF import is hit-or-miss across apps - formats break constantly
+No single app does script reading + self-tape recording well together
+Where co-star already wins:
+
+ElevenLabs voices are dramatically better than any TTS competitor mentioned here
+Web-based, so it works everywhere (no iOS/Android divide)
+PDF import with OCR already handles the format problem
+Audition mode with recording is built in
+Line memorization levels (Full → Partial → Cue → Memory) match exactly what LineLearner users love
+Free tier with full features undercuts WeAudition's model
+Gaps worth noting:
+
+Several actors mention wanting to practice in the car (audio-only, hands-free mode)
+The progression from "hearing lines read" → "testing yourself" is the core workflow actors describe over and over
+Self-tape quality guidance (framing, lighting, backdrop) came up repeatedly - could be an in-app tip or overlay
+Actors want to archive scripts across shows and revisit old ones (Pro feature territory)
+co-star is genuinely positioned better than anything mentioned in these threads. The biggest differentiator is voice quality - every thread has someone complaining about robotic voices, and ElevenLabs solves that completely.
+
+What are you thinking about based on this research? Are there specific features or positioning ideas you want to explore?

@@ -932,6 +932,43 @@ class TTSEngine {
     }
     return this.synth?.paused ?? false;
   }
+
+  speakHint(fullText: string, onEnd?: () => void): boolean {
+    if (!this.synth) {
+      onEnd?.();
+      return false;
+    }
+
+    const words = fullText.split(/\s+/).filter(w => w.length > 0);
+    const hintWords = words.slice(0, Math.min(4, words.length));
+    const hintText = hintWords.join(" ") + (words.length > 4 ? "..." : "");
+
+    this.loadVoices();
+
+    const utterance = new SpeechSynthesisUtterance(hintText);
+    const englishVoices = this.voices.filter(v => v.lang.startsWith("en"));
+    const voice = englishVoices.find(v =>
+      v.name.toLowerCase().includes("samantha") ||
+      v.name.toLowerCase().includes("google") ||
+      v.name.toLowerCase().includes("natural")
+    ) || englishVoices[0] || this.voices[0];
+
+    if (voice) utterance.voice = voice;
+    utterance.rate = 0.85;
+    utterance.pitch = 0.9;
+    utterance.volume = 0.3 * this._masterVolume;
+
+    utterance.onend = () => onEnd?.();
+    utterance.onerror = () => onEnd?.();
+
+    try {
+      this.synth.speak(utterance);
+      return true;
+    } catch {
+      onEnd?.();
+      return false;
+    }
+  }
 }
 
 export const ttsEngine = new TTSEngine();

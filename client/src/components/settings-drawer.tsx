@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer, Hand, Headphones } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -51,6 +51,7 @@ interface SettingsDrawerProps {
   onClearSession: () => void;
   isLoading?: boolean;
   error?: string | null;
+  onHandsFreeMode?: () => void;
 }
 
 export function SettingsDrawer({
@@ -77,6 +78,7 @@ export function SettingsDrawer({
   onClearSession,
   isLoading,
   error,
+  onHandsFreeMode,
 }: SettingsDrawerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -165,6 +167,27 @@ export function SettingsDrawer({
                   data-testid="switch-tap-mode"
                 />
               </div>
+
+              {onHandsFreeMode && (
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setTimeout(onHandsFreeMode, 300);
+                  }}
+                  className="w-full flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-muted/30 transition-colors"
+                  data-testid="button-hands-free-mode"
+                >
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                    <Car className="h-4 w-4" />
+                  </div>
+                  <div className="text-left">
+                    <span className="text-sm font-medium">Hands-Free Mode</span>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      Audio-only rehearsal, no screen needed
+                    </p>
+                  </div>
+                </button>
+              )}
 
               {/* Earbuds-Only Recording - only show when camera is enabled */}
               {cameraEnabled && onEarbudsOnlyChange && (
