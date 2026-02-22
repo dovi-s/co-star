@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock, Camera } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock, Cloud, Camera } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ interface ScriptImportProps {
 }
 
 export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "" }: ScriptImportProps) {
+  const { isAuthenticated } = useAuth();
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
   const [pasteSuccess, setPasteSuccess] = useState(false);
@@ -963,8 +965,17 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       )}
 
       <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/50" data-testid="text-privacy-badge">
-        <Lock className="h-3 w-3" />
-        <span>Your script stays on your device</span>
+        {isAuthenticated ? (
+          <>
+            <Cloud className="h-3 w-3" />
+            <span>Scripts can be saved to your library</span>
+          </>
+        ) : (
+          <>
+            <Lock className="h-3 w-3" />
+            <span>Your script stays on your device</span>
+          </>
+        )}
       </div>
 
       <Button
