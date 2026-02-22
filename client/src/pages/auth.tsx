@@ -25,7 +25,7 @@ const benefits = [
   { icon: Shield, text: "Your scripts stay on your device" },
 ];
 
-export function AuthPage({ onBack }: { onBack: () => void }) {
+export function AuthPage({ onBack, onSignUp }: { onBack: () => void; onSignUp?: () => void }) {
   const queryClient = useQueryClient();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -65,7 +65,11 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
       }
 
       await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      onBack();
+      if (mode === "signup" && onSignUp) {
+        onSignUp();
+      } else {
+        onBack();
+      }
     } catch {
       setError("Unable to connect. Please try again.");
       setIsLoading(false);

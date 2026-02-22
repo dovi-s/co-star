@@ -16,9 +16,11 @@ import { AuthPage } from "@/pages/auth";
 import { LibraryPage } from "@/pages/library";
 import { HistoryPage } from "@/pages/history";
 import { FeatureBoardPage } from "@/pages/feature-board";
+import { OnboardingPage } from "@/pages/onboarding";
+import { ActorProfilePage } from "@/pages/actor-profile";
 import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -47,7 +49,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board") {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile") {
       setView(page as View);
     }
   }, []);
@@ -101,7 +103,7 @@ function AppContent() {
         <RoadmapPage onBack={handleBackToHome} onNavigate={handleNavigate} />
       )}
       {view === "signin" && (
-        <AuthPage onBack={handleBackToHome} />
+        <AuthPage onBack={handleBackToHome} onSignUp={() => setView("onboarding")} />
       )}
       {view === "library" && (
         <LibraryPage onBack={handleBackToHome} onLoadScript={handleLoadScript} />
@@ -111,6 +113,12 @@ function AppContent() {
       )}
       {view === "feature-board" && (
         <FeatureBoardPage onBack={handleBackToHome} />
+      )}
+      {view === "onboarding" && (
+        <OnboardingPage onComplete={handleBackToHome} />
+      )}
+      {view === "profile" && (
+        <ActorProfilePage onBack={handleBackToHome} />
       )}
     </div>
   );
