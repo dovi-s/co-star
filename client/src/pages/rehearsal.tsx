@@ -17,7 +17,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2 } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -1651,7 +1651,46 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             )}
           </div>
 
-          <div className="pb-8 safe-bottom text-center">
+          <div className="pb-8 safe-bottom flex flex-col items-center gap-4">
+            <div className="flex items-center gap-6">
+              <button
+                onClick={() => {
+                  stopAllPlayback();
+                  setSceneCompleted(false);
+                  setShowCelebration(false);
+                  setUserTranscript("");
+                  goToLine(0);
+                  resetRunPerformance();
+                  setTimeout(() => {
+                    speakingLineRef.current = null;
+                    setPlaying(true);
+                  }, 500);
+                }}
+                className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                data-testid="button-hands-free-restart"
+              >
+                <RotateCcw className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => {
+                  if (session?.isPlaying) {
+                    stopAllPlayback();
+                    setPlaying(false);
+                  } else {
+                    ttsEngine.unlockAudio();
+                    setPlaying(true);
+                  }
+                }}
+                className="p-4 rounded-full bg-white/15 hover:bg-white/25 transition-colors"
+                data-testid="button-hands-free-play-pause"
+              >
+                {session?.isPlaying ? (
+                  <Pause className="h-6 w-6" />
+                ) : (
+                  <Play className="h-6 w-6 ml-0.5" />
+                )}
+              </button>
+            </div>
             <p className="text-xs text-white/20">Hands-free mode</p>
           </div>
         </div>

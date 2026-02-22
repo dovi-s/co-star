@@ -939,13 +939,9 @@ class TTSEngine {
       return false;
     }
 
-    const words = fullText.split(/\s+/).filter(w => w.length > 0);
-    const hintWords = words.slice(0, Math.min(4, words.length));
-    const hintText = hintWords.join(" ") + (words.length > 4 ? "..." : "");
-
     this.loadVoices();
 
-    const utterance = new SpeechSynthesisUtterance(hintText);
+    const utterance = new SpeechSynthesisUtterance(fullText);
     const englishVoices = this.voices.filter(v => v.lang.startsWith("en"));
     const voice = englishVoices.find(v =>
       v.name.toLowerCase().includes("samantha") ||
