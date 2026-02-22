@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { ReaderMenu } from "@/components/reader-menu";
 import { RoleChip } from "@/components/role-chip";
+import { SideMenu } from "@/components/side-menu";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -60,6 +60,7 @@ interface HeaderProps {
   onJumpToLine?: (lineIndex: number, sceneIndex?: number) => void;
   cameraMode?: boolean;
   onToast?: (msg: string) => void;
+  onNavigate?: (page: string) => void;
 }
 
 export function Header({
@@ -76,8 +77,10 @@ export function Header({
   onJumpToLine,
   cameraMode = false,
   onToast,
+  onNavigate,
 }: HeaderProps) {
   const [shareOpen, setShareOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [titleOverflows, setTitleOverflows] = useState(false);
@@ -243,17 +246,19 @@ export function Header({
             onJumpToLine={onJumpToLine}
           />
         )}
-        <ThemeToggle />
         <Button
           variant="ghost"
           size="icon"
           title="Profile"
+          onClick={() => setMenuOpen(true)}
           data-testid="button-profile"
           className={`shrink-0 ${cameraMode ? "text-white" : "text-muted-foreground"}`}
         >
           <CircleUser className="h-5 w-5" />
         </Button>
       </div>
+
+      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
     </header>
   );
 }

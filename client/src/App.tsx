@@ -8,14 +8,16 @@ import { SessionProvider, useSessionContext } from "@/context/session-context";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
 import MultiplayerPage from "@/pages/multiplayer";
+import { HowItWorksPage } from "@/pages/how-it-works";
+import { ComparePage } from "@/pages/compare";
+import { RoadmapPage } from "@/pages/roadmap";
 
-type View = "home" | "rehearsal" | "multiplayer";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
   const { session } = useSessionContext();
   const [view, setView] = useState<View>(() => {
-    // Start at home - session context will have the data
     return "home";
   });
   const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("join");
@@ -28,20 +30,22 @@ function AppContent() {
     setView("home");
   }, []);
 
-  // From role selector: go directly to create room
   const handleTableReadFromRoleSelector = useCallback(() => {
     setMultiplayerInitialView("create");
     setView("multiplayer");
   }, []);
 
-  // From home header: go directly to join (skip menu screen)
   const handleMultiplayerFromHome = useCallback(() => {
     setMultiplayerInitialView("join");
     setView("multiplayer");
   }, []);
 
-  // Auto-navigate to rehearsal if session is ready with a user role
-  // This handles page refresh (though session won't persist for large scripts)
+  const handleNavigate = useCallback((page: string) => {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap") {
+      setView(page);
+    }
+  }, []);
+
   if (view === "home" && session?.userRoleId) {
     setView("rehearsal");
   }
@@ -54,6 +58,7 @@ function AppContent() {
           onSessionReady={handleSessionReady} 
           onMultiplayer={handleMultiplayerFromHome}
           onTableRead={handleTableReadFromRoleSelector}
+          onNavigate={handleNavigate}
         />
       )}
       {view === "rehearsal" && (
@@ -65,6 +70,15 @@ function AppContent() {
           onBack={handleBackToHome}
           initialView={multiplayerInitialView}
         />
+      )}
+      {view === "how-it-works" && (
+        <HowItWorksPage onBack={handleBackToHome} />
+      )}
+      {view === "compare" && (
+        <ComparePage onBack={handleBackToHome} />
+      )}
+      {view === "roadmap" && (
+        <RoadmapPage onBack={handleBackToHome} />
       )}
     </div>
   );

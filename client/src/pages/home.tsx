@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { RecentScripts } from "@/components/recent-scripts";
+import { SideMenu } from "@/components/side-menu";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
-import { Users, Repeat, Clock, Volume2, CircleUser } from "lucide-react";
+import { Users, CircleUser, Repeat, Clock, Volume2 } from "lucide-react";
 import { getRecentScripts, saveRecentScript, type RecentScript } from "@/lib/recent-scripts";
 
 type Step = "import" | "role-select";
@@ -15,14 +15,16 @@ interface HomePageProps {
   onSessionReady: () => void;
   onMultiplayer?: () => void;
   onTableRead?: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePageProps) {
+export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
   const [recentScripts, setRecentScripts] = useState<RecentScript[]>(() => getRecentScripts());
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const refreshRecent = useCallback(() => {
     setRecentScripts(getRecentScripts());
@@ -143,11 +145,11 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
               <Users className="h-5 w-5" />
             </Button>
           )}
-          <ThemeToggle />
           <Button
             variant="ghost"
             size="icon"
             title="Profile"
+            onClick={() => setMenuOpen(true)}
             data-testid="button-profile"
             className="text-muted-foreground"
           >
@@ -155,6 +157,8 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
           </Button>
         </div>
       </header>
+
+      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
 
       <main className="flex-1 flex flex-col onboarding-glow relative">
         <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
