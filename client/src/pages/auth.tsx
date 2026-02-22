@@ -11,11 +11,11 @@ import {
 } from "lucide-react";
 
 const benefits = [
-  { icon: Mic, text: "Voices that read with emotion" },
-  { icon: Users, text: "Multiplayer table reads" },
-  { icon: Video, text: "Self-tape recording" },
-  { icon: BarChart3, text: "Performance tracking" },
-  { icon: Shield, text: "Scripts stay on your device" },
+  { icon: Mic, text: "Scene partners that read with real emotion" },
+  { icon: Users, text: "Run table reads with friends, remotely" },
+  { icon: Video, text: "Record self-tapes while you rehearse" },
+  { icon: BarChart3, text: "See how your accuracy improves over time" },
+  { icon: Shield, text: "Your scripts stay on your device" },
 ];
 
 export function AuthPage({ onBack }: { onBack: () => void }) {
@@ -57,9 +57,7 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
               </Button>
             </a>
             <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
-              Sign in with Google, GitHub, Apple, or email.
-              <br />
-              No separate signup needed.
+              Takes 10 seconds. Use any account you already have.
             </p>
           </div>
 
@@ -79,9 +77,7 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
 
           <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
-              Free to use. No credit card required.
-              <br />
-              Upgrade to Pro anytime for $9/mo.
+              Free to use. No credit card needed.
             </p>
           </div>
         </div>
