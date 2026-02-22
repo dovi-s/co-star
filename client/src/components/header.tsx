@@ -9,7 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronLeft, Share2, Download, Copy, Send, CircleUser } from "lucide-react";
+import { ChevronLeft, Share2, Download, Copy, Send } from "lucide-react";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import type { Role, Scene } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
@@ -254,7 +255,7 @@ export function Header({
           data-testid="button-profile"
           className={`shrink-0 ${cameraMode ? "text-white" : "text-muted-foreground"}`}
         >
-          <CircleUser className="h-5 w-5" />
+          <ProfileAvatar size="sm" className={cameraMode ? "text-white" : ""} />
         </Button>
       </div>
 

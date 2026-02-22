@@ -6,7 +6,8 @@ import { SideMenu } from "@/components/side-menu";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { Button } from "@/components/ui/button";
-import { Users, CircleUser, Repeat, Clock, Volume2 } from "lucide-react";
+import { Users, Repeat, Clock, Volume2 } from "lucide-react";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import { getRecentScripts, saveRecentScript, type RecentScript } from "@/lib/recent-scripts";
 
 type Step = "import" | "role-select";
@@ -153,7 +154,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             data-testid="button-profile"
             className="text-muted-foreground"
           >
-            <CircleUser className="h-5 w-5" />
+            <ProfileAvatar size="sm" />
           </Button>
         </div>
       </header>

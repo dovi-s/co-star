@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { SessionProvider, useSessionContext } from "@/context/session-context";
+import { ProfileProvider } from "@/context/profile-context";
 import { HomePage } from "@/pages/home";
 import { RehearsalPage } from "@/pages/rehearsal";
 import MultiplayerPage from "@/pages/multiplayer";
@@ -89,9 +90,11 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
-          <SessionProvider>
-            <AppContent />
-          </SessionProvider>
+          <ProfileProvider>
+            <SessionProvider>
+              <AppContent />
+            </SessionProvider>
+          </ProfileProvider>
           <Toaster />
         </TooltipProvider>
       </ThemeProvider>
