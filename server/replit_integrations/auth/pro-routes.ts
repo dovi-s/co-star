@@ -190,7 +190,9 @@ export function registerProRoutes(app: Express): void {
   // --- Feature Requests Board ---
 
   const optionalAuth: RequestHandler = (req: any, res, next) => {
-    if (req.isAuthenticated?.() && req.user?.claims?.sub) {
+    const session = req.session as any;
+    if (session?.userId && session?.claims?.sub) {
+      req.user = { claims: session.claims };
       next();
     } else {
       req.user = null;

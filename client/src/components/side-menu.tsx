@@ -334,7 +334,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             <>
               <Separator className="my-2 mx-3" />
               <button
-                onClick={() => { onOpenChange(false); window.location.href = "/api/logout"; }}
+                onClick={() => { onOpenChange(false); logout(); }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left text-sm text-muted-foreground"
                 data-testid="menu-item-logout"
               >

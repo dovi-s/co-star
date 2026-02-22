@@ -1,13 +1,20 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/logo";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   LogIn,
+  UserPlus,
   Mic,
   Users,
   Video,
   BarChart3,
   Shield,
+  Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 const benefits = [
@@ -19,6 +26,54 @@ const benefits = [
 ];
 
 export function AuthPage({ onBack }: { onBack: () => void }) {
+  const queryClient = useQueryClient();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const endpoint = mode === "signup" ? "/api/register" : "/api/login";
+      const body: Record<string, string> = { email, password };
+      if (mode === "signup") {
+        body.firstName = firstName;
+        body.lastName = lastName;
+      }
+
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Something went wrong");
+        setIsLoading(false);
+        return;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      onBack();
+    } catch {
+      setError("Unable to connect. Please try again.");
+      setIsLoading(false);
+    }
+  };
+
+  const canSubmit = email.trim() && password.trim() && (mode === "signin" || firstName.trim());
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="flex items-center gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
@@ -38,30 +93,125 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
           <div className="mb-8 flex flex-col items-center animate-fade-in-up">
             <Logo size="lg" />
             <h1 className="text-2xl font-semibold text-foreground mt-4" data-testid="text-auth-title">
-              Welcome to co-star
+              {mode === "signin" ? "Welcome back" : "Create your account"}
             </h1>
             <p className="text-sm text-muted-foreground mt-1 text-center">
-              Your on demand scene partner
+              {mode === "signin" ? "Sign in to your account" : "Get started with co-star"}
             </p>
           </div>
 
-          <div className="w-full glass-surface rounded-md p-6 mb-6 animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="card-auth">
-            <a href="/api/login" className="block w-full">
+          <form onSubmit={handleSubmit} className="w-full space-y-3 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+            <div className="w-full glass-surface rounded-md p-6" data-testid="card-auth">
+              {mode === "signup" && (
+                <div className="flex gap-2 mb-3">
+                  <Input
+                    type="text"
+                    placeholder="First name"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    data-testid="input-first-name"
+                    autoComplete="given-name"
+                    className="h-11"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Last name"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    data-testid="input-last-name"
+                    autoComplete="family-name"
+                    className="h-11"
+                  />
+                </div>
+              )}
+
+              <Input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                data-testid="input-email"
+                autoComplete="email"
+                className="h-11 mb-3"
+              />
+
+              <div className="relative mb-3">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  data-testid="input-password"
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  className="h-11 pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
+                  data-testid="button-toggle-password"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+
+              {error && (
+                <p className="text-xs text-destructive mb-3" data-testid="text-auth-error">{error}</p>
+              )}
+
               <Button
+                type="submit"
                 className="w-full h-11"
                 size="lg"
-                data-testid="button-sign-in"
+                disabled={!canSubmit || isLoading}
+                data-testid="button-submit"
               >
-                <LogIn className="h-4 w-4 mr-2" />
-                Continue
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : mode === "signin" ? (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign in
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Create account
+                  </>
+                )}
               </Button>
-            </a>
-            <p className="text-[11px] text-muted-foreground text-center mt-3 leading-relaxed">
-              Sign in or create an account. Takes 10 seconds.
-            </p>
-          </div>
+            </div>
 
-          <div className="w-full animate-fade-in-up" style={{ animationDelay: "200ms" }}>
+            <p className="text-xs text-muted-foreground text-center pt-1">
+              {mode === "signin" ? (
+                <>
+                  No account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setMode("signup"); setError(null); }}
+                    className="text-primary hover:underline font-medium"
+                    data-testid="button-switch-signup"
+                  >
+                    Create one
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{" "}
+                  <button
+                    type="button"
+                    onClick={() => { setMode("signin"); setError(null); }}
+                    className="text-primary hover:underline font-medium"
+                    data-testid="button-switch-signin"
+                  >
+                    Sign in
+                  </button>
+                </>
+              )}
+            </p>
+          </form>
+
+          <div className="w-full mt-8 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
             <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1 mb-3">
               What you get
             </p>
