@@ -162,12 +162,8 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           {!isSignedIn ? (
             <>
               <div className="mx-3 mb-2 p-4 rounded-md glass-surface">
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">Go Pro</span>
-                </div>
                 <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                  Sign in to save scripts, ditch the watermark, and track your progress across sessions.
+                  Create an account to save scripts, remove the watermark, and track your progress.
                 </p>
                 <Button
                   className="w-full"
@@ -176,7 +172,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                   data-testid="button-menu-signin"
                 >
                   <LogIn className="h-3.5 w-3.5 mr-1.5" />
-                  Sign in
+                  Get started
                 </Button>
               </div>
             </>
