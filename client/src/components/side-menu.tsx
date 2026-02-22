@@ -160,29 +160,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           {!isSignedIn ? (
             <>
               <div className="mx-3 mb-2 p-4 rounded-md glass-surface">
-                <div className="flex items-center gap-3 mb-3">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="relative shrink-0 group"
-                    data-testid="button-set-photo"
-                  >
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
-                      <ProfileAvatar size="lg" className="text-primary" />
-                    </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                      <Camera className="h-2.5 w-2.5 text-primary-foreground" />
-                    </div>
-                  </button>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <Crown className="h-3.5 w-3.5 text-primary" />
-                      <span className="text-sm font-semibold text-foreground">Go Pro</span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-relaxed">
-                      Save scripts, ditch the watermark, track progress.
-                    </p>
-                  </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <Crown className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">Go Pro</span>
                 </div>
+                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
+                  Save scripts, ditch the watermark, and track your progress across sessions.
+                </p>
                 <Button
                   className="w-full"
                   size="sm"
