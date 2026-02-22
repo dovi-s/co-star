@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { trackFeature } from "@/hooks/use-analytics";
 import { Header } from "@/components/header";
 import { ThreeLineReader } from "@/components/three-line-reader";
 import { TransportBar } from "@/components/transport-bar";
@@ -962,6 +963,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (session?.currentLineIndex === 0) {
       resetRunPerformance();
     }
+    trackFeature("rehearsal", "play");
     setPlaying(true);
   }, [session?.currentLineIndex, resetRunPerformance, setPlaying]);
 
@@ -1133,6 +1135,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       return;
     }
     setHandsFreeMode(true);
+    trackFeature("hands-free-mode", "enter");
     
     const wasTapMode = tapMode;
     if (tapMode && speechRecognition.available) {

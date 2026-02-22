@@ -128,6 +128,74 @@ export const recentScripts = pgTable("recent_scripts", {
 
 export type RecentScriptRow = typeof recentScripts.$inferSelect;
 
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  userId: varchar("user_id"),
+  event: varchar("event").notNull(),
+  category: varchar("category").notNull(),
+  label: varchar("label"),
+  value: varchar("value"),
+  path: varchar("path"),
+  device: varchar("device"),
+  browser: varchar("browser"),
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_events_created").on(table.createdAt),
+  index("IDX_events_session").on(table.sessionId),
+  index("IDX_events_user").on(table.userId),
+  index("IDX_events_event").on(table.event),
+  index("IDX_events_category").on(table.category),
+]);
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+
+export const feedbackMessages = pgTable("feedback_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  userEmail: varchar("user_email"),
+  userName: varchar("user_name"),
+  type: varchar("type").notNull().default("feedback"),
+  subject: varchar("subject"),
+  message: text("message").notNull(),
+  attachmentData: text("attachment_data"),
+  status: varchar("status").default("new"),
+  adminNotes: text("admin_notes"),
+  device: varchar("device"),
+  browser: varchar("browser"),
+  path: varchar("path"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_feedback_created").on(table.createdAt),
+  index("IDX_feedback_status").on(table.status),
+  index("IDX_feedback_type").on(table.type),
+]);
+
+export type FeedbackMessage = typeof feedbackMessages.$inferSelect;
+
+export const errorLogs = pgTable("error_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id"),
+  userId: varchar("user_id"),
+  message: text("message").notNull(),
+  stack: text("stack"),
+  source: varchar("source"),
+  path: varchar("path"),
+  device: varchar("device"),
+  browser: varchar("browser"),
+  userAgent: varchar("user_agent"),
+  metadata: jsonb("metadata"),
+  resolved: varchar("resolved").default("false"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_errors_created").on(table.createdAt),
+  index("IDX_errors_resolved").on(table.resolved),
+  index("IDX_errors_session").on(table.sessionId),
+]);
+
+export type ErrorLog = typeof errorLogs.$inferSelect;
+
 export const pageviews = pgTable("pageviews", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionId: varchar("session_id").notNull(),

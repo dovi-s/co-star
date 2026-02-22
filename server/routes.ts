@@ -15,7 +15,7 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts } from "@shared/models/auth";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
@@ -1726,27 +1726,29 @@ MARY: You're kidding me.`;
 
   // --- Pageview Tracking ---
 
+  function parseUA(req: any) {
+    const ua = req.headers["user-agent"] || "";
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    const sessionId = req.sessionID || "unknown";
+    let device = "desktop";
+    if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+      device = /iPad|Tablet/i.test(ua) ? "tablet" : "mobile";
+    }
+    let browser = "other";
+    if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "chrome";
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "safari";
+    else if (/Firefox/i.test(ua)) browser = "firefox";
+    else if (/Edg/i.test(ua)) browser = "edge";
+    return { ua, userId, sessionId, device, browser };
+  }
+
   app.post("/api/track", async (req: any, res: Response) => {
     try {
       const { path: pagePath, referrer } = req.body;
       if (!pagePath || typeof pagePath !== "string") return res.status(400).json({ error: "path required" });
       const cleanPath = pagePath.substring(0, 100).replace(/[^\w\-\/]/g, "");
       const cleanReferrer = typeof referrer === "string" ? referrer.substring(0, 500) : null;
-
-      const ua = req.headers["user-agent"] || "";
-      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
-      const sessionId = req.sessionID || "unknown";
-
-      let device = "desktop";
-      if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
-        device = /iPad|Tablet/i.test(ua) ? "tablet" : "mobile";
-      }
-
-      let browser = "other";
-      if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "chrome";
-      else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "safari";
-      else if (/Firefox/i.test(ua)) browser = "firefox";
-      else if (/Edg/i.test(ua)) browser = "edge";
+      const { ua, userId, sessionId, device, browser } = parseUA(req);
 
       await db.insert(pageviews).values({
         sessionId,
@@ -1761,6 +1763,85 @@ MARY: You're kidding me.`;
       res.json({ ok: true });
     } catch (error: any) {
       res.json({ ok: true });
+    }
+  });
+
+  app.post("/api/track-event", async (req: any, res: Response) => {
+    try {
+      const { event, category, label, value, path: pagePath, metadata } = req.body;
+      if (!event || !category) return res.json({ ok: true });
+      const { userId, sessionId, device, browser } = parseUA(req);
+
+      await db.insert(analyticsEvents).values({
+        sessionId,
+        userId,
+        event: String(event).substring(0, 100),
+        category: String(category).substring(0, 50),
+        label: label ? String(label).substring(0, 200) : null,
+        value: value ? String(value).substring(0, 200) : null,
+        path: pagePath ? String(pagePath).substring(0, 100) : null,
+        device,
+        browser,
+        metadata: metadata || null,
+      });
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.json({ ok: true });
+    }
+  });
+
+  app.post("/api/track-error", async (req: any, res: Response) => {
+    try {
+      const { message: errMsg, stack, source, path: pagePath, metadata } = req.body;
+      if (!errMsg) return res.json({ ok: true });
+      const { ua, userId, sessionId, device, browser } = parseUA(req);
+
+      await db.insert(errorLogs).values({
+        sessionId,
+        userId,
+        message: String(errMsg).substring(0, 2000),
+        stack: stack ? String(stack).substring(0, 5000) : null,
+        source: source ? String(source).substring(0, 100) : null,
+        path: pagePath ? String(pagePath).substring(0, 100) : null,
+        device,
+        browser,
+        userAgent: ua.substring(0, 500),
+        metadata: metadata || null,
+      });
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.json({ ok: true });
+    }
+  });
+
+  app.post("/api/feedback", async (req: any, res: Response) => {
+    try {
+      const { type, subject, message: msg, attachmentData } = req.body;
+      if (!msg) return res.status(400).json({ error: "message required" });
+      const { userId, device, browser } = parseUA(req);
+
+      const user = userId ? await db.select({ email: users.email, firstName: users.firstName, lastName: users.lastName }).from(users).where(eq(users.id, userId)).limit(1) : [];
+      const u = user[0];
+
+      await db.insert(feedbackMessages).values({
+        userId,
+        userEmail: u?.email || null,
+        userName: [u?.firstName, u?.lastName].filter(Boolean).join(" ") || null,
+        type: type || "feedback",
+        subject: subject ? String(subject).substring(0, 200) : null,
+        message: String(msg).substring(0, 10000),
+        attachmentData: attachmentData ? String(attachmentData).substring(0, 50000) : null,
+        device,
+        browser,
+        path: req.body.path ? String(req.body.path).substring(0, 100) : null,
+      });
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      console.error("[Feedback] Error:", error.message);
+      res.status(500).json({ error: "Failed to save feedback" });
     }
   });
 
@@ -1954,6 +2035,219 @@ MARY: You're kidding me.`;
     } catch (error: any) {
       console.error("[Analytics] Error:", error.message);
       res.status(500).json({ error: "Failed to fetch analytics" });
+    }
+  });
+
+  app.get("/api/admin/users", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const page = Math.max(1, Number(req.query.page) || 1);
+      const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+      const offset = (page - 1) * limit;
+      const search = req.query.search ? String(req.query.search) : null;
+      const tier = req.query.tier ? String(req.query.tier) : null;
+
+      let whereClause = sql`1=1`;
+      if (search) {
+        whereClause = sql`(email ILIKE ${'%' + search + '%'} OR first_name ILIKE ${'%' + search + '%'} OR last_name ILIKE ${'%' + search + '%'} OR stage_name ILIKE ${'%' + search + '%'})`;
+      }
+      if (tier) {
+        whereClause = search
+          ? sql`${whereClause} AND COALESCE(subscription_tier, 'free') = ${tier}`
+          : sql`COALESCE(subscription_tier, 'free') = ${tier}`;
+      }
+
+      const result = await db.execute(
+        sql`SELECT id, email, first_name, last_name, stage_name, profile_image_url, subscription_tier, stripe_customer_id, stripe_subscription_id, onboarding_complete, location, created_at, updated_at FROM users WHERE ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`
+      );
+      const totalResult = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE ${whereClause}`);
+
+      res.json({ users: result.rows, total: Number((totalResult.rows[0] as any)?.count || 0), page, limit });
+    } catch (error: any) {
+      console.error("[Admin Users] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/users/:userId", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const userId = req.params.userId;
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const userPageviews = await db.execute(
+        sql`SELECT path, COUNT(*) as views, MAX(created_at) as last_visit FROM pageviews WHERE user_id = ${userId} GROUP BY path ORDER BY views DESC LIMIT 20`
+      );
+      const userEvents = await db.execute(
+        sql`SELECT event, category, label, COUNT(*) as count, MAX(created_at) as last_used FROM analytics_events WHERE user_id = ${userId} GROUP BY event, category, label ORDER BY count DESC LIMIT 30`
+      );
+      const userRuns = await db.execute(
+        sql`SELECT id, script_name, accuracy, lines_total, lines_correct, lines_skipped, duration_seconds, memorization_mode, created_at FROM performance_runs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 20`
+      );
+      const userScripts = await db.execute(
+        sql`SELECT id, name, created_at FROM saved_scripts WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 20`
+      );
+      const userErrors = await db.execute(
+        sql`SELECT id, message, source, path, created_at FROM error_logs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 10`
+      );
+
+      const { passwordHash, ...safeUser } = user;
+
+      res.json({
+        user: safeUser,
+        pageviews: userPageviews.rows,
+        events: userEvents.rows,
+        runs: userRuns.rows,
+        scripts: userScripts.rows,
+        errors: userErrors.rows,
+      });
+    } catch (error: any) {
+      console.error("[Admin User Detail] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch user details" });
+    }
+  });
+
+  app.get("/api/admin/events", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const days = Math.min(90, Math.max(1, Number(req.query.days) || 30));
+      const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+      const topEvents = await db.execute(
+        sql`SELECT event, category, COUNT(*) as count, COUNT(DISTINCT session_id) as unique_sessions, COUNT(DISTINCT user_id) as unique_users FROM analytics_events WHERE created_at >= ${since} GROUP BY event, category ORDER BY count DESC LIMIT 50`
+      );
+      const eventsByDay = await db.execute(
+        sql`SELECT DATE(created_at) as date, COUNT(*) as count FROM analytics_events WHERE created_at >= ${since} GROUP BY DATE(created_at) ORDER BY date`
+      );
+      const featureUsage = await db.execute(
+        sql`SELECT event, label, COUNT(*) as count, COUNT(DISTINCT user_id) as unique_users FROM analytics_events WHERE category = 'feature' AND created_at >= ${since} GROUP BY event, label ORDER BY count DESC LIMIT 30`
+      );
+      const clickEvents = await db.execute(
+        sql`SELECT label, path, COUNT(*) as clicks, COUNT(DISTINCT session_id) as unique_clicks FROM analytics_events WHERE category = 'click' AND created_at >= ${since} GROUP BY label, path ORDER BY clicks DESC LIMIT 30`
+      );
+
+      res.json({
+        topEvents: topEvents.rows,
+        eventsByDay: eventsByDay.rows,
+        featureUsage: featureUsage.rows,
+        clickEvents: clickEvents.rows,
+      });
+    } catch (error: any) {
+      console.error("[Admin Events] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch events" });
+    }
+  });
+
+  app.get("/api/admin/feedback", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const status = req.query.status ? String(req.query.status) : null;
+      const type = req.query.type ? String(req.query.type) : null;
+
+      let whereClause = sql`1=1`;
+      if (status) whereClause = sql`status = ${status}`;
+      if (type) whereClause = status ? sql`${whereClause} AND type = ${type}` : sql`type = ${type}`;
+
+      const result = await db.execute(
+        sql`SELECT * FROM feedback_messages WHERE ${whereClause} ORDER BY created_at DESC LIMIT 100`
+      );
+      const counts = await db.execute(
+        sql`SELECT status, COUNT(*) as count FROM feedback_messages GROUP BY status`
+      );
+
+      res.json({ messages: result.rows, statusCounts: counts.rows });
+    } catch (error: any) {
+      console.error("[Admin Feedback] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.patch("/api/admin/feedback/:id", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { status, adminNotes } = req.body;
+      const updates: any = {};
+      if (status) updates.status = status;
+      if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+
+      await db.update(feedbackMessages).set(updates).where(eq(feedbackMessages.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  app.get("/api/admin/errors", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const resolved = req.query.resolved === "true" ? "true" : "false";
+      const result = await db.execute(
+        sql`SELECT id, session_id, user_id, message, stack, source, path, device, browser, resolved, created_at FROM error_logs WHERE resolved = ${resolved} ORDER BY created_at DESC LIMIT 100`
+      );
+      const counts = await db.execute(
+        sql`SELECT resolved, COUNT(*) as count FROM error_logs GROUP BY resolved`
+      );
+      const topErrors = await db.execute(
+        sql`SELECT message, COUNT(*) as count, MAX(created_at) as last_seen FROM error_logs WHERE resolved = 'false' GROUP BY message ORDER BY count DESC LIMIT 20`
+      );
+
+      res.json({ errors: result.rows, counts: counts.rows, topErrors: topErrors.rows });
+    } catch (error: any) {
+      console.error("[Admin Errors] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch errors" });
+    }
+  });
+
+  app.patch("/api/admin/errors/:id", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      await db.update(errorLogs).set({ resolved: req.body.resolved || "true" }).where(eq(errorLogs.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update error" });
+    }
+  });
+
+  app.post("/api/admin/errors/resolve-bulk", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { message: errorMessage } = req.body;
+      if (!errorMessage) return res.status(400).json({ error: "message required" });
+      await db.execute(sql`UPDATE error_logs SET resolved = 'true' WHERE message = ${errorMessage}`);
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to bulk resolve errors" });
+    }
+  });
+
+  app.get("/api/admin/stripe", async (req: any, res: Response) => {
+    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const subscribers = await db.execute(
+        sql`SELECT u.id, u.email, u.first_name, u.last_name, u.subscription_tier, u.stripe_customer_id, u.stripe_subscription_id, u.subscription_expires_at, u.created_at
+            FROM users u WHERE u.stripe_customer_id IS NOT NULL ORDER BY u.created_at DESC`
+      );
+
+      let stripeData: any = { subscriptions: [], payments: [] };
+      try {
+        const subs = await db.execute(
+          sql`SELECT id, customer_id, status, current_period_start, current_period_end, cancel_at_period_end, created FROM stripe.subscriptions ORDER BY created DESC LIMIT 50`
+        );
+        stripeData.subscriptions = subs.rows;
+      } catch (e) {}
+
+      try {
+        const payments = await db.execute(
+          sql`SELECT id, customer_id, amount, currency, status, created FROM stripe.charges ORDER BY created DESC LIMIT 50`
+        );
+        stripeData.payments = payments.rows;
+      } catch (e) {}
+
+      res.json({ subscribers: subscribers.rows, ...stripeData });
+    } catch (error: any) {
+      console.error("[Admin Stripe] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch Stripe data" });
     }
   });
 

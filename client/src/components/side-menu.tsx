@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
+import { trackClick, trackNavigation } from "@/hooks/use-analytics";
 import {
   Sheet,
   SheetContent,
@@ -124,6 +125,8 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const navigate = (page: string) => {
+    trackClick(`menu-${page}`);
+    trackNavigation("menu", page);
     onOpenChange(false);
     onNavigate?.(page);
   };

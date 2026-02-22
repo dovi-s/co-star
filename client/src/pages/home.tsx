@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { trackFeature } from "@/hooks/use-analytics";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
 import { RecentScripts } from "@/components/recent-scripts";
@@ -66,6 +67,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
     const newSession = createSessionFromParsed(overrideName || name, parsed, rawScript);
     if (newSession) {
       const totalLines = newSession.scenes.reduce((s, sc) => s + sc.lines.length, 0);
+      trackFeature("script-import", "success", { roles: newSession.roles.length, lines: totalLines });
       saveRecentScript({
         name: newSession.name,
         rawScript: rawScript || "",

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { trackFeature } from '@/hooks/use-analytics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -1389,7 +1390,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const handleCreateRoom = () => {
     if (!session || !playerName.trim()) return;
-    unlockAudio(); // Unlock audio on user gesture when creating room
+    trackFeature("table-read", "create-room");
+    unlockAudio();
     multiplayer.createRoom(
       session.name,
       session.roles,
@@ -1400,7 +1402,8 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
 
   const handleJoinRoom = () => {
     if (!joinCode.trim() || !playerName.trim()) return;
-    unlockAudio(); // Unlock audio on user gesture when joining
+    trackFeature("table-read", "join-room");
+    unlockAudio();
     multiplayer.joinRoom(joinCode.trim().toUpperCase(), playerName.trim());
   };
 

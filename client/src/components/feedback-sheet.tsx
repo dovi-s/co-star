@@ -58,6 +58,19 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       ? `${message}\n\n--- Attached script data ---\n${attachment === "full-script" ? lastRawScript : attachmentText}`
       : message;
 
+    fetch("/api/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type: "feedback",
+        subject: "Co-star Studio feedback",
+        message: fullMessage,
+        attachmentData: attachmentText || null,
+        path: window.location.pathname,
+      }),
+      credentials: "include",
+    }).catch(() => {});
+
     const subject = encodeURIComponent("Co-star Studio feedback");
     const body = encodeURIComponent(fullMessage);
     window.open(`mailto:support@co-star.app?subject=${subject}&body=${body}`, "_blank");

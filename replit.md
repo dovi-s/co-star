@@ -67,6 +67,15 @@ The design philosophy is sophisticated and minimal, now using Apple's Liquid Gla
 - **Context Peek Feature**: Allows users to reveal stage directions and action preceding a line.
 - **Global Script Navigation**: Progress indicator shows position across the entire script, with automatic scene advancement.
 
+### Admin Dashboard
+- **Access Control**: Protected by `ADMIN_USER_IDS` environment variable (comma-separated user IDs). All admin API routes enforce server-side auth.
+- **Database Tables**: `analytics_events` (user interactions), `feedback_messages` (feedback/bug reports), `error_logs` (client-side errors) in `shared/models/auth.ts`.
+- **API Endpoints**: `/api/track` (pageviews), `/api/track-event` (feature events), `/api/track-error` (client errors), `/api/feedback` (feedback submissions), plus 8 admin GET/PATCH/POST endpoints under `/api/admin/*`.
+- **Client-Side Analytics**: Batched event tracking in `client/src/hooks/use-analytics.ts` (flushes every 5s or 20 events max, also on beforeunload/visibilitychange). Automatic error capture via `window.onerror` and `unhandledrejection`. Tracking integrated into side-menu navigation, rehearsal playback, hands-free mode, script import, and multiplayer/table-read features.
+- **Dashboard Tabs**: Overview, Users (with individual detail views), Traffic, Usage, Features, Revenue/Stripe, Feedback Inbox, Errors, Integrations (placeholders for PostHog, GA4, Sentry, Mixpanel, Intercom).
+- **Feedback Inbox**: Body validation with size limits (subject 200 chars, message 10K chars, attachments 50K chars). Status management (new/read/resolved/archived).
+- **Error Management**: Bulk resolution, status tracking, and grouping by message.
+
 ## External Dependencies
 
 - **Web Speech API**: Used for Text-to-Speech (TTS) for some functionalities.

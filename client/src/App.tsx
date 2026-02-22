@@ -23,6 +23,7 @@ import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
 import { usePageTracking } from "@/hooks/use-tracking";
+import "@/hooks/use-analytics";
 import type { SavedScript } from "@shared/models/auth";
 
 type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
