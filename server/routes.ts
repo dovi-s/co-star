@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, registerAuthRoutes } from "./replit_integrations/auth";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import OpenAI from "openai";
 import multer from "multer";
@@ -348,6 +349,10 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  // Initialize auth (must be before other routes)
+  await setupAuth(app);
+  registerAuthRoutes(app);
+
   // Initialize WebSocket server for multiplayer
   setupMultiplayer(httpServer);
   

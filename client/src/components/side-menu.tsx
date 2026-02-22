@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { useTheme } from "@/lib/theme-provider";
 import { useProfile } from "@/context/profile-context";
+import { useAuth } from "@/hooks/use-auth";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import {
   CircleUser,
@@ -114,8 +115,8 @@ function resizeImage(file: File, maxSize: number): Promise<string> {
 export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const { theme, toggleTheme } = useTheme();
   const { profile, setPhoto } = useProfile();
+  const { user, isAuthenticated: isSignedIn, logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isSignedIn = false;
 
   const navigate = (page: string) => {
     onOpenChange(false);
@@ -203,9 +204,9 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                   </button>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-foreground truncate">
-                      {profile.name || "Actor Name"}
+                      {user?.firstName ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}` : profile.name || "Actor"}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate">actor@email.com</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{user?.email || ""}</p>
                   </div>
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary">
                     Pro
@@ -325,6 +326,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             <>
               <Separator className="my-2 mx-3" />
               <button
+                onClick={() => { onOpenChange(false); window.location.href = "/api/logout"; }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left text-sm text-muted-foreground"
                 data-testid="menu-item-logout"
               >

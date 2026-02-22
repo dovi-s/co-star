@@ -225,5 +225,4 @@ export const roomUpdateSchema = z.discriminatedUnion("type", [
 ]);
 export type RoomUpdate = z.infer<typeof roomUpdateSchema>;
 
-export { users, insertUserSchema } from "./user-schema";
-export type { User, InsertUser } from "./user-schema";
+export * from "./models/auth";

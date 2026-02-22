@@ -12,8 +12,9 @@ import MultiplayerPage from "@/pages/multiplayer";
 import { HowItWorksPage } from "@/pages/how-it-works";
 import { ComparePage } from "@/pages/compare";
 import { RoadmapPage } from "@/pages/roadmap";
+import { AuthPage } from "@/pages/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -42,8 +43,11 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap") {
-      setView(page);
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin") {
+      setView(page as View);
+    }
+    if (page === "signup") {
+      window.location.href = "/api/login";
     }
   }, []);
 
@@ -80,6 +84,9 @@ function AppContent() {
       )}
       {view === "roadmap" && (
         <RoadmapPage onBack={handleBackToHome} />
+      )}
+      {view === "signin" && (
+        <AuthPage onBack={handleBackToHome} />
       )}
     </div>
   );
