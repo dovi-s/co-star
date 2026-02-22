@@ -29,8 +29,8 @@ function CoStarAppIcon({ className }: { className?: string }) {
     >
       <defs>
         <linearGradient id="costarBg" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#FBBF24" />
-          <stop offset="100%" stopColor="#F59E0B" />
+          <stop offset="0%" stopColor="#1A73E8" />
+          <stop offset="100%" stopColor="#1557B0" />
         </linearGradient>
       </defs>
       <rect width="48" height="48" rx="12" fill="url(#costarBg)" />
@@ -41,8 +41,8 @@ function CoStarAppIcon({ className }: { className?: string }) {
       />
       <path
         d="M35 29.5 Q36.5 33.5 40.5 35 Q36.5 36.5 35 40.5 Q33.5 36.5 29.5 35 Q33.5 33.5 35 29.5 Z"
-        fill="white"
-        opacity="0.7"
+        fill="#D4A574"
+        opacity="0.85"
       />
     </svg>
   );
