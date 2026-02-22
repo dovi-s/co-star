@@ -30,6 +30,7 @@ import {
   Camera,
   BarChart3,
   Lightbulb,
+  Palette,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FeedbackSheet } from "@/components/feedback-sheet";
@@ -282,6 +283,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             description="Vote on what we build next"
             onClick={() => navigate("feature-board")}
             testId="menu-item-feature-board"
+          />
+          <MenuItem
+            icon={<Palette className="h-4 w-4" />}
+            label="Brand"
+            description="Logos, colors, and guidelines"
+            onClick={() => navigate("brand")}
+            testId="menu-item-brand"
           />
 
           <SectionLabel>More</SectionLabel>
