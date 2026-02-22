@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -31,6 +31,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FeedbackSheet } from "@/components/feedback-sheet";
 
 interface SideMenuProps {
   open: boolean;
@@ -118,6 +119,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const { profile, setPhoto } = useProfile();
   const { user, isAuthenticated: isSignedIn, logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const navigate = (page: string) => {
     onOpenChange(false);
@@ -297,7 +299,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             icon={<MessageCircle className="h-4 w-4" />}
             label="Support"
             description="Get help or share feedback"
-            onClick={() => window.open("mailto:support@co-star.app", "_blank")}
+            onClick={() => setFeedbackOpen(true)}
             testId="menu-item-support"
           />
           <MenuItem
@@ -349,6 +351,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           </div>
         </div>
       </SheetContent>
+      <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </Sheet>
   );
 }
