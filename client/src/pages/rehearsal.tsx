@@ -86,6 +86,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     return !isMobile;
   });
+  const micEnabledRef = useRef(micEnabled);
+  useEffect(() => { micEnabledRef.current = micEnabled; }, [micEnabled]);
   const [tapMode, setTapMode] = useState(() => {
     try { return localStorage.getItem("costar-tap-mode") === "true"; } catch { return false; }
   });
@@ -198,6 +200,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setMicPermissionGranted(true);
       setMicBlocked(false);
       setMicEnabled(true);
+      micEnabledRef.current = true;
       console.log('[Rehearsal] Mic permission granted');
       return true;
     } catch (err) {
@@ -269,13 +272,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const line = getCurrentLineRef.current();
       if (!line || transcript.length === 0 || !waitingForUserRef.current) return;
 
-      const lastWord = transcript.split(/\s+/).pop()?.toLowerCase() || "";
-      if (
-        (lastWord === "line" || lastWord === "line!" || lastWord === "line?") &&
-        !hintPlayingRef.current &&
-        result.isFinal
-      ) {
-        const cleanTranscript = transcript.replace(/\bline[!?]?\s*$/i, "").trim();
+      const allWords = transcript.split(/\s+/);
+      const lastWord = (allWords[allWords.length - 1] || "").toLowerCase().replace(/[^a-z]/g, "");
+      const isLineWord = lastWord === "line" || lastWord === "lne" || lastWord === "lying";
+      const isShortEnough = allWords.length <= 3;
+      const notAlreadyMatching = currentLineAccuracyRef.current < 50;
+      const isLineCommand = isLineWord && notAlreadyMatching && (result.isFinal || isShortEnough);
+      if (isLineCommand && !hintPlayingRef.current) {
+        const cleanTranscript = transcript.replace(/\b(line|lne|lying)[!?.]*\s*$/i, "").trim();
         const isJustLine = cleanTranscript.length === 0;
         if (isJustLine || matchWords(line.text, cleanTranscript).percentMatched < 40) {
           console.log("[Rehearsal] LINE command detected, whispering hint");
@@ -638,7 +642,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       return;
     }
     
-    if (speechRecognition.available && !micBlocked && micEnabled) {
+    if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
       const isAndroid = /Android/i.test(navigator.userAgent);
       const micDelay = isIOS ? 500 : (isAndroid ? 400 : 50);
@@ -668,7 +672,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 5000);
     }
-  }, [micBlocked, micEnabled]);
+  }, [micBlocked]);
 
   const prefetchNextAILine = useCallback(() => {
     if (!session) return;
@@ -1095,18 +1099,27 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       return;
     }
     setHandsFreeMode(true);
+    
+    if (tapMode) {
+      setTapMode(false);
+      tapModeRef.current = false;
+      try { localStorage.setItem("costar-tap-mode", "false"); } catch {}
+    }
+    
     if (!micEnabled) {
       if (micPermissionGranted) {
         setMicEnabled(true);
+        micEnabledRef.current = true;
       } else {
         await requestMicPermission();
       }
     }
+    
     if (!session.isPlaying) {
       setTimeout(() => {
         speakingLineRef.current = null;
         setPlaying(true);
-      }, 500);
+      }, 600);
     }
   };
 
