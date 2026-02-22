@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { parseScript } from "@/lib/script-parser";
+import { CameraScanner } from "@/components/camera-scanner";
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
   const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
   const [isEditingScript, setIsEditingScript] = useState(!initialScript);
+  const [showScanner, setShowScanner] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -718,13 +720,13 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 )}
               </button>
               <button
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={() => setShowScanner(true)}
                 disabled={isParsingFile}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
                 data-testid="button-snap-script"
               >
                 <Camera className="h-3 w-3" />
-                Snap
+                Scan
               </button>
             </div>
             <Dialog>
@@ -1048,6 +1050,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             </p>
           )}
         </div>
+      )}
+
+      {showScanner && (
+        <CameraScanner
+          onCapture={(file) => {
+            setShowScanner(false);
+            handleFileSelect(file);
+          }}
+          onClose={() => setShowScanner(false)}
+        />
       )}
     </div>
   );
