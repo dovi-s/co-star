@@ -647,21 +647,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       return;
     }
     
-    const isIOSPWA = speechRecognition.isIOSPWA;
-    if (isIOSPWA) {
-      console.log("[Rehearsal] iOS PWA mode detected, speech recognition may be unreliable");
-    }
-    
-    if (speechRecognition.available && !micBlocked && micEnabledRef.current && !isIOSPWA) {
+    if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
       const micDelay = speechRecognition.isMobileDevice ? 500 : 50;
-      console.log("[Rehearsal] Mic delay:", micDelay, "ms, mobile:", speechRecognition.isMobileDevice);
+      console.log("[Rehearsal] Mic delay:", micDelay, "ms, mobile:", speechRecognition.isMobileDevice, "iOS:", speechRecognition.isIOSPWA);
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
         }
       }, micDelay);
       
-      // Safety timeout: if no result after 60 seconds, advance anyway
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           console.log("[Rehearsal] User turn safety timeout, advancing");
@@ -671,17 +665,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 60000);
     } else {
-      const speechUnavailable = !speechRecognition.available || isIOSPWA;
-      if (speechUnavailable && speechRecognition.isMobileDevice) {
-        console.log("[Rehearsal] Speech recognition not available on this device, isIOSPWA:", isIOSPWA);
+      if (!speechRecognition.available && speechRecognition.isMobileDevice) {
+        console.log("[Rehearsal] Speech recognition not available on this device");
         if (!tapModeRef.current) {
           setTapMode(true);
           tapModeRef.current = true;
           toast({
             title: "Voice recognition unavailable",
-            description: isIOSPWA
-              ? "Voice input isn't supported in app mode on this device. Tap mode enabled — tap the screen to advance through your lines."
-              : "Tap mode enabled. Tap the screen to advance through your lines.",
+            description: "Tap mode enabled. Tap the screen to advance through your lines.",
           });
           return;
         }
