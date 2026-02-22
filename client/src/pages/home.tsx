@@ -95,9 +95,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
     setUserRole(roleId);
   };
 
+  const [prefillKey, setPrefillKey] = useState(0);
+  const [prefillScript, setPrefillScript] = useState<string | undefined>(undefined);
+
   const handleSelectRecent = (script: RecentScript) => {
-    userWentBackRef.current = false;
-    handleImport(script.name, script.rawScript);
+    setPrefillScript(script.rawScript);
+    setPrefillKey((k) => k + 1);
   };
 
   const handleBackToImport = () => {
@@ -179,13 +182,14 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
         </div>
 
         <div className="flex-1 px-4 pb-6 relative z-10">
-          <ScriptImport 
+          <ScriptImport
+            key={prefillKey}
             onImport={handleImport}
             onImportParsed={handleImportParsed}
             isLoading={isLoading} 
             error={error}
             onClearError={clearError}
-            initialScript={lastRawScript}
+            initialScript={prefillScript ?? lastRawScript}
           />
         </div>
 
