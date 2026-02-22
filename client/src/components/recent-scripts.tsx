@@ -151,7 +151,7 @@ export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsPro
 
               {editingId !== script.id && (
                 <div
-                  className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                  className="flex items-center gap-0.5 shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <Button
