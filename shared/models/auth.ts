@@ -70,3 +70,36 @@ export const performanceRuns = pgTable("performance_runs", {
 
 export type PerformanceRun = typeof performanceRuns.$inferSelect;
 export type InsertPerformanceRun = typeof performanceRuns.$inferInsert;
+
+// Feature requests board
+export const featureRequests = pgTable("feature_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  authorName: varchar("author_name").notNull(),
+  title: varchar("title").notNull(),
+  description: text("description"),
+  category: varchar("category").default("general"),
+  status: varchar("status").default("open"),
+  voteCount: integer("vote_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_feature_requests_votes").on(table.voteCount),
+  index("IDX_feature_requests_user").on(table.userId),
+]);
+
+export type FeatureRequest = typeof featureRequests.$inferSelect;
+export type InsertFeatureRequest = typeof featureRequests.$inferInsert;
+
+// Votes on feature requests (one per user per request)
+export const featureVotes = pgTable("feature_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  featureRequestId: varchar("feature_request_id").notNull().references(() => featureRequests.id, { onDelete: "cascade" }),
+  value: integer("value").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_feature_votes_request").on(table.featureRequestId),
+  index("IDX_feature_votes_user_request").on(table.userId, table.featureRequestId),
+]);
+
+export type FeatureVote = typeof featureVotes.$inferSelect;

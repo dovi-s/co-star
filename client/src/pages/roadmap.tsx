@@ -25,6 +25,7 @@ import {
   Globe,
   Smartphone,
   Wifi,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,7 @@ const groups: { status: Status; title: string }[] = [
   { status: "coming-soon", title: "Coming Soon" },
 ];
 
-export function RoadmapPage({ onBack }: { onBack: () => void }) {
+export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (page: string) => void }) {
   let animIndex = 0;
 
   const liveCount = items.filter(i => i.status === "live").length;
@@ -184,16 +185,18 @@ export function RoadmapPage({ onBack }: { onBack: () => void }) {
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">Have a feature request?</p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Reach out at{" "}
-          <a
-            href="mailto:hello@co-star.app"
-            className="text-primary underline"
-            data-testid="link-support-email"
-          >
-            hello@co-star.app
-          </a>
+        <p className="text-xs text-muted-foreground mb-3">
+          Vote on what we build next, or suggest something new.
         </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onNavigate?.("feature-board")}
+          data-testid="button-feature-board"
+        >
+          <Lightbulb className="h-3.5 w-3.5 mr-1.5" />
+          Open Feature Board
+        </Button>
       </footer>
     </div>
   );

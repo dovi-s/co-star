@@ -1,8 +1,8 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { isAuthenticated } from "./replitAuth";
 import { db } from "../../db";
-import { savedScripts, performanceRuns, users } from "@shared/models/auth";
-import { eq, desc, and } from "drizzle-orm";
+import { savedScripts, performanceRuns, users, featureRequests, featureVotes } from "@shared/models/auth";
+import { eq, desc, and, sql } from "drizzle-orm";
 
 export function registerProRoutes(app: Express): void {
   // --- Saved Scripts ---
@@ -184,6 +184,135 @@ export function registerProRoutes(app: Express): void {
       res.json({ tier: user?.subscriptionTier || "free" });
     } catch (error) {
       res.json({ tier: "free" });
+    }
+  });
+
+  // --- Feature Requests Board ---
+
+  const optionalAuth: RequestHandler = (req: any, res, next) => {
+    if (req.isAuthenticated?.() && req.user?.claims?.sub) {
+      next();
+    } else {
+      req.user = null;
+      next();
+    }
+  };
+
+  app.get("/api/features", optionalAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub || null;
+      const sort = req.query.sort === "newest" ? "newest" : "top";
+
+      const requests = await db
+        .select()
+        .from(featureRequests)
+        .orderBy(sort === "newest" ? desc(featureRequests.createdAt) : desc(featureRequests.voteCount));
+
+      let userVotes: Record<string, number> = {};
+      if (userId) {
+        const votes = await db
+          .select({ featureRequestId: featureVotes.featureRequestId, value: featureVotes.value })
+          .from(featureVotes)
+          .where(eq(featureVotes.userId, userId));
+        userVotes = Object.fromEntries(votes.map(v => [v.featureRequestId, v.value]));
+      }
+
+      res.json({
+        requests: requests.map(r => ({
+          ...r,
+          userVote: userVotes[r.id] || 0,
+        })),
+      });
+    } catch (error) {
+      console.error("Error fetching features:", error);
+      res.status(500).json({ message: "Failed to fetch feature requests" });
+    }
+  });
+
+  app.post("/api/features", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { title, description, category } = req.body;
+
+      if (!title || title.trim().length < 3) {
+        return res.status(400).json({ message: "Title must be at least 3 characters" });
+      }
+
+      const [user] = await db
+        .select({ firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(eq(users.id, userId));
+      const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Anonymous";
+
+      const [request] = await db
+        .insert(featureRequests)
+        .values({
+          userId,
+          authorName,
+          title: title.trim(),
+          description: description?.trim() || null,
+          category: category || "general",
+          voteCount: 1,
+        })
+        .returning();
+
+      await db.insert(featureVotes).values({
+        userId,
+        featureRequestId: request.id,
+        value: 1,
+      });
+
+      res.json({ ...request, userVote: 1 });
+    } catch (error) {
+      console.error("Error creating feature:", error);
+      res.status(500).json({ message: "Failed to create feature request" });
+    }
+  });
+
+  app.post("/api/features/:id/vote", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const featureId = req.params.id;
+      const { value } = req.body;
+
+      if (value !== 1 && value !== -1 && value !== 0) {
+        return res.status(400).json({ message: "Vote must be 1, -1, or 0" });
+      }
+
+      const [existing] = await db
+        .select()
+        .from(featureVotes)
+        .where(and(eq(featureVotes.userId, userId), eq(featureVotes.featureRequestId, featureId)));
+
+      const oldValue = existing?.value || 0;
+      const diff = value - oldValue;
+
+      if (existing) {
+        if (value === 0) {
+          await db.delete(featureVotes).where(eq(featureVotes.id, existing.id));
+        } else {
+          await db.update(featureVotes).set({ value }).where(eq(featureVotes.id, existing.id));
+        }
+      } else if (value !== 0) {
+        await db.insert(featureVotes).values({ userId, featureRequestId: featureId, value });
+      }
+
+      if (diff !== 0) {
+        await db
+          .update(featureRequests)
+          .set({ voteCount: sql`COALESCE(${featureRequests.voteCount}, 0) + ${diff}` })
+          .where(eq(featureRequests.id, featureId));
+      }
+
+      const [updated] = await db
+        .select({ voteCount: featureRequests.voteCount })
+        .from(featureRequests)
+        .where(eq(featureRequests.id, featureId));
+
+      res.json({ voteCount: updated?.voteCount || 0, userVote: value });
+    } catch (error) {
+      console.error("Error voting:", error);
+      res.status(500).json({ message: "Failed to vote" });
     }
   });
 }

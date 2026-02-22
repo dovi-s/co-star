@@ -29,6 +29,7 @@ import {
   Crown,
   Camera,
   BarChart3,
+  Lightbulb,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FeedbackSheet } from "@/components/feedback-sheet";
@@ -267,6 +268,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             description="What we are building next"
             onClick={() => navigate("roadmap")}
             testId="menu-item-roadmap"
+          />
+          <MenuItem
+            icon={<Lightbulb className="h-4 w-4" />}
+            label="Feature Board"
+            description="Vote on what we build next"
+            onClick={() => navigate("feature-board")}
+            testId="menu-item-feature-board"
           />
 
           <SectionLabel>More</SectionLabel>

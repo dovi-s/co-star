@@ -15,9 +15,10 @@ import { RoadmapPage } from "@/pages/roadmap";
 import { AuthPage } from "@/pages/auth";
 import { LibraryPage } from "@/pages/library";
 import { HistoryPage } from "@/pages/history";
+import { FeatureBoardPage } from "@/pages/feature-board";
 import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -46,7 +47,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history") {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board") {
       setView(page as View);
     }
   }, []);
@@ -97,7 +98,7 @@ function AppContent() {
         <ComparePage onBack={handleBackToHome} />
       )}
       {view === "roadmap" && (
-        <RoadmapPage onBack={handleBackToHome} />
+        <RoadmapPage onBack={handleBackToHome} onNavigate={handleNavigate} />
       )}
       {view === "signin" && (
         <AuthPage onBack={handleBackToHome} />
@@ -107,6 +108,9 @@ function AppContent() {
       )}
       {view === "history" && (
         <HistoryPage onBack={handleBackToHome} />
+      )}
+      {view === "feature-board" && (
+        <FeatureBoardPage onBack={handleBackToHome} />
       )}
     </div>
   );
