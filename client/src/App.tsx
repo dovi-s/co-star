@@ -35,6 +35,9 @@ function AppContent() {
   const { user } = useAuth();
   const [view, setView] = useState<View>(() => {
     const params = new URLSearchParams(window.location.search);
+    if (params.get("reset-token")) {
+      return "signin";
+    }
     if (params.get("checkout") === "success" || params.get("view") === "subscription") {
       window.history.replaceState({}, "", "/");
       return "subscription";

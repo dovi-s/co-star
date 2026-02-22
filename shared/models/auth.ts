@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, jsonb, pgTable, real, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, real, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const sessions = pgTable(
   "sessions",
@@ -15,6 +15,8 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   passwordHash: varchar("password_hash"),
+  googleId: varchar("google_id").unique(),
+  authProvider: varchar("auth_provider").default("email"),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -38,6 +40,20 @@ export const users = pgTable("users", {
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+export const passwordResetTokens = pgTable("password_reset_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email").notNull(),
+  tokenHash: varchar("token_hash").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  used: boolean("used").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_reset_tokens_email").on(table.email),
+  index("IDX_reset_tokens_expires").on(table.expiresAt),
+]);
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 
 // Saved scripts for Pro users
 export const savedScripts = pgTable("saved_scripts", {

@@ -60,6 +60,9 @@ The design philosophy is sophisticated and minimal, now using Apple's Liquid Gla
 - **PWA Ready**: Includes service worker, manifest, and offline support.
 - **Multiplayer Table Read**: Real-time remote rehearsals with multiple actors via WebSocket (socket.io). Includes room creation with 6-character codes, role selection, ready states, host controls (start/pause/resume/navigation), and synchronized line progression. Server validates all events with Zod schemas and enforces authorization (host or current speaker for line advancement).
 - **WebRTC Video Calls**: Peer-to-peer video and audio streaming during table reads using WebRTC. Features include mute/unmute audio, enable/disable video, current speaker highlighting, and a compact video strip during rehearsals. Server acts as signaling relay for ICE candidates and SDP offer/answer exchange.
+- **Authentication**: Custom email/password auth with session-based storage (express-session + connect-pg-simple). Supports Google Sign-In via Google Identity Services (ID token verification with google-auth-library). Users table has `google_id` and `auth_provider` columns. Google accounts are linked by email if a matching account exists.
+- **Forgot Password Flow**: Users request a reset link via email (Resend integration). Tokens are hashed (SHA-256) and stored in `password_reset_tokens` table with 1-hour expiry. Reset link uses `?reset-token=` query param which routes to the auth page's reset form. Backend never reveals whether an email exists (anti-enumeration).
+- **Resend Email Integration**: Uses Replit connectors for API key management (`server/replit_integrations/email/resend.ts`). `getUncachableResendClient()` fetches fresh credentials each call. Used for password reset emails.
 
 ### Feature Specifications
 - **Script Context Capture**: Action lines between dialogues and scene descriptions are attached to the next dialogue.
