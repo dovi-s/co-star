@@ -1069,23 +1069,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const hasCameraFeed = camera.isEnabled && camera.videoRef.current;
 
-    const safeRoundRect = (c: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) => {
-      if (c.roundRect) {
-        c.roundRect(x, y, w, h, r);
-      } else {
-        c.moveTo(x + r, y);
-        c.lineTo(x + w - r, y);
-        c.arcTo(x + w, y, x + w, y + r, r);
-        c.lineTo(x + w, y + h - r);
-        c.arcTo(x + w, y + h, x + w - r, y + h, r);
-        c.lineTo(x + r, y + h);
-        c.arcTo(x, y + h, x, y + h - r, r);
-        c.lineTo(x, y + r);
-        c.arcTo(x, y, x + r, y, r);
-        c.closePath();
-      }
-    };
-
     const drawScreenFrame = () => {
       const w = 1920;
       const h = 1080;
@@ -1110,8 +1093,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           ctx.scale(-1, 1);
           ctx.drawImage(video, w - dx - dw, dy, dw, dh);
           ctx.restore();
-          ctx.fillStyle = 'rgba(0,0,0,0.3)';
-          ctx.fillRect(0, 0, w, h);
         } else {
           ctx.fillStyle = '#000';
           ctx.fillRect(0, 0, w, h);
@@ -1120,143 +1101,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         const isDark = document.documentElement.classList.contains('dark');
         ctx.fillStyle = isDark ? '#0E1218' : '#FFFFFF';
         ctx.fillRect(0, 0, w, h);
-      }
-
-      const onCamera = hasCameraFeed;
-      const fgColor = onCamera ? '#FFFFFF' : (document.documentElement.classList.contains('dark') ? '#E6EDF3' : '#0F172A');
-      const mutedColor = onCamera ? 'rgba(255,255,255,0.4)' : (document.documentElement.classList.contains('dark') ? 'rgba(230,237,243,0.4)' : 'rgba(15,23,42,0.4)');
-      const userBg = onCamera ? 'rgba(255,255,255,0.9)' : (document.documentElement.classList.contains('dark') ? '#E6EDF3' : '#0F172A');
-      const userFg = onCamera ? '#000' : (document.documentElement.classList.contains('dark') ? '#0E1218' : '#FFFFFF');
-      const aiBg = onCamera ? 'rgba(0,0,0,0.7)' : (document.documentElement.classList.contains('dark') ? '#1a1f28' : '#f8fafc');
-      const aiBorder = onCamera ? 'rgba(255,255,255,0.2)' : (document.documentElement.classList.contains('dark') ? 'rgba(230,237,243,0.15)' : 'rgba(15,23,42,0.1)');
-      const primaryColor = 'hsl(217, 91%, 60%)';
-
-      const prev = previousLine;
-      const curr = currentLine;
-      const next = nextLineData;
-      const isUser = currentIsUserLine;
-
-      const centerY = h / 2;
-      const boxW = Math.min(w - 120, 1050);
-      const boxX = (w - boxW) / 2;
-      const padding = 30;
-
-      const wrapText = (text: string, maxWidth: number, font: string): string[] => {
-        ctx.font = font;
-        const words = text.split(' ');
-        const lines: string[] = [];
-        let line = '';
-        for (const word of words) {
-          const test = line ? `${line} ${word}` : word;
-          if (ctx.measureText(test).width > maxWidth) {
-            if (line) lines.push(line);
-            line = word;
-          } else {
-            line = test;
-          }
-        }
-        if (line) lines.push(line);
-        return lines.length ? lines : [''];
-      };
-
-      const drawLineBox = (
-        line: { text: string; roleName: string; direction?: string },
-        y: number,
-        isCurr: boolean,
-        isUserLine: boolean,
-      ): number => {
-        const textFont = isCurr ? '500 30px Inter, system-ui, sans-serif' : '500 25px Inter, system-ui, sans-serif';
-        const wrappedLines = wrapText(line.text, boxW - padding * 2, textFont);
-        const lineH = isCurr ? 44 : 38;
-        const roleH = 42;
-        const boxH = roleH + wrappedLines.length * lineH + padding * 2;
-
-        if (isCurr && isUserLine) {
-          ctx.fillStyle = userBg;
-          ctx.beginPath();
-          safeRoundRect(ctx, boxX, y, boxW, boxH, 12);
-          ctx.fill();
-        } else if (isCurr) {
-          ctx.fillStyle = aiBg;
-          ctx.strokeStyle = aiBorder;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          safeRoundRect(ctx, boxX, y, boxW, boxH, 12);
-          ctx.fill();
-          ctx.stroke();
-        }
-
-        let textY = y + padding;
-
-        ctx.font = 'bold 16px Inter, system-ui, sans-serif';
-        const roleBg = isCurr && isUserLine ? 'rgba(255,255,255,0.2)' : (isCurr ? primaryColor : 'transparent');
-        const roleFg = isCurr && isUserLine ? userFg : (isCurr ? '#fff' : mutedColor);
-        const roleW = ctx.measureText(line.roleName.toUpperCase()).width + 20;
-        if (isCurr) {
-          ctx.fillStyle = roleBg;
-          ctx.beginPath();
-          safeRoundRect(ctx, boxX + padding, textY, roleW, 28, 6);
-          ctx.fill();
-        }
-        ctx.fillStyle = roleFg;
-        ctx.fillText(line.roleName.toUpperCase(), boxX + padding + 10, textY + 20);
-
-        if (line.direction && isCurr) {
-          ctx.font = 'italic 16px Inter, system-ui, sans-serif';
-          ctx.fillStyle = isCurr && isUserLine ? `${userFg}aa` : mutedColor;
-          ctx.fillText(`(${line.direction})`, boxX + padding + roleW + 12, textY + 20);
-        }
-
-        textY += roleH;
-
-        ctx.font = textFont;
-        ctx.fillStyle = isCurr && isUserLine ? userFg : (isCurr ? fgColor : mutedColor);
-        for (const wl of wrappedLines) {
-          ctx.fillText(wl, boxX + padding, textY + (isCurr ? 26 : 22));
-          textY += lineH;
-        }
-
-        return boxH;
-      };
-
-      let currH = 0;
-      if (curr) {
-        const tempFont = '500 30px Inter, system-ui, sans-serif';
-        const wrappedCurr = wrapText(curr.text, boxW - padding * 2, tempFont);
-        currH = 42 + wrappedCurr.length * 44 + padding * 2;
-      }
-
-      const gap = 18;
-      let prevH = 0;
-      if (prev) {
-        const tempFont = '500 25px Inter, system-ui, sans-serif';
-        const wrappedPrev = wrapText(prev.text, boxW - padding * 2, tempFont);
-        prevH = 42 + wrappedPrev.length * 38 + padding * 2;
-      }
-
-      const startY = centerY - currH / 2;
-
-      if (prev) {
-        ctx.globalAlpha = 0.35;
-        drawLineBox(prev, startY - gap - prevH, false, false);
-        ctx.globalAlpha = 1;
-      }
-
-      if (curr) {
-        drawLineBox(curr, startY, true, isUser);
-      }
-
-      if (next) {
-        ctx.globalAlpha = 0.35;
-        drawLineBox(next, startY + currH + gap, false, false);
-        ctx.globalAlpha = 1;
-      }
-
-      const scene = session?.scenes?.[session?.currentSceneIndex ?? 0];
-      if (scene) {
-        ctx.font = '500 18px Inter, system-ui, sans-serif';
-        ctx.fillStyle = mutedColor;
-        ctx.fillText(scene.name || '', boxX, h - 45);
       }
 
       drawWatermark(ctx, w, h);
@@ -1272,7 +1116,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         screenRecordingFrameRef.current = null;
       }
     };
-  }, [camera.isRecording, camera.isEnabled, camera.videoRef, currentLine, previousLine, nextLineData, currentIsUserLine, session?.scenes, session?.currentSceneIndex]);
+  }, [camera.isRecording, camera.isEnabled, camera.videoRef]);
 
   if (!session) {
     onBack();
