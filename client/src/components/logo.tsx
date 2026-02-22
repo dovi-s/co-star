@@ -50,7 +50,7 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
       </div>
       {showWordmark && (
         <span className={cn("tracking-[0.08em] text-foreground/90", text)}>
-          <span className="font-normal">Co-Star</span>{" "}
+          <span className="font-normal">Co-star</span>{" "}
           <span className="font-semibold">Studio</span>
         </span>
       )}
