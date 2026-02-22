@@ -1039,10 +1039,12 @@ function FeedbackTab() {
                   </select>
                 </div>
               </div>
-              {msg.subject && <p className="text-sm font-medium">{msg.subject}</p>}
               <p className="text-sm text-foreground/80 whitespace-pre-wrap">{msg.message}</p>
-              {(msg.device || msg.browser || msg.path) && (
-                <div className="flex gap-3 text-[10px] text-muted-foreground">
+              {(msg.contact_email || msg.device || msg.browser || msg.path) && (
+                <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                  {msg.contact_email && (
+                    <a href={`mailto:${msg.contact_email}`} className="text-primary hover:underline font-medium">{msg.contact_email}</a>
+                  )}
                   {msg.device && <span>{msg.device}</span>}
                   {msg.browser && <span>{msg.browser}</span>}
                   {msg.path && <span className="font-mono">{msg.path}</span>}

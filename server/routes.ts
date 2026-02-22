@@ -1818,7 +1818,7 @@ MARY: You're kidding me.`;
 
   app.post("/api/feedback", async (req: any, res: Response) => {
     try {
-      const { type, subject, message: msg, attachmentData } = req.body;
+      const { type, subject, message: msg, attachmentData, contactEmail } = req.body;
       if (!msg) return res.status(400).json({ error: "message required" });
       const { userId, device, browser } = parseUA(req);
 
@@ -1829,10 +1829,11 @@ MARY: You're kidding me.`;
         userId,
         userEmail: u?.email || null,
         userName: [u?.firstName, u?.lastName].filter(Boolean).join(" ") || null,
-        type: type || "feedback",
+        type: type || "bug",
         subject: subject ? String(subject).substring(0, 200) : null,
         message: String(msg).substring(0, 10000),
         attachmentData: attachmentData ? String(attachmentData).substring(0, 50000) : null,
+        contactEmail: contactEmail ? String(contactEmail).substring(0, 200) : null,
         device,
         browser,
         path: req.body.path ? String(req.body.path).substring(0, 100) : null,

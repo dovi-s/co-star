@@ -160,6 +160,7 @@ export const feedbackMessages = pgTable("feedback_messages", {
   subject: varchar("subject"),
   message: text("message").notNull(),
   attachmentData: text("attachment_data"),
+  contactEmail: varchar("contact_email"),
   status: varchar("status").default("new"),
   adminNotes: text("admin_notes"),
   device: varchar("device"),
