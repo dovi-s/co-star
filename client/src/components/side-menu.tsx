@@ -251,13 +251,15 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                 onClick={() => navigate("subscription")}
                 testId="menu-item-billing"
               />
-              <MenuItem
-                icon={<BarChart3 className="h-4 w-4" />}
-                label="Analytics"
-                description="Growth metrics and insights"
-                onClick={() => navigate("admin")}
-                testId="menu-item-admin"
-              />
+              {user?.email === "dovisherman@gmail.com" && (
+                <MenuItem
+                  icon={<BarChart3 className="h-4 w-4" />}
+                  label="Analytics"
+                  description="Growth metrics and insights"
+                  onClick={() => navigate("admin")}
+                  testId="menu-item-admin"
+                />
+              )}
             </>
           )}
 
