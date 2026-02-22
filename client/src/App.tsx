@@ -20,9 +20,11 @@ import { FeatureBoardPage } from "@/pages/feature-board";
 import { OnboardingPage } from "@/pages/onboarding";
 import { ActorProfilePage } from "@/pages/actor-profile";
 import { SubscriptionPage } from "@/pages/subscription";
+import { AdminDashboard } from "@/pages/admin-dashboard";
+import { usePageTracking } from "@/hooks/use-tracking";
 import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -35,8 +37,14 @@ function AppContent() {
       window.history.replaceState({}, "", "/");
       return "subscription";
     }
+    if (params.get("view") === "admin") {
+      window.history.replaceState({}, "", "/");
+      return "admin";
+    }
     return "home";
   });
+
+  usePageTracking(view);
 
   useEffect(() => {
     if (user) {
@@ -65,7 +73,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription") {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin") {
       setView(page as View);
     }
   }, []);
@@ -134,6 +142,9 @@ function AppContent() {
       )}
       {view === "subscription" && (
         <SubscriptionPage onBack={handleBackToHome} />
+      )}
+      {view === "admin" && (
+        <AdminDashboard onBack={handleBackToHome} />
       )}
     </div>
   );

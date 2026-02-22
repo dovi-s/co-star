@@ -127,3 +127,21 @@ export const recentScripts = pgTable("recent_scripts", {
 ]);
 
 export type RecentScriptRow = typeof recentScripts.$inferSelect;
+
+export const pageviews = pgTable("pageviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionId: varchar("session_id").notNull(),
+  userId: varchar("user_id"),
+  path: varchar("path").notNull(),
+  referrer: varchar("referrer"),
+  userAgent: varchar("user_agent"),
+  country: varchar("country"),
+  device: varchar("device"),
+  browser: varchar("browser"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_pageviews_created").on(table.createdAt),
+  index("IDX_pageviews_session").on(table.sessionId),
+  index("IDX_pageviews_user").on(table.userId),
+  index("IDX_pageviews_path").on(table.path),
+]);

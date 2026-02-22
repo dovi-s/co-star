@@ -15,8 +15,8 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users } from "@shared/models/auth";
-import { eq, sql } from "drizzle-orm";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts } from "@shared/models/auth";
+import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
   return text
@@ -1721,6 +1721,239 @@ MARY: You're kidding me.`;
     } catch (error: any) {
       console.error("[Stripe] Subscription check error:", error.message);
       res.json({ subscription: null, tier: "free" });
+    }
+  });
+
+  // --- Pageview Tracking ---
+
+  app.post("/api/track", async (req: any, res: Response) => {
+    try {
+      const { path: pagePath, referrer } = req.body;
+      if (!pagePath || typeof pagePath !== "string") return res.status(400).json({ error: "path required" });
+      const cleanPath = pagePath.substring(0, 100).replace(/[^\w\-\/]/g, "");
+      const cleanReferrer = typeof referrer === "string" ? referrer.substring(0, 500) : null;
+
+      const ua = req.headers["user-agent"] || "";
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      const sessionId = req.sessionID || "unknown";
+
+      let device = "desktop";
+      if (/Mobile|Android|iPhone|iPad/i.test(ua)) {
+        device = /iPad|Tablet/i.test(ua) ? "tablet" : "mobile";
+      }
+
+      let browser = "other";
+      if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) browser = "chrome";
+      else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) browser = "safari";
+      else if (/Firefox/i.test(ua)) browser = "firefox";
+      else if (/Edg/i.test(ua)) browser = "edge";
+
+      await db.insert(pageviews).values({
+        sessionId,
+        userId,
+        path: cleanPath,
+        referrer: cleanReferrer,
+        userAgent: ua.substring(0, 500),
+        device,
+        browser,
+      });
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.json({ ok: true });
+    }
+  });
+
+  // --- Admin Analytics Dashboard ---
+
+  function isAdmin(req: any): boolean {
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return false;
+    const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").filter(Boolean);
+    if (adminIds.length === 0) {
+      // In development, allow first user (app owner)
+      return process.env.NODE_ENV === "development";
+    }
+    return adminIds.includes(userId);
+  }
+
+  let analyticsCache: { data: any; timestamp: number } | null = null;
+  const CACHE_TTL = 30000; // 30 seconds
+
+  app.get("/api/admin/analytics", async (req: any, res: Response) => {
+    if (!isAdmin(req)) {
+      return res.status(403).json({ error: "Not authorized" });
+    }
+
+    if (analyticsCache && Date.now() - analyticsCache.timestamp < CACHE_TTL) {
+      return res.json(analyticsCache.data);
+    }
+
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      // --- User Metrics ---
+      const [totalUsers] = await db.select({ count: count() }).from(users);
+      const [usersToday] = await db.select({ count: count() }).from(users).where(gte(users.createdAt, today));
+      const [users7d] = await db.select({ count: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo));
+      const [users30d] = await db.select({ count: count() }).from(users).where(gte(users.createdAt, thirtyDaysAgo));
+
+      // Subscription breakdown
+      const tierBreakdown = await db.execute(
+        sql`SELECT COALESCE(subscription_tier, 'free') as tier, COUNT(*) as count FROM users GROUP BY COALESCE(subscription_tier, 'free')`
+      );
+
+      // User signups by day (last 30 days)
+      const signupsByDay = await db.execute(
+        sql`SELECT DATE(created_at) as date, COUNT(*) as count FROM users WHERE created_at >= ${thirtyDaysAgo} GROUP BY DATE(created_at) ORDER BY date`
+      );
+
+      // --- Pageview Metrics ---
+      const [totalPageviews] = await db.select({ count: count() }).from(pageviews);
+      const [pageviewsToday] = await db.select({ count: count() }).from(pageviews).where(gte(pageviews.createdAt, today));
+      const [pageviews7d] = await db.select({ count: count() }).from(pageviews).where(gte(pageviews.createdAt, sevenDaysAgo));
+
+      // Unique visitors (by sessionId) today and 7d
+      const uniqueToday = await db.execute(
+        sql`SELECT COUNT(DISTINCT session_id) as count FROM pageviews WHERE created_at >= ${today}`
+      );
+      const unique7d = await db.execute(
+        sql`SELECT COUNT(DISTINCT session_id) as count FROM pageviews WHERE created_at >= ${sevenDaysAgo}`
+      );
+      const unique30d = await db.execute(
+        sql`SELECT COUNT(DISTINCT session_id) as count FROM pageviews WHERE created_at >= ${thirtyDaysAgo}`
+      );
+
+      // Top pages
+      const topPages = await db.execute(
+        sql`SELECT path, COUNT(*) as views, COUNT(DISTINCT session_id) as unique_visitors FROM pageviews WHERE created_at >= ${thirtyDaysAgo} GROUP BY path ORDER BY views DESC LIMIT 15`
+      );
+
+      // Pageviews by day (last 30 days)
+      const pageviewsByDay = await db.execute(
+        sql`SELECT DATE(created_at) as date, COUNT(*) as views, COUNT(DISTINCT session_id) as visitors FROM pageviews WHERE created_at >= ${thirtyDaysAgo} GROUP BY DATE(created_at) ORDER BY date`
+      );
+
+      // Device breakdown
+      const deviceBreakdown = await db.execute(
+        sql`SELECT device, COUNT(*) as count FROM pageviews WHERE created_at >= ${thirtyDaysAgo} GROUP BY device ORDER BY count DESC`
+      );
+
+      // Browser breakdown
+      const browserBreakdown = await db.execute(
+        sql`SELECT browser, COUNT(*) as count FROM pageviews WHERE created_at >= ${thirtyDaysAgo} GROUP BY browser ORDER BY count DESC`
+      );
+
+      // Top referrers
+      const topReferrers = await db.execute(
+        sql`SELECT referrer, COUNT(*) as count FROM pageviews WHERE referrer IS NOT NULL AND referrer != '' AND created_at >= ${thirtyDaysAgo} GROUP BY referrer ORDER BY count DESC LIMIT 10`
+      );
+
+      // --- Usage Metrics ---
+      const [totalScripts] = await db.select({ count: count() }).from(savedScripts);
+      const [totalRuns] = await db.select({ count: count() }).from(performanceRuns);
+      const [totalRecentScripts] = await db.select({ count: count() }).from(recentScripts);
+
+      // Scripts created last 30 days
+      const [scripts30d] = await db.select({ count: count() }).from(savedScripts).where(gte(savedScripts.createdAt, thirtyDaysAgo));
+      const [runs30d] = await db.select({ count: count() }).from(performanceRuns).where(gte(performanceRuns.createdAt, thirtyDaysAgo));
+
+      // Avg accuracy across runs
+      const avgAccuracy = await db.execute(
+        sql`SELECT AVG(accuracy) as avg_accuracy, AVG(duration_seconds) as avg_duration FROM performance_runs`
+      );
+
+      // Runs by day (last 30 days)
+      const runsByDay = await db.execute(
+        sql`SELECT DATE(created_at) as date, COUNT(*) as count, AVG(accuracy) as avg_accuracy FROM performance_runs WHERE created_at >= ${thirtyDaysAgo} GROUP BY DATE(created_at) ORDER BY date`
+      );
+
+      // --- Feature Request Metrics ---
+      const [totalFeatureRequests] = await db.select({ count: count() }).from(featureRequests);
+      const topFeatureRequests = await db.execute(
+        sql`SELECT title, category, status, vote_count, created_at FROM feature_requests ORDER BY vote_count DESC LIMIT 10`
+      );
+
+      // --- Stripe Revenue Metrics ---
+      let revenue = { mrr: 0, totalSubscriptions: 0, activeSubscriptions: 0 };
+      try {
+        const stripeSubs = await db.execute(
+          sql`SELECT status, COUNT(*) as count FROM stripe.subscriptions GROUP BY status`
+        );
+        const activeSubs = await db.execute(
+          sql`SELECT COUNT(*) as count FROM stripe.subscriptions WHERE status IN ('active', 'trialing')`
+        );
+        const activeCount = Number((activeSubs.rows[0] as any)?.count || 0);
+        revenue = {
+          mrr: activeCount * 9,
+          totalSubscriptions: stripeSubs.rows.reduce((sum: number, r: any) => sum + Number(r.count), 0),
+          activeSubscriptions: activeCount,
+        };
+      } catch (e) {}
+
+      // --- Recent Users ---
+      const recentUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          subscriptionTier: users.subscriptionTier,
+          createdAt: users.createdAt,
+          onboardingComplete: users.onboardingComplete,
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt))
+        .limit(25);
+
+      const result = {
+        users: {
+          total: totalUsers.count,
+          today: usersToday.count,
+          last7d: users7d.count,
+          last30d: users30d.count,
+          tierBreakdown: tierBreakdown.rows,
+          signupsByDay: signupsByDay.rows,
+          recentUsers,
+        },
+        pageviews: {
+          total: totalPageviews.count,
+          today: pageviewsToday.count,
+          last7d: pageviews7d.count,
+          uniqueToday: Number((uniqueToday.rows[0] as any)?.count || 0),
+          unique7d: Number((unique7d.rows[0] as any)?.count || 0),
+          unique30d: Number((unique30d.rows[0] as any)?.count || 0),
+          topPages: topPages.rows,
+          byDay: pageviewsByDay.rows,
+          deviceBreakdown: deviceBreakdown.rows,
+          browserBreakdown: browserBreakdown.rows,
+          topReferrers: topReferrers.rows,
+        },
+        usage: {
+          totalScripts: totalScripts.count,
+          totalRuns: totalRuns.count,
+          totalRecentScripts: totalRecentScripts.count,
+          scripts30d: scripts30d.count,
+          runs30d: runs30d.count,
+          avgAccuracy: Number((avgAccuracy.rows[0] as any)?.avg_accuracy || 0),
+          avgDuration: Number((avgAccuracy.rows[0] as any)?.avg_duration || 0),
+          runsByDay: runsByDay.rows,
+        },
+        featureRequests: {
+          total: totalFeatureRequests.count,
+          top: topFeatureRequests.rows,
+        },
+        revenue,
+      };
+
+      analyticsCache = { data: result, timestamp: Date.now() };
+      res.json(result);
+    } catch (error: any) {
+      console.error("[Analytics] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch analytics" });
     }
   });
 
