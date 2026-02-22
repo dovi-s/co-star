@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -9,26 +9,24 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { useTheme } from "@/lib/theme-provider";
+import { useProfile } from "@/context/profile-context";
+import { ProfileAvatar } from "@/components/profile-avatar";
 import {
   CircleUser,
   LogIn,
   Library,
   CreditCard,
   Sparkles,
-  Info,
   Scale,
   Map,
   MessageCircle,
   Share2,
   Moon,
   Sun,
-  FileText,
-  Shield,
   ChevronRight,
   Crown,
-  Star,
+  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -84,13 +82,54 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+function resizeImage(file: File, maxSize: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+        if (w > h) {
+          if (w > maxSize) { h = (h * maxSize) / w; w = maxSize; }
+        } else {
+          if (h > maxSize) { w = (w * maxSize) / h; h = maxSize; }
+        }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas not supported"));
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = reader.result as string;
+    };
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const { theme, toggleTheme } = useTheme();
+  const { profile, setPhoto } = useProfile();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isSignedIn = false;
 
   const navigate = (page: string) => {
     onOpenChange(false);
     onNavigate?.(page);
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await resizeImage(file, 256);
+      setPhoto(dataUrl);
+    } catch {}
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -108,17 +147,42 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           </div>
         </SheetHeader>
 
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handlePhotoSelect}
+          data-testid="input-profile-photo"
+        />
+
         <div className="flex-1 overflow-y-auto px-2 pb-4">
           {!isSignedIn ? (
             <>
               <div className="mx-3 mb-2 p-4 rounded-md glass-surface">
-                <div className="flex items-center gap-2 mb-2">
-                  <Crown className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold text-foreground">Go Pro</span>
+                <div className="flex items-center gap-3 mb-3">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative shrink-0 group"
+                    data-testid="button-set-photo"
+                  >
+                    <div className="w-12 h-12 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                      <ProfileAvatar size="lg" className="text-primary" />
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <Camera className="h-2.5 w-2.5 text-primary-foreground" />
+                    </div>
+                  </button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <Crown className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-sm font-semibold text-foreground">Go Pro</span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      Save scripts, ditch the watermark, track progress.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                  Save scripts, keep recordings watermark-free, and track your progress across sessions.
-                </p>
                 <Button
                   className="w-full"
                   size="sm"
@@ -141,11 +205,22 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             <>
               <div className="mx-3 mb-2 p-3 rounded-md glass-surface">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CircleUser className="h-5 w-5 text-primary" />
-                  </div>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="relative shrink-0"
+                    data-testid="button-change-photo"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-primary/10 flex items-center justify-center">
+                      <ProfileAvatar size="lg" className="text-primary" />
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                      <Camera className="h-2 w-2 text-primary-foreground" />
+                    </div>
+                  </button>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">Actor Name</p>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {profile.name || "Actor Name"}
+                    </p>
                     <p className="text-[11px] text-muted-foreground truncate">actor@email.com</p>
                   </div>
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary">
