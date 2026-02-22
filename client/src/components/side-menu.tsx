@@ -167,24 +167,17 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                   <span className="text-sm font-semibold text-foreground">Go Pro</span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
-                  Save scripts, ditch the watermark, and track your progress across sessions.
+                  Sign in to save scripts, ditch the watermark, and track your progress across sessions.
                 </p>
                 <Button
                   className="w-full"
                   size="sm"
-                  onClick={() => navigate("signup")}
-                  data-testid="button-menu-signup"
-                >
-                  <LogIn className="h-3.5 w-3.5 mr-1.5" />
-                  Sign up
-                </Button>
-                <button
                   onClick={() => navigate("signin")}
-                  className="w-full text-center text-xs text-muted-foreground mt-2 py-1"
                   data-testid="button-menu-signin"
                 >
-                  Already have an account? <span className="text-primary font-medium">Sign in</span>
-                </button>
+                  <LogIn className="h-3.5 w-3.5 mr-1.5" />
+                  Sign in
+                </Button>
               </div>
             </>
           ) : (

@@ -49,9 +49,6 @@ function AppContent() {
     if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history") {
       setView(page as View);
     }
-    if (page === "signup") {
-      window.location.href = "/api/login";
-    }
   }, []);
 
   const handleLoadScript = useCallback((script: SavedScript) => {

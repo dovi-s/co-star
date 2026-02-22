@@ -29,8 +29,8 @@ function CoStarMark({ className }: { className?: string }) {
       />
       <path
         d="M35 29.5 Q36.5 33.5 40.5 35 Q36.5 36.5 35 40.5 Q33.5 36.5 29.5 35 Q33.5 33.5 35 29.5 Z"
-        fill="currentColor"
-        opacity="0.55"
+        fill="hsl(47, 96%, 53%)"
+        opacity="0.85"
       />
     </svg>
   );
