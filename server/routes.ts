@@ -256,7 +256,6 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   }
   
   voiceAssignmentCache.set(name, voiceType);
-  console.log(`[Voice] Assigned ${name} (index ${characterIndex}) -> ${voiceType} (${isFemale ? 'female' : 'male'})`);
   
   return voiceType;
 }
