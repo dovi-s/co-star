@@ -82,12 +82,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const [isUserTurn, setIsUserTurn] = useState(false);
   const [micBlocked, setMicBlocked] = useState(false);
   const [micPermissionGranted, setMicPermissionGranted] = useState(false);
-  const [micEnabled, setMicEnabled] = useState(() => {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    return !isMobile;
-  });
-  const micEnabledRef = useRef(micEnabled);
-  useEffect(() => { micEnabledRef.current = micEnabled; }, [micEnabled]);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const micEnabledRef = useRef(true);
+  const setMicEnabledSync = (val: boolean) => {
+    setMicEnabled(val);
+    micEnabledRef.current = val;
+  };
   const [tapMode, setTapMode] = useState(() => {
     try { return localStorage.getItem("costar-tap-mode") === "true"; } catch { return false; }
   });
@@ -191,7 +191,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const requestMicPermission = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
       console.log('[Rehearsal] getUserMedia not available');
-      setMicEnabled(true);
+      setMicEnabledSync(true);
       return true;
     }
     try {
@@ -199,14 +199,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       stream.getTracks().forEach(track => track.stop());
       setMicPermissionGranted(true);
       setMicBlocked(false);
-      setMicEnabled(true);
-      micEnabledRef.current = true;
+      setMicEnabledSync(true);
       console.log('[Rehearsal] Mic permission granted');
       return true;
     } catch (err) {
       console.error('[Rehearsal] Mic permission denied:', err);
       setMicBlocked(true);
-      setMicEnabled(false);
+      setMicEnabledSync(false);
       toast({
         title: "Microphone Blocked",
         description: "Please allow microphone access in your browser settings to use voice recognition.",
@@ -233,7 +232,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       navigator.permissions.query({ name: 'microphone' as PermissionName }).then(result => {
         if (result.state === 'granted') {
           setMicPermissionGranted(true);
-          setMicEnabled(true);
+          setMicEnabledSync(true);
         } else if (result.state === 'denied') {
           setMicBlocked(true);
         }
@@ -1122,8 +1121,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     
     if (!micEnabled) {
       if (micPermissionGranted) {
-        setMicEnabled(true);
-        micEnabledRef.current = true;
+        setMicEnabledSync(true);
       } else {
         await requestMicPermission();
       }
@@ -1843,10 +1841,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             onMicToggle={async () => {
               if (micEnabled) {
                 speechRecognition.abort();
-                setMicEnabled(false);
+                setMicEnabledSync(false);
               } else {
                 if (micPermissionGranted) {
-                  setMicEnabled(true);
+                  setMicEnabledSync(true);
                 } else {
                   await requestMicPermission();
                 }

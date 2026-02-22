@@ -13,6 +13,7 @@ type ErrorCallback = (error: string) => void;
 
 class SpeechRecognitionEngine {
   private recognition: any = null;
+  private SpeechRecognitionAPI: any = null;
   private isListening = false;
   private onResultCallback: SpeechRecognitionEventCallback | null = null;
   private onStateChangeCallback: StateChangeCallback | null = null;
@@ -37,21 +38,30 @@ class SpeechRecognitionEngine {
   private shouldAutoRestart = false;
   private lastResultTranscript = "";
   private restartDelay: ReturnType<typeof setTimeout> | null = null;
+  private consecutiveErrors = 0;
 
   constructor() {
     if (typeof window !== "undefined") {
-      const SpeechRecognitionAPI = 
+      this.SpeechRecognitionAPI = 
         (window as any).SpeechRecognition || 
         (window as any).webkitSpeechRecognition;
       
-      if (SpeechRecognitionAPI) {
-        this.initRecognition(SpeechRecognitionAPI);
+      if (this.SpeechRecognitionAPI) {
+        this.createRecognition();
       }
     }
   }
 
-  private initRecognition(SpeechRecognitionAPI: any) {
-    this.recognition = new SpeechRecognitionAPI();
+  private createRecognition() {
+    if (!this.SpeechRecognitionAPI) return;
+    
+    try {
+      this.recognition = new this.SpeechRecognitionAPI();
+    } catch (e) {
+      console.error("[Speech] Failed to create recognition instance:", e);
+      this.recognition = null;
+      return;
+    }
     
     const useSingleShot = this.isSafari || this.isIOS;
     this.recognition.continuous = !useSingleShot;
@@ -69,6 +79,7 @@ class SpeechRecognitionEngine {
       this.lastResultTranscript = "";
       this.startTime = Date.now();
       this.lastActivityTime = Date.now();
+      this.consecutiveErrors = 0;
       this.setState("listening");
       
       this.clearMaxListenTimeout();
@@ -131,6 +142,7 @@ class SpeechRecognitionEngine {
 
     this.recognition.onerror = (event: any) => {
       console.log("[Speech] Error:", event.error, "mobile:", this.isMobile, "iOS:", this.isIOS);
+      this.consecutiveErrors++;
       
       if (event.error === "no-speech") {
         this.isListening = false;
@@ -163,11 +175,17 @@ class SpeechRecognitionEngine {
         this.clearSilenceTimeout();
         this.stopWatchdog();
         console.log("[Speech] Network error, attempting restart");
-        setTimeout(() => {
-          if (!this.isListening && this.shouldAutoRestart) {
-            this.startInternal();
-          }
-        }, this.isMobile ? 800 : 500);
+        if (this.consecutiveErrors < 5 && this.shouldAutoRestart) {
+          setTimeout(() => {
+            if (!this.isListening && this.shouldAutoRestart) {
+              this.recreateAndStart();
+            }
+          }, this.isMobile ? 800 : 500);
+        } else {
+          this.shouldAutoRestart = false;
+          this.setState("idle");
+          this.onEndCallback?.();
+        }
         return;
       }
 
@@ -176,11 +194,17 @@ class SpeechRecognitionEngine {
         this.isListening = false;
         this.clearSilenceTimeout();
         this.stopWatchdog();
-        setTimeout(() => {
-          if (!this.isListening && this.shouldAutoRestart) {
-            this.startInternal();
-          }
-        }, 1000);
+        if (this.consecutiveErrors < 5 && this.shouldAutoRestart) {
+          setTimeout(() => {
+            if (!this.isListening && this.shouldAutoRestart) {
+              this.recreateAndStart();
+            }
+          }, 1000);
+        } else {
+          this.shouldAutoRestart = false;
+          this.setState("idle");
+          this.onEndCallback?.();
+        }
         return;
       }
 
@@ -188,6 +212,18 @@ class SpeechRecognitionEngine {
         console.log("[Speech] Microphone permission denied");
         this.shouldAutoRestart = false;
         this.onErrorCallback?.("not-allowed");
+      } else if (event.error === "service-not-allowed") {
+        console.log("[Speech] Speech service not allowed, recreating");
+        this.isListening = false;
+        if (this.consecutiveErrors < 3 && this.shouldAutoRestart) {
+          setTimeout(() => {
+            if (!this.isListening && this.shouldAutoRestart) {
+              this.recreateAndStart();
+            }
+          }, 500);
+          return;
+        }
+        this.onErrorCallback?.(event.error);
       } else if (event.error !== "aborted") {
         this.onErrorCallback?.(event.error);
       }
@@ -203,6 +239,7 @@ class SpeechRecognitionEngine {
     this.recognition.onresult = (event: any) => {
       this.hasReceivedSpeech = true;
       this.noSpeechRestartCount = 0;
+      this.consecutiveErrors = 0;
       this.lastActivityTime = Date.now();
       
       const useSingleShot = this.isSafari || this.isIOS;
@@ -295,6 +332,22 @@ class SpeechRecognitionEngine {
     };
   }
 
+  private recreateAndStart() {
+    console.log("[Speech] Recreating recognition instance");
+    try {
+      if (this.recognition) {
+        try { this.recognition.abort(); } catch {}
+      }
+      this.isListening = false;
+      this.createRecognition();
+      if (this.recognition) {
+        this.startInternal();
+      }
+    } catch (e) {
+      console.error("[Speech] Failed to recreate:", e);
+    }
+  }
+
   private setState(state: SpeechRecognitionState) {
     if (this.currentState !== state) {
       this.currentState = state;
@@ -345,7 +398,7 @@ class SpeechRecognitionEngine {
       const timeSinceStart = Date.now() - this.startTime;
 
       if (timeSinceStart > 5000 && timeSinceActivity > 10000) {
-        console.log("[Speech] Watchdog: recognition stalled (no speech received), restarting");
+        console.log("[Speech] Watchdog: recognition stalled (no speech received), recreating");
         try {
           this.recognition?.abort();
         } catch {}
@@ -354,7 +407,7 @@ class SpeechRecognitionEngine {
         this.stopWatchdog();
         setTimeout(() => {
           if (!this.isListening && this.shouldAutoRestart) {
-            this.startInternal();
+            this.recreateAndStart();
           }
         }, 500);
       }
@@ -369,7 +422,7 @@ class SpeechRecognitionEngine {
   }
 
   get available(): boolean {
-    return this.recognition !== null;
+    return this.SpeechRecognitionAPI !== null;
   }
 
   get listening(): boolean {
@@ -414,7 +467,13 @@ class SpeechRecognitionEngine {
   }
 
   private startInternal(): boolean {
+    if (!this.SpeechRecognitionAPI) return false;
+    
+    if (!this.recognition) {
+      this.createRecognition();
+    }
     if (!this.recognition) return false;
+    
     if (this.isListening) return true;
     try {
       this.hasReceivedSpeech = false;
@@ -426,15 +485,16 @@ class SpeechRecognitionEngine {
       return true;
     } catch (e: any) {
       console.error("[Speech] Failed to start:", e?.message || e);
+      
+      if (e?.message?.includes("already started") || e?.name === "InvalidStateError") {
+        this.isListening = true;
+        return true;
+      }
+      
       if (this.isMobile || this.isSafari) {
         setTimeout(() => {
           if (!this.isListening && this.shouldAutoRestart) {
-            try {
-              this.recognition.start();
-              console.log("[Speech] Retry start succeeded");
-            } catch (e2) {
-              console.error("[Speech] Retry start also failed:", e2);
-            }
+            this.recreateAndStart();
           }
         }, 500);
       }
@@ -443,8 +503,8 @@ class SpeechRecognitionEngine {
   }
 
   start(): boolean {
-    if (!this.recognition) {
-      console.log("[Speech] Recognition not available");
+    if (!this.SpeechRecognitionAPI) {
+      console.log("[Speech] Recognition API not available");
       return false;
     }
 
@@ -454,6 +514,7 @@ class SpeechRecognitionEngine {
     }
 
     this.noSpeechRestartCount = 0;
+    this.consecutiveErrors = 0;
     this.shouldAutoRestart = true;
     return this.startInternal();
   }
@@ -473,6 +534,17 @@ class SpeechRecognitionEngine {
       try {
         this.recognition.stop();
       } catch (e) {}
+    } else if (this.intentionalStop && !this.isListening) {
+      this.intentionalStop = false;
+      if (this.accumulatedTranscript) {
+        this.onResultCallback?.({
+          transcript: this.accumulatedTranscript,
+          confidence: 0.8,
+          isFinal: true,
+        });
+      }
+      this.setState("idle");
+      this.onEndCallback?.();
     }
     this.clearSilenceTimeout();
     this.clearMaxListenTimeout();
