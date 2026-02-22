@@ -11,9 +11,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, FileText, Users2, Trash2, Pencil, Check, X } from "lucide-react";
+import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save } from "lucide-react";
 import type { RecentScript } from "@/lib/recent-scripts";
 import { deleteRecentScript, updateRecentScript } from "@/lib/recent-scripts";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 interface RecentScriptsProps {
   scripts: RecentScript[];
@@ -41,7 +43,37 @@ export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsPro
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<RecentScript | null>(null);
+  const [savingId, setSavingId] = useState<string | null>(null);
+  const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
+
+  const handleSaveToLibrary = async (script: RecentScript) => {
+    if (savingId || savedIds.has(script.id)) return;
+    setSavingId(script.id);
+    try {
+      const res = await fetch("/api/scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: script.name,
+          rawScript: script.rawScript || "",
+        }),
+      });
+      if (res.ok) {
+        setSavedIds(prev => new Set(prev).add(script.id));
+        toast({ description: "Script saved to your library" });
+      } else {
+        toast({ title: "Could not save script", variant: "destructive" });
+      }
+    } catch {
+      toast({ title: "Could not save script", variant: "destructive" });
+    } finally {
+      setSavingId(null);
+    }
+  };
 
   if (scripts.length === 0) return null;
 
@@ -154,6 +186,23 @@ export function RecentScripts({ scripts, onSelect, onChanged }: RecentScriptsPro
                   className="flex items-center gap-0.5 shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
+                  {isAuthenticated && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={savedIds.has(script.id) ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}
+                      onClick={() => handleSaveToLibrary(script)}
+                      disabled={savingId === script.id || savedIds.has(script.id)}
+                      title={savedIds.has(script.id) ? "Saved" : "Save to library"}
+                      data-testid={`button-save-script-${script.id}`}
+                    >
+                      {savedIds.has(script.id) ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Save className="h-3.5 w-3.5" />
+                      )}
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
