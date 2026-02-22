@@ -270,6 +270,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       
       const line = getCurrentLineRef.current();
       if (!line || transcript.length === 0 || !waitingForUserRef.current) return;
+      
+      if (hintPlayingRef.current) return;
 
       const allWords = transcript.split(/\s+/);
       const lastWord = (allWords[allWords.length - 1] || "").toLowerCase().replace(/[^a-z]/g, "");
@@ -341,14 +343,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     });
 
     speechRecognition.onEnd(() => {
-      console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current);
+      console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current, "hintPlaying:", hintPlayingRef.current);
       if (waitingForUserRef.current && isPlayingRef.current) {
+        if (hintPlayingRef.current) {
+          console.log("[Rehearsal] Hint is playing, skipping auto-restart");
+          return;
+        }
         const isMobile = speechRecognition.isMobileDevice;
         const restartDelay = isMobile ? 500 : 150;
         console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting in", restartDelay, "ms");
         
         const attemptRestart = (attempt: number) => {
           if (!waitingForUserRef.current || !isPlayingRef.current || speechRecognition.listening) return;
+          if (hintPlayingRef.current) return;
           console.log("[Rehearsal] Restarting speech recognition, attempt:", attempt);
           const started = speechRecognition.start();
           if (!started && attempt < 3 && isMobile) {
@@ -1113,6 +1120,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     setHandsFreeMode(true);
     
+    const wasTapMode = tapMode;
     if (tapMode) {
       setTapMode(false);
       tapModeRef.current = false;
@@ -1127,7 +1135,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       }
     }
     
-    if (!session.isPlaying) {
+    if (session.isPlaying && wasTapMode && currentIsUserLine && waitingForUserRef.current) {
+      waitingForUserRef.current = false;
+      speechRecognition.abort();
+      speakingLineRef.current = null;
+      setPlaying(false);
+      setTimeout(() => {
+        speakingLineRef.current = null;
+        setPlaying(true);
+      }, 300);
+    } else if (!session.isPlaying) {
       setTimeout(() => {
         speakingLineRef.current = null;
         setPlaying(true);
