@@ -241,7 +241,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                 icon={<CreditCard className="h-4 w-4" />}
                 label="Subscription"
                 description="Manage your plan and billing"
-                onClick={() => navigate("billing")}
+                onClick={() => navigate("subscription")}
                 testId="menu-item-billing"
               />
             </>

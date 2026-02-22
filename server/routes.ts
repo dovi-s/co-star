@@ -13,6 +13,10 @@ import { execFile } from "child_process";
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
+import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
+import { db } from "./db";
+import { users } from "@shared/models/auth";
+import { eq, sql } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
   return text
@@ -1500,6 +1504,223 @@ MARY: You're kidding me.`;
       if (!res.headersSent) {
         res.status(500).json({ error: "Failed to process scanned PDF" });
       }
+    }
+  });
+
+  // --- Stripe Subscription Routes ---
+
+  app.get("/api/stripe/publishable-key", async (_req: Request, res: Response) => {
+    try {
+      const key = await getStripePublishableKey();
+      res.json({ publishableKey: key });
+    } catch (error: any) {
+      console.error("[Stripe] Failed to get publishable key:", error.message);
+      res.status(500).json({ error: "Failed to get Stripe config" });
+    }
+  });
+
+  app.get("/api/stripe/products", async (_req: Request, res: Response) => {
+    try {
+      const result = await db.execute(
+        sql`
+          WITH active_products AS (
+            SELECT id, name, description, metadata, active
+            FROM stripe.products
+            WHERE active = true
+            ORDER BY id
+          )
+          SELECT 
+            p.id as product_id,
+            p.name as product_name,
+            p.description as product_description,
+            p.metadata as product_metadata,
+            pr.id as price_id,
+            pr.unit_amount,
+            pr.currency,
+            pr.recurring,
+            pr.active as price_active
+          FROM active_products p
+          LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
+          ORDER BY p.id, pr.unit_amount
+        `
+      );
+
+      const productsMap = new Map<string, any>();
+      for (const row of result.rows) {
+        const r = row as any;
+        if (!productsMap.has(r.product_id)) {
+          productsMap.set(r.product_id, {
+            id: r.product_id,
+            name: r.product_name,
+            description: r.product_description,
+            metadata: r.product_metadata,
+            prices: [],
+          });
+        }
+        if (r.price_id) {
+          productsMap.get(r.product_id).prices.push({
+            id: r.price_id,
+            unit_amount: r.unit_amount,
+            currency: r.currency,
+            recurring: r.recurring,
+          });
+        }
+      }
+
+      res.json({ products: Array.from(productsMap.values()) });
+    } catch (error: any) {
+      console.error("[Stripe] Products error:", error.message);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/stripe/checkout", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const { priceId } = req.body;
+      if (!priceId) {
+        return res.status(400).json({ error: "Price ID required" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      const [user] = await db
+        .select({ id: users.id, email: users.email, stripeCustomerId: users.stripeCustomerId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      let customerId = user.stripeCustomerId;
+      if (!customerId) {
+        const customer = await stripe.customers.create({
+          email: user.email || undefined,
+          metadata: { userId: user.id },
+        });
+        customerId = customer.id;
+        await db.update(users).set({ stripeCustomerId: customerId }).where(eq(users.id, userId));
+      }
+
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        success_url: `${baseUrl}/?checkout=success`,
+        cancel_url: `${baseUrl}/?checkout=cancel`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error("[Stripe] Checkout error:", error.message);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  app.post("/api/stripe/portal", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const [user] = await db
+        .select({ stripeCustomerId: users.stripeCustomerId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No subscription found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const session = await stripe.billingPortal.sessions.create({
+        customer: user.stripeCustomerId,
+        return_url: `${baseUrl}/?view=subscription`,
+      });
+
+      res.json({ url: session.url });
+    } catch (error: any) {
+      console.error("[Stripe] Portal error:", error.message);
+      res.status(500).json({ error: "Failed to create portal session" });
+    }
+  });
+
+  app.get("/api/stripe/subscription", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.json({ subscription: null, tier: "free" });
+      }
+
+      const [user] = await db
+        .select({
+          stripeCustomerId: users.stripeCustomerId,
+          stripeSubscriptionId: users.stripeSubscriptionId,
+          subscriptionTier: users.subscriptionTier,
+        })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeCustomerId) {
+        return res.json({ subscription: null, tier: user?.subscriptionTier || "free" });
+      }
+
+      // Check for active subscription in stripe schema
+      const subResult = await db.execute(
+        sql`
+          SELECT id, status, current_period_end, cancel_at_period_end
+          FROM stripe.subscriptions
+          WHERE customer = ${user.stripeCustomerId}
+          AND status IN ('active', 'trialing')
+          ORDER BY created DESC
+          LIMIT 1
+        `
+      );
+
+      const sub = subResult.rows[0] as any;
+      if (sub) {
+        // Sync subscription status to user record if needed
+        if (user.stripeSubscriptionId !== sub.id || user.subscriptionTier !== 'pro') {
+          await db.update(users).set({
+            stripeSubscriptionId: sub.id,
+            subscriptionTier: 'pro',
+            updatedAt: new Date(),
+          }).where(eq(users.id, userId));
+        }
+
+        return res.json({
+          subscription: {
+            id: sub.id,
+            status: sub.status,
+            currentPeriodEnd: sub.current_period_end,
+            cancelAtPeriodEnd: sub.cancel_at_period_end,
+          },
+          tier: "pro",
+        });
+      }
+
+      // No active sub - ensure user is marked free
+      if (user.subscriptionTier !== 'free') {
+        await db.update(users).set({
+          subscriptionTier: 'free',
+          stripeSubscriptionId: null,
+          updatedAt: new Date(),
+        }).where(eq(users.id, userId));
+      }
+
+      return res.json({ subscription: null, tier: "free" });
+    } catch (error: any) {
+      console.error("[Stripe] Subscription check error:", error.message);
+      res.json({ subscription: null, tier: "free" });
     }
   });
 

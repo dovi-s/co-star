@@ -19,9 +19,10 @@ import { HistoryPage } from "@/pages/history";
 import { FeatureBoardPage } from "@/pages/feature-board";
 import { OnboardingPage } from "@/pages/onboarding";
 import { ActorProfilePage } from "@/pages/actor-profile";
+import { SubscriptionPage } from "@/pages/subscription";
 import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -29,6 +30,11 @@ function AppContent() {
   const { syncFromServer } = useProfile();
   const { user } = useAuth();
   const [view, setView] = useState<View>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("checkout") === "success" || params.get("view") === "subscription") {
+      window.history.replaceState({}, "", "/");
+      return "subscription";
+    }
     return "home";
   });
 
@@ -59,7 +65,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile") {
+    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription") {
       setView(page as View);
     }
   }, []);
@@ -125,6 +131,9 @@ function AppContent() {
       )}
       {view === "profile" && (
         <ActorProfilePage onBack={handleBackToHome} />
+      )}
+      {view === "subscription" && (
+        <SubscriptionPage onBack={handleBackToHome} />
       )}
     </div>
   );

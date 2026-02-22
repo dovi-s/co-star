@@ -2,6 +2,9 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
+import { runMigrations } from "stripe-replit-sync";
+import { getStripeSync } from "./stripeClient";
+import { WebhookHandlers } from "./webhookHandlers";
 
 const app = express();
 const httpServer = createServer(app);
@@ -11,6 +14,27 @@ declare module "http" {
     rawBody: unknown;
   }
 }
+
+// Stripe webhook route MUST be registered BEFORE express.json()
+// Webhook needs raw Buffer, not parsed JSON
+app.post(
+  '/api/stripe/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+    if (!signature) {
+      return res.status(400).json({ error: 'Missing stripe-signature' });
+    }
+    try {
+      const sig = Array.isArray(signature) ? signature[0] : signature;
+      await WebhookHandlers.processWebhook(req.body as Buffer, sig);
+      res.status(200).json({ received: true });
+    } catch (error: any) {
+      console.error('Webhook error:', error.message);
+      res.status(400).json({ error: 'Webhook processing error' });
+    }
+  }
+);
 
 app.use(
   express.json({
@@ -61,6 +85,34 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Initialize Stripe schema and sync data
+  try {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (databaseUrl) {
+      console.log('[Stripe] Initializing schema...');
+      await runMigrations({ databaseUrl } as any);
+      console.log('[Stripe] Schema ready');
+
+      const stripeSync = await getStripeSync();
+
+      const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
+      try {
+        const webhookResult = await stripeSync.findOrCreateManagedWebhook(
+          `${webhookBaseUrl}/api/stripe/webhook`
+        );
+        console.log('[Stripe] Webhook configured:', webhookResult?.webhook?.url || 'ready');
+      } catch (whErr: any) {
+        console.log('[Stripe] Webhook setup skipped:', whErr.message || 'not available yet');
+      }
+
+      stripeSync.syncBackfill()
+        .then(() => console.log('[Stripe] Data synced'))
+        .catch((err: any) => console.error('[Stripe] Sync error:', err));
+    }
+  } catch (error) {
+    console.error('[Stripe] Init error (non-fatal):', error);
+  }
+
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
