@@ -6,14 +6,7 @@ import {
   X,
   Minus,
   Crown,
-  Mic,
-  Smartphone,
-  Users,
-  PenLine,
-  Headphones,
-  Video,
-  MessageCircle,
-  Clock,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -256,60 +249,34 @@ const competitors: Competitor[] = [
 ];
 
 interface Workaround {
-  icon: typeof Mic;
-  name: string;
-  description: string;
-  drawbacks: string[];
+  method: string;
+  reality: string;
 }
 
 const workarounds: Workaround[] = [
   {
-    icon: Mic,
-    name: "Record and playback",
-    description: "Record other characters' lines yourself, leave gaps, play it back and rehearse over it.",
-    drawbacks: ["Setup time for every scene", "Unnatural timing", "No feedback on accuracy"],
+    method: "Ask a friend to read with you",
+    reality: "They're busy, they're bored by take three, and they can't do accents",
   },
   {
-    icon: Users,
-    name: "Ask a friend or partner",
-    description: "Rope someone into reading opposite you. The classic approach.",
-    drawbacks: ["Scheduling conflicts", "They get bored fast", "No emotional range"],
+    method: "Record the other lines yourself",
+    reality: "Twenty minutes of setup for each scene, and the timing never feels right",
   },
   {
-    icon: MessageCircle,
-    name: "Text a scene partner online",
-    description: "Find someone on Reddit, Discord, or Facebook groups to run lines over video call.",
-    drawbacks: ["Unreliable availability", "Quality varies wildly", "Privacy concerns with scripts"],
+    method: "Stare at your phone in Notes",
+    reality: "No cue recognition, no scene awareness, constant app-switching to Voice Memos",
   },
   {
-    icon: PenLine,
-    name: "Write lines by hand",
-    description: "Copy out the script longhand to engage deeper memory. A classic stage technique.",
-    drawbacks: ["Time-intensive", "No performance practice", "Doesn't train delivery"],
+    method: "Find a reader on Reddit or Discord",
+    reality: "Unreliable, inconsistent quality, and you're sharing unreleased sides with strangers",
   },
   {
-    icon: Headphones,
-    name: "Listen on repeat",
-    description: "Record the full scene, listen on a loop during commutes or walks.",
-    drawbacks: ["Passive learning", "Doesn't practice active recall", "No cue timing"],
+    method: "Prop up two devices for a self-tape",
+    reality: "Awkward eye-line, can't see the script and the camera at the same time",
   },
   {
-    icon: Smartphone,
-    name: "Voice memos and Notes app",
-    description: "The most common workaround. Stare at the script in Notes, record lines in Voice Memos.",
-    drawbacks: ["Constant app switching", "No cue recognition", "No formatting or scene awareness"],
-  },
-  {
-    icon: Video,
-    name: "Self-tape with two devices",
-    description: "Prop your phone up to record, read cue lines from a laptop or tablet.",
-    drawbacks: ["Awkward eye-line", "Can't see the script and camera at once", "Clunky setup"],
-  },
-  {
-    icon: Clock,
-    name: "Speed-through in your head",
-    description: "Recite lines silently or at speed to drill memorization before adding performance layers.",
-    drawbacks: ["No vocal practice", "Misses emotional beats", "Easy to skip trouble spots"],
+    method: "Write lines out by hand",
+    reality: "Great for memorization, but it doesn't train delivery, timing, or performance",
   },
 ];
 
@@ -358,39 +325,32 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
       <main className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <section className="mb-12 animate-fade-in-up">
-            <h2 className="text-lg font-semibold text-foreground mb-1" data-testid="text-section-workarounds">How actors rehearse today</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-1" data-testid="text-section-workarounds">Sound familiar?</h2>
             <p className="text-sm text-muted-foreground mb-5">
-              Before dedicated apps, actors pieced together workarounds. Most still do.
+              Actors have always pieced together workarounds to rehearse. Most still do.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="glass-surface rounded-md overflow-hidden" data-testid="list-workarounds">
               {workarounds.map((w, i) => (
                 <div
-                  key={w.name}
-                  className="glass-surface rounded-md p-4 animate-fade-in-up"
-                  style={{ animationDelay: `${(i + 1) * 50}ms` }}
+                  key={w.method}
+                  className={cn(
+                    "px-4 py-3",
+                    i < workarounds.length - 1 && "border-b border-border/20"
+                  )}
                   data-testid={`card-workaround-${i}`}
                 >
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <w.icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <span className="text-xs font-semibold text-foreground" data-testid={`text-workaround-name-${i}`}>{w.name}</span>
-                  </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">{w.description}</p>
-                  <div className="space-y-1">
-                    {w.drawbacks.map((d) => (
-                      <div key={d} className="flex items-start gap-1.5">
-                        <X className="h-3 w-3 text-muted-foreground/40 mt-0.5 shrink-0" />
-                        <span className="text-[10px] text-muted-foreground/70 leading-tight">{d}</span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-xs font-medium text-foreground mb-0.5" data-testid={`text-workaround-name-${i}`}>{w.method}</p>
+                  <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{w.reality}</p>
                 </div>
               ))}
             </div>
 
-            <div className="mt-4 glass-surface rounded-md p-4" data-testid="card-workaround-summary">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                These methods work, but they're fragmented, time-consuming, and none give you a realistic scene partner who listens and responds. That's what co-star was built for.
+            <div className="mt-4 glass-surface rounded-md p-4 flex items-start gap-3" data-testid="card-workaround-summary">
+              <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-foreground leading-relaxed">
+                <span className="font-semibold">co-star replaces all of this.</span>
+                <span className="text-muted-foreground"> Paste your script, pick your role, and start rehearsing with an AI scene partner who listens, responds, and reads with emotion. No setup. No scheduling. No second device.</span>
               </p>
             </div>
           </section>
