@@ -39,12 +39,12 @@ const brandColors = [
 ];
 
 const typographySamples = [
-  { name: "Heading XL", className: "text-3xl font-semibold", sample: "Co-star Studio" },
+  { name: "Heading XL", className: "text-3xl font-semibold", sample: "Co-Star Studio" },
   { name: "Heading LG", className: "text-2xl font-semibold", sample: "Professional rehearsals" },
   { name: "Heading MD", className: "text-xl font-semibold", sample: "Run lines with your scene partner" },
   { name: "Body", className: "text-base font-normal", sample: "Paste your script, pick your role, and start rehearsing with intelligent scene partners." },
   { name: "Body Small", className: "text-sm font-normal", sample: "Smart voice assignment and natural timing that adapts to scene tension." },
-  { name: "Caption", className: "text-xs font-medium text-muted-foreground", sample: "v1.0 · co-star studio" },
+  { name: "Caption", className: "text-xs font-medium text-muted-foreground", sample: "v1.0 · Co-Star Studio" },
   { name: "Mono", className: "text-sm font-mono", sample: "JULIET: O Romeo, Romeo, wherefore art thou Romeo?" },
 ];
 
@@ -140,7 +140,7 @@ function LogoPreview({ svg, bg, label }: { svg: string; bg: string; label: strin
 function WordmarkPreview({ svg, textColor, bg, label }: { svg: string; textColor: string; bg: string; label: string }) {
   const wordmarkSvg = `<svg viewBox="0 0 280 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   ${svg.replace(/<\/?svg[^>]*>/g, "")}
-  <text x="56" y="32" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="18" letter-spacing="1.5" fill="${textColor}">Co-star Studio</text>
+  <text x="56" y="32" font-family="Inter, system-ui, sans-serif" font-size="18" letter-spacing="1.5" fill="${textColor}"><tspan font-weight="400">Co-Star</tspan> <tspan font-weight="600">Studio</tspan></text>
 </svg>`;
 
   return (
@@ -168,7 +168,7 @@ function WordmarkPreview({ svg, textColor, bg, label }: { svg: string; textColor
 function downloadWordmarkPng(svg: string, textColor: string, filename: string) {
   const wordmarkSvg = `<svg viewBox="0 0 280 48" xmlns="http://www.w3.org/2000/svg">
   ${svg.replace(/<\/?svg[^>]*>/g, "")}
-  <text x="56" y="32" font-family="Inter, system-ui, sans-serif" font-weight="500" font-size="18" letter-spacing="1.5" fill="${textColor}">Co-star Studio</text>
+  <text x="56" y="32" font-family="Inter, system-ui, sans-serif" font-size="18" letter-spacing="1.5" fill="${textColor}"><tspan font-weight="400">Co-Star</tspan> <tspan font-weight="600">Studio</tspan></text>
 </svg>`;
   downloadPng(wordmarkSvg, filename, 1120);
 }
@@ -254,7 +254,7 @@ function LogosSection() {
 
       <div>
         <SectionTitle>Wordmark</SectionTitle>
-        <SectionDescription>The full logo with "Co-star Studio" text. Use this where space allows.</SectionDescription>
+        <SectionDescription>The full logo with "Co-Star Studio" text. Use this where space allows.</SectionDescription>
         <div className="grid grid-cols-1 gap-4">
           <WordmarkPreview svg={LOGO_SVG} textColor="#0F172A" bg="bg-white" label="Light" />
           <WordmarkPreview svg={LOGO_SVG_DARK} textColor="#F0F6FC" bg="bg-[#0A0D12]" label="Dark" />
@@ -408,10 +408,12 @@ function UsageSection() {
         <SectionDescription>How to write the name in different contexts.</SectionDescription>
         <div className="space-y-2">
           {[
-            { context: "Product name", value: "Co-star Studio" },
-            { context: "In a sentence", value: 'Use "Co-star Studio" on first reference, then "Co-star" for short.' },
-            { context: "URL / slug", value: "co-star" },
-            { context: "User-facing copy", value: 'Refer to the product as "your scene partner" — never use "AI" in user-facing text.' },
+            { context: "Product name", value: "Co-Star Studio" },
+            { context: "Full lockup", value: "Always use the full name \"Co-Star Studio\" in UI, listings, press, and ads." },
+            { context: "Visual hierarchy", value: "Co-Star (lighter weight) + Studio (heavier weight). Never just \"Co-Star\" alone." },
+            { context: "Spoken form", value: "Always say \"Co-Star Studio\" (never just \"Co-Star\")." },
+            { context: "In-app copy", value: "Refer to the product as \"your scene partner\" in descriptive text. Never use \"AI\" in user-facing copy." },
+            { context: "URL / domain", value: "co-star.app" },
           ].map((item) => (
             <div key={item.context} className="rounded-lg border border-border/40 p-3 flex items-start gap-3">
               <span className="text-xs font-medium text-muted-foreground w-28 flex-shrink-0 pt-0.5">{item.context}</span>
@@ -436,9 +438,13 @@ function UsageSection() {
         <SectionTitle>Do and don't</SectionTitle>
         <div className="grid grid-cols-2 gap-3">
           {[
+            { do: true, text: "Always write \"Co-Star Studio\" in full" },
             { do: true, text: "Use the icon mark at 24px or larger" },
             { do: true, text: "Maintain aspect ratio when scaling" },
             { do: true, text: "Use approved color variants only" },
+            { do: true, text: "Say \"your scene partner\" in descriptive copy" },
+            { do: false, text: "Write just \"Co-Star\" without \"Studio\"" },
+            { do: false, text: "Use the word \"AI\" in user-facing text" },
             { do: false, text: "Rotate or skew the logo" },
             { do: false, text: "Add effects like shadows or glows" },
             { do: false, text: "Place on busy backgrounds without contrast" },

@@ -100,7 +100,7 @@ export function AuthPage({ onBack, onSignUp }: { onBack: () => void; onSignUp?: 
               {mode === "signin" ? "Welcome back" : "Create your account"}
             </h1>
             <p className="text-sm text-muted-foreground mt-1 text-center">
-              {mode === "signin" ? "Sign in to your account" : "Get started with co-star"}
+              {mode === "signin" ? "Sign in to your account" : "Get started with Co-Star Studio"}
             </p>
           </div>
 

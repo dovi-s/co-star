@@ -1,10 +1,19 @@
-# co-star
+# Co-Star Studio
 
-A voice-first rehearsal app for actors. Paste your script, pick your role, start rehearsing with intelligent AI scene partners.
+A voice-first rehearsal app for actors. Paste your script, pick your role, start rehearsing with intelligent scene partners.
 
 ## Overview
 
-co-star is a premium, mobile-first rehearsal application designed to provide actors with a zero-setup, intuitive rehearsal experience. Its core purpose is to enable actors to rehearse scripts effectively with intelligent AI scene partners, offering features like automatic voice assignment, natural timing that adapts to scene tension, and privacy by keeping all data local by default. The project aims to deliver a sophisticated, minimal, and professional tool for actors, simplifying the rehearsal process and enhancing performance preparation.
+Co-Star Studio is a premium, mobile-first rehearsal application designed to provide actors with a zero-setup, intuitive rehearsal experience. Its core purpose is to enable actors to rehearse scripts effectively with intelligent scene partners, offering features like automatic voice assignment, natural timing that adapts to scene tension, and privacy by keeping all data local by default. The project aims to deliver a sophisticated, minimal, and professional tool for actors, simplifying the rehearsal process and enhancing performance preparation.
+
+## Brand Naming Convention
+
+- **Full name**: Co-Star Studio (always use in UI, listings, press, ads)
+- **Visual hierarchy**: "Co-Star" lighter weight, "Studio" heavier/bolder
+- **Spoken**: Always "Co-Star Studio" (never just "Co-Star")
+- **In-app copy**: Use "your scene partner" when describing what the product does. Never use "AI" in user-facing text.
+- **Domain**: co-star.app
+- **Subscription tier**: Co-Star Pro
 
 ## User Preferences
 

@@ -44,7 +44,7 @@ const sections: FeatureSection[] = [
     number: 2,
     title: "Pick your role",
     subtitle: "Smart casting for the rest",
-    description: "Select which character you want to play. co-star automatically assigns distinct voices to every other part.",
+    description: "Select which character you want to play. Your scene partner automatically assigns distinct voices to every other part.",
     details: [
       "Line counts shown per character",
       "Six ElevenLabs voices with emotion detection",
@@ -58,7 +58,7 @@ const sections: FeatureSection[] = [
     number: 3,
     title: "Rehearse your scene",
     subtitle: "The three-line reader",
-    description: "See previous, current, and next lines at a glance. Your turn is highlighted. co-star listens and responds with realistic timing.",
+    description: "See previous, current, and next lines at a glance. Your turn is highlighted. Your scene partner listens and responds with realistic timing.",
     details: [
       "Speech recognition waits for your lines",
       "Natural pauses adapt to scene tension",

@@ -65,8 +65,9 @@ export function BrandLogo({
       
       {showWordmark && (
         <div className="flex flex-col leading-none">
-          <span className={cn("font-bold tracking-tight", wordmarkSizes[size])}>
-            co-star
+          <span className={cn("tracking-tight", wordmarkSizes[size])}>
+            <span className="font-normal">Co-Star</span>{" "}
+            <span className="font-bold">Studio</span>
           </span>
         </div>
       )}

@@ -105,7 +105,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
             Select your role
           </h2>
           <p className="text-sm text-muted-foreground mt-1 relative">
-            co-star reads the other parts.
+            Your scene partner reads the other parts.
           </p>
         </div>
 

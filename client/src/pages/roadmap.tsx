@@ -45,7 +45,7 @@ interface RoadmapItem {
 }
 
 const items: RoadmapItem[] = [
-  { title: "Solo Rehearsal", description: "Run scenes with co-star reading every other part.", icon: Mic, status: "live" },
+  { title: "Solo Rehearsal", description: "Run scenes with your scene partner reading every other part.", icon: Mic, status: "live" },
   { title: "Voices", description: "Six realistic ElevenLabs voices with emotion detection and SSML prosody.", icon: Volume2, status: "live" },
   { title: "Script Import", description: "Paste text, upload PDF/TXT, or snap a photo. Built-in OCR for scanned scripts.", icon: FileUp, status: "live" },
   { title: "Smart Parsing", description: "Automatic character detection, stage directions, scene breaks, and action line context.", icon: Layers, status: "live" },

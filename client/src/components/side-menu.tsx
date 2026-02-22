@@ -145,7 +145,10 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           <div className="flex items-center gap-3">
             <Logo size="xs" />
             <div>
-              <SheetTitle className="text-base font-semibold">co-star</SheetTitle>
+              <SheetTitle className="text-base">
+                <span className="font-normal">Co-Star</span>{" "}
+                <span className="font-semibold">Studio</span>
+              </SheetTitle>
               <SheetDescription className="text-[11px] text-muted-foreground mt-0">
                 Your rehearsal companion
               </SheetDescription>
@@ -259,7 +262,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           <MenuItem
             icon={<Sparkles className="h-4 w-4" />}
             label="How It Works"
-            description="See co-star in action"
+            description="See Co-Star Studio in action"
             onClick={() => navigate("how-it-works")}
             testId="menu-item-how-it-works"
           />
@@ -328,12 +331,12 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           <MenuItem
             icon={<Share2 className="h-4 w-4" />}
             label="Tell a Friend"
-            description="Share co-star with fellow actors"
+            description="Share with fellow actors"
             onClick={() => {
               if (navigator.share) {
                 navigator.share({
-                  title: "co-star",
-                  text: "Check out co-star, your on demand scene partner",
+                  title: "Co-Star Studio",
+                  text: "Check out Co-Star Studio, your on demand scene partner",
                   url: window.location.origin,
                 }).catch(() => {});
               } else {
