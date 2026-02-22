@@ -62,12 +62,6 @@ export function TransportBar({
               e.stopPropagation();
               if (canGoBack) onBack();
             }}
-            onTouchEnd={(e) => {
-              if (canGoBack) {
-                e.preventDefault();
-                onBack();
-              }
-            }}
             title="Previous"
             className={cn(
               "p-3 rounded-full touch-manipulation select-none icon-btn-press transition-colors",
@@ -184,12 +178,6 @@ export function TransportBar({
               e.preventDefault();
               e.stopPropagation();
               if (canGoNext) onNext();
-            }}
-            onTouchEnd={(e) => {
-              if (canGoNext) {
-                e.preventDefault();
-                onNext();
-              }
             }}
             title="Next"
             className={cn(

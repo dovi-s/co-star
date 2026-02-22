@@ -49,8 +49,12 @@
             setInterval(function() { reg.update(); }, 60000);
           }).catch(function() {});
         });
+        var swRefreshed = false;
         navigator.serviceWorker.addEventListener('controllerchange', function() {
-          window.location.reload();
+          if (!swRefreshed) {
+            swRefreshed = true;
+            window.location.reload();
+          }
         });
       }
     </script>

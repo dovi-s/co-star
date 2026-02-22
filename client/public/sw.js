@@ -1,4 +1,4 @@
-const CACHE_NAME = 'costar-v20';
+const CACHE_NAME = 'costar-v21';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
@@ -7,7 +7,11 @@ self.addEventListener('install', () => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((names) =>
-      Promise.all(names.map((name) => caches.delete(name)))
+      Promise.all(
+        names
+          .filter((name) => name !== CACHE_NAME)
+          .map((name) => caches.delete(name))
+      )
     )
   );
   self.clients.claim();

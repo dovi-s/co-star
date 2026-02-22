@@ -194,7 +194,28 @@ export function useCamera() {
       ];
       
       const candidates = hasVideo ? videoFormats : audioFormats;
-      const mimeType = candidates.find(fmt => MediaRecorder.isTypeSupported(fmt)) || candidates[candidates.length - 1];
+      let mimeType = candidates.find(fmt => {
+        try { return MediaRecorder.isTypeSupported(fmt); } catch { return false; }
+      });
+      if (!mimeType) {
+        const fallback = hasVideo ? audioFormats : [];
+        mimeType = fallback.find(fmt => {
+          try { return MediaRecorder.isTypeSupported(fmt); } catch { return false; }
+        });
+        if (mimeType && hasVideo) {
+          recordingStream = mixedAudio;
+          console.log('[Camera] Video recording not supported, falling back to audio-only');
+        }
+      }
+      if (!mimeType) {
+        console.log('[Camera] No supported recording format found');
+        setError('Recording is not supported on this browser.');
+        if (audioCleanupRef.current) {
+          audioCleanupRef.current();
+          audioCleanupRef.current = null;
+        }
+        return false;
+      }
       console.log('[Camera] Selected recording format:', mimeType);
 
       mimeTypeRef.current = mimeType;

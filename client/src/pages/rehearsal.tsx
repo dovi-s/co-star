@@ -671,14 +671,18 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         }
       }, 60000);
     } else {
-      if (!speechRecognition.available && speechRecognition.isMobileDevice) {
+      if (!speechRecognition.available) {
         console.log("[Rehearsal] Speech recognition not available on this device");
         if (!tapModeRef.current) {
           setTapMode(true);
           tapModeRef.current = true;
+          try { localStorage.setItem("costar-tap-mode", "true"); } catch {}
+          const message = speechRecognition.isIOSPWANoSpeech
+            ? "Voice recognition is not available in this app mode. Tap to advance through your lines."
+            : "Tap mode enabled. Tap the screen to advance through your lines.";
           toast({
             title: "Voice recognition unavailable",
-            description: "Tap mode enabled. Tap the screen to advance through your lines.",
+            description: message,
           });
           return;
         }
@@ -1113,6 +1117,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   };
 
   const enterHandsFreeMode = async () => {
+    if (!session) return;
     const currentScene = session.scenes[session.currentSceneIndex];
     if (!currentScene || currentScene.lines.length === 0) {
       toast({ description: "Load a script first to use hands-free mode" });
@@ -1121,13 +1126,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setHandsFreeMode(true);
     
     const wasTapMode = tapMode;
-    if (tapMode) {
+    if (tapMode && speechRecognition.available) {
       setTapMode(false);
       tapModeRef.current = false;
       try { localStorage.setItem("costar-tap-mode", "false"); } catch {}
     }
     
-    if (!micEnabled) {
+    if (!micEnabled && speechRecognition.available) {
       if (micPermissionGranted) {
         setMicEnabledSync(true);
       } else {

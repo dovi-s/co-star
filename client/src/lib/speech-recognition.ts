@@ -47,7 +47,21 @@ class SpeechRecognitionEngine {
         (window as any).webkitSpeechRecognition;
       
       if (this.SpeechRecognitionAPI) {
-        this.createRecognition();
+        try {
+          this.createRecognition();
+          if (!this.recognition) {
+            console.log("[Speech] Recognition instance creation failed, API unavailable");
+            this.SpeechRecognitionAPI = null;
+          }
+        } catch (e) {
+          console.log("[Speech] Recognition unavailable (likely iOS PWA):", e);
+          this.SpeechRecognitionAPI = null;
+          this.recognition = null;
+        }
+      }
+      
+      if (!this.SpeechRecognitionAPI && this.isIOS && this.isPWA) {
+        console.log("[Speech] Web Speech API not available in iOS standalone/PWA mode");
       }
     }
   }
@@ -435,6 +449,10 @@ class SpeechRecognitionEngine {
 
   get isIOSPWA(): boolean {
     return this.isIOS && this.isPWA;
+  }
+
+  get isIOSPWANoSpeech(): boolean {
+    return this.isIOS && this.isPWA && !this.SpeechRecognitionAPI;
   }
 
   get isMobileDevice(): boolean {

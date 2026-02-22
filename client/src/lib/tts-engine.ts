@@ -297,8 +297,6 @@ class TTSEngine {
             audio.pause();
             audio.volume = 1;
             audio.currentTime = 0;
-            audio.src = '';
-            audio.load();
             this.audioUnlocked = true;
             console.log("[TTS] Persistent audio element unlocked");
           }).catch(() => {
@@ -939,6 +937,7 @@ class TTSEngine {
       return false;
     }
 
+    this.synth.cancel();
     this.loadVoices();
 
     const utterance = new SpeechSynthesisUtterance(fullText);
