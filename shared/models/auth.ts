@@ -81,7 +81,7 @@ export type InsertPerformanceRun = typeof performanceRuns.$inferInsert;
 // Feature requests board
 export const featureRequests = pgTable("feature_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull(),
   authorName: varchar("author_name").notNull(),
   title: varchar("title").notNull(),
   description: text("description"),
@@ -100,7 +100,7 @@ export type InsertFeatureRequest = typeof featureRequests.$inferInsert;
 // Votes on feature requests (one per user per request)
 export const featureVotes = pgTable("feature_votes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
+  userId: varchar("user_id").notNull(),
   featureRequestId: varchar("feature_request_id").notNull().references(() => featureRequests.id, { onDelete: "cascade" }),
   value: integer("value").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
