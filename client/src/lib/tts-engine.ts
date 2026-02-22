@@ -199,8 +199,15 @@ class TTSEngine {
   private ttsDestination: MediaStreamAudioDestinationNode | null = null;
   private currentMediaSource: MediaElementAudioSourceNode | null = null;
   private persistentMediaSource: MediaElementAudioSourceNode | null = null;
+  private _masterVolume: number = 1;
 
   constructor() {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("costar-reader-volume");
+        if (saved !== null) this._masterVolume = Math.max(0, Math.min(1, parseFloat(saved)));
+      } catch {}
+    }
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       this.synth = window.speechSynthesis;
       this.loadVoices();
@@ -241,6 +248,18 @@ class TTSEngine {
 
   get ready(): boolean {
     return this.isReady || this.useElevenLabs;
+  }
+
+  get masterVolume(): number {
+    return this._masterVolume;
+  }
+
+  setMasterVolume(vol: number): void {
+    this._masterVolume = Math.max(0, Math.min(1, vol));
+    try { localStorage.setItem("costar-reader-volume", String(this._masterVolume)); } catch {}
+    if (this.currentAudio) {
+      this.currentAudio.volume = this._masterVolume;
+    }
   }
 
   // Initialize audio context for WebRTC streaming (must be called after user interaction)
@@ -597,7 +616,7 @@ class TTSEngine {
         };
 
         audio.src = audioUrl;
-        audio.volume = 1;
+        audio.volume = this._masterVolume;
         audio.load();
         
         const connectWebRTC = () => {
@@ -764,7 +783,7 @@ class TTSEngine {
 
     utterance.rate = Math.max(0.5, Math.min(2, prosody.rate));
     utterance.pitch = Math.max(0, Math.min(2, 1 + prosody.pitch * 0.5));
-    utterance.volume = Math.max(0.1, Math.min(1, prosody.volume));
+    utterance.volume = Math.max(0.1, Math.min(1, prosody.volume)) * this._masterVolume;
 
     let browserCallbackFired = false;
     const fireBrowserCallback = (result: SpeakResult) => {

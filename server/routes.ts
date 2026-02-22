@@ -1315,9 +1315,36 @@ MARY: You're kidding me.`;
         fileName.endsWith(".fdx")
       ) {
         text = file.buffer.toString("utf-8");
+      } else if (mimeType.startsWith("image/")) {
+        console.log(`[Image->Session] Processing image: ${file.originalname}, ${file.buffer.length} bytes`);
+        try {
+          const openai = new OpenAI({
+            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+          });
+          const base64 = file.buffer.toString("base64");
+          const imgMime = mimeType === "image/jpeg" ? "image/jpeg" : mimeType === "image/png" ? "image/png" : "image/jpeg";
+          const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{
+              role: "user",
+              content: [
+                { type: "text", text: "Extract all text from this script/screenplay page exactly as written. Preserve the original formatting including character names, dialogue, stage directions, and any other text. Output only the extracted text, nothing else." },
+                { type: "image_url", image_url: { url: `data:${imgMime};base64,${base64}` } }
+              ]
+            }],
+            max_tokens: 4096,
+            temperature: 0.1,
+          });
+          text = response.choices[0]?.message?.content || "";
+          console.log(`[Image->Session] Extracted ${text.length} characters from image`);
+        } catch (imgErr: any) {
+          console.error(`[Image->Session] OCR failed:`, imgErr.message);
+          return res.status(500).json({ error: "Could not read text from image. Try a clearer photo." });
+        }
       } else {
         return res.status(400).json({ 
-          error: "Unsupported file type. Please upload a PDF, TXT, or Fountain file." 
+          error: "Unsupported file type. Please upload a PDF, TXT, image, or Fountain file." 
         });
       }
 

@@ -36,10 +36,12 @@ interface SettingsDrawerProps {
   playbackSpeed: number;
   readerDelay: number;
   tapMode: boolean;
+  readerVolume: number;
   onAmbientToggle: (enabled: boolean) => void;
   onPlaybackSpeedChange: (speed: number) => void;
   onReaderDelayChange: (delay: number) => void;
   onTapModeChange: (enabled: boolean) => void;
+  onReaderVolumeChange: (volume: number) => void;
   earbudsOnly?: boolean;
   onEarbudsOnlyChange?: (enabled: boolean) => void;
   cameraEnabled?: boolean;
@@ -60,10 +62,12 @@ export function SettingsDrawer({
   playbackSpeed,
   readerDelay,
   tapMode,
+  readerVolume,
   onAmbientToggle,
   onPlaybackSpeedChange,
   onReaderDelayChange,
   onTapModeChange,
+  onReaderVolumeChange,
   earbudsOnly = false,
   onEarbudsOnlyChange,
   cameraEnabled = false,
@@ -249,6 +253,37 @@ export function SettingsDrawer({
                   <span>0s</span>
                   <span>1.5s</span>
                   <span>3s</span>
+                </div>
+              </div>
+
+              {/* Reader Volume */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                    <Volume2 className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium">
+                      Reader Volume
+                    </label>
+                    <p className="text-[11px] text-muted-foreground/60">
+                      {readerVolume === 0 ? "Muted" : `${Math.round(readerVolume * 100)}%`}
+                    </p>
+                  </div>
+                </div>
+                <Slider
+                  value={[readerVolume]}
+                  onValueChange={([value]) => onReaderVolumeChange(value)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  className="w-full"
+                  data-testid="slider-reader-volume"
+                />
+                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
                 </div>
               </div>
 

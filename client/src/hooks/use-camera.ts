@@ -163,16 +163,16 @@ export function useCamera() {
 
       let recordingStream: MediaStream;
 
-      if (screenCanvasRef.current) {
+      if (isEnabled && screenCanvasRef.current) {
         const canvasStream = screenCanvasRef.current.captureStream(30);
         recordingStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
           ...mixedAudio.getAudioTracks(),
         ]);
-        console.log('[Camera] Starting canvas + mixed audio recording');
+        console.log('[Camera] Starting video + mixed audio recording');
       } else {
         recordingStream = mixedAudio;
-        console.log('[Camera] Starting audio-only recording (no canvas available)');
+        console.log('[Camera] Starting audio-only recording');
       }
 
       const hasVideo = recordingStream.getVideoTracks().length > 0;

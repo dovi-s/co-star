@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
   const [serverParsedData, setServerParsedData] = useState<ParsedScript | null>(null);
   const [isEditingScript, setIsEditingScript] = useState(!initialScript);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const promptInputRef = useRef<HTMLInputElement>(null);
 
@@ -378,8 +379,39 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       return;
     }
     
-    // Unsupported file type
-    setFileError("Please upload a PDF, TXT, or Fountain file");
+    if (file.type.startsWith("image/") || /\.(jpg|jpeg|png|heic|heif|webp)$/i.test(fileName)) {
+      setIsParsingFile(true);
+      setParseProgress("Reading photo...");
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        
+        setParseProgress("Scanning text...");
+        const response = await fetch("/api/parse-file-to-session", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Could not read text from photo");
+        }
+        
+        const data = await response.json();
+        setServerParsedData(data.parsed);
+        setScript(data.rawText || "");
+        setIsEditingScript(false);
+      } catch (e: any) {
+        console.error("Photo OCR error:", e);
+        setFileError(e.message || "Could not read text from photo");
+      } finally {
+        setIsParsingFile(false);
+        setParseProgress("");
+      }
+      return;
+    }
+
+    setFileError("Please upload a PDF, TXT, image, or Fountain file");
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -685,6 +717,15 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                   </>
                 )}
               </button>
+              <button
+                onClick={() => cameraInputRef.current?.click()}
+                disabled={isParsingFile}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg press-effect bg-background/80 backdrop-blur-sm text-muted-foreground hover:text-foreground hover:bg-background"
+                data-testid="button-snap-script"
+              >
+                <Camera className="h-3 w-3" />
+                Snap
+              </button>
             </div>
             <Dialog>
               <DialogTrigger asChild>
@@ -741,6 +782,10 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                         <span>Use the Upload button for best results</span>
                       </li>
                       <li className="flex gap-2">
+                        <span className="text-foreground font-medium">Photo</span>
+                        <span>Snap a script page with your camera</span>
+                      </li>
+                      <li className="flex gap-2">
                         <span className="text-foreground">Names</span>
                         <span>ALL CAPS or followed by colon</span>
                       </li>
@@ -764,12 +809,24 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       <input
         ref={fileInputRef}
         type="file"
-        accept=".txt,.pdf,.fountain,.fdx,.rtf,text/plain,application/pdf"
+        accept=".txt,.pdf,.fountain,.fdx,.rtf,text/plain,application/pdf,image/*"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleFileSelect(file);
-          e.target.value = ""; // Reset so same file can be selected again
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleFileSelect(file);
+          e.target.value = "";
         }}
       />
 

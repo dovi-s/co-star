@@ -86,6 +86,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     try { return localStorage.getItem("costar-tap-mode") === "true"; } catch { return false; }
   });
   const tapModeRef = useRef(tapMode);
+  const [readerVolume, setReaderVolume] = useState(() => ttsEngine.masterVolume);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const [showCountdown, setShowCountdown] = useState(false);
@@ -140,6 +141,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     setTapMode(enabled);
     tapModeRef.current = enabled;
     try { localStorage.setItem("costar-tap-mode", String(enabled)); } catch {}
+  }, []);
+
+  const handleReaderVolumeChange = useCallback((vol: number) => {
+    setReaderVolume(vol);
+    ttsEngine.setMasterVolume(vol);
   }, []);
 
   const requestMicPermission = useCallback(async () => {
@@ -1309,7 +1315,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                     Download Recording
                   </Button>
                   <p className="text-xs text-muted-foreground text-center mt-1.5">
-                    {camera.isEnabled ? "Camera + script recording with audio" : "Script view with audio"}
+                    {camera.isEnabled ? "Video recording with audio" : "Audio-only recording"}
                   </p>
                 </div>
               )}
@@ -1548,6 +1554,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           playbackSpeed={session.playbackSpeed ?? 1.0}
           readerDelay={session.readerDelay ?? 0}
           tapMode={tapMode}
+          readerVolume={readerVolume}
           earbudsOnly={camera.earbudsOnly}
           onEarbudsOnlyChange={camera.toggleEarbudsOnly}
           cameraEnabled={camera.isEnabled}
@@ -1555,6 +1562,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           onPlaybackSpeedChange={(speed) => updateSession({ playbackSpeed: speed })}
           onReaderDelayChange={(delay) => updateSession({ readerDelay: delay })}
           onTapModeChange={handleTapModeChange}
+          onReaderVolumeChange={handleReaderVolumeChange}
           onSceneChange={goToScene}
           onRolePresetChange={handleRolePresetChange}
           onNewScript={handleNewScript}

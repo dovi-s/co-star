@@ -121,7 +121,7 @@ export function PracticeToolbar({
             isRecording && "animate-pulse",
             cameraEnabled && !isRecording && "text-white/60"
           )}
-          title={isRecording ? "Stop recording" : "Record rehearsal with audio"}
+          title={isRecording ? "Stop recording" : cameraEnabled ? "Record video with audio" : "Record audio only"}
           data-testid="button-record-toggle"
         >
           <Circle 
