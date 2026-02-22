@@ -77,7 +77,9 @@ export function AuthPage({ onBack }: { onBack: () => void }) {
 
           <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
             <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
-              Free to use. No credit card needed.
+              Save your scripts, keep your history, record without watermarks.
+              <br />
+              $9/mo or $69/yr.
             </p>
           </div>
         </div>
