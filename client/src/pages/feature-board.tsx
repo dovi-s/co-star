@@ -68,8 +68,6 @@ function VoteButton({
   item: FeatureRequestItem;
   direction: "up" | "down";
 }) {
-  const { isAuthenticated } = useAuth();
-
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
       const res = await apiRequest("POST", `/api/features/${item.id}/vote`, { value });
@@ -81,7 +79,6 @@ function VoteButton({
   });
 
   const handleVote = () => {
-    if (!isAuthenticated) return;
     const targetValue = direction === "up" ? 1 : -1;
     const newValue = item.userVote === targetValue ? 0 : targetValue;
     voteMutation.mutate(newValue);
@@ -96,13 +93,12 @@ function VoteButton({
   return (
     <button
       onClick={handleVote}
-      disabled={!isAuthenticated || voteMutation.isPending}
+      disabled={voteMutation.isPending}
       className={cn(
         "p-1 rounded-md transition-colors",
         isActive
           ? "text-primary bg-primary/10"
-          : "text-muted-foreground/50 hover:text-foreground hover:bg-muted/50",
-        !isAuthenticated && "opacity-40 cursor-default"
+          : "text-muted-foreground/50 hover:text-foreground hover:bg-muted/50"
       )}
       data-testid={`button-vote-${direction}-${item.id}`}
     >
@@ -176,13 +172,19 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
 }
 
 function NewRequestForm({ onClose }: { onClose: () => void }) {
+  const { isAuthenticated } = useAuth();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("general");
+  const [authorName, setAuthorName] = useState("");
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/features", { title, description, category });
+      const body: Record<string, string> = { title, description, category };
+      if (!isAuthenticated && authorName.trim()) {
+        body.authorName = authorName.trim();
+      }
+      const res = await apiRequest("POST", "/api/features", body);
       return res.json();
     },
     onSuccess: () => {
@@ -213,6 +215,17 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
         data-testid="input-feature-title"
         autoFocus
       />
+
+      {!isAuthenticated && (
+        <input
+          type="text"
+          placeholder="Your name (optional)"
+          value={authorName}
+          onChange={(e) => setAuthorName(e.target.value)}
+          className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+          data-testid="input-feature-author"
+        />
+      )}
 
       <Textarea
         placeholder="Add more detail (optional)"
@@ -254,7 +267,6 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
 }
 
 export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
-  const { isAuthenticated } = useAuth();
   const [sort, setSort] = useState<SortMode>("top");
   const [showForm, setShowForm] = useState(false);
 
@@ -282,18 +294,16 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
             {requests.length} {requests.length === 1 ? "request" : "requests"}
           </p>
         </div>
-        {isAuthenticated && (
-          <Button
-            size="sm"
-            onClick={() => setShowForm(true)}
-            disabled={showForm}
-            data-testid="button-new-request"
-            className="shrink-0"
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            Request
-          </Button>
-        )}
+        <Button
+          size="sm"
+          onClick={() => setShowForm(true)}
+          disabled={showForm}
+          data-testid="button-new-request"
+          className="shrink-0"
+        >
+          <Plus className="h-3.5 w-3.5 mr-1" />
+          Request
+        </Button>
       </header>
 
       <main className="flex-1 px-4 py-5">
@@ -355,20 +365,14 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
               <p className="text-xs text-muted-foreground max-w-[240px] mb-4">
                 Be the first to suggest a feature. What would make co-star better for you?
               </p>
-              {isAuthenticated ? (
-                <Button
-                  size="sm"
-                  onClick={() => setShowForm(true)}
-                  data-testid="button-first-request"
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Post a request
-                </Button>
-              ) : (
-                <p className="text-[11px] text-muted-foreground/60">
-                  Sign in to post a request
-                </p>
-              )}
+              <Button
+                size="sm"
+                onClick={() => setShowForm(true)}
+                data-testid="button-first-request"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                Post a request
+              </Button>
             </div>
           ) : (
             <div className="space-y-3">
@@ -378,13 +382,6 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
             </div>
           )}
 
-          {!isAuthenticated && requests.length > 0 && (
-            <div className="text-center py-4">
-              <p className="text-[11px] text-muted-foreground/60">
-                Sign in to vote and post requests
-              </p>
-            </div>
-          )}
         </div>
       </main>
 

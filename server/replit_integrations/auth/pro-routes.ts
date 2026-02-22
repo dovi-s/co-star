@@ -202,7 +202,7 @@ export function registerProRoutes(app: Express): void {
 
   app.get("/api/features", optionalAuth, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub || null;
+      const userId = req.user?.claims?.sub || `anon_${req.sessionID}`;
       const sort = req.query.sort === "newest" ? "newest" : "top";
 
       const requests = await db
@@ -210,14 +210,11 @@ export function registerProRoutes(app: Express): void {
         .from(featureRequests)
         .orderBy(sort === "newest" ? desc(featureRequests.createdAt) : desc(featureRequests.voteCount));
 
-      let userVotes: Record<string, number> = {};
-      if (userId) {
-        const votes = await db
-          .select({ featureRequestId: featureVotes.featureRequestId, value: featureVotes.value })
-          .from(featureVotes)
-          .where(eq(featureVotes.userId, userId));
-        userVotes = Object.fromEntries(votes.map(v => [v.featureRequestId, v.value]));
-      }
+      const votes = await db
+        .select({ featureRequestId: featureVotes.featureRequestId, value: featureVotes.value })
+        .from(featureVotes)
+        .where(eq(featureVotes.userId, userId));
+      const userVotes: Record<string, number> = Object.fromEntries(votes.map(v => [v.featureRequestId, v.value]));
 
       res.json({
         requests: requests.map(r => ({
@@ -231,20 +228,25 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/features", isAuthenticated, async (req: any, res) => {
+  app.post("/api/features", optionalAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const { title, description, category } = req.body;
+      const userId = req.user?.claims?.sub || `anon_${req.sessionID}`;
+      const { title, description, category, authorName: providedName } = req.body;
 
       if (!title || title.trim().length < 3) {
         return res.status(400).json({ message: "Title must be at least 3 characters" });
       }
 
-      const [user] = await db
-        .select({ firstName: users.firstName, lastName: users.lastName })
-        .from(users)
-        .where(eq(users.id, userId));
-      const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Anonymous";
+      let authorName = "Anonymous";
+      if (req.user?.claims?.sub) {
+        const [user] = await db
+          .select({ firstName: users.firstName, lastName: users.lastName })
+          .from(users)
+          .where(eq(users.id, req.user.claims.sub));
+        authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Anonymous";
+      } else if (providedName?.trim()) {
+        authorName = providedName.trim();
+      }
 
       const [request] = await db
         .insert(featureRequests)
@@ -271,9 +273,9 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/features/:id/vote", isAuthenticated, async (req: any, res) => {
+  app.post("/api/features/:id/vote", optionalAuth, async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user?.claims?.sub || `anon_${req.sessionID}`;
       const featureId = req.params.id;
       const { value } = req.body;
 
