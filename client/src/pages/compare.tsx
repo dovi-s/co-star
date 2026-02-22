@@ -305,8 +305,6 @@ const proTierFeatures = [
 ];
 
 export function ComparePage({ onBack }: { onBack: () => void }) {
-  const costarFeatureCount = Object.values(competitors[0].features).filter(v => v === true).length;
-
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="flex items-center gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
@@ -357,11 +355,8 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
 
           <section className="mb-12">
             <h2 className="text-lg font-semibold text-foreground mb-1 animate-fade-in-up" data-testid="text-section-comparison">How we stack up</h2>
-            <p className="text-sm text-muted-foreground mb-1 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-              {costarFeatureCount} of {features.length} features. No other app comes close.
-            </p>
-            <p className="text-[11px] text-muted-foreground/70 mb-5 animate-fade-in-up" style={{ animationDelay: "75ms" }}>
-              Scroll right to see all {competitors.length} competitors.
+            <p className="text-sm text-muted-foreground mb-5 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
+              Most apps do one thing well. co-star does all of them.
             </p>
 
             <div className="glass-surface rounded-md overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="comparison-table">
