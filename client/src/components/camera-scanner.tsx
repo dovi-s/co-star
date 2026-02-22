@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Camera, RotateCcw } from "lucide-react";
+import { X, Camera, RotateCcw, ChevronLeft } from "lucide-react";
 
 interface CameraScannerProps {
   onCapture: (file: File) => void;
@@ -15,13 +15,24 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
   const [ready, setReady] = useState(false);
   const [facingMode, setFacingMode] = useState<"environment" | "user">("environment");
 
+  const stopStream = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+      streamRef.current = null;
+    }
+  }, []);
+
   const startCamera = useCallback(async (facing: "environment" | "user") => {
     try {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-      }
+      stopStream();
       setError(null);
       setReady(false);
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError("Camera is not available in this browser.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: facing, width: { ideal: 1920 }, height: { ideal: 1440 } },
         audio: false,
@@ -33,17 +44,19 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
       }
     } catch (e: any) {
       console.error("Camera error:", e);
-      setError("Could not access camera. Please allow camera permission and try again.");
+      if (e.name === "NotAllowedError") {
+        setError("Camera permission was denied. Please allow camera access in your browser settings.");
+      } else if (e.name === "NotFoundError") {
+        setError("No camera found on this device.");
+      } else {
+        setError("Could not access camera. Try uploading a photo instead.");
+      }
     }
-  }, []);
+  }, [stopStream]);
 
   useEffect(() => {
     startCamera(facingMode);
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(t => t.stop());
-      }
-    };
+    return stopStream;
   }, []);
 
   const flipCamera = useCallback(() => {
@@ -66,52 +79,55 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
     canvas.toBlob((blob) => {
       if (blob) {
         const file = new File([blob], `script-scan-${Date.now()}.jpg`, { type: "image/jpeg" });
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(t => t.stop());
-        }
+        stopStream();
         onCapture(file);
       }
     }, "image/jpeg", 0.92);
-  }, [onCapture]);
+  }, [onCapture, stopStream]);
 
   const handleClose = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(t => t.stop());
-    }
+    stopStream();
     onClose();
-  }, [onClose]);
+  }, [onClose, stopStream]);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col" data-testid="camera-scanner">
-      <div className="flex items-center justify-between p-3 safe-top">
-        <Button
-          variant="ghost"
-          className="text-white/90 gap-1.5 text-sm"
+    <div
+      className="fixed inset-0 z-[100] bg-black flex flex-col"
+      data-testid="camera-scanner"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
+      <div className="flex items-center justify-between p-3 safe-top" style={{ zIndex: 10 }}>
+        <button
           onClick={handleClose}
+          className="flex items-center gap-1 text-white text-sm font-medium px-2 py-2 rounded-md active:bg-white/10"
           data-testid="button-close-scanner"
         >
-          <X className="h-4 w-4" />
-          Close
-        </Button>
+          <ChevronLeft className="h-5 w-5" />
+          Back
+        </button>
         <span className="text-white/60 text-xs font-medium">Scan script page</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white/80"
+        <button
           onClick={flipCamera}
+          className="p-2 text-white/80 rounded-md active:bg-white/10"
           data-testid="button-flip-camera"
         >
           <RotateCcw className="h-4 w-4" />
-        </Button>
+        </button>
       </div>
 
       <div className="flex-1 relative overflow-hidden">
         {error ? (
           <div className="flex flex-col items-center justify-center h-full px-6 gap-4">
             <p className="text-white/60 text-sm text-center">{error}</p>
-            <Button variant="outline" className="text-white border-white/30" onClick={handleClose}>
+            <button
+              onClick={handleClose}
+              className="px-6 py-2.5 rounded-md border border-white/30 text-white text-sm font-medium active:bg-white/10"
+              data-testid="button-go-back"
+            >
               Go back
-            </Button>
+            </button>
           </div>
         ) : (
           <video
