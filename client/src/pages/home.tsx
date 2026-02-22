@@ -42,7 +42,9 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
 
   const handleImport = async (name: string, rawScript: string) => {
     userWentBackRef.current = false;
-    const newSession = await createSession(name, rawScript);
+    const overrideName = recentNameOverride.current;
+    recentNameOverride.current = null;
+    const newSession = await createSession(overrideName || name, rawScript);
     if (newSession) {
       const totalLines = newSession.scenes.reduce((s, sc) => s + sc.lines.length, 0);
       saveRecentScript({
@@ -58,7 +60,9 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
 
   const handleImportParsed = (name: string, parsed: { roles: any[], scenes: any[] }, rawScript?: string) => {
     userWentBackRef.current = false;
-    const newSession = createSessionFromParsed(name, parsed, rawScript);
+    const overrideName = recentNameOverride.current;
+    recentNameOverride.current = null;
+    const newSession = createSessionFromParsed(overrideName || name, parsed, rawScript);
     if (newSession) {
       const totalLines = newSession.scenes.reduce((s, sc) => s + sc.lines.length, 0);
       saveRecentScript({
@@ -97,8 +101,10 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead }: HomePag
 
   const [prefillKey, setPrefillKey] = useState(0);
   const [prefillScript, setPrefillScript] = useState<string | undefined>(undefined);
+  const recentNameOverride = useRef<string | null>(null);
 
   const handleSelectRecent = (script: RecentScript) => {
+    recentNameOverride.current = script.name;
     setPrefillScript(script.rawScript);
     setPrefillKey((k) => k + 1);
   };
