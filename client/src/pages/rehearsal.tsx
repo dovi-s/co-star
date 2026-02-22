@@ -536,6 +536,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     if (session?.ambientEnabled && !ambientRef.current) {
       try {
         const ctx = new AudioContext();
+        if (ctx.state === 'suspended') {
+          const resumeOnGesture = () => {
+            ctx.resume().catch(() => {});
+            document.removeEventListener('touchstart', resumeOnGesture);
+            document.removeEventListener('click', resumeOnGesture);
+          };
+          document.addEventListener('touchstart', resumeOnGesture, { once: true });
+          document.addEventListener('click', resumeOnGesture, { once: true });
+        }
         const gain = ctx.createGain();
         gain.gain.value = 0.04;
         gain.connect(ctx.destination);
@@ -1329,8 +1338,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   }, [camera.isRecording, camera.isEnabled, camera.videoRef]);
 
+  useEffect(() => {
+    if (!session && !isLoading) {
+      onBack();
+    }
+  }, [session, isLoading, onBack]);
+
   if (!session) {
-    onBack();
     return null;
   }
 

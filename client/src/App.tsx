@@ -68,10 +68,6 @@ function AppContent() {
     }
   }, [createSessionFromParsed, setUserRole]);
 
-  if (view === "home" && session?.userRoleId) {
-    setView("rehearsal");
-  }
-
   return (
     <div className="min-h-screen bg-background text-foreground">
       {view === "home" && (
