@@ -48,6 +48,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 type Tab = "overview" | "users" | "traffic" | "usage" | "features" | "revenue" | "feedback" | "errors" | "integrations";
 
@@ -343,6 +344,7 @@ function OverviewTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (i
 }
 
 function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: string) => void }) {
+  const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("");
   const [page, setPage] = useState(1);
@@ -362,9 +364,16 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const resetOnboardingMutation = useMutation({
     mutationFn: async (userId: string) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/reset-onboarding`, {});
+      if (!res.ok) throw new Error("Failed to reset onboarding");
       return res.json();
     },
-    onSuccess: invalidateUsers,
+    onSuccess: () => {
+      invalidateUsers();
+      toast({ title: "Onboarding reset", description: "User will see onboarding on next visit" });
+    },
+    onError: () => {
+      toast({ title: "Failed to reset onboarding", variant: "destructive" });
+    },
   });
 
   const blockMutation = useMutation({
