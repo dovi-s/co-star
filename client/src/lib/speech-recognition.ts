@@ -371,7 +371,7 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    const timeout = this.isMobile ? 2500 : 1500;
+    const timeout = this.isMobile ? 3200 : 2200;
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
         console.log("[Speech] Silence timeout after speech, stopping");

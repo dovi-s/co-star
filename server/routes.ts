@@ -1963,22 +1963,29 @@ MARY: You're kidding me.`;
 
   // --- Admin Analytics Dashboard ---
 
-  function isAdmin(req: any): boolean {
+  async function isAdmin(req: any): Promise<boolean> {
     const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
     if (!userId) return false;
     const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").filter(Boolean);
-    if (adminIds.length === 0) {
-      // In development, allow first user (app owner)
+    if (adminIds.includes(userId)) return true;
+    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+    if (adminEmails.length > 0) {
+      try {
+        const [user] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
+        if (user?.email && adminEmails.includes(user.email.toLowerCase().trim())) return true;
+      } catch {}
+    }
+    if (adminIds.length === 0 && adminEmails.length === 0) {
       return process.env.NODE_ENV === "development";
     }
-    return adminIds.includes(userId);
+    return false;
   }
 
   let analyticsCache: { data: any; timestamp: number } | null = null;
   const CACHE_TTL = 30000; // 30 seconds
 
   app.get("/api/admin/analytics", async (req: any, res: Response) => {
-    if (!isAdmin(req)) {
+    if (!(await isAdmin(req))) {
       return res.status(403).json({ error: "Not authorized" });
     }
 
@@ -2155,7 +2162,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/users", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const page = Math.max(1, Number(req.query.page) || 1);
       const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
@@ -2186,7 +2193,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/users/:userId", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const userId = req.params.userId;
       const [user] = await db.select().from(users).where(eq(users.id, userId));
@@ -2225,7 +2232,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/events", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const days = Math.min(90, Math.max(1, Number(req.query.days) || 30));
       const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
@@ -2256,7 +2263,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/feedback", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const status = req.query.status ? String(req.query.status) : null;
       const type = req.query.type ? String(req.query.type) : null;
@@ -2280,7 +2287,7 @@ MARY: You're kidding me.`;
   });
 
   app.patch("/api/admin/feedback/:id", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const { status, adminNotes } = req.body;
       const updates: any = {};
@@ -2295,7 +2302,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/errors", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const resolved = req.query.resolved === "true" ? "true" : "false";
       const result = await db.execute(
@@ -2316,7 +2323,7 @@ MARY: You're kidding me.`;
   });
 
   app.patch("/api/admin/errors/:id", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       await db.update(errorLogs).set({ resolved: req.body.resolved || "true" }).where(eq(errorLogs.id, req.params.id));
       res.json({ ok: true });
@@ -2326,7 +2333,7 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/admin/errors/resolve-bulk", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const { message: errorMessage } = req.body;
       if (!errorMessage) return res.status(400).json({ error: "message required" });
@@ -2338,7 +2345,7 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/admin/stripe", async (req: any, res: Response) => {
-    if (!isAdmin(req)) return res.status(403).json({ error: "Not authorized" });
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const subscribers = await db.execute(
         sql`SELECT u.id, u.email, u.first_name, u.last_name, u.subscription_tier, u.stripe_customer_id, u.stripe_subscription_id, u.subscription_expires_at, u.created_at
