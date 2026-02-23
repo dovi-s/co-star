@@ -48,7 +48,7 @@ const features: Feature[] = [
 const competitors: Competitor[] = [
   {
     name: "Co-star Studio",
-    price: "Free / $9 mo",
+    price: "Free / $9 mo / $79 yr",
     platform: "Web, PWA",
     features: {
       "Voices": true,
@@ -287,20 +287,20 @@ function SupportIcon({ value }: { value: Support }) {
 }
 
 const freeTierFeatures = [
-  "All core features",
-  "ElevenLabs voices",
-  "Multiplayer table reads",
-  "Self-tape recording (watermark)",
+  "3 script rehearsals per month",
+  "All voice presets",
   "Performance feedback",
-  "No account required",
+  "Multiplayer table reads",
+  "Dark and light mode",
+  "Keyboard shortcuts",
 ];
 
 const proTierFeatures = [
-  "Everything in Free",
-  "Watermark-free recordings",
+  "Unlimited script rehearsals",
   "Cloud script library",
-  "Performance history",
-  "Saved recordings",
+  "Watermark-free recordings",
+  "Performance tracking over time",
+  "Hands-free rehearsal mode",
   "Priority support",
 ];
 
@@ -447,7 +447,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               Pricing
             </h2>
             <p className="text-sm text-muted-foreground mb-6 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
-              Start free with every feature. Upgrade when you want persistence.
+              Start free. Upgrade when you need more.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -459,7 +459,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                 <div className="mb-1">
                   <span className="text-base font-semibold text-foreground">Free</span>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">No account needed. Jump right in.</p>
+                <p className="text-xs text-muted-foreground mb-4">Get started and rehearse for free.</p>
                 <div className="space-y-2">
                   {freeTierFeatures.map((f) => (
                     <div key={f} className="flex items-center gap-2" data-testid={`text-free-feature-${f.toLowerCase().replace(/\s+/g, "-").slice(0, 30)}`}>

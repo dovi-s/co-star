@@ -372,7 +372,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   {[
                     "3 script rehearsals per month",
                     "All voice presets",
-                    "Basic performance feedback",
+                    "Performance feedback",
+                    "Multiplayer table reads",
                   ].map((f) => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -391,24 +392,34 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                     <Crown className="h-4 w-4 text-primary" />
                     <span className="text-base font-semibold text-foreground">Co-star Pro</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-sm font-semibold text-foreground">$9</span>
-                    <span className="text-xs text-muted-foreground">/mo</span>
-                  </div>
                 </div>
                 <div className="space-y-2 mb-4">
                   {[
                     "Unlimited script rehearsals",
-                    "Save scripts to your library",
-                    "Record without watermark",
-                    "Track your accuracy over time",
-                    "Priority access to new features",
+                    "Cloud script library",
+                    "Watermark-free recordings",
+                    "Performance tracking over time",
+                    "Hands-free rehearsal mode",
+                    "Priority support",
                   ].map((f) => (
                     <div key={f} className="flex items-center gap-2">
                       <Check className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span className="text-xs text-foreground">{f}</span>
                     </div>
                   ))}
+                </div>
+                <div className="flex gap-2 mb-3">
+                  <div className="flex-1 rounded-md border border-border/50 p-2.5 text-center">
+                    <p className="text-sm font-semibold text-foreground">$9</p>
+                    <p className="text-[10px] text-muted-foreground">per month</p>
+                  </div>
+                  <div className="flex-1 rounded-md border border-primary/30 bg-primary/5 p-2.5 text-center relative">
+                    <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
+                      Save 27%
+                    </span>
+                    <p className="text-sm font-semibold text-foreground">$79</p>
+                    <p className="text-[10px] text-muted-foreground">per year</p>
+                  </div>
                 </div>
                 <Button
                   className="w-full h-10"

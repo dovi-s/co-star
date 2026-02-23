@@ -43,19 +43,19 @@ interface StripeProduct {
 }
 
 const proFeatures = [
-  { icon: Mic, label: "Professional voice engine" },
-  { icon: BookOpen, label: "Unlimited scripts and scenes" },
-  { icon: BarChart3, label: "Performance tracking and insights" },
+  { icon: Sparkles, label: "Unlimited script rehearsals" },
+  { icon: BookOpen, label: "Cloud script library" },
+  { icon: Mic, label: "Watermark-free recordings" },
+  { icon: BarChart3, label: "Performance tracking over time" },
   { icon: Headphones, label: "Hands-free rehearsal mode" },
-  { icon: Users, label: "Multiplayer table reads" },
-  { icon: Sparkles, label: "Smart script parsing with OCR" },
+  { icon: Users, label: "Priority support" },
 ];
 
 const freeFeatures = [
-  "Unlimited scripts and scenes",
-  "Browser voices",
-  "Full rehearsal controls",
+  "3 script rehearsals per month",
+  "All voice presets",
   "Performance feedback",
+  "Multiplayer table reads",
   "Dark and light mode",
   "Keyboard shortcuts",
 ];
