@@ -27,9 +27,11 @@ interface ScriptImportProps {
   error?: string | null;
   onClearError?: () => void;
   initialScript?: string;
+  onAuthRequired?: () => void;
+  onUpgradeRequired?: (resetsAt: string | null) => void;
 }
 
-export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "" }: ScriptImportProps) {
+export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "", onAuthRequired, onUpgradeRequired }: ScriptImportProps) {
   const { isAuthenticated } = useAuth();
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
@@ -467,6 +469,34 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   const handleSubmit = async () => {
     if (!script.trim()) return;
+
+    if (!isAuthenticated) {
+      const anonKey = "costar-anon-generates";
+      const anonCount = parseInt(localStorage.getItem(anonKey) || "0", 10);
+      if (anonCount >= 10) {
+        return;
+      }
+      localStorage.setItem(anonKey, String(anonCount + 1));
+
+      sessionStorage.setItem("costar-pending-script", script);
+      if (uploadedFileName) sessionStorage.setItem("costar-pending-filename", uploadedFileName);
+      if (onAuthRequired) onAuthRequired();
+      return;
+    }
+
+    try {
+      const usageRes = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
+      if (usageRes.ok) {
+        const usageData = await usageRes.json();
+        if (!usageData.allowed) {
+          if (onUpgradeRequired) onUpgradeRequired(usageData.resetsAt);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("[Submit] Usage check failed, allowing:", e);
+    }
+
     // Use uploaded filename if available, otherwise detect from content
     const sessionName = uploadedFileName || detectSceneName(script, characters);
     

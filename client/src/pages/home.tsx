@@ -8,6 +8,7 @@ import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
@@ -104,7 +105,17 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   };
 
   const [prefillKey, setPrefillKey] = useState(0);
-  const [prefillScript, setPrefillScript] = useState<string | undefined>(undefined);
+  const [prefillScript, setPrefillScript] = useState<string | undefined>(() => {
+    const pending = sessionStorage.getItem("costar-pending-script");
+    if (pending) {
+      sessionStorage.removeItem("costar-pending-script");
+      sessionStorage.removeItem("costar-pending-filename");
+      return pending;
+    }
+    return undefined;
+  });
+  const [upgradeResetsAt, setUpgradeResetsAt] = useState<string | null>(null);
+  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
   const recentNameOverride = useRef<string | null>(null);
 
   const handleSelectRecent = (script: RecentScript) => {
@@ -206,6 +217,11 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             error={error}
             onClearError={clearError}
             initialScript={prefillScript ?? lastRawScript}
+            onAuthRequired={() => onNavigate?.("signin")}
+            onUpgradeRequired={(resetsAt) => {
+              setUpgradeResetsAt(resetsAt);
+              setShowUpgradeDialog(true);
+            }}
           />
         </div>
 
@@ -226,6 +242,32 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
         </p>
       </footer>
+
+      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
+        <AlertDialogContent className="glass-surface-heavy rounded-xl max-w-[340px]" data-testid="dialog-upgrade">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-semibold">Monthly limit reached</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm text-muted-foreground">
+              Free accounts can continue with 3 scripts per month.
+              {upgradeResetsAt && (
+                <span className="block mt-1.5 text-xs">
+                  Your limit resets on {new Date(upgradeResetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="rounded-lg" data-testid="button-upgrade-dismiss">Not now</AlertDialogCancel>
+            <AlertDialogAction
+              className="rounded-lg bg-primary text-primary-foreground"
+              data-testid="button-upgrade-pro"
+              onClick={() => onNavigate?.("subscription")}
+            >
+              Upgrade to Pro
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

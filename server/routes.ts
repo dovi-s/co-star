@@ -364,6 +364,104 @@ export async function registerRoutes(
     res.json({ status: "ok", app: "co-star" });
   });
 
+  const FREE_SCRIPT_LIMIT = 3;
+
+  app.get("/api/script-usage", async (req: Request, res: Response) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    try {
+      const [user] = await db.select({
+        scriptUsageCount: users.scriptUsageCount,
+        scriptUsageResetAt: users.scriptUsageResetAt,
+        subscriptionTier: users.subscriptionTier,
+      }).from(users).where(eq(users.id, userId));
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      const now = new Date();
+      let usageCount = user.scriptUsageCount ?? 0;
+      let resetAt = user.scriptUsageResetAt;
+
+      if (!resetAt || now >= new Date(resetAt)) {
+        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        await db.update(users).set({
+          scriptUsageCount: 0,
+          scriptUsageResetAt: nextReset,
+        }).where(eq(users.id, userId));
+        usageCount = 0;
+        resetAt = nextReset;
+      }
+
+      const isPro = user.subscriptionTier === "pro";
+      res.json({
+        used: usageCount,
+        limit: isPro ? null : FREE_SCRIPT_LIMIT,
+        resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
+        isPro,
+      });
+    } catch (e) {
+      console.error("Script usage check error:", e);
+      res.status(500).json({ message: "Something went wrong" });
+    }
+  });
+
+  app.post("/api/script-usage/increment", async (req: Request, res: Response) => {
+    const userId = (req.session as any)?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    try {
+      const [user] = await db.select({
+        scriptUsageCount: users.scriptUsageCount,
+        scriptUsageResetAt: users.scriptUsageResetAt,
+        subscriptionTier: users.subscriptionTier,
+      }).from(users).where(eq(users.id, userId));
+      if (!user) return res.status(404).json({ message: "User not found" });
+
+      if (user.subscriptionTier === "pro") {
+        return res.json({ allowed: true, used: 0, limit: null, isPro: true });
+      }
+
+      const now = new Date();
+      let usageCount = user.scriptUsageCount ?? 0;
+      let resetAt = user.scriptUsageResetAt;
+
+      if (!resetAt || now >= new Date(resetAt)) {
+        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        usageCount = 0;
+        resetAt = nextReset;
+      }
+
+      if (usageCount >= FREE_SCRIPT_LIMIT) {
+        return res.json({
+          allowed: false,
+          used: usageCount,
+          limit: FREE_SCRIPT_LIMIT,
+          resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
+          isPro: false,
+        });
+      }
+
+      const nextReset = resetAt || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      await db.update(users).set({
+        scriptUsageCount: usageCount + 1,
+        scriptUsageResetAt: nextReset,
+      }).where(eq(users.id, userId));
+
+      res.json({
+        allowed: true,
+        used: usageCount + 1,
+        limit: FREE_SCRIPT_LIMIT,
+        resetsAt: new Date(nextReset).toISOString(),
+        isPro: false,
+      });
+    } catch (e) {
+      console.error("Script usage increment error:", e);
+      res.status(500).json({ message: "Something went wrong" });
+    }
+  });
+
   // Clear voice cache on session start (call from client when starting new session)
   app.post("/api/tts/reset", (_req: Request, res: Response) => {
     voiceAssignmentCache.clear();

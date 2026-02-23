@@ -133,7 +133,13 @@ function AppContent() {
         <RoadmapPage onBack={handleBackToHome} onNavigate={handleNavigate} />
       )}
       {view === "signin" && (
-        <AuthPage onBack={handleBackToHome} onSignUp={() => setView("onboarding")} />
+        <AuthPage 
+          onBack={handleBackToHome} 
+          onSignUp={() => {
+            const hasPendingScript = !!sessionStorage.getItem("costar-pending-script");
+            setView(hasPendingScript ? "home" : "onboarding");
+          }}
+        />
       )}
       {view === "library" && (
         <LibraryPage onBack={handleBackToHome} onLoadScript={handleLoadScript} />
