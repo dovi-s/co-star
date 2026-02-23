@@ -673,7 +673,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     
     if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
-      const micDelay = speechRecognition.isMobileDevice ? 500 : 50;
+      const micDelay = speechRecognition.isMobileDevice ? 500 : 0;
       console.log("[Rehearsal] Mic delay:", micDelay, "ms, mobile:", speechRecognition.isMobileDevice, "iOS:", speechRecognition.isIOSPWA);
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
