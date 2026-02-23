@@ -483,8 +483,8 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
-                  <span className="text-foreground font-semibold">$9/mo</span> or <span className="text-foreground font-semibold">$69/year</span>
-                  <span className="text-green-600 ml-1">(save 36%)</span>
+                  <span className="text-foreground font-semibold">$9/mo</span> or <span className="text-foreground font-semibold">$79/year</span>
+                  <span className="text-green-600 ml-1">(save 27%)</span>
                 </p>
                 <div className="space-y-2">
                   {proTierFeatures.map((f) => (

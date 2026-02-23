@@ -67,7 +67,7 @@ const items: RoadmapItem[] = [
   { title: "Bookmarks", description: "Mark and return to specific lines during rehearsal.", icon: Bookmark, status: "live" },
   { title: "PWA Ready", description: "Install as an app on any device. Offline support with service worker.", icon: Smartphone, status: "live" },
   { title: "Dark and Light Mode", description: "System-aware theme with Liquid Glass design throughout.", icon: Globe, status: "live" },
-  { title: "Pro Subscription", description: "$9/mo or $69/yr for watermark-free recordings, saved scripts, and history.", icon: CreditCard, status: "in-progress" },
+  { title: "Pro Subscription", description: "$9/mo or $79/yr for watermark-free recordings, saved scripts, and history.", icon: CreditCard, status: "in-progress" },
   { title: "Scene Library", description: "Browse and rehearse from a curated collection of monologues and scenes.", icon: Library, status: "coming-soon" },
   { title: "Performance Analytics", description: "Track your accuracy, pace, and growth over time with detailed charts.", icon: TrendingUp, status: "coming-soon" },
   { title: "Services Directory", description: "Find acting coaches, readers, and industry professionals.", icon: Briefcase, status: "coming-soon" },

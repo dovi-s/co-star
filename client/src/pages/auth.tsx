@@ -525,7 +525,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
                 <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
                   Save your scripts, keep your history, record without watermarks.
                   <br />
-                  $9/mo or $69/yr.
+                  $9/mo or $79/yr.
                 </p>
               </div>
             </>

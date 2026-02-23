@@ -396,9 +396,9 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   onClick={() => {}}
                 >
                   <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                    Save 36%
+                    Save 27%
                   </span>
-                  <p className="text-lg font-semibold text-foreground">$69</p>
+                  <p className="text-lg font-semibold text-foreground">$79</p>
                   <p className="text-[11px] text-muted-foreground">per year</p>
                 </button>
               </div>
