@@ -29,9 +29,11 @@ interface ScriptImportProps {
   initialScript?: string;
   onAuthRequired?: () => void;
   onUpgradeRequired?: (resetsAt: string | null) => void;
+  autoSubmit?: boolean;
+  onAutoSubmitHandled?: () => void;
 }
 
-export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "", onAuthRequired, onUpgradeRequired }: ScriptImportProps) {
+export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "", onAuthRequired, onUpgradeRequired, autoSubmit, onAutoSubmitHandled }: ScriptImportProps) {
   const { isAuthenticated } = useAuth();
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
@@ -555,6 +557,14 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     console.log('[Submit] Client-side parsing for small script');
     onImport(sessionName, script);
   };
+
+  useEffect(() => {
+    if (autoSubmit && isAuthenticated && script.trim()) {
+      onAutoSubmitHandled?.();
+      const timer = setTimeout(() => handleSubmit(), 50);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSubmit, isAuthenticated, script]);
 
   const canSubmit = script.trim().length > 0 && !isLoading && !isGenerating && !isCleaning && !isSubmitting;
   

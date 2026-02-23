@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { trackFeature } from "@/hooks/use-analytics";
 import { ScriptImport } from "@/components/script-import";
 import { RoleSelector } from "@/components/role-selector";
@@ -9,6 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
+import { AuthModal } from "@/components/auth-modal";
 import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
@@ -116,6 +117,8 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   });
   const [upgradeResetsAt, setUpgradeResetsAt] = useState<string | null>(null);
   const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const recentNameOverride = useRef<string | null>(null);
 
   const handleSelectRecent = (script: RecentScript) => {
@@ -217,11 +220,13 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             error={error}
             onClearError={clearError}
             initialScript={prefillScript ?? lastRawScript}
-            onAuthRequired={() => onNavigate?.("signin")}
+            onAuthRequired={() => setShowAuthModal(true)}
             onUpgradeRequired={(resetsAt) => {
               setUpgradeResetsAt(resetsAt);
               setShowUpgradeDialog(true);
             }}
+            autoSubmit={pendingSubmit}
+            onAutoSubmitHandled={() => setPendingSubmit(false)}
           />
         </div>
 
@@ -242,6 +247,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
         </p>
       </footer>
+
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        onSuccess={() => setPendingSubmit(true)}
+      />
 
       <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
         <AlertDialogContent className="glass-surface-heavy rounded-xl max-w-[340px]" data-testid="dialog-upgrade">
