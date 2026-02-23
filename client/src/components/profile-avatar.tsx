@@ -1,5 +1,6 @@
 import { CircleUser } from "lucide-react";
 import { useProfile } from "@/context/profile-context";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 interface ProfileAvatarProps {
@@ -21,8 +22,9 @@ const iconSizeMap = {
 
 export function ProfileAvatar({ size = "sm", className }: ProfileAvatarProps) {
   const { profile } = useProfile();
+  const { isAuthenticated } = useAuth();
 
-  if (profile.photoUrl) {
+  if (isAuthenticated && profile.photoUrl) {
     return (
       <img
         src={profile.photoUrl}
