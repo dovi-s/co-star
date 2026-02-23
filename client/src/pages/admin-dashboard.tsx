@@ -568,15 +568,9 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                             <RotateCcw className="w-3.5 h-3.5 hidden group-hover:block text-amber-600" />
                           </button>
                         ) : (
-                          <button
-                            onClick={(e) => { e.stopPropagation(); resetOnboardingMutation.mutate(u.id); }}
-                            className="group flex items-center gap-1 hover:text-amber-600 transition-colors"
-                            title="Resend onboarding for this user"
-                            data-testid={`button-resend-onboarding-${u.id}`}
-                          >
-                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:hidden" />
-                            <RotateCcw className="w-3.5 h-3.5 hidden group-hover:block text-amber-600" />
-                          </button>
+                          <span title="Not yet onboarded">
+                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          </span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatTime(u.created_at)}</td>
@@ -663,12 +657,29 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
 }
 
 function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void }) {
+  const [grantAmount, setGrantAmount] = useState("5");
+
   const { data, isLoading } = useQuery<any>({
     queryKey: ["/api/admin/users", userId],
     queryFn: async () => {
       const res = await fetch(`/api/admin/users/${userId}`, { credentials: "include" });
       if (!res.ok) throw new Error(`${res.status}`);
       return res.json();
+    },
+  });
+
+  const planMutation = useMutation({
+    mutationFn: async (body: any) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/plan`, body);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update plan");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users", userId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
     },
   });
 
@@ -724,6 +735,106 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
               {u.unionStatus && <div className="text-xs"><span className="text-muted-foreground">Union:</span> {u.unionStatus}</div>}
             </div>
           )}
+        </Card>
+
+        <Card>
+          <SectionTitle>Plan and Usage Controls</SectionTitle>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Current Tier</p>
+                <span className={cn("text-xs font-medium px-2 py-1 rounded-full",
+                  u.subscriptionTier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                )}>{u.subscriptionTier || "free"}</span>
+              </div>
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Script Usage</p>
+                <span className="text-xs font-medium">{u.scriptUsageCount || 0} used</span>
+              </div>
+              {u.scriptUsageResetAt && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Usage Resets</p>
+                  <span className="text-xs text-muted-foreground">{formatTime(u.scriptUsageResetAt)}</span>
+                </div>
+              )}
+              {u.subscriptionExpiresAt && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Subscription Expires</p>
+                  <span className="text-xs text-muted-foreground">{formatTime(u.subscriptionExpiresAt)}</span>
+                </div>
+              )}
+              {u.stripeSubscriptionId && (
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Stripe Sub</p>
+                  <span className="text-xs font-mono text-muted-foreground">{u.stripeSubscriptionId.slice(0, 20)}...</span>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-border/30 pt-3 flex flex-wrap gap-2 items-end">
+              {u.subscriptionTier === "pro" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={planMutation.isPending}
+                  onClick={() => planMutation.mutate({ action: "change_tier", tier: "free" })}
+                  data-testid="button-downgrade-user"
+                >
+                  {planMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                  Downgrade to Free
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  disabled={planMutation.isPending}
+                  onClick={() => planMutation.mutate({ action: "change_tier", tier: "pro" })}
+                  data-testid="button-upgrade-user"
+                >
+                  {planMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Crown className="w-3.5 h-3.5 mr-1" />}
+                  Upgrade to Pro
+                </Button>
+              )}
+
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={planMutation.isPending || (u.scriptUsageCount || 0) === 0}
+                onClick={() => planMutation.mutate({ action: "reset_usage" })}
+                data-testid="button-reset-usage"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                Reset Usage Counter
+              </Button>
+
+              <div className="flex items-end gap-1">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-muted-foreground">Extra scripts</p>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    value={grantAmount}
+                    onChange={(e) => setGrantAmount(e.target.value)}
+                    className="w-16 px-2 py-1.5 text-xs rounded border border-border/50 bg-background"
+                    data-testid="input-grant-amount"
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={planMutation.isPending}
+                  onClick={() => planMutation.mutate({ action: "grant_usage", amount: Number(grantAmount) || 5 })}
+                  data-testid="button-grant-usage"
+                >
+                  Grant
+                </Button>
+              </div>
+            </div>
+
+            {planMutation.error && (
+              <p className="text-xs text-red-500">{(planMutation.error as Error).message}</p>
+            )}
+          </div>
         </Card>
 
         <div className="grid md:grid-cols-2 gap-4">

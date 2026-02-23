@@ -2355,6 +2355,44 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.post("/api/admin/users/:userId/plan", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { userId } = req.params;
+      const { action, tier } = req.body;
+
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const updates: any = { updatedAt: new Date() };
+
+      if (action === "change_tier") {
+        if (!["free", "pro"].includes(tier)) return res.status(400).json({ error: "Invalid tier" });
+        updates.subscriptionTier = tier;
+        if (tier === "free") {
+          updates.subscriptionExpiresAt = null;
+        }
+      } else if (action === "reset_usage") {
+        updates.scriptUsageCount = 0;
+        updates.scriptUsageResetAt = new Date();
+      } else if (action === "grant_usage") {
+        const { amount } = req.body;
+        const bonus = Math.max(0, Number(amount) || 0);
+        updates.scriptUsageCount = Math.max(0, (user.scriptUsageCount || 0) - bonus);
+      } else {
+        return res.status(400).json({ error: "Invalid action" });
+      }
+
+      await db.update(users).set(updates).where(eq(users.id, userId));
+      const [updated] = await db.select().from(users).where(eq(users.id, userId));
+      const { passwordHash, ...safeUser } = updated;
+      res.json({ ok: true, user: safeUser });
+    } catch (error: any) {
+      console.error("[Admin Plan] Error:", error.message);
+      res.status(500).json({ error: "Failed to update plan" });
+    }
+  });
+
   app.post("/api/admin/users/:userId/block", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
