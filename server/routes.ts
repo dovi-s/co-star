@@ -367,7 +367,7 @@ export async function registerRoutes(
   const FREE_DAILY_LIMIT = 5;
 
   function getDailyReset(fromDate: Date): Date {
-    return new Date(fromDate.getTime() + 24 * 60 * 60 * 1000);
+    return new Date(fromDate.getTime() + 12 * 60 * 60 * 1000);
   }
 
   app.get("/api/script-usage", async (req: Request, res: Response) => {
@@ -398,7 +398,7 @@ export async function registerRoutes(
           }).where(eq(users.id, userId));
           usageCount = 0;
           resetAt = null;
-        } else if (resetDate.getTime() - now.getTime() > 25 * 60 * 60 * 1000) {
+        } else if (resetDate.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
           await db.update(users).set({
             scriptUsageCount: 0,
             scriptUsageResetAt: null,
@@ -449,7 +449,7 @@ export async function registerRoutes(
 
       if (resetAt) {
         const resetDate = new Date(resetAt);
-        if (now >= resetDate || resetDate.getTime() - now.getTime() > 25 * 60 * 60 * 1000) {
+        if (now >= resetDate || resetDate.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
           usageCount = 0;
           resetAt = null;
         }
