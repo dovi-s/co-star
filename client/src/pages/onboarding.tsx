@@ -370,7 +370,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                 </div>
                 <div className="space-y-2">
                   {[
-                    "3 script rehearsals per month",
+                    "5 rehearsals per day",
                     "All voice presets",
                     "Performance feedback",
                     "Multiplayer table reads",

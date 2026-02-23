@@ -8,7 +8,6 @@ import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from "@/components/ui/alert-dialog";
 import { AuthModal } from "@/components/auth-modal";
 import { Users, Repeat, Clock, Volume2 } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
@@ -115,8 +114,9 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
     }
     return undefined;
   });
-  const [upgradeResetsAt, setUpgradeResetsAt] = useState<string | null>(null);
-  const [showUpgradeDialog, setShowUpgradeDialog] = useState(false);
+  const [dailyLimitResetsAt, setDailyLimitResetsAt] = useState<string | null>(null);
+  const [isLimitReached, setIsLimitReached] = useState(false);
+  const [showLimitBanner, setShowLimitBanner] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const recentNameOverride = useRef<string | null>(null);
@@ -222,9 +222,14 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             initialScript={prefillScript ?? lastRawScript}
             onAuthRequired={() => setShowAuthModal(true)}
             onUpgradeRequired={(resetsAt) => {
-              setUpgradeResetsAt(resetsAt);
-              setShowUpgradeDialog(true);
+              setDailyLimitResetsAt(resetsAt);
+              setIsLimitReached(true);
+              setShowLimitBanner(true);
             }}
+            dailyLimitResetsAt={showLimitBanner ? dailyLimitResetsAt : null}
+            isLimitReached={isLimitReached}
+            onDismissLimit={() => setShowLimitBanner(false)}
+            onUpgradeClick={() => onNavigate?.("subscription")}
             autoSubmit={pendingSubmit}
             onAutoSubmitHandled={() => setPendingSubmit(false)}
           />
@@ -254,31 +259,6 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         onSuccess={() => setPendingSubmit(true)}
       />
 
-      <AlertDialog open={showUpgradeDialog} onOpenChange={setShowUpgradeDialog}>
-        <AlertDialogContent className="glass-surface-heavy rounded-xl max-w-[340px]" data-testid="dialog-upgrade">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-base font-semibold">Monthly limit reached</AlertDialogTitle>
-            <AlertDialogDescription className="text-sm text-muted-foreground">
-              Free accounts can continue with 3 scripts per month.
-              {upgradeResetsAt && (
-                <span className="block mt-1.5 text-xs">
-                  Your limit resets on {new Date(upgradeResetsAt).toLocaleDateString("en-US", { month: "long", day: "numeric" })}.
-                </span>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2">
-            <AlertDialogCancel className="rounded-lg" data-testid="button-upgrade-dismiss">Not now</AlertDialogCancel>
-            <AlertDialogAction
-              className="rounded-lg bg-primary text-primary-foreground"
-              data-testid="button-upgrade-pro"
-              onClick={() => onNavigate?.("subscription")}
-            >
-              Upgrade to Pro
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

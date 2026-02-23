@@ -364,7 +364,11 @@ export async function registerRoutes(
     res.json({ status: "ok", app: "co-star" });
   });
 
-  const FREE_SCRIPT_LIMIT = 3;
+  const FREE_DAILY_LIMIT = 5;
+
+  function getDailyReset(fromDate: Date): Date {
+    return new Date(fromDate.getTime() + 24 * 60 * 60 * 1000);
+  }
 
   app.get("/api/script-usage", async (req: Request, res: Response) => {
     const userId = (req.session as any)?.userId;
@@ -383,22 +387,33 @@ export async function registerRoutes(
       let usageCount = user.scriptUsageCount ?? 0;
       let resetAt = user.scriptUsageResetAt;
 
-      if (!resetAt || now >= new Date(resetAt)) {
-        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        await db.update(users).set({
-          scriptUsageCount: 0,
-          scriptUsageResetAt: nextReset,
-        }).where(eq(users.id, userId));
-        usageCount = 0;
-        resetAt = nextReset;
+      if (resetAt) {
+        const resetDate = new Date(resetAt);
+        if (now >= resetDate) {
+          await db.update(users).set({
+            scriptUsageCount: 0,
+            scriptUsageResetAt: null,
+          }).where(eq(users.id, userId));
+          usageCount = 0;
+          resetAt = null;
+        } else if (resetDate.getTime() - now.getTime() > 25 * 60 * 60 * 1000) {
+          await db.update(users).set({
+            scriptUsageCount: 0,
+            scriptUsageResetAt: null,
+          }).where(eq(users.id, userId));
+          usageCount = 0;
+          resetAt = null;
+        }
       }
 
       const isPro = user.subscriptionTier === "pro";
+      const limitReached = !isPro && usageCount >= FREE_DAILY_LIMIT;
       res.json({
         used: usageCount,
-        limit: isPro ? null : FREE_SCRIPT_LIMIT,
+        limit: isPro ? null : FREE_DAILY_LIMIT,
         resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
         isPro,
+        limitReached,
       });
     } catch (e) {
       console.error("Script usage check error:", e);
@@ -427,23 +442,25 @@ export async function registerRoutes(
       let usageCount = user.scriptUsageCount ?? 0;
       let resetAt = user.scriptUsageResetAt;
 
-      if (!resetAt || now >= new Date(resetAt)) {
-        const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-        usageCount = 0;
-        resetAt = nextReset;
+      if (resetAt) {
+        const resetDate = new Date(resetAt);
+        if (now >= resetDate || resetDate.getTime() - now.getTime() > 25 * 60 * 60 * 1000) {
+          usageCount = 0;
+          resetAt = null;
+        }
       }
 
-      if (usageCount >= FREE_SCRIPT_LIMIT) {
+      if (usageCount >= FREE_DAILY_LIMIT) {
         return res.json({
           allowed: false,
           used: usageCount,
-          limit: FREE_SCRIPT_LIMIT,
+          limit: FREE_DAILY_LIMIT,
           resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
           isPro: false,
         });
       }
 
-      const nextReset = resetAt || new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      const nextReset = resetAt || getDailyReset(now);
       await db.update(users).set({
         scriptUsageCount: usageCount + 1,
         scriptUsageResetAt: nextReset,
@@ -452,7 +469,7 @@ export async function registerRoutes(
       res.json({
         allowed: true,
         used: usageCount + 1,
-        limit: FREE_SCRIPT_LIMIT,
+        limit: FREE_DAILY_LIMIT,
         resetsAt: new Date(nextReset).toISOString(),
         isPro: false,
       });

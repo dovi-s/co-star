@@ -287,7 +287,7 @@ function SupportIcon({ value }: { value: Support }) {
 }
 
 const freeTierFeatures = [
-  "3 script rehearsals per month",
+  "5 rehearsals per day",
   "All voice presets",
   "Performance feedback",
   "Multiplayer table reads",

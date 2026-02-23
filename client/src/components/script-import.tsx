@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock, Cloud, Camera } from "lucide-react";
+import { Upload, Clipboard, X, Loader2, Check, HelpCircle, Lock, Cloud, Camera, Clock, ArrowUpRight } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,11 +29,15 @@ interface ScriptImportProps {
   initialScript?: string;
   onAuthRequired?: () => void;
   onUpgradeRequired?: (resetsAt: string | null) => void;
+  dailyLimitResetsAt?: string | null;
+  isLimitReached?: boolean;
+  onDismissLimit?: () => void;
+  onUpgradeClick?: () => void;
   autoSubmit?: boolean;
   onAutoSubmitHandled?: () => void;
 }
 
-export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "", onAuthRequired, onUpgradeRequired, autoSubmit, onAutoSubmitHandled }: ScriptImportProps) {
+export function ScriptImport({ onImport, onImportParsed, isLoading, error, onClearError, initialScript = "", onAuthRequired, onUpgradeRequired, dailyLimitResetsAt, isLimitReached, onDismissLimit, onUpgradeClick, autoSubmit, onAutoSubmitHandled }: ScriptImportProps) {
   const { isAuthenticated } = useAuth();
   const [script, setScript] = useState(initialScript);
   const [isDragging, setIsDragging] = useState(false);
@@ -1018,9 +1022,46 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         )}
       </div>
 
+      {dailyLimitResetsAt && (
+        <div
+          className="flex items-start gap-3 rounded-lg border border-border/60 bg-muted/50 px-4 py-3 text-sm"
+          data-testid="banner-daily-limit"
+        >
+          <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="font-medium text-foreground">You've reached your daily limit</p>
+            <p className="text-muted-foreground text-xs mt-0.5">
+              Your limit resets {new Date(dailyLimitResetsAt).toLocaleString("en-US", {
+                month: "short",
+                day: "numeric",
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              })}. Upgrade anytime for unlimited rehearsals.
+            </p>
+          </div>
+          <Button
+            variant="default"
+            size="sm"
+            className="shrink-0 text-xs h-7 px-3 rounded-md"
+            onClick={onUpgradeClick}
+            data-testid="button-upgrade-inline"
+          >
+            Upgrade
+          </Button>
+          <button
+            onClick={onDismissLimit}
+            className="text-muted-foreground hover:text-foreground shrink-0 mt-0.5"
+            data-testid="button-dismiss-limit"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
       <Button
         onClick={handleSubmit}
-        disabled={!canSubmit}
+        disabled={!canSubmit || !!isLimitReached}
         size="lg"
         className="w-full"
         data-testid="button-choose-role"
