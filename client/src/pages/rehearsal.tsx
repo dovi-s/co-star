@@ -307,7 +307,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const match = matchWords(line.text, result.transcript);
       currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
       
-      if (match.percentMatched >= 80 && !matchReachedRef.current) {
+      const expectedWordCount = line.text.split(/\s+/).filter((w: string) => w.length > 0).length;
+      const spokenWordCount = result.transcript.split(/\s+/).filter((w: string) => w.length > 0).length;
+      
+      const lineEndsInterrupted = /[-\u2014\u2013]{1,3}\s*$/.test(line.text.trim());
+      const matchThreshold = lineEndsInterrupted ? 65 : 80;
+      const spokenRatioRequired = lineEndsInterrupted ? 0.45 : 0.60;
+      
+      const spokenEnough = expectedWordCount <= 4 || (spokenWordCount / expectedWordCount) >= spokenRatioRequired;
+      
+      if (match.percentMatched >= matchThreshold && spokenEnough && !matchReachedRef.current) {
         if (matchGraceTimeoutRef.current) {
           clearTimeout(matchGraceTimeoutRef.current);
         }
@@ -327,12 +336,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         
         if (result.isFinal) {
           matchReachedRef.current = true;
-          const graceMs = match.percentMatched >= 95 ? 40 : 100;
+          const graceMs = match.percentMatched >= 95 ? 80 : 200;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current) doAdvance();
           }, graceMs);
         } else {
-          const interimGraceMs = match.percentMatched >= 95 ? 150 : 300;
+          const interimGraceMs = match.percentMatched >= 95 ? 350 : 600;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;

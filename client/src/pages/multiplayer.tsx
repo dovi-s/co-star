@@ -1127,9 +1127,15 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
         // Track best accuracy for this line
         currentLineAccuracyRef.current = Math.max(currentLineAccuracyRef.current, match.percentMatched);
         
-        // Auto-advance when user has matched 80%+ of the words (like solo mode)
-        if (match.percentMatched >= 80) {
-          console.log("[Multiplayer] 80%+ match, advancing now!");
+        const expectedWordCount = line.text.split(/\s+/).filter((w: string) => w.length > 0).length;
+        const spokenWordCount = result.transcript.split(/\s+/).filter((w: string) => w.length > 0).length;
+        const lineEndsInterrupted = /[-\u2014\u2013]{1,3}\s*$/.test(line.text.trim());
+        const matchThreshold = lineEndsInterrupted ? 65 : 80;
+        const spokenRatioRequired = lineEndsInterrupted ? 0.45 : 0.60;
+        const spokenEnough = expectedWordCount <= 4 || (spokenWordCount / expectedWordCount) >= spokenRatioRequired;
+        
+        if (match.percentMatched >= matchThreshold && spokenEnough) {
+          console.log("[Multiplayer] Match threshold met, advancing!");
           speechRecognition.stop();
           waitingForUserRef.current = false;
           
@@ -1142,12 +1148,12 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             autoAdvanceTimeoutRef.current = null;
           }
           
-          // Quick pause then advance (150ms for snappy response like solo)
+          const graceMs = match.percentMatched >= 95 ? 100 : 250;
           autoAdvanceTimeoutRef.current = setTimeout(() => {
             if (isActivelyRehearsalRef.current) {
               advanceAfterUserLine();
             }
-          }, 150);
+          }, graceMs);
           return;
         }
       }
@@ -1157,7 +1163,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
       // The recognition will restart automatically via handleEnd and we'll keep listening
       if (result.isFinal && waitingForUserRef.current && isActivelyRehearsalRef.current && line) {
         const match = matchWords(line.text, result.transcript);
-        console.log("[Multiplayer] Final result with", Math.round(match.percentMatched), "% match - ignoring, waiting for 80%+");
+        console.log("[Multiplayer] Final result with", Math.round(match.percentMatched), "% match - continuing to listen");
         // Don't advance, don't stop - let speech recognition restart and continue listening
         // The handleEnd callback will restart listening if still waiting
       }
