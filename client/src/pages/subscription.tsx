@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -60,10 +60,11 @@ const freeFeatures = [
   "Keyboard shortcuts",
 ];
 
-export function SubscriptionPage({ onBack }: { onBack: () => void }) {
+export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => void; checkoutSuccess?: boolean }) {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [billingPeriod, setBillingPeriod] = useState<"month" | "year">("month");
+  const [shownSuccess, setShownSuccess] = useState(false);
 
   const { data: subData, isLoading: subLoading } = useQuery<SubscriptionData>({
     queryKey: ["/api/stripe/subscription"],
@@ -73,6 +74,13 @@ export function SubscriptionPage({ onBack }: { onBack: () => void }) {
     },
     enabled: isAuthenticated,
   });
+
+  useEffect(() => {
+    if (checkoutSuccess && !shownSuccess && subData?.tier === "pro") {
+      setShownSuccess(true);
+      toast({ title: "Welcome to Co-star Pro", description: "Your subscription is active. Enjoy unlimited rehearsals." });
+    }
+  }, [checkoutSuccess, shownSuccess, subData, toast]);
 
   const { data: productsData, isLoading: productsLoading } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ["/api/stripe/products"],
@@ -293,8 +301,9 @@ function ActiveSubscription({
   onManage: () => void;
   isManaging: boolean;
 }) {
-  const periodEnd = subscription.currentPeriodEnd
-    ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
+  const rawEnd = subscription.currentPeriodEnd;
+  const periodEnd = rawEnd
+    ? new Date(typeof rawEnd === "number" && rawEnd < 1e12 ? rawEnd * 1000 : rawEnd).toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",

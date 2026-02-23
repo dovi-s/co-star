@@ -33,12 +33,18 @@ function AppContent() {
   const { session, createSessionFromParsed, setUserRole } = useSessionContext();
   const { syncFromServer } = useProfile();
   const { user } = useAuth();
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [view, setView] = useState<View>(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("reset-token")) {
       return "signin";
     }
-    if (params.get("checkout") === "success" || params.get("view") === "subscription") {
+    if (params.get("checkout") === "success") {
+      window.history.replaceState({}, "", "/");
+      setCheckoutSuccess(true);
+      return "subscription";
+    }
+    if (params.get("view") === "subscription") {
       window.history.replaceState({}, "", "/");
       return "subscription";
     }
@@ -157,7 +163,7 @@ function AppContent() {
         <ActorProfilePage onBack={handleBackToHome} />
       )}
       {view === "subscription" && (
-        <SubscriptionPage onBack={handleBackToHome} />
+        <SubscriptionPage onBack={handleBackToHome} checkoutSuccess={checkoutSuccess} />
       )}
       {view === "admin" && (
         <AdminDashboard onBack={handleBackToHome} />
