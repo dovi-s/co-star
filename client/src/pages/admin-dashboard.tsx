@@ -39,6 +39,7 @@ import {
   TrendingDown,
   Target,
   Layers,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -341,6 +342,16 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const [tierFilter, setTierFilter] = useState<string>("");
   const [page, setPage] = useState(1);
 
+  const resetOnboardingMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/reset-onboarding`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    },
+  });
+
   const { data: usersData, isLoading } = useQuery<{ users: any[]; total: number }>({
     queryKey: ["/api/admin/users", { search, tier: tierFilter, page }],
     queryFn: async () => {
@@ -421,7 +432,21 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                           u.subscription_tier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                         )}>{u.subscription_tier || "free"}</span>
                       </td>
-                      <td className="px-4 py-2.5 text-xs">{u.onboarding_complete === "true" ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />}</td>
+                      <td className="px-4 py-2.5 text-xs">
+                        {u.onboarding_complete === "true" ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); resetOnboardingMutation.mutate(u.id); }}
+                            className="group flex items-center gap-1 hover:text-amber-600 transition-colors"
+                            title="Reset onboarding for this user"
+                            data-testid={`button-reset-onboarding-${u.id}`}
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-green-500 group-hover:hidden" />
+                            <RotateCcw className="w-3.5 h-3.5 hidden group-hover:block text-amber-600" />
+                          </button>
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />
+                        )}
+                      </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{u.location || "-"}</td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatTime(u.created_at)}</td>
                       <td className="px-4 py-2.5"><ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /></td>

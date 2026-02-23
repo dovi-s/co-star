@@ -2344,6 +2344,17 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.post("/api/admin/users/:userId/reset-onboarding", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { userId } = req.params;
+      await db.update(users).set({ onboardingComplete: "false", updatedAt: new Date() }).where(eq(users.id, userId));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to reset onboarding" });
+    }
+  });
+
   app.get("/api/admin/stripe", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
