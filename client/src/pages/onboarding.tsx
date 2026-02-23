@@ -13,11 +13,6 @@ import {
   Camera,
   Check,
   Crown,
-  Loader2,
-  Sparkles,
-  Library,
-  Video,
-  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -356,76 +351,88 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
 
         {step === 3 && (
           <div className="flex-1 flex flex-col animate-fade-in-up">
-            <div className="flex-1 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-                <Crown className="h-8 w-8 text-primary" />
-              </div>
-              <h1 className="text-2xl font-semibold text-foreground tracking-tight">
-                Upgrade to Pro
-              </h1>
-              <p className="text-sm text-muted-foreground mt-2 max-w-[280px]">
-                Get more out of every rehearsal.
-              </p>
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              Choose your plan
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1 mb-6">
+              You can upgrade anytime from settings.
+            </p>
 
-              <div className="w-full mt-8 space-y-3 text-left max-w-sm">
-                {[
-                  { icon: Library, text: "Save scripts to your library" },
-                  { icon: Video, text: "Record without watermark" },
-                  { icon: BarChart3, text: "Track your accuracy over time" },
-                  { icon: Sparkles, text: "Priority access to new features" },
-                ].map((b) => (
-                  <div key={b.text} className="flex items-center gap-3 px-4 py-3 rounded-md glass-surface">
-                    <b.icon className="h-4 w-4 text-primary shrink-0" />
-                    <span className="text-sm text-foreground">{b.text}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-3 w-full max-w-sm mt-8">
-                <button
-                  className="flex-1 rounded-md border border-primary/30 bg-primary/5 p-4 text-center transition-colors hover:bg-primary/10"
-                  data-testid="button-plan-monthly"
-                  onClick={() => {}}
-                >
-                  <p className="text-lg font-semibold text-foreground">$9</p>
-                  <p className="text-[11px] text-muted-foreground">per month</p>
-                </button>
-                <button
-                  className="flex-1 rounded-md border-2 border-primary bg-primary/10 p-4 text-center relative transition-colors hover:bg-primary/15"
-                  data-testid="button-plan-yearly"
-                  onClick={() => {}}
-                >
-                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
-                    Save 27%
-                  </span>
-                  <p className="text-lg font-semibold text-foreground">$79</p>
-                  <p className="text-[11px] text-muted-foreground">per year</p>
-                </button>
-              </div>
-
-              <p className="text-[10px] text-muted-foreground/50 mt-3">
-                Payment coming soon. You will not be charged.
-              </p>
-            </div>
-
-            <div className="space-y-2 mt-6">
-              <Button
-                className="w-full h-11"
-                disabled
-                data-testid="button-subscribe"
-              >
-                <Loader2 className="h-4 w-4 mr-2 animate-spin hidden" />
-                <Crown className="h-4 w-4 mr-2" />
-                Coming soon
-              </Button>
+            <div className="flex-1 space-y-3">
               <button
                 onClick={finishOnboarding}
-                className="w-full text-center text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
-                data-testid="button-maybe-later"
+                className="w-full rounded-lg border border-border p-4 text-left transition-colors hover:border-foreground/20 hover:bg-muted/30"
+                data-testid="button-plan-free"
               >
-                Maybe later
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-base font-semibold text-foreground">Free</span>
+                  <span className="text-sm text-muted-foreground">$0</span>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    "3 script rehearsals per month",
+                    "All voice presets",
+                    "Basic performance feedback",
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-xs text-muted-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
               </button>
+
+              <div className="relative w-full rounded-lg border-2 border-primary p-4 text-left">
+                <span className="absolute -top-2.5 left-4 text-[10px] font-semibold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">
+                  Recommended
+                </span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Crown className="h-4 w-4 text-primary" />
+                    <span className="text-base font-semibold text-foreground">Co-star Pro</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm font-semibold text-foreground">$9</span>
+                    <span className="text-xs text-muted-foreground">/mo</span>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {[
+                    "Unlimited script rehearsals",
+                    "Save scripts to your library",
+                    "Record without watermark",
+                    "Track your accuracy over time",
+                    "Priority access to new features",
+                  ].map((f) => (
+                    <div key={f} className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-xs text-foreground">{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button
+                  className="w-full h-10"
+                  disabled
+                  data-testid="button-subscribe"
+                >
+                  <Crown className="h-4 w-4 mr-2" />
+                  Coming soon
+                </Button>
+                <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
+                  You will not be charged yet.
+                </p>
+              </div>
             </div>
+
+            <Button
+              variant="outline"
+              onClick={finishOnboarding}
+              className="w-full h-11 mt-4"
+              data-testid="button-continue-free"
+            >
+              Continue with Free
+              <ChevronRight className="h-4 w-4 ml-1" />
+            </Button>
           </div>
         )}
       </main>
