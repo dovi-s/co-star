@@ -749,7 +749,11 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Script Usage</p>
-                <span className="text-xs font-medium">{u.scriptUsageCount || 0} used</span>
+                <span className="text-xs font-medium">
+                  {u.subscriptionTier === "pro"
+                    ? "unlimited"
+                    : `${u.scriptUsageCount || 0} / ${5 + (u.scriptUsageLimitBonus || 0)}`}
+                </span>
               </div>
               {u.scriptUsageResetAt && (
                 <div className="space-y-1">
@@ -808,7 +812,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
 
               <div className="flex items-end gap-1">
                 <div className="space-y-1">
-                  <p className="text-[10px] text-muted-foreground">Extra scripts</p>
+                  <p className="text-[10px] text-muted-foreground">Raise limit by</p>
                   <input
                     type="number"
                     min="1"

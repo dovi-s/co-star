@@ -378,6 +378,7 @@ export async function registerRoutes(
     try {
       const [user] = await db.select({
         scriptUsageCount: users.scriptUsageCount,
+        scriptUsageLimitBonus: users.scriptUsageLimitBonus,
         scriptUsageResetAt: users.scriptUsageResetAt,
         subscriptionTier: users.subscriptionTier,
       }).from(users).where(eq(users.id, userId));
@@ -386,6 +387,7 @@ export async function registerRoutes(
       const now = new Date();
       let usageCount = user.scriptUsageCount ?? 0;
       let resetAt = user.scriptUsageResetAt;
+      const bonus = user.scriptUsageLimitBonus ?? 0;
 
       if (resetAt) {
         const resetDate = new Date(resetAt);
@@ -407,10 +409,11 @@ export async function registerRoutes(
       }
 
       const isPro = user.subscriptionTier === "pro";
-      const limitReached = !isPro && usageCount >= FREE_DAILY_LIMIT;
+      const effectiveLimit = FREE_DAILY_LIMIT + bonus;
+      const limitReached = !isPro && usageCount >= effectiveLimit;
       res.json({
         used: usageCount,
-        limit: isPro ? null : FREE_DAILY_LIMIT,
+        limit: isPro ? null : effectiveLimit,
         resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
         isPro,
         limitReached,
@@ -429,6 +432,7 @@ export async function registerRoutes(
     try {
       const [user] = await db.select({
         scriptUsageCount: users.scriptUsageCount,
+        scriptUsageLimitBonus: users.scriptUsageLimitBonus,
         scriptUsageResetAt: users.scriptUsageResetAt,
         subscriptionTier: users.subscriptionTier,
       }).from(users).where(eq(users.id, userId));
@@ -441,6 +445,7 @@ export async function registerRoutes(
       const now = new Date();
       let usageCount = user.scriptUsageCount ?? 0;
       let resetAt = user.scriptUsageResetAt;
+      const bonus = user.scriptUsageLimitBonus ?? 0;
 
       if (resetAt) {
         const resetDate = new Date(resetAt);
@@ -450,11 +455,12 @@ export async function registerRoutes(
         }
       }
 
-      if (usageCount >= FREE_DAILY_LIMIT) {
+      const effectiveLimit = FREE_DAILY_LIMIT + bonus;
+      if (usageCount >= effectiveLimit) {
         return res.json({
           allowed: false,
           used: usageCount,
-          limit: FREE_DAILY_LIMIT,
+          limit: effectiveLimit,
           resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
           isPro: false,
         });
@@ -469,7 +475,7 @@ export async function registerRoutes(
       res.json({
         allowed: true,
         used: usageCount + 1,
-        limit: FREE_DAILY_LIMIT,
+        limit: effectiveLimit,
         resetsAt: new Date(nextReset).toISOString(),
         isPro: false,
       });
@@ -2374,11 +2380,12 @@ MARY: You're kidding me.`;
         }
       } else if (action === "reset_usage") {
         updates.scriptUsageCount = 0;
-        updates.scriptUsageResetAt = new Date();
+        updates.scriptUsageLimitBonus = 0;
+        updates.scriptUsageResetAt = null;
       } else if (action === "grant_usage") {
         const { amount } = req.body;
-        const bonus = Math.max(0, Number(amount) || 0);
-        updates.scriptUsageCount = Math.max(0, (user.scriptUsageCount || 0) - bonus);
+        const extra = Math.max(0, Math.min(100, Number(amount) || 0));
+        updates.scriptUsageLimitBonus = (user.scriptUsageLimitBonus || 0) + extra;
       } else {
         return res.status(400).json({ error: "Invalid action" });
       }
