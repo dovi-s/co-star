@@ -568,7 +568,15 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                             <RotateCcw className="w-3.5 h-3.5 hidden group-hover:block text-amber-600" />
                           </button>
                         ) : (
-                          <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); resetOnboardingMutation.mutate(u.id); }}
+                            className="group flex items-center gap-1 hover:text-amber-600 transition-colors"
+                            title="Resend onboarding for this user"
+                            data-testid={`button-resend-onboarding-${u.id}`}
+                          >
+                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:hidden" />
+                            <RotateCcw className="w-3.5 h-3.5 hidden group-hover:block text-amber-600" />
+                          </button>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatTime(u.created_at)}</td>
