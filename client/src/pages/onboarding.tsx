@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useProfile, compressPhoto } from "@/context/profile-context";
 import {
@@ -13,8 +13,10 @@ import {
   Camera,
   Check,
   Crown,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const eyeColorOptions = ["Brown", "Blue", "Green", "Hazel", "Gray", "Amber"];
 const hairColorOptions = ["Black", "Brown", "Blonde", "Red", "Auburn", "Gray", "White", "Other"];
@@ -78,6 +80,36 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const [location, setLocation] = useState("");
   const [unionStatus, setUnionStatus] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<"month" | "year">("year");
+  const { toast } = useToast();
+
+  const { data: productsData } = useQuery<{ products: { id: string; name: string; metadata: Record<string, string>; prices: { id: string; unit_amount: number; currency: string; recurring: { interval: string } }[] }[] }>({
+    queryKey: ["/api/stripe/products"],
+    queryFn: async () => {
+      const res = await fetch("/api/stripe/products");
+      return res.json();
+    },
+  });
+
+  const proProduct = productsData?.products?.find(
+    (p) => p.metadata?.tier === "pro" || p.name.toLowerCase().includes("pro")
+  );
+  const monthlyPrice = proProduct?.prices.find((p) => p.recurring?.interval === "month");
+  const yearlyPrice = proProduct?.prices.find((p) => p.recurring?.interval === "year");
+  const selectedPrice = billingPeriod === "month" ? monthlyPrice : yearlyPrice;
+
+  const checkoutMutation = useMutation({
+    mutationFn: async (priceId: string) => {
+      const res = await apiRequest("POST", "/api/stripe/checkout", { priceId });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    },
+    onError: (error: Error) => {
+      toast({ title: "Could not start checkout", description: error.message, variant: "destructive" });
+    },
+  });
 
   const saveMutation = useMutation({
     mutationFn: async (data: Record<string, string>) => {
@@ -409,28 +441,59 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   ))}
                 </div>
                 <div className="flex gap-2 mb-3">
-                  <div className="flex-1 rounded-md border border-border/50 p-2.5 text-center">
-                    <p className="text-sm font-semibold text-foreground">$9</p>
+                  <button
+                    onClick={() => setBillingPeriod("month")}
+                    className={cn(
+                      "flex-1 rounded-md border p-2.5 text-center transition-colors",
+                      billingPeriod === "month"
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-border/50 hover:border-border"
+                    )}
+                    data-testid="button-onboarding-monthly"
+                  >
+                    <p className="text-sm font-semibold text-foreground">
+                      ${monthlyPrice ? monthlyPrice.unit_amount / 100 : 9}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">per month</p>
-                  </div>
-                  <div className="flex-1 rounded-md border border-primary/30 bg-primary/5 p-2.5 text-center relative">
+                  </button>
+                  <button
+                    onClick={() => setBillingPeriod("year")}
+                    className={cn(
+                      "flex-1 rounded-md border p-2.5 text-center relative transition-colors",
+                      billingPeriod === "year"
+                        ? "border-primary/30 bg-primary/5"
+                        : "border-border/50 hover:border-border"
+                    )}
+                    data-testid="button-onboarding-annual"
+                  >
                     <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-semibold bg-primary text-primary-foreground px-1.5 py-0.5 rounded-full">
                       Save 27%
                     </span>
-                    <p className="text-sm font-semibold text-foreground">$79</p>
+                    <p className="text-sm font-semibold text-foreground">
+                      ${yearlyPrice ? yearlyPrice.unit_amount / 100 : 79}
+                    </p>
                     <p className="text-[10px] text-muted-foreground">per year</p>
-                  </div>
+                  </button>
                 </div>
                 <Button
                   className="w-full h-10"
-                  disabled
+                  onClick={() => {
+                    if (selectedPrice) {
+                      checkoutMutation.mutate(selectedPrice.id);
+                    }
+                  }}
+                  disabled={checkoutMutation.isPending || !selectedPrice}
                   data-testid="button-subscribe"
                 >
-                  <Crown className="h-4 w-4 mr-2" />
-                  Coming soon
+                  {checkoutMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : (
+                    <Crown className="h-4 w-4 mr-2" />
+                  )}
+                  Subscribe to Pro
                 </Button>
                 <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
-                  You will not be charged yet.
+                  Cancel anytime from settings.
                 </p>
               </div>
             </div>
