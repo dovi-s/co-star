@@ -4,6 +4,8 @@ import { nanoid } from "nanoid";
 import type { Room, Participant, RoomUpdate, Role, Scene } from "@shared/schema";
 import { roomEventSchema, rtcOfferSchema, rtcAnswerSchema, rtcIceCandidateSchema } from "@shared/schema";
 
+const MAX_PARTICIPANTS_PER_ROOM = 12;
+
 const rooms = new Map<string, Room>();
 const socketToRoom = new Map<string, { roomId: string; participantId: string }>();
 
@@ -81,6 +83,12 @@ function handleJoinRoom(
 
   if (room.state !== "lobby") {
     const error: RoomUpdate = { type: "room_error", message: "Rehearsal already in progress" };
+    socket.emit("room_update", error);
+    return;
+  }
+
+  if (room.participants.length >= MAX_PARTICIPANTS_PER_ROOM) {
+    const error: RoomUpdate = { type: "room_error", message: `Room is full (max ${MAX_PARTICIPANTS_PER_ROOM} participants)` };
     socket.emit("room_update", error);
     return;
   }

@@ -9,6 +9,36 @@ import { eq, and, gt } from "drizzle-orm";
 import { sendPasswordResetEmail } from "../email/resend";
 import { OAuth2Client } from "google-auth-library";
 
+const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
+
+function rateLimit(windowMs: number, maxRequests: number): RequestHandler {
+  return (req, res, next) => {
+    const ip = req.ip || req.socket.remoteAddress || "unknown";
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    const entry = rateLimitStore.get(key);
+
+    if (!entry || now > entry.resetAt) {
+      rateLimitStore.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    if (entry.count >= maxRequests) {
+      return res.status(429).json({ message: "Too many requests. Please try again later." });
+    }
+
+    entry.count++;
+    return next();
+  };
+}
+
+setInterval(() => {
+  const now = Date.now();
+  rateLimitStore.forEach((entry, key) => {
+    if (now > entry.resetAt) rateLimitStore.delete(key);
+  });
+}, 60 * 1000);
+
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
@@ -36,7 +66,10 @@ export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
 
-  app.post("/api/register", async (req, res) => {
+  const authLimiter = rateLimit(15 * 60 * 1000, 10);
+  const forgotLimiter = rateLimit(15 * 60 * 1000, 5);
+
+  app.post("/api/register", authLimiter, async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;
 
@@ -79,7 +112,7 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/login", async (req, res) => {
+  app.post("/api/login", authLimiter, async (req, res) => {
     try {
       const { email, password } = req.body;
 
@@ -123,7 +156,7 @@ export async function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/forgot-password", async (req, res) => {
+  app.post("/api/forgot-password", forgotLimiter, async (req, res) => {
     try {
       const { email } = req.body;
       if (!email) {
@@ -158,7 +191,7 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/reset-password", async (req, res) => {
+  app.post("/api/reset-password", authLimiter, async (req, res) => {
     try {
       const { token, password } = req.body;
       if (!token || !password) {
@@ -203,7 +236,7 @@ export async function setupAuth(app: Express) {
     }
   });
 
-  app.post("/api/auth/google", async (req, res) => {
+  app.post("/api/auth/google", authLimiter, async (req, res) => {
     try {
       const { credential } = req.body;
       if (!credential) {
