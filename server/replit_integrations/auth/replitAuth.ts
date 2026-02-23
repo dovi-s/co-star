@@ -125,6 +125,10 @@ export async function setupAuth(app: Express) {
         return res.status(401).json({ message: "Invalid email or password" });
       }
 
+      if (user.blocked === "true") {
+        return res.status(403).json({ message: "This account has been suspended" });
+      }
+
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
         return res.status(401).json({ message: "Invalid email or password" });
@@ -293,6 +297,10 @@ export async function setupAuth(app: Express) {
           .returning();
       }
 
+      if (user.blocked === "true") {
+        return res.status(403).json({ message: "This account has been suspended" });
+      }
+
       req.session.regenerate((err) => {
         if (err) {
           console.error("Session regenerate error:", err);
@@ -325,6 +333,12 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
 
   if (!session.userId || !session.claims?.sub) {
     return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const [user] = await db.select({ blocked: users.blocked }).from(users).where(eq(users.id, session.userId));
+  if (user?.blocked === "true") {
+    req.session.destroy(() => {});
+    return res.status(403).json({ message: "This account has been suspended" });
   }
 
   (req as any).user = { claims: session.claims };

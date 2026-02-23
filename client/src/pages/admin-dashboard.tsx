@@ -40,6 +40,11 @@ import {
   Target,
   Layers,
   RotateCcw,
+  UserPlus,
+  Trash2,
+  Ban,
+  ShieldCheck,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -341,14 +346,62 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const [search, setSearch] = useState("");
   const [tierFilter, setTierFilter] = useState<string>("");
   const [page, setPage] = useState(1);
+  const [showAddUser, setShowAddUser] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newFirstName, setNewFirstName] = useState("");
+  const [newLastName, setNewLastName] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [actionsOpenId, setActionsOpenId] = useState<string | null>(null);
+
+  const invalidateUsers = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+  };
 
   const resetOnboardingMutation = useMutation({
     mutationFn: async (userId: string) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/reset-onboarding`, {});
       return res.json();
     },
+    onSuccess: invalidateUsers,
+  });
+
+  const blockMutation = useMutation({
+    mutationFn: async ({ userId, blocked }: { userId: string; blocked: boolean }) => {
+      const res = await apiRequest("POST", `/api/admin/users/${userId}/block`, { blocked });
+      return res.json();
+    },
+    onSuccess: invalidateUsers,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await apiRequest("DELETE", `/api/admin/users/${userId}`, {});
+      return res.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setConfirmDeleteId(null);
+      invalidateUsers();
+    },
+  });
+
+  const createUserMutation = useMutation({
+    mutationFn: async (data: { email: string; firstName: string; lastName: string; password: string }) => {
+      const res = await apiRequest("POST", "/api/admin/users", data);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create user");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      setShowAddUser(false);
+      setNewEmail("");
+      setNewFirstName("");
+      setNewLastName("");
+      setNewPassword("");
+      invalidateUsers();
     },
   });
 
@@ -395,7 +448,68 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
           <option value="free">Free</option>
           <option value="pro">Pro</option>
         </select>
+        <Button size="sm" onClick={() => setShowAddUser(!showAddUser)} data-testid="button-add-user">
+          <UserPlus className="w-4 h-4 mr-1" />
+          Add User
+        </Button>
       </div>
+
+      {showAddUser && (
+        <Card>
+          <div className="space-y-3">
+            <h3 className="text-sm font-semibold">Create New User</h3>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                placeholder="First name"
+                value={newFirstName}
+                onChange={(e) => setNewFirstName(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                data-testid="input-new-first-name"
+              />
+              <input
+                type="text"
+                placeholder="Last name"
+                value={newLastName}
+                onChange={(e) => setNewLastName(e.target.value)}
+                className="px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                data-testid="input-new-last-name"
+              />
+            </div>
+            <input
+              type="email"
+              placeholder="Email (required)"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+              data-testid="input-new-email"
+            />
+            <input
+              type="password"
+              placeholder="Temporary password (optional)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+              data-testid="input-new-password"
+            />
+            {createUserMutation.error && (
+              <p className="text-xs text-red-500">{(createUserMutation.error as Error).message}</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button size="sm" variant="outline" onClick={() => setShowAddUser(false)} data-testid="button-cancel-add-user">Cancel</Button>
+              <Button
+                size="sm"
+                disabled={!newEmail.trim() || createUserMutation.isPending}
+                onClick={() => createUserMutation.mutate({ email: newEmail, firstName: newFirstName, lastName: newLastName, password: newPassword })}
+                data-testid="button-confirm-add-user"
+              >
+                {createUserMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
+                Create User
+              </Button>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <Card className="p-0 overflow-hidden">
         {isLoading ? (
@@ -409,15 +523,18 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                     <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">User</th>
                     <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Email</th>
                     <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Tier</th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Status</th>
                     <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Onboarded</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Location</th>
                     <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Joined</th>
-                    <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground"></th>
+                    <th className="px-4 py-2.5 text-xs font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {(usersData?.users || []).map((u: any) => (
-                    <tr key={u.id} className="border-t border-border/20 hover:bg-muted/20 cursor-pointer" onClick={() => onViewUser(u.id)}>
+                  {(usersData?.users || []).map((u: any) => {
+                    const isBlocked = u.blocked === "true";
+                    const isDeleting = confirmDeleteId === u.id;
+                    return (
+                    <tr key={u.id} className={cn("border-t border-border/20 hover:bg-muted/20 cursor-pointer", isBlocked && "opacity-50")} onClick={() => onViewUser(u.id)}>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium shrink-0">
@@ -431,6 +548,13 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                         <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full",
                           u.subscription_tier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
                         )}>{u.subscription_tier || "free"}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-xs">
+                        {isBlocked ? (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-500/10 text-red-500">Blocked</span>
+                        ) : (
+                          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-green-500/10 text-green-600">Active</span>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-xs">
                         {u.onboarding_complete === "true" ? (
@@ -447,11 +571,70 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                           <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{u.location || "-"}</td>
                       <td className="px-4 py-2.5 text-xs text-muted-foreground">{formatTime(u.created_at)}</td>
-                      <td className="px-4 py-2.5"><ChevronRight className="w-3.5 h-3.5 text-muted-foreground" /></td>
+                      <td className="px-4 py-2.5">
+                        {isDeleting ? (
+                          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <span className="text-[10px] text-red-500 mr-1">Delete?</span>
+                            <button
+                              onClick={() => deleteMutation.mutate(u.id)}
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                              data-testid={`button-confirm-delete-${u.id}`}
+                            >
+                              {deleteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Yes"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                              data-testid={`button-cancel-delete-${u.id}`}
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={() => setActionsOpenId(actionsOpenId === u.id ? null : u.id)}
+                              className="p-1 rounded hover:bg-muted transition-colors"
+                              data-testid={`button-actions-${u.id}`}
+                            >
+                              <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                            </button>
+                            {actionsOpenId === u.id && (
+                              <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[140px]">
+                                <button
+                                  onClick={() => { blockMutation.mutate({ userId: u.id, blocked: !isBlocked }); setActionsOpenId(null); }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left"
+                                  data-testid={`button-block-${u.id}`}
+                                >
+                                  {isBlocked ? <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> : <Ban className="w-3.5 h-3.5 text-amber-500" />}
+                                  {isBlocked ? "Unblock User" : "Block User"}
+                                </button>
+                                <button
+                                  onClick={() => { resetOnboardingMutation.mutate(u.id); setActionsOpenId(null); }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left"
+                                  data-testid={`button-menu-reset-onboarding-${u.id}`}
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                                  Reset Onboarding
+                                </button>
+                                <div className="border-t border-border/30 my-1" />
+                                <button
+                                  onClick={() => { setConfirmDeleteId(u.id); setActionsOpenId(null); }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left text-red-500"
+                                  data-testid={`button-delete-${u.id}`}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  Delete User
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

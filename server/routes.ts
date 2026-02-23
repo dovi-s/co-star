@@ -2181,7 +2181,7 @@ MARY: You're kidding me.`;
       }
 
       const result = await db.execute(
-        sql`SELECT id, email, first_name, last_name, stage_name, profile_image_url, subscription_tier, stripe_customer_id, stripe_subscription_id, onboarding_complete, location, created_at, updated_at FROM users WHERE ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`
+        sql`SELECT id, email, first_name, last_name, stage_name, profile_image_url, subscription_tier, stripe_customer_id, stripe_subscription_id, onboarding_complete, location, blocked, blocked_at, created_at, updated_at FROM users WHERE ${whereClause} ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}`
       );
       const totalResult = await db.execute(sql`SELECT COUNT(*) as count FROM users WHERE ${whereClause}`);
 
@@ -2352,6 +2352,69 @@ MARY: You're kidding me.`;
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to reset onboarding" });
+    }
+  });
+
+  app.post("/api/admin/users/:userId/block", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { userId } = req.params;
+      const { blocked } = req.body;
+      const isBlocked = blocked === true || blocked === "true";
+      await db.update(users).set({
+        blocked: isBlocked ? "true" : "false",
+        blockedAt: isBlocked ? new Date() : null,
+        updatedAt: new Date(),
+      }).where(eq(users.id, userId));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update user block status" });
+    }
+  });
+
+  app.delete("/api/admin/users/:userId", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { userId } = req.params;
+      await db.execute(sql`DELETE FROM analytics_events WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM error_logs WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM feedback_messages WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM rehearsal_runs WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM saved_scripts WHERE user_id = ${userId}`);
+      await db.execute(sql`DELETE FROM sessions WHERE sess->>'userId' = ${userId}`);
+      await db.delete(users).where(eq(users.id, userId));
+      res.json({ ok: true });
+    } catch (error: any) {
+      console.error("[Admin] Delete user error:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
+  app.post("/api/admin/users", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const { email, firstName, lastName, password } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required" });
+
+      const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email.toLowerCase().trim()));
+      if (existing.length > 0) return res.status(409).json({ error: "A user with this email already exists" });
+
+      const bcrypt = await import("bcryptjs");
+      const passwordHash = password ? await bcrypt.hash(password, 10) : null;
+
+      const [newUser] = await db.insert(users).values({
+        email: email.toLowerCase().trim(),
+        firstName: firstName || null,
+        lastName: lastName || null,
+        passwordHash,
+        authProvider: "email",
+        onboardingComplete: "false",
+      }).returning({ id: users.id });
+
+      res.json({ ok: true, userId: newUser.id });
+    } catch (error: any) {
+      console.error("[Admin] Create user error:", error);
+      res.status(500).json({ error: "Failed to create user" });
     }
   });
 

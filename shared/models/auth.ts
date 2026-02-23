@@ -36,6 +36,8 @@ export const users = pgTable("users", {
   stripeSubscriptionId: varchar("stripe_subscription_id"),
   scriptUsageCount: integer("script_usage_count").default(0),
   scriptUsageResetAt: timestamp("script_usage_reset_at"),
+  blocked: varchar("blocked").default("false"),
+  blockedAt: timestamp("blocked_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
