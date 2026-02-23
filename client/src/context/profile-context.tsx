@@ -10,6 +10,7 @@ interface ProfileContextValue {
   setName: (name: string) => void;
   setPhoto: (dataUrl: string | null) => void;
   syncFromServer: (photoUrl: string | null, name?: string) => void;
+  clearProfile: () => void;
 }
 
 const STORAGE_KEY = "co-star-profile";
@@ -115,8 +116,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const clearProfile = useCallback(() => {
+    const empty = { name: "", photoUrl: null };
+    setProfile(empty);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+  }, []);
+
   return (
-    <ProfileContext.Provider value={{ profile, setName, setPhoto, syncFromServer }}>
+    <ProfileContext.Provider value={{ profile, setName, setPhoto, syncFromServer, clearProfile }}>
       {children}
     </ProfileContext.Provider>
   );

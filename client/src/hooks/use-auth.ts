@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useProfile } from "@/context/profile-context";
 import type { User } from "@shared/models/auth";
 
 async function fetchUser(): Promise<User | null> {
@@ -26,6 +27,7 @@ async function logout(): Promise<void> {
 
 export function useAuth() {
   const queryClient = useQueryClient();
+  const { clearProfile } = useProfile();
   const { data: user, isLoading } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,
@@ -38,8 +40,8 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
       queryClient.clear();
+      clearProfile();
       try {
-        localStorage.removeItem("co-star-profile");
         localStorage.removeItem("costar-recent-scripts");
         localStorage.removeItem("costar-user-stats");
       } catch {}
