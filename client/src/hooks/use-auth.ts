@@ -38,6 +38,11 @@ export function useAuth() {
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
       queryClient.clear();
+      try {
+        localStorage.removeItem("co-star-profile");
+        localStorage.removeItem("costar-recent-scripts");
+        localStorage.removeItem("costar-user-stats");
+      } catch {}
       window.location.href = "/";
     },
   });
