@@ -64,6 +64,10 @@ The design philosophy is sophisticated and minimal, now using Apple's Liquid Gla
 - **Forgot Password Flow**: Users request a reset link via email (Resend integration). Tokens are hashed (SHA-256) and stored in `password_reset_tokens` table with 1-hour expiry. Reset link uses `?reset-token=` query param which routes to the auth page's reset form. Backend never reveals whether an email exists (anti-enumeration).
 - **Resend Email Integration**: Uses Replit connectors for API key management (`server/replit_integrations/email/resend.ts`). `getUncachableResendClient()` fetches fresh credentials each call. Used for password reset emails.
 
+### Marketing Pages
+- **Who Is It For** (`client/src/pages/who-is-it-for.tsx`): Showcases target audiences in three tiers — Performers (actors, acting students, voice actors, audition preppers), Professionals (language learners, public speakers, teachers, sales teams), and Specialized Training (medical students, law students, therapists, customer service, clergy). Accessible via side menu and `?view=who-is-it-for`.
+- **Subscription Pricing** (`client/src/pages/subscription.tsx`): Below Free and Pro cards, includes Education and Teams "Contact us" cards for institutional/team inquiries (mailto: hello@co-star.app).
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines between dialogues and scene descriptions are attached to the next dialogue.
 - **Scene Transition Cards**: Display scene name and description on scene entry with subtle animation.

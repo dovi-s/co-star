@@ -32,6 +32,7 @@ import {
   BarChart3,
   Lightbulb,
   Palette,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FeedbackSheet } from "@/components/feedback-sheet";
@@ -264,6 +265,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
           )}
 
           <SectionLabel>Explore</SectionLabel>
+          <MenuItem
+            icon={<Users className="h-4 w-4" />}
+            label="Who Is It For"
+            description="Actors, students, teams, and more"
+            onClick={() => navigate("who-is-it-for")}
+            testId="menu-item-who-is-it-for"
+          />
           <MenuItem
             icon={<Sparkles className="h-4 w-4" />}
             label="How It Works"

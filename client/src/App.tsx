@@ -22,11 +22,12 @@ import { ActorProfilePage } from "@/pages/actor-profile";
 import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
+import { WhoIsItForPage } from "@/pages/who-is-it-for";
 import { usePageTracking } from "@/hooks/use-tracking";
 import "@/hooks/use-analytics";
 import type { SavedScript } from "@shared/models/auth";
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
 type MultiplayerInitialView = "create" | "join";
 
 function AppContent() {
@@ -53,7 +54,7 @@ function AppContent() {
       return "admin";
     }
     const viewParam = params.get("view");
-    if (viewParam === "brand" || viewParam === "how-it-works" || viewParam === "compare" || viewParam === "roadmap" || viewParam === "feature-board") {
+    if (viewParam === "brand" || viewParam === "how-it-works" || viewParam === "who-is-it-for" || viewParam === "compare" || viewParam === "roadmap" || viewParam === "feature-board") {
       window.history.replaceState({}, "", "/");
       return viewParam as View;
     }
@@ -89,7 +90,7 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
-    if (page === "how-it-works" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
+    if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
       setView(page as View);
     }
   }, []);
@@ -131,6 +132,9 @@ function AppContent() {
       )}
       {view === "how-it-works" && (
         <HowItWorksPage onBack={handleBackToHome} />
+      )}
+      {view === "who-is-it-for" && (
+        <WhoIsItForPage onBack={handleBackToHome} />
       )}
       {view === "compare" && (
         <ComparePage onBack={handleBackToHome} />

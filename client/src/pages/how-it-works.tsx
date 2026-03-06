@@ -30,7 +30,7 @@ const sections: FeatureSection[] = [
     number: 1,
     title: "Import your script",
     subtitle: "Any format, any source",
-    description: "Paste text, upload a PDF or TXT file, or snap a photo of a printed page. The parser handles it all.",
+    description: "Paste text, upload a PDF or TXT file, or snap a photo of a printed page. Scripts, sides, speeches, training dialogues -- the parser handles it all.",
     details: [
       "Automatic character and scene detection",
       "Stage directions and action lines preserved",
@@ -44,7 +44,7 @@ const sections: FeatureSection[] = [
     number: 2,
     title: "Pick your role",
     subtitle: "Smart casting for the rest",
-    description: "Select which character you want to play. Your scene partner automatically assigns distinct voices to every other part.",
+    description: "Select which character you want to play, or the role you need to practice. Your scene partner automatically assigns distinct voices to every other part.",
     details: [
       "Line counts shown per character",
       "Six ElevenLabs voices with emotion detection",
@@ -58,7 +58,7 @@ const sections: FeatureSection[] = [
     number: 3,
     title: "Rehearse your scene",
     subtitle: "The three-line reader",
-    description: "See previous, current, and next lines at a glance. Your turn is highlighted. Your scene partner listens and responds with realistic timing.",
+    description: "See previous, current, and next lines at a glance. Your turn is highlighted. Your scene partner listens and responds with natural timing.",
     details: [
       "Speech recognition waits for your lines",
       "Natural pauses adapt to scene tension",
@@ -72,7 +72,7 @@ const sections: FeatureSection[] = [
     number: 4,
     title: "Read with others",
     subtitle: "Multiplayer table reads",
-    description: "Create a room, share a code, and rehearse together in real time. Peer-to-peer video calls keep everyone connected.",
+    description: "Create a room, share a code, and rehearse together in real time. Great for cast rehearsals, team training, or group practice.",
     details: [
       "WebRTC video and audio calls",
       "Host controls for start, pause, navigation",
@@ -86,7 +86,7 @@ const sections: FeatureSection[] = [
     number: 5,
     title: "Record your performance",
     subtitle: "Self-tape and audition mode",
-    description: "Record with your front camera for self-tapes, or go audio-only for practice runs. Audition mode dims the UI so the camera captures a clean frame.",
+    description: "Record with your front camera for self-tapes and presentations, or go audio-only for practice runs. Audition mode dims the UI so the camera captures a clean frame.",
     details: [
       "Picture-in-picture camera overlay",
       "Audio-only mode when camera is off",
@@ -133,7 +133,7 @@ export function HowItWorksPage({ onBack }: { onBack: () => void }) {
           <div className="mb-8 animate-fade-in-up">
             <h2 className="text-xl font-semibold text-foreground mb-1">Your scene partner, on demand</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              From script to stage-ready in six steps. No signup required.
+              From script to performance-ready in six steps. No signup required.
             </p>
           </div>
 
