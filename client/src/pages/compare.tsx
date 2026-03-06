@@ -7,6 +7,9 @@ import {
   Minus,
   Crown,
   ArrowRight,
+  GraduationCap,
+  Building2,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -493,6 +496,88 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                       <span className="text-xs text-muted-foreground">{f}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-4">
+              <p className="text-xs text-muted-foreground text-center">Need something bigger?</p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div
+                  className="glass-surface rounded-md p-5 space-y-4 animate-fade-in-up"
+                  style={{ animationDelay: "500ms" }}
+                  data-testid="card-pricing-education"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <GraduationCap className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold" data-testid="text-education-title">Education</h3>
+                      <p className="text-[11px] text-muted-foreground" data-testid="text-education-description">Drama programs, universities, language courses</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      "Bulk seats for students and faculty",
+                      "Shared script library for classes",
+                      "Usage analytics per student",
+                      "Academic pricing available",
+                    ].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <Check className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <span className="text-xs text-muted-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Education%20Plan%20Inquiry"}
+                    data-testid="button-contact-education"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Contact us
+                  </Button>
+                </div>
+
+                <div
+                  className="glass-surface rounded-md p-5 space-y-4 animate-fade-in-up"
+                  style={{ animationDelay: "600ms" }}
+                  data-testid="card-pricing-teams"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <Building2 className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold" data-testid="text-teams-title">Teams</h3>
+                      <p className="text-[11px] text-muted-foreground" data-testid="text-teams-description">Sales, corporate training, medical programs</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      "Team management and seat allocation",
+                      "Custom script templates",
+                      "Team-wide performance analytics",
+                      "Priority onboarding and support",
+                    ].map((f) => (
+                      <div key={f} className="flex items-center gap-2">
+                        <Check className="h-3.5 w-3.5 text-primary/60 shrink-0" />
+                        <span className="text-xs text-muted-foreground">{f}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Teams%20Plan%20Inquiry"}
+                    data-testid="button-contact-teams"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Contact us
+                  </Button>
                 </div>
               </div>
             </div>
