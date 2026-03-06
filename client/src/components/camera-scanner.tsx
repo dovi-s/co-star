@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Camera, RotateCcw, ChevronLeft } from "lucide-react";
+import { X, Camera, RotateCcw } from "lucide-react";
 
 interface CameraScannerProps {
   onCapture: (file: File) => void;
@@ -101,16 +101,15 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
       <div className="flex items-center justify-between p-3 safe-top" style={{ zIndex: 10 }}>
         <button
           onClick={handleClose}
-          className="flex items-center gap-1 text-white text-sm font-medium px-2 py-2 rounded-md active:bg-white/10"
+          className="w-10 h-10 flex items-center justify-center text-white rounded-full bg-white/10 active:bg-white/20"
           data-testid="button-close-scanner"
         >
-          <ChevronLeft className="h-5 w-5" />
-          Back
+          <X className="h-5 w-5" />
         </button>
         <span className="text-white/60 text-xs font-medium">Scan script page</span>
         <button
           onClick={flipCamera}
-          className="p-2 text-white/80 rounded-md active:bg-white/10"
+          className="w-10 h-10 flex items-center justify-center text-white/80 rounded-full bg-white/10 active:bg-white/20"
           data-testid="button-flip-camera"
         >
           <RotateCcw className="h-4 w-4" />
@@ -120,10 +119,10 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
       <div className="flex-1 relative overflow-hidden">
         {error ? (
           <div className="flex flex-col items-center justify-center h-full px-6 gap-4">
-            <p className="text-white/60 text-sm text-center">{error}</p>
+            <p className="text-white/60 text-sm text-center leading-relaxed">{error}</p>
             <button
               onClick={handleClose}
-              className="px-6 py-2.5 rounded-md border border-white/30 text-white text-sm font-medium active:bg-white/10"
+              className="px-8 py-3 rounded-lg bg-white/10 text-white text-sm font-medium active:bg-white/20 min-h-[48px]"
               data-testid="button-go-back"
             >
               Go back
