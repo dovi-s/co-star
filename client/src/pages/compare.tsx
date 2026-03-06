@@ -314,6 +314,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -331,7 +332,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               Actors have always pieced together workarounds to rehearse. Most still do.
             </p>
 
-            <div className="glass-surface rounded-md overflow-hidden" data-testid="list-workarounds">
+            <div className="glass-surface rounded-lg overflow-hidden" data-testid="list-workarounds">
               {workarounds.map((w, i) => (
                 <div
                   key={w.method}
@@ -347,7 +348,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               ))}
             </div>
 
-            <div className="mt-4 glass-surface rounded-md p-4 flex items-start gap-3" data-testid="card-workaround-summary">
+            <div className="mt-4 glass-surface rounded-lg p-4 flex items-start gap-3" data-testid="card-workaround-summary">
               <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-foreground leading-relaxed">
                 <span className="font-semibold">Co-star Studio replaces all of this.</span>
@@ -362,7 +363,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               Most apps do one thing well. Co-star Studio does all of them.
             </p>
 
-            <div className="glass-surface rounded-md overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="comparison-table">
+            <div className="glass-surface rounded-lg overflow-hidden animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="comparison-table">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
@@ -455,7 +456,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div
-                className="glass-surface rounded-md p-5 animate-fade-in-up"
+                className="glass-surface rounded-lg p-5 animate-fade-in-up"
                 style={{ animationDelay: "300ms" }}
                 data-testid="card-pricing-free"
               >
@@ -474,7 +475,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               </div>
 
               <div
-                className="glass-surface rounded-md p-5 ring-2 ring-primary animate-fade-in-up"
+                className="glass-surface rounded-lg p-5 ring-2 ring-primary animate-fade-in-up"
                 style={{ animationDelay: "400ms" }}
                 data-testid="card-pricing-pro"
               >
@@ -505,7 +506,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div
-                  className="glass-surface rounded-md p-5 space-y-4 animate-fade-in-up"
+                  className="glass-surface rounded-lg p-5 space-y-4 animate-fade-in-up"
                   style={{ animationDelay: "500ms" }}
                   data-testid="card-pricing-education"
                 >
@@ -543,7 +544,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                 </div>
 
                 <div
-                  className="glass-surface rounded-md p-5 space-y-4 animate-fade-in-up"
+                  className="glass-surface rounded-lg p-5 space-y-4 animate-fade-in-up"
                   style={{ animationDelay: "600ms" }}
                   data-testid="card-pricing-teams"
                 >

@@ -179,6 +179,7 @@ export function Header({
             onClick={() => {
               onBack();
             }}
+            aria-label="Go back"
             className={`shrink-0 -ml-1 icon-btn-press ${cameraMode ? "text-white hover:bg-white/10" : ""}`}
             data-testid="button-back-home"
           >
@@ -212,6 +213,7 @@ export function Header({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Share script"
                 className="shrink-0 text-muted-foreground"
                 data-testid="button-share-menu"
               >
@@ -280,6 +282,7 @@ export function Header({
           variant="ghost"
           size="icon"
           title="Profile"
+          aria-label="Open profile menu"
           onClick={() => setMenuOpen(true)}
           data-testid="button-profile"
           className={`shrink-0 ${cameraMode ? "text-white" : "text-muted-foreground"}`}

@@ -34,7 +34,7 @@ export function StreakDisplay({ streak, dailyGoal, todayLines, compact = false }
               style={{ width: `${goalProgress}%` }}
             />
           </div>
-          <span className="text-[10px] text-muted-foreground">
+          <span className="text-[11px] text-muted-foreground">
             {todayLines}/{dailyGoal}
           </span>
         </div>

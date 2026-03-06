@@ -69,6 +69,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Back to import"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

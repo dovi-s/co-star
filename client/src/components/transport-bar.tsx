@@ -44,6 +44,7 @@ export function TransportBar({
           size="icon"
           onClick={onRepeat}
           title="Start Over (R)"
+          aria-label="Start over"
           className={cn(
             "rounded-full icon-btn-press",
             cameraMode && "text-white/80 hover:text-white hover:bg-white/10"
@@ -63,6 +64,7 @@ export function TransportBar({
               if (canGoBack) onBack();
             }}
             title="Previous"
+            aria-label="Previous line"
             className={cn(
               "p-3 rounded-full touch-manipulation select-none icon-btn-press transition-colors",
               cameraMode 
@@ -70,7 +72,7 @@ export function TransportBar({
                 : "hover-elevate active-elevate-2",
               canGoBack 
                 ? (cameraMode ? "text-white" : "text-foreground") 
-                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
+                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/60 pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-prev-line"
@@ -153,6 +155,7 @@ export function TransportBar({
             <Button
               onClick={onPlayPause}
               title="Play/Pause (Space)"
+              aria-label={isPlaying ? "Pause" : "Play"}
               size="icon"
               variant={isPlaying ? "secondary" : "default"}
               data-testid="button-play-pause"
@@ -180,6 +183,7 @@ export function TransportBar({
               if (canGoNext) onNext();
             }}
             title="Next"
+            aria-label="Next line"
             className={cn(
               "p-3 rounded-full touch-manipulation select-none icon-btn-press transition-colors",
               cameraMode 
@@ -187,7 +191,7 @@ export function TransportBar({
                 : "hover-elevate active-elevate-2",
               canGoNext 
                 ? (cameraMode ? "text-white" : "text-foreground") 
-                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/40 pointer-events-none")
+                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/60 pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-next-line"
@@ -207,7 +211,7 @@ export function TransportBar({
             {currentLine + 1}
           </span>
           <span className={cn(
-            "text-[10px]",
+            "text-[11px]",
             cameraMode ? "text-white/60" : "text-muted-foreground"
           )}>
             of {totalLines}

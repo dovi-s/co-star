@@ -178,7 +178,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
 
                 {includeScript && hasScript && (
                   <div className="p-3 rounded-md bg-muted/50 border border-border/50">
-                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
+                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">
                       Preview
                     </p>
                     <pre className="text-[11px] text-muted-foreground whitespace-pre-wrap break-words font-mono max-h-[80px] overflow-y-auto leading-relaxed">

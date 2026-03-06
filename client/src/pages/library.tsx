@@ -79,6 +79,7 @@ export function LibraryPage({
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -97,12 +98,21 @@ export function LibraryPage({
           )}
 
           {!isLoading && (!scripts || scripts.length === 0) && (
-            <div className="text-center py-16 animate-fade-in-up" data-testid="empty-library">
-              <FileText className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-sm font-medium text-foreground mb-1">No saved scripts yet</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                After importing a script, use the save button to keep it here.
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up" data-testid="empty-library">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground mb-1">No saved scripts yet</h3>
+              <p className="text-xs text-muted-foreground max-w-[240px] mb-4 leading-relaxed">
+                Import a script and tap save to build your personal library.
               </p>
+              <Button
+                size="sm"
+                onClick={onBack}
+                data-testid="button-import-first-script"
+              >
+                Import your first script
+              </Button>
             </div>
           )}
 
@@ -111,7 +121,7 @@ export function LibraryPage({
               {scripts.map((script, i) => (
                 <div
                   key={script.id}
-                  className="glass-surface rounded-md p-4 animate-fade-in-up"
+                  className="glass-surface rounded-lg p-4 animate-fade-in-up"
                   style={{ animationDelay: `${i * 60}ms` }}
                   data-testid={`card-script-${script.id}`}
                 >
@@ -126,7 +136,7 @@ export function LibraryPage({
                         {script.name}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Clock className="h-3 w-3 text-muted-foreground/50" />
+                        <Clock className="h-3 w-3 text-muted-foreground/60" />
                         <span className="text-[11px] text-muted-foreground">
                           {formatDate(script.updatedAt)}
                         </span>
@@ -136,7 +146,7 @@ export function LibraryPage({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8"
+                        aria-label="Play script"
                         onClick={() => loadMutation.mutate(script.id)}
                         disabled={loadMutation.isPending}
                         data-testid={`button-play-script-${script.id}`}
@@ -150,7 +160,8 @@ export function LibraryPage({
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        aria-label="Delete script"
+                        className="text-muted-foreground hover:text-destructive"
                         onClick={() => setDeleteTarget(script)}
                         data-testid={`button-delete-script-${script.id}`}
                       >

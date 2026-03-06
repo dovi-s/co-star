@@ -184,6 +184,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Go back"
               onClick={() => setStep(step - 1)}
               data-testid="button-onboarding-back"
               className="-ml-1"
@@ -454,7 +455,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                     <p className="text-sm font-semibold text-foreground">
                       ${monthlyPrice ? monthlyPrice.unit_amount / 100 : 9}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">per month</p>
+                    <p className="text-[11px] text-muted-foreground">per month</p>
                   </button>
                   <button
                     onClick={() => setBillingPeriod("year")}
@@ -472,7 +473,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                     <p className="text-sm font-semibold text-foreground">
                       ${yearlyPrice ? yearlyPrice.unit_amount / 100 : 79}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">per year</p>
+                    <p className="text-[11px] text-muted-foreground">per year</p>
                   </button>
                 </div>
                 <Button
@@ -492,7 +493,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   )}
                   Subscribe to Pro
                 </Button>
-                <p className="text-[10px] text-muted-foreground/50 mt-2 text-center">
+                <p className="text-[11px] text-muted-foreground/60 mt-2 text-center">
                   Cancel anytime from settings.
                 </p>
               </div>

@@ -1442,6 +1442,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Go back"
               onClick={onBack}
               className="shrink-0"
               data-testid="button-back-home"
@@ -1513,6 +1514,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Go back"
               onClick={onBack}
               className="shrink-0"
               data-testid="button-back-home"
@@ -1697,6 +1699,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
             <Button 
               variant="ghost" 
               size="icon"
+              aria-label="Leave rehearsal"
               onClick={handleLeave} 
               className="text-white shrink-0"
               data-testid="button-leave-rehearsal"
@@ -1719,6 +1722,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Download recording"
                   onClick={downloadRecording}
                   className="text-green-400"
                   data-testid="button-download-recording"
@@ -1729,6 +1733,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label={isRecording ? "Stop recording" : "Start recording"}
                 onClick={toggleRecording}
                 className={cn(
                   "text-white",
@@ -1747,6 +1752,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label={webrtc.isAudioEnabled ? "Mute microphone" : "Unmute microphone"}
                 onClick={webrtc.toggleAudio}
                 className={cn(
                   "text-white",
@@ -1759,6 +1765,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label={webrtc.isVideoEnabled ? "Turn off camera" : "Turn on camera"}
                 onClick={webrtc.toggleVideo}
                 className={cn(
                   "text-white",
@@ -1790,6 +1797,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Previous line"
                       onClick={handleManualBack}
                       className="bg-white/10 border-white/30 text-white"
                       data-testid="button-prev-line"
@@ -1798,6 +1806,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     </Button>
                     <Button
                       size="icon"
+                      aria-label={room.state === 'paused' ? "Resume rehearsal" : "Pause rehearsal"}
                       onClick={() => {
                         if (room.state === 'paused') {
                           multiplayer.resumeRehearsal();
@@ -1814,6 +1823,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                     <Button
                       variant="outline"
                       size="icon"
+                      aria-label="Next line"
                       onClick={handleManualSkip}
                       className="bg-white/10 border-white/30 text-white"
                       data-testid="button-next-line"
@@ -1869,7 +1879,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold">Table Read Complete</h3>
+                  <h2 className="text-xl font-semibold">Table Read Complete</h2>
                   <p className={cn(
                     "text-sm",
                     completionStats && completionStats.averageAccuracy >= 95 ? "text-yellow-600 dark:text-yellow-400" :

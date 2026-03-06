@@ -98,7 +98,7 @@ function VoteButton({
         "p-1 rounded-md transition-colors",
         isActive
           ? "text-primary bg-primary/10"
-          : "text-muted-foreground/50 hover:text-foreground hover:bg-muted/50"
+          : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
       )}
       data-testid={`button-vote-${direction}-${item.id}`}
     >
@@ -112,7 +112,7 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
 
   return (
     <div
-      className="glass-surface rounded-md p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
+      className="glass-surface rounded-lg p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
       data-testid={`card-feature-${item.id}`}
     >
       <div className="flex gap-3">
@@ -132,9 +132,9 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-sm font-medium text-foreground leading-snug">
+            <h2 className="text-sm font-medium text-foreground leading-snug">
               {item.title}
-            </h3>
+            </h2>
             {item.status === "planned" && (
               <Badge className="shrink-0 bg-primary/10 text-primary border-transparent text-[10px]">
                 Planned
@@ -158,10 +158,10 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
             >
               {categoryLabels[category] || category}
             </Badge>
-            <span className="text-[10px] text-muted-foreground/60">
+            <span className="text-[11px] text-muted-foreground/60">
               {item.authorName}
             </span>
-            <span className="text-[10px] text-muted-foreground/40">
+            <span className="text-[11px] text-muted-foreground/60">
               {timeAgo(item.createdAt)}
             </span>
           </div>
@@ -194,9 +194,9 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
   });
 
   return (
-    <div className="glass-surface rounded-md p-4 animate-fade-in-up space-y-3">
+    <div className="glass-surface rounded-lg p-4 animate-fade-in-up space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-foreground">New request</h3>
+        <h2 className="text-sm font-semibold text-foreground">New request</h2>
         <button
           onClick={onClose}
           className="text-muted-foreground p-1 rounded-md hover:bg-muted/50"
@@ -282,6 +282,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -290,7 +291,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
         </Button>
         <div className="flex-1 min-w-0">
           <h1 className="font-semibold text-sm text-foreground">Feature Board</h1>
-          <p className="text-[10px] text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground">
             {requests.length} {requests.length === 1 ? "request" : "requests"}
           </p>
         </div>
@@ -342,7 +343,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="glass-surface rounded-md p-4 animate-pulse">
+                <div key={i} className="glass-surface rounded-lg p-4 animate-pulse">
                   <div className="flex gap-3">
                     <div className="w-6 h-16 bg-muted rounded" />
                     <div className="flex-1 space-y-2">
@@ -359,9 +360,9 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                 <Lightbulb className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-1">
+              <h2 className="text-sm font-semibold text-foreground mb-1">
                 No requests yet
-              </h3>
+              </h2>
               <p className="text-xs text-muted-foreground max-w-[240px] mb-4">
                 Be the first to suggest a feature. What would make Co-star Studio better for you?
               </p>
@@ -387,7 +388,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
 
       <footer className="px-5 py-6 text-center border-t border-border/40 safe-bottom">
         <div className="flex items-center justify-center gap-2">
-          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/50" />
+          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/60" />
           <p className="text-[11px] text-muted-foreground/60">
             Requests help shape what we build next
           </p>

@@ -74,7 +74,7 @@ export function AIStateIndicator({
           )}
           {state === "idle" && (
             <Volume2
-              className={cn(config.icon, "text-muted-foreground/50 transition-all duration-200")}
+              className={cn(config.icon, "text-muted-foreground/60 transition-all duration-200")}
             />
           )}
         </div>

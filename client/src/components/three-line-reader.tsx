@@ -183,7 +183,7 @@ export function ThreeLineReader({
             type === "next" && "opacity-25"
           )}
         >
-          <span className="text-muted-foreground/50 text-xs">
+          <span className="text-muted-foreground/60 text-xs">
             {type === "previous" ? "Start" : type === "next" ? "End" : ""}
           </span>
         </div>
@@ -248,7 +248,7 @@ export function ThreeLineReader({
                   isCurrent && isUser && cameraMode && "text-white/80",
                   isCurrent && !isUser && !cameraMode && "text-muted-foreground",
                   isCurrent && !isUser && cameraMode && "text-white/70",
-                  !isCurrent && "text-muted-foreground/50"
+                  !isCurrent && "text-muted-foreground/60"
                 )}
               >
                 {line.roleName}
@@ -268,7 +268,7 @@ export function ThreeLineReader({
                   isCurrent && isUser && cameraMode && "text-white/60",
                   isCurrent && !isUser && !cameraMode && "text-muted-foreground/60",
                   isCurrent && !isUser && cameraMode && "text-white/50",
-                  !isCurrent && !cameraMode && "text-muted-foreground/40",
+                  !isCurrent && !cameraMode && "text-muted-foreground/60",
                   !isCurrent && cameraMode && "text-white/30"
                 )}>
                   {line.direction}
@@ -484,6 +484,7 @@ export function ThreeLineReader({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={line.isBookmarked ? "Remove bookmark" : "Add bookmark"}
               className={cn(
                 "flex-shrink-0",
                 isUser && "text-background/70 hover:text-background hover:bg-background/10"
@@ -583,7 +584,7 @@ export function ThreeLineReader({
               {currentScene.description.length > 60 && (
                 <div className={cn(
                   "flex items-center gap-1 mt-1 text-[10px]",
-                  cameraMode ? "text-white/40" : "text-muted-foreground/50"
+                  cameraMode ? "text-white/40" : "text-muted-foreground/60"
                 )}>
                   {descriptionExpanded ? (
                     <>

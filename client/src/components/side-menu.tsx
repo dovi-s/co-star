@@ -76,7 +76,7 @@ function MenuItem({ icon, label, description, onClick, badge, disabled, testId }
           {badge}
         </span>
       )}
-      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+      <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
     </button>
   );
 }
@@ -377,7 +377,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
         </div>
 
         <div className="px-5 py-3 border-t border-border/40">
-          <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground/50">
+          <div className="flex items-center justify-center gap-3 text-[11px] text-muted-foreground/60">
             <button onClick={() => navigate("terms")} data-testid="link-terms">
               Terms
             </button>

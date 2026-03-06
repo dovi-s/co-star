@@ -156,6 +156,7 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"

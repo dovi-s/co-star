@@ -119,6 +119,7 @@ export function HowItWorksPage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -141,7 +142,7 @@ export function HowItWorksPage({ onBack }: { onBack: () => void }) {
             {sections.map((section, i) => (
               <div
                 key={section.number}
-                className="glass-surface rounded-md overflow-hidden animate-fade-in-up"
+                className="glass-surface rounded-lg overflow-hidden animate-fade-in-up"
                 style={{ animationDelay: `${(i + 1) * 100}ms` }}
                 data-testid={`card-step-${section.number}`}
               >

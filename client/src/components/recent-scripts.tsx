@@ -113,9 +113,17 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
         {scripts.map((script) => (
           <div
             key={script.id}
-            className="group glass-surface rounded-md p-3 cursor-pointer"
+            className="group glass-surface rounded-lg p-3 cursor-pointer"
+            role="button"
+            tabIndex={0}
             onClick={() => {
               if (editingId !== script.id) onSelect(script);
+            }}
+            onKeyDown={(e) => {
+              if ((e.key === "Enter" || e.key === " ") && editingId !== script.id) {
+                e.preventDefault();
+                onSelect(script);
+              }
             }}
             data-testid={`card-recent-script-${script.id}`}
           >
@@ -139,6 +147,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                       size="icon"
                       className="shrink-0 text-muted-foreground"
                       onClick={confirmEdit}
+                      aria-label="Confirm rename"
                       data-testid="button-confirm-edit"
                     >
                       <Check className="h-3.5 w-3.5" />
@@ -148,6 +157,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                       size="icon"
                       className="shrink-0 text-muted-foreground"
                       onClick={cancelEdit}
+                      aria-label="Cancel rename"
                       data-testid="button-cancel-edit"
                     >
                       <X className="h-3.5 w-3.5" />
@@ -173,7 +183,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                   </span>
                 </div>
                 {script.lastRole && (
-                  <p className="text-[11px] text-muted-foreground/50 mt-1">
+                  <p className="text-[11px] text-muted-foreground/60 mt-1">
                     Last played as {script.lastRole}
                   </p>
                 )}
@@ -192,6 +202,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                       onClick={() => handleSaveToLibrary(script)}
                       disabled={savingId === script.id || savedIds.has(script.id)}
                       title={savedIds.has(script.id) ? "Saved" : "Save to library"}
+                      aria-label={savedIds.has(script.id) ? "Saved to library" : "Save to library"}
                       data-testid={`button-save-script-${script.id}`}
                     >
                       {savedIds.has(script.id) ? (
@@ -207,6 +218,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                     className="text-muted-foreground"
                     onClick={() => startEdit(script)}
                     title="Rename"
+                    aria-label="Rename script"
                     data-testid={`button-edit-script-${script.id}`}
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -217,6 +229,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                     className="text-muted-foreground"
                     onClick={() => setDeleteTarget(script)}
                     title="Delete"
+                    aria-label="Delete script"
                     data-testid={`button-delete-script-${script.id}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />

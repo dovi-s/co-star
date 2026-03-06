@@ -201,7 +201,7 @@ export function BrandPage({ onBack }: { onBack: () => void }) {
         </div>
       </header>
 
-      <div className="sticky top-14 z-30 glass-surface border-b border-border/40">
+      <nav aria-label="Brand sections" className="sticky top-14 z-30 glass-surface border-b border-border/40">
         <div className="flex gap-1 px-4 max-w-2xl mx-auto overflow-x-auto">
           {sections.map((s) => (
             <button
@@ -219,7 +219,7 @@ export function BrandPage({ onBack }: { onBack: () => void }) {
             </button>
           ))}
         </div>
-      </div>
+      </nav>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-8">
         {activeSection === "logos" && <LogosSection />}
@@ -324,7 +324,7 @@ function ColorsSection() {
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <code className="text-xs text-muted-foreground font-mono">{color.light}</code>
-                    <span className="text-xs text-muted-foreground/50">/</span>
+                    <span className="text-xs text-muted-foreground/60">/</span>
                     <code className="text-xs text-muted-foreground font-mono">{color.dark}</code>
                     <CopyButton text={`${color.light} / ${color.dark}`} label={color.name} />
                   </div>

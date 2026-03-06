@@ -161,7 +161,7 @@ function PersonaCard({ persona, index }: { persona: Persona; index: number }) {
   const Icon = persona.icon;
   return (
     <div
-      className="glass-surface rounded-md p-4 animate-fade-in-up"
+      className="glass-surface rounded-lg p-4 animate-fade-in-up"
       style={{ animationDelay: `${(index + 1) * 80}ms` }}
       data-testid={`card-persona-${persona.title.toLowerCase().replace(/\s+/g, "-")}`}
     >
@@ -214,6 +214,7 @@ export function WhoIsItForPage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"

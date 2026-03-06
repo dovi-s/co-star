@@ -100,6 +100,7 @@ export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavi
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -112,7 +113,7 @@ export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavi
       <main className="flex-1 px-5 py-8">
         <div className="max-w-lg mx-auto">
           <div className="mb-8 animate-fade-in-up" data-testid="roadmap-progress">
-            <div className="glass-surface rounded-md p-4">
+            <div className="glass-surface rounded-lg p-4">
               <div className="flex items-baseline justify-between mb-2">
                 <span className="text-sm font-semibold text-foreground">Overall progress</span>
                 <span className="text-xs text-muted-foreground">{completedPercent}% shipped</span>
@@ -160,7 +161,7 @@ export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavi
                     return (
                       <div
                         key={item.title}
-                        className="glass-surface rounded-md p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
+                        className="glass-surface rounded-lg p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
                         style={{ animationDelay: `${delay}ms` }}
                         data-testid={`card-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
                       >

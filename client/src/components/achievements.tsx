@@ -117,7 +117,7 @@ function AchievementBadge({ achievement, unlocked }: { achievement: Achievement;
         {achievement.icon}
       </div>
       <p className="text-xs font-medium truncate w-full">{achievement.name}</p>
-      <p className="text-[10px] text-muted-foreground truncate w-full">{achievement.description}</p>
+      <p className="text-[11px] text-muted-foreground truncate w-full">{achievement.description}</p>
     </div>
   );
 }

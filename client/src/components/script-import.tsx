@@ -809,7 +809,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             <Dialog>
               <DialogTrigger asChild>
                 <button
-                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
                   data-testid="button-format-help"
                 >
                   <HelpCircle className="w-3 h-3" />
@@ -1039,7 +1039,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/50" data-testid="text-privacy-badge">
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60" data-testid="text-privacy-badge">
         {isAuthenticated ? (
           <>
             <Cloud className="h-3 w-3" />

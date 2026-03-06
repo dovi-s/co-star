@@ -1510,19 +1510,19 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                     <>
                       <div className="text-center">
                         <span className="text-xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">accuracy</p>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">accuracy</p>
                       </div>
                       <div className="w-px h-6 bg-border" />
                       <div className="text-center">
                         <span className="text-xl font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">perfect</p>
+                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">perfect</p>
                       </div>
                       {completedRunStats.totalUserLines < completedRunStats.expectedUserLines && (
                         <>
                           <div className="w-px h-6 bg-border" />
                           <div className="text-center">
                             <span className="text-xl font-bold text-foreground">{completedRunStats.totalUserLines}/{completedRunStats.expectedUserLines}</span>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">spoken</p>
+                            <p className="text-[11px] text-muted-foreground uppercase tracking-wide">spoken</p>
                           </div>
                         </>
                       )}
@@ -1530,7 +1530,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
                   ) : (
                     <div className="text-center">
                       <span className="text-xl font-bold text-foreground">0/{completedRunStats.expectedUserLines}</span>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-wide">lines spoken</p>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">lines spoken</p>
                     </div>
                   )}
                 </div>

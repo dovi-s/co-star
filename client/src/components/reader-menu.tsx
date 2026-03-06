@@ -113,6 +113,7 @@ export function ReaderMenu({
           <Button
             variant="ghost"
             size="icon"
+            aria-label="Reader settings"
             className="text-muted-foreground rounded-xl"
             data-testid="button-reader-menu"
           >
@@ -134,6 +135,7 @@ export function ReaderMenu({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Decrease font size"
                 onClick={() => onFontSizeChange(Math.max(0, fontSize - 1))}
                 disabled={fontSize === 0}
                 data-testid="button-font-decrease"
@@ -146,6 +148,7 @@ export function ReaderMenu({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label="Increase font size"
                 onClick={() => onFontSizeChange(Math.min(2, fontSize + 1))}
                 disabled={fontSize === 2}
                 data-testid="button-font-increase"
@@ -214,7 +217,7 @@ export function ReaderMenu({
           
           {/* Search input */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
             <input
               ref={searchInputRef}
               type="text"
@@ -227,7 +230,7 @@ export function ReaderMenu({
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground transition-colors"
                 data-testid="button-clear-search"
               >
                 <X className="h-4 w-4" />
@@ -238,9 +241,15 @@ export function ReaderMenu({
           <ScrollArea className="max-h-[55vh] pr-4 custom-scrollbar">
             <div className="space-y-1">
               {organizedContent.length === 0 ? (
-                <p className="text-center text-sm text-muted-foreground py-8">
-                  No lines match your search
-                </p>
+                <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                    <Search className="h-5 w-5 text-primary" />
+                  </div>
+                  <p className="text-sm font-semibold text-foreground mb-1">No matches found</p>
+                  <p className="text-xs text-muted-foreground max-w-[200px] leading-relaxed">
+                    Try a different character name or line of dialogue.
+                  </p>
+                </div>
               ) : (
                 organizedContent.map((item, idx) => {
                   if (item.type === 'scene') {

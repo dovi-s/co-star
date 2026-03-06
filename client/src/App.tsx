@@ -23,6 +23,7 @@ import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
 import { WhoIsItForPage } from "@/pages/who-is-it-for";
+import { Logo } from "@/components/logo";
 import { usePageTracking } from "@/hooks/use-tracking";
 import "@/hooks/use-analytics";
 import type { SavedScript } from "@shared/models/auth";
@@ -89,6 +90,28 @@ function AppContent() {
   usePageTracking(view);
 
   useEffect(() => {
+    const titles: Record<View, string> = {
+      home: "Co-star Studio",
+      rehearsal: "Rehearsal - Co-star Studio",
+      multiplayer: "Table Read - Co-star Studio",
+      "how-it-works": "How It Works - Co-star Studio",
+      "who-is-it-for": "Who Is It For - Co-star Studio",
+      compare: "Compare Plans - Co-star Studio",
+      roadmap: "Roadmap - Co-star Studio",
+      signin: "Sign In - Co-star Studio",
+      library: "Library - Co-star Studio",
+      history: "History - Co-star Studio",
+      "feature-board": "Feature Board - Co-star Studio",
+      onboarding: "Welcome - Co-star Studio",
+      profile: "Profile - Co-star Studio",
+      subscription: "Subscription - Co-star Studio",
+      admin: "Admin - Co-star Studio",
+      brand: "Brand - Co-star Studio",
+    };
+    document.title = titles[view] || "Co-star Studio";
+  }, [view]);
+
+  useEffect(() => {
     if (user) {
       const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
       syncFromServer(user.profileImageUrl || null, name || undefined);
@@ -140,6 +163,14 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isExiting ? "animate-page-exit" : ""}`}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+        data-testid="link-skip-to-content"
+      >
+        Skip to content
+      </a>
+      <div id="main-content">
       {view === "home" && (
         <HomePage 
           key="home" 
@@ -204,17 +235,43 @@ function AppContent() {
       {view === "brand" && (
         <BrandPage onBack={handleBackToHome} />
       )}
+      </div>
+    </div>
+  );
+}
+
+function SplashScreen({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<"enter" | "exit">("enter");
+
+  useEffect(() => {
+    const showTimer = setTimeout(() => setPhase("exit"), 600);
+    const doneTimer = setTimeout(onComplete, 900);
+    return () => { clearTimeout(showTimer); clearTimeout(doneTimer); };
+  }, [onComplete]);
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-background transition-opacity duration-300 ${phase === "exit" ? "opacity-0" : "opacity-100"}`}
+      data-testid="splash-screen"
+    >
+      <div className={`transition-transform duration-500 ease-out ${phase === "enter" ? "scale-100 opacity-100" : "scale-110 opacity-0"}`}>
+        <Logo size="xl" showWordmark animated={false} className="pointer-events-none" />
+      </div>
     </div>
   );
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const handleSplashComplete = useCallback(() => setShowSplash(false), []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <TooltipProvider>
           <ProfileProvider>
             <SessionProvider>
+              {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
               <AppContent />
             </SessionProvider>
           </ProfileProvider>

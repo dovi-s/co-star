@@ -282,7 +282,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
                   <div className="flex items-center gap-3 my-3">
                     <div className="flex-1 h-px bg-border/60" />
-                    <span className="text-[10px] text-muted-foreground/50 uppercase tracking-wider">or</span>
+                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">or</span>
                     <div className="flex-1 h-px bg-border/60" />
                   </div>
                 </div>

@@ -231,6 +231,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={mode === "forgot" || mode === "reset" ? () => { setMode("signin"); setError(null); setForgotSent(false); setResetSuccess(false); } : onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -255,7 +256,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
 
           {mode === "forgot" && forgotSent ? (
             <div className="w-full space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              <div className="w-full glass-surface rounded-md p-6 flex flex-col items-center gap-4">
+              <div className="w-full glass-surface rounded-lg p-6 flex flex-col items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
@@ -275,7 +276,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
             </div>
           ) : mode === "reset" && resetSuccess ? (
             <div className="w-full space-y-4 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-              <div className="w-full glass-surface rounded-md p-6 flex flex-col items-center gap-4">
+              <div className="w-full glass-surface rounded-lg p-6 flex flex-col items-center gap-4">
                 <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
                   <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
@@ -323,7 +324,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
               )}
 
               <form onSubmit={handleSubmit} className="w-full space-y-3 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-                <div className="w-full glass-surface rounded-md p-6" data-testid="card-auth">
+                <div className="w-full glass-surface rounded-lg p-6" data-testid="card-auth">
                   {mode === "signup" && (
                     <div className="flex gap-2 mb-3">
                       <Input
@@ -510,7 +511,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
           {(mode === "signin" || mode === "signup") && (
             <>
               <div className="w-full mt-8 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-                <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1 mb-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1 mb-3">
                   What you get
                 </p>
                 <div className="space-y-2.5">
@@ -524,7 +525,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
               </div>
 
               <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-                <p className="text-[11px] text-muted-foreground/50 text-center leading-relaxed">
+                <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
                   Save your scripts, keep your history, record without watermarks.
                   <br />
                   $9/mo or $79/yr.

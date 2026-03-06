@@ -72,6 +72,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
+          aria-label="Go back"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
@@ -90,37 +91,46 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
           )}
 
           {!isLoading && totalRuns === 0 && (
-            <div className="text-center py-16 animate-fade-in-up" data-testid="empty-history">
-              <BarChart3 className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-              <p className="text-sm font-medium text-foreground mb-1">No runs yet</p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Your performance will be tracked here after each rehearsal.
+            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up" data-testid="empty-history">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                <BarChart3 className="h-6 w-6 text-primary" />
+              </div>
+              <h3 className="text-sm font-semibold text-foreground mb-1">No runs yet</h3>
+              <p className="text-xs text-muted-foreground max-w-[240px] mb-4 leading-relaxed">
+                Complete your first rehearsal and your performance stats will appear here.
               </p>
+              <Button
+                size="sm"
+                onClick={onBack}
+                data-testid="button-start-first-rehearsal"
+              >
+                Start rehearsing
+              </Button>
             </div>
           )}
 
           {totalRuns > 0 && (
             <>
               <div className="grid grid-cols-3 gap-3 mb-6 animate-fade-in-up" data-testid="stats-summary">
-                <div className="glass-surface rounded-md p-3 text-center">
+                <div className="glass-surface rounded-lg p-3 text-center">
                   <Target className="h-4 w-4 text-primary mx-auto mb-1" />
                   <p className="text-lg font-semibold text-foreground">{avgAccuracy}%</p>
-                  <p className="text-[10px] text-muted-foreground">Average</p>
+                  <p className="text-[11px] text-muted-foreground">Average</p>
                 </div>
-                <div className="glass-surface rounded-md p-3 text-center">
+                <div className="glass-surface rounded-lg p-3 text-center">
                   <TrendingUp className="h-4 w-4 text-green-600 mx-auto mb-1" />
                   <p className="text-lg font-semibold text-foreground">{bestAccuracy}%</p>
-                  <p className="text-[10px] text-muted-foreground">Best</p>
+                  <p className="text-[11px] text-muted-foreground">Best</p>
                 </div>
-                <div className="glass-surface rounded-md p-3 text-center">
+                <div className="glass-surface rounded-lg p-3 text-center">
                   <BarChart3 className="h-4 w-4 text-amber-600 mx-auto mb-1" />
                   <p className="text-lg font-semibold text-foreground">{totalRuns}</p>
-                  <p className="text-[10px] text-muted-foreground">Runs</p>
+                  <p className="text-[11px] text-muted-foreground">Runs</p>
                 </div>
               </div>
 
               {recentTrend !== null && (
-                <div className="glass-surface rounded-md p-3 mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }} data-testid="trend-indicator">
+                <div className="glass-surface rounded-lg p-3 mb-6 animate-fade-in-up" style={{ animationDelay: "80ms" }} data-testid="trend-indicator">
                   <div className="flex items-center gap-2">
                     <TrendingUp className={cn("h-4 w-4", recentTrend >= 0 ? "text-green-600" : "text-amber-600")} />
                     <p className="text-xs text-muted-foreground">
@@ -136,7 +146,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                   return (
                     <div
                       key={run.id}
-                      className="glass-surface rounded-md p-3 animate-fade-in-up"
+                      className="glass-surface rounded-lg p-3 animate-fade-in-up"
                       style={{ animationDelay: `${(i + 2) * 60}ms` }}
                       data-testid={`card-run-${run.id}`}
                     >
@@ -156,7 +166,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                               </span>
                             )}
                             {run.memorizationMode && run.memorizationMode !== "off" && (
-                              <span className="text-[10px] text-muted-foreground/60 uppercase">
+                              <span className="text-[11px] text-muted-foreground/60 uppercase">
                                 {run.memorizationMode}
                               </span>
                             )}
@@ -166,7 +176,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                           <p className={cn("text-sm font-semibold", grade.color)}>
                             {Math.round(run.accuracy ?? 0)}%
                           </p>
-                          <p className={cn("text-[10px]", grade.color)}>
+                          <p className={cn("text-[11px]", grade.color)}>
                             {grade.label}
                           </p>
                         </div>

@@ -252,7 +252,7 @@ function SparklineChart({ data, height = 48, color }: { data: number[]; height?:
 function SectionTitle({ children, action }: { children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between mb-3">
-      <h3 className="text-sm font-semibold">{children}</h3>
+      <h2 className="text-sm font-semibold">{children}</h2>
       {action}
     </div>
   );
@@ -468,7 +468,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
       {showAddUser && (
         <Card>
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Create New User</h3>
+            <h2 className="text-sm font-semibold">Create New User</h2>
             <div className="grid grid-cols-2 gap-2">
               <input
                 type="text"
@@ -580,7 +580,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                           </button>
                         ) : (
                           <span title="Not yet onboarded">
-                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/40" />
+                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/60" />
                           </span>
                         )}
                       </td>

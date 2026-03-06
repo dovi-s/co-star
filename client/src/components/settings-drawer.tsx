@@ -242,7 +242,7 @@ export function SettingsDrawer({
                   className="w-full"
                   data-testid="slider-playback-speed"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                <div className="flex justify-between text-[11px] text-muted-foreground/60">
                   <span>0.5x</span>
                   <span>1.0x</span>
                   <span>1.5x</span>
@@ -273,7 +273,7 @@ export function SettingsDrawer({
                   className="w-full"
                   data-testid="slider-reader-delay"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                <div className="flex justify-between text-[11px] text-muted-foreground/60">
                   <span>0s</span>
                   <span>1.5s</span>
                   <span>3s</span>
@@ -304,7 +304,7 @@ export function SettingsDrawer({
                   className="w-full"
                   data-testid="slider-reader-volume"
                 />
-                <div className="flex justify-between text-[10px] text-muted-foreground/50">
+                <div className="flex justify-between text-[11px] text-muted-foreground/60">
                   <span>0%</span>
                   <span>50%</span>
                   <span>100%</span>
@@ -332,7 +332,7 @@ export function SettingsDrawer({
                       >
                         <div className="flex flex-col items-start gap-0.5 min-w-0">
                           <div className="text-sm font-medium truncate max-w-full">{scene.name}</div>
-                          <div className="text-[10px] opacity-70">
+                          <div className="text-[11px] opacity-70">
                             {scene.lines.length} lines
                           </div>
                         </div>

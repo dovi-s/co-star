@@ -155,6 +155,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
               size="icon"
               onClick={onMultiplayer}
               title="Table Read"
+              aria-label="Table Read"
               data-testid="button-multiplayer"
               className="text-muted-foreground"
             >
@@ -165,6 +166,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             variant="ghost"
             size="icon"
             title="Profile"
+            aria-label="Open profile menu"
             onClick={() => setMenuOpen(true)}
             data-testid="button-profile"
             className="text-muted-foreground"
@@ -176,7 +178,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
 
       <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
 
-      <main className="flex-1 flex flex-col onboarding-glow relative">
+      <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative">
         <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
           style={{
             background: 'radial-gradient(ellipse at 50% 50%, hsl(28 35% 54% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
@@ -196,15 +198,15 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
               : "Paste a script. Pick your role. Start rehearsing."}
           </p>
           <div className="flex items-center gap-4 mt-4 relative" data-testid="value-props">
-            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-unlimited-takes">
+            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-unlimited-takes">
               <Repeat className="h-3 w-3" />
               <span className="text-[11px]">Unlimited takes</span>
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-always-available">
+            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-always-available">
               <Clock className="h-3 w-3" />
               <span className="text-[11px]">Always available</span>
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground/50" data-testid="value-prop-zero-judgment">
+            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-zero-judgment">
               <Volume2 className="h-3 w-3" />
               <span className="text-[11px]">Zero judgment</span>
             </div>
