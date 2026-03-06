@@ -39,11 +39,12 @@ function CoStarMark({ className }: { className?: string }) {
 
 export function Logo({ size = "md", animated = true, showWordmark = false, className, onClick }: LogoProps) {
   const { container, text } = sizeClasses[size];
-  const Tag = onClick ? "button" : "div";
+  const isClickable = !!onClick;
   
   return (
-    <Tag
-      className={cn("flex items-center gap-2", onClick && "cursor-pointer", className)}
+    <button
+      type="button"
+      className={cn("flex items-center gap-2", isClickable ? "cursor-pointer" : "cursor-default", className)}
       data-testid="logo"
       onClick={onClick}
     >
@@ -60,7 +61,7 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
           <span className="font-semibold">Studio</span>
         </span>
       )}
-    </Tag>
+    </button>
   );
 }
 

@@ -90,6 +90,10 @@ function AppContent() {
   }, []);
 
   const handleNavigate = useCallback((page: string) => {
+    if (page === "home") {
+      setView("home");
+      return;
+    }
     if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
       setView(page as View);
     }

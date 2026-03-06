@@ -147,7 +147,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
       <SheetContent side="right" className="w-[300px] sm:max-w-[340px] p-0 flex flex-col overflow-hidden">
         <SheetHeader className="px-5 pt-5 pb-3 text-left">
           <div className="flex items-center gap-3">
-            <Logo size="xs" />
+            <Logo size="xs" onClick={() => navigate("home")} />
             <div>
               <SheetTitle className="text-base">
                 <span className="font-normal">Co-star</span>{" "}
