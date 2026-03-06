@@ -5,6 +5,7 @@ interface LogoProps {
   animated?: boolean;
   showWordmark?: boolean;
   className?: string;
+  onClick?: () => void;
 }
 
 const sizeClasses = {
@@ -36,11 +37,16 @@ function CoStarMark({ className }: { className?: string }) {
   );
 }
 
-export function Logo({ size = "md", animated = true, showWordmark = false, className }: LogoProps) {
+export function Logo({ size = "md", animated = true, showWordmark = false, className, onClick }: LogoProps) {
   const { container, text } = sizeClasses[size];
+  const Tag = onClick ? "button" : "div";
   
   return (
-    <div className={cn("flex items-center gap-2", className)} data-testid="logo">
+    <Tag
+      className={cn("flex items-center gap-2", onClick && "cursor-pointer", className)}
+      data-testid="logo"
+      onClick={onClick}
+    >
       <div className={cn(
         container,
         "relative flex items-center justify-center",
@@ -54,7 +60,7 @@ export function Logo({ size = "md", animated = true, showWordmark = false, class
           <span className="font-semibold">Studio</span>
         </span>
       )}
-    </div>
+    </Tag>
   );
 }
 
