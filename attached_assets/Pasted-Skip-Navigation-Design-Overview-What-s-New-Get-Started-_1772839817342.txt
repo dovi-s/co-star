@@ -1,0 +1,176 @@
+Skip Navigation
+Design
+Overview
+What’s New
+Get Started
+Guidelines
+Resources
+
+Getting started
+
+Foundations
+
+Patterns
+
+Components
+
+Inputs
+
+Technologies
+
+6 items were found. Tab back to navigate through them.
+
+
+Filter
+Navigator is ready
+Human Interface Guidelines
+The HIG contains guidance and best practices that can help you design a great experience for any Apple platform.
+As you design interfaces for Apple platforms, keep these principles in mind:
+
+A conceptual graphic of two circular buttons arranged vertically on the leading side of a capsule-shape vertical item grouping. Those three elements are set atop a larger rounded square.
+
+Hierarchy
+Establish a clear visual hierarchy where controls and interface elements elevate and distinguish the content beneath them.
+
+A conceptual graphic of a circular button on the leading side of a capsule-shape item grouping.
+
+Harmony
+Align with the concentric design of the hardware and software to create harmony between interface elements, system experiences, and devices.
+
+A conceptual graphic of a circular button.
+
+Consistency
+Adopt platform conventions to maintain a consistent design that continuously adapts across window sizes and displays.
+
+For developer guidance, see Adopting Liquid Glass.
+
+Design fundamentals
+A sketch of the App Store icon. The image is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+App icons
+A sketch of a paint palette, suggesting the use of color. The image is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+Color
+A sketch of overlapping squares, suggesting the use of transparency to hint at background content. The image is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+Materials
+A sketch of a small rectangle in the upper-left quadrant of a larger rectangle, suggesting the position of a user interface element within a window. The image is overlaid with rectangular and circular grid lines and is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+Layout
+A sketch of the Command key icon. The image is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+Icons
+A sketch of the Accessibility icon. The image is tinted yellow to subtly reflect the yellow in the original six-color Apple logo.
+Accessibility
+New and updated
+A sketch of two side-by-side windows in a split view arrangement, suggesting multitasking. The image is tinted orange to subtly reflect the orange in the original six-color Apple logo.
+Multitasking
+A stylized representation of the macOS menu bar displaying a selected menu. The image is tinted red to subtly reflect the red in the original six-color Apple logo.
+The menu bar
+A stylized representation of top and bottom toolbars. The image is tinted red to subtly reflect the red in the original six-color Apple logo.
+Toolbars
+A stylized representation of a search field containing placeholder text and a dictation icon. The image is tinted red to subtly reflect the red in the original six-color Apple logo.
+Search fields
+A sketch of the Game Center icon. The image is tinted blue to subtly reflect the blue in the original six-color Apple logo.
+Game Center
+A sketch of a pencil surrounded by sparkly stars, suggesting generative intelligence. The image is tinted blue to subtly reflect the blue in the original six-color Apple logo.
+Generative AI
+Topics
+
+Getting started
+Create an app or game that feels at home on every platform you support.
+Learn More
+
+Foundations
+Understand how fundamental design elements help you create rich experiences.
+Learn More
+
+Patterns
+Get design guidance for supporting common user actions, tasks, and experiences.
+Learn More
+
+Components
+Learn how to use and customize system-defined components to give people a familiar and consistent experience.
+Learn More
+
+Inputs
+Learn about the various methods people use to control your app or game and enter data.
+Learn More
+
+Technologies
+Discover the Apple technologies, features, and services you can integrate into your app or game.
+Learn More
+Current page is Human Interface Guidelines
+Apple
+Developer
+Documentation
+Platforms
+iOS
+iPadOS
+macOS
+tvOS
+visionOS
+watchOS
+Tools
+Swift
+SwiftUI
+Swift Playground
+TestFlight
+Xcode
+Xcode Cloud
+SF Symbols
+Topics & Technologies
+Accessibility
+Accessories
+App Extension
+App Store
+Audio & Video
+Augmented Reality
+Design
+Distribution
+Education
+Fonts
+Games
+Health & Fitness
+In-App Purchase
+Localization
+Maps & Location
+Machine Learning & AI
+Open Source
+Security
+Safari & Web
+Resources
+Documentation
+Tutorials
+Downloads
+Forums
+Videos
+Support
+Support Articles
+Contact Us
+Bug Reporting
+System Status
+Account
+Apple Developer
+App Store Connect
+Certificates, IDs, & Profiles
+Feedback Assistant
+Programs
+Apple Developer Program
+Apple Developer Enterprise Program
+App Store Small Business Program
+MFi Program
+News Partner Program
+Video Partner Program
+Security Bounty Program
+Security Research Device Program
+Events
+Meet with Apple
+Apple Developer Centers
+App Store Awards
+Apple Design Awards
+Apple Developer Academies
+WWDC
+To submit feedback on documentation, visit Feedback Assistant.
+Select a color scheme preference
+Light
+Dark
+Auto
+
+English
+Copyright © 2026 Apple Inc. All rights reserved.Terms of UsePrivacy PolicyAgreements and Guidelines

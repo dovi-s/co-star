@@ -154,12 +154,14 @@ export function ThreeLineReader({
   const [showHint, setShowHint] = useState(false);
   const [showContext, setShowContext] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [lineSlideKey, setLineSlideKey] = useState(0);
   const fontSizeClass = fontSize === 0 ? "text-base md:text-lg" : fontSize === 1 ? "text-lg md:text-xl" : "text-xl md:text-2xl";
 
   useEffect(() => {
     setShowHint(false);
     setShowContext(false);
     setDescriptionExpanded(false);
+    setLineSlideKey((k) => k + 1);
   }, [currentLine?.id, currentScene?.id]);
 
   const wordMatchResult = useMemo(() => {
@@ -653,7 +655,7 @@ export function ThreeLineReader({
         </div>
         
         {/* Lines */}
-        <div className="flex-1 flex flex-col gap-2 min-w-0">
+        <div key={lineSlideKey} className="flex-1 flex flex-col gap-2 min-w-0 animate-line-slide">
           {renderLine(previousLine, "previous", false)}
           {renderLine(currentLine, "current", isUserLine)}
           {renderLine(nextLine, "next", false)}

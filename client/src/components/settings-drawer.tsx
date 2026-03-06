@@ -113,7 +113,7 @@ export function SettingsDrawer({
           <div className="flex-1 overflow-auto px-5 pb-10">
             <div className="space-y-6">
               {/* Ambient Sound Toggle */}
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-9 h-9 rounded-lg flex items-center justify-center",
@@ -143,7 +143,7 @@ export function SettingsDrawer({
               </div>
 
               {/* Tap Mode Toggle */}
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
                 <div className="flex items-center gap-3">
                   <div className={cn(
                     "w-9 h-9 rounded-lg flex items-center justify-center",
@@ -174,7 +174,8 @@ export function SettingsDrawer({
                     setIsOpen(false);
                     setTimeout(onHandsFreeMode, 300);
                   }}
-                  className="w-full flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-muted/30 transition-colors"
+                  className="w-full flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-muted/30 transition-colors animate-fade-in-up"
+                  style={{ animationDelay: "150ms" }}
                   data-testid="button-hands-free-mode"
                 >
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
@@ -218,7 +219,7 @@ export function SettingsDrawer({
               )}
 
               {/* Playback Speed */}
-              <div className="space-y-3">
+              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
                     <Gauge className="h-4 w-4" />
@@ -249,7 +250,7 @@ export function SettingsDrawer({
               </div>
 
               {/* Reader Delay */}
-              <div className="space-y-3">
+              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
                     <Timer className="h-4 w-4" />
@@ -280,7 +281,7 @@ export function SettingsDrawer({
               </div>
 
               {/* Reader Volume */}
-              <div className="space-y-3">
+              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
                     <Volume2 className="h-4 w-4" />
@@ -312,7 +313,7 @@ export function SettingsDrawer({
 
               {/* Scenes */}
               {scenes.length > 1 && (
-                <div className="space-y-2">
+                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
                   <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     <Layers className="h-3.5 w-3.5" />
                     Scenes
@@ -342,7 +343,7 @@ export function SettingsDrawer({
               )}
 
               {/* Voice Presets */}
-              <div className="space-y-2">
+              <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "400ms" }}>
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                   Voice Presets
                 </div>

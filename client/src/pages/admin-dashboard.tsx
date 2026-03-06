@@ -177,6 +177,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
           <div className="text-center py-20 text-muted-foreground"><p className="text-sm">Could not load analytics. Make sure you are signed in as admin.</p></div>
         ) : data ? (
           <>
+            <div key={tab} className="animate-crossfade">
             {tab === "overview" && <OverviewTab data={data} onViewUser={setSelectedUserId} />}
             {tab === "users" && <UsersTab data={data} onViewUser={setSelectedUserId} />}
             {tab === "traffic" && <TrafficTab data={data} />}
@@ -186,6 +187,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
             {tab === "feedback" && <FeedbackTab />}
             {tab === "errors" && <ErrorsTab />}
             {tab === "integrations" && <IntegrationsTab />}
+            </div>
           </>
         ) : null}
       </main>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -61,6 +61,31 @@ function AppContent() {
     return "home";
   });
 
+  const [isExiting, setIsExiting] = useState(false);
+  const pendingViewRef = useRef<View | null>(null);
+
+  const transitionTo = useCallback((nextView: View) => {
+    if (nextView === view && !isExiting) return;
+    if (isExiting) {
+      pendingViewRef.current = nextView;
+      return;
+    }
+    setIsExiting(true);
+    pendingViewRef.current = nextView;
+  }, [view, isExiting]);
+
+  useEffect(() => {
+    if (!isExiting) return;
+    const timer = setTimeout(() => {
+      if (pendingViewRef.current) {
+        setView(pendingViewRef.current);
+        pendingViewRef.current = null;
+      }
+      setIsExiting(false);
+    }, 180);
+    return () => clearTimeout(timer);
+  }, [isExiting]);
+
   usePageTracking(view);
 
   useEffect(() => {
@@ -72,32 +97,32 @@ function AppContent() {
   const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("join");
 
   const handleSessionReady = useCallback(() => {
-    setView("rehearsal");
-  }, []);
+    transitionTo("rehearsal");
+  }, [transitionTo]);
 
   const handleBackToHome = useCallback(() => {
-    setView("home");
-  }, []);
+    transitionTo("home");
+  }, [transitionTo]);
 
   const handleTableReadFromRoleSelector = useCallback(() => {
     setMultiplayerInitialView("create");
-    setView("multiplayer");
-  }, []);
+    transitionTo("multiplayer");
+  }, [transitionTo]);
 
   const handleMultiplayerFromHome = useCallback(() => {
     setMultiplayerInitialView("join");
-    setView("multiplayer");
-  }, []);
+    transitionTo("multiplayer");
+  }, [transitionTo]);
 
   const handleNavigate = useCallback((page: string) => {
     if (page === "home") {
-      setView("home");
+      transitionTo("home");
       return;
     }
     if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
-      setView(page as View);
+      transitionTo(page as View);
     }
-  }, []);
+  }, [transitionTo]);
 
   const handleLoadScript = useCallback((script: SavedScript) => {
     if (script.rolesJson && script.scenesJson) {
@@ -114,7 +139,7 @@ function AppContent() {
   }, [createSessionFromParsed, setUserRole]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className={`min-h-screen bg-background text-foreground ${isExiting ? "animate-page-exit" : ""}`}>
       {view === "home" && (
         <HomePage 
           key="home" 

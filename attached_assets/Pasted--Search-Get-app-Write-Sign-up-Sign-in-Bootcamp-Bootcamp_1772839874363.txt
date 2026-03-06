@@ -1,0 +1,310 @@
+
+Search
+
+Get app
+Write
+Sign up
+
+Sign in
+
+
+
+Bootcamp
+Bootcamp
+From idea to product, one lesson at a time. To submit your story: https://tinyurl.com/bootspub1
+
+Follow publication
+
+Top highlight
+
+Laws of UX that Uber Follows
+Basit A. khan
+Basit A. khan
+
+Follow
+4 min read
+·
+May 16, 2023
+356
+
+
+
+
+Get ready to unravel the captivating world of UX strategies and laws employed by the Uber app, elevating it to the realm of super usefulness and unrivaled effectiveness.
+
+Press enter or click to view image in full size
+
+In this article, we dive deep into the ingenious design techniques that drive the Uber app’s success. Brace yourself for an enlightening exploration that unveils the secrets behind its seamless user experience.
+
+Get Basit A. khan’s stories in your inbox
+Join Medium for free to get updates from this writer.
+
+Enter your email
+Subscribe
+Without wasting another moment, let’s embark on this thrilling journey of discovery!
+
+1. Aesthetic Usability Effect
+Designing a beautiful UI is a necessity nowadays, which according to the law of aesthetic usability makes the design more useful in users' eyes.
+
+Press enter or click to view image in full size
+
+Users often perceive aesthetically pleasing design as design that’s more usable.
+
+2. Doherty Threshold
+Uber provides the perfect feedback, when searching for a ride they show the progress bars. Uber shows circular loading indicators to make the user feel they have listened.
+
+Press enter or click to view image in full size
+
+Productivity soars when a computer and its users interact at a pace (<400ms) that ensures that neither has to wait on the other.
+
+3. Fitt’s Law
+They have put every key button like confirm ride near your thumb. It makes the design more convenient and useful for the users.
+
+Press enter or click to view image in full size
+
+The time to acquire a target is a function of the distance to and size of the target.
+
+4. Hick’s Law
+Uber offers you the 3 best rides with their pricing and some indicators like cheaper highlighter and nearest time count which makes your decision quick.
+
+Press enter or click to view image in full size
+
+The time it takes to make a decision increases with the number and complexity of choices.
+
+5. Law of Proximity
+Uber cleverly places the categories of their ride accordingly by spacing them from other categories, on the other hand, you can see the different groups of pickups and drop-offs as well.
+
+Press enter or click to view image in full size
+
+Objects that are near, or proximate to each other, tend to be grouped together.
+
+6. Law of Similarity
+If you will see Uber UI, you will be noticed everything is designed on the same pitch. They design their elements with the same black color to make their design more consistent and relatable.
+
+Press enter or click to view image in full size
+
+The human eye tends to perceive similar elements in a design as a complete picture, shape, or group, even if those elements are separated.
+
+7. Miller’s Law
+Uber knows this law very well and perfectly placed the limited option on the very first screen for the users to remind what they have on the mainland, As human beings we can save a few things in our mind at first glance.
+
+Press enter or click to view image in full size
+
+The average person can only keep 7 (plus or minus 2) items in their working memory.
+
+Bottom Line
+In a world of UX design, the Uber app reigns as a shining example of excellence, skillfully employing UX laws to craft a flawless user experience. With the strategic implementation of principles like the law of proximity, the law of similarity, and more, Uber has curated an interface that seamlessly guides users with ease and precision. By harnessing visual cues, intuitive icons, and straightforward instructions, Uber has transformed the intricate process of navigation into a simplified masterpiece.
+
+The user-friendly nature and personalized touch of the Uber app have set a new gold standard for UX design, inspiring other applications to strive for greatness. As Uber continues to push boundaries, innovation will remain at the forefront.
+
+Further elevating the user experience to unprecedented heights. Embrace the revolution, for the evolution of Uber is destined to shape the future of UX design as we know it.
+
+Cheers!
+
+If you like it, then share it with your friends ❤️
+
+UX
+UX Design
+UX Research
+Ux Strategy
+Ui Ux Design
+356
+
+
+
+Bootcamp
+Published in Bootcamp
+107K followers
+·
+Last published just now
+From idea to product, one lesson at a time. To submit your story: https://tinyurl.com/bootspub1
+
+
+Follow
+Basit A. khan
+Written by Basit A. khan
+119 followers
+·
+19 following
+Lead Product designer
+
+
+Follow
+No responses yet
+
+Write a response
+
+What are your thoughts?
+
+Cancel
+Respond
+More from Basit A. khan and Bootcamp
+Laws of UX that Google map Follows
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Basit A. khan
+
+Laws of UX that Google map Follows
+In this article, I address some of the amazing UX strategies and laws that Google Map uses in the app design which makes the Google Map app…
+May 3, 2023
+246
+7
+End of Figma?
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Punit Chawla
+
+Why Are Designers Leaving Figma? The Great Transition.
+The Creative Industry Is Changing Rapidly & So Is Figma’s Future
+
+Jan 11
+2.3K
+89
+Clean, minimalist mobile login UI with soft gradients, rounded elements, and intuitive form layout — example of effective prompt engineering for mobile designs.
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Ravidudilusha
+
+Prompt Engineering for Designers: How to Get Stunning UIs from AI in 2026
+From chaotic blobs to polished, production-ready interfaces — the complete playbook for designers who want to 10x their workflow with AI.
+
+Jan 30
+286
+4
+Unlocking Your Potential: Beyond the Title of “Designer”
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Basit A. khan
+
+Unlocking Your Potential: Beyond the Title of “Designer”
+Designers are undoubtedly the creative wizards of the digital realm. Their ability to breathe life into visual concepts is awe-inspiring…
+May 23, 2023
+12
+1
+See all from Basit A. khan
+See all from Bootcamp
+Recommended from Medium
+End of Figma?
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Punit Chawla
+
+Why Are Designers Leaving Figma? The Great Transition.
+The Creative Industry Is Changing Rapidly & So Is Figma’s Future
+
+Jan 11
+2.3K
+89
+Figma Make with Claude 4.6 or Gemini 3
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Figma Make with Claude 4.6 or Gemini 3
+Which AI Model Works Best for UI Design
+
+Feb 23
+508
+9
+6 brain images
+Write A Catalyst
+In
+
+Write A Catalyst
+
+by
+
+Dr. Patricia Schmidt
+
+As a Neuroscientist, I Quit These 5 Morning Habits That Destroy Your Brain
+Most people do #1 within 10 minutes of waking (and it sabotages your entire day)
+
+Jan 14
+34K
+628
+An example of a perfect, human designed dashboard interface for desktop and mobile phone
+Michal Malewicz
+Michal Malewicz
+
+The End of Dashboards and Design Systems
+Design is becoming quietly human again.
+
+Nov 26, 2025
+6K
+233
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+Generative AI
+In
+
+Generative AI
+
+by
+
+Adham Khaled
+
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+ChatGPT keeps giving you the same boring response? This new technique unlocks 2× more creativity from ANY AI model — no training required…
+
+Oct 19, 2025
+24K
+650
+Why everything looks the same in 2025
+Hriday Checker
+Hriday Checker
+
+Why everything looks the same in 2025
+The Copy-Paste World
+
+Sep 24, 2025
+4.5K
+159
+See more recommendations
+Help
+
+Status
+
+About
+
+Careers
+
+Press
+
+Blog
+
+Privacy
+
+Rules
+
+Terms
+
+Text to speech

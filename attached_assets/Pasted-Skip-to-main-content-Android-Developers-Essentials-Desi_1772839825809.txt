@@ -1,0 +1,122 @@
+Skip to main content
+Android Developers
+Essentials
+
+Design & Plan
+
+Develop
+
+More
+Search
+/
+
+
+Language
+Android Studio
+Sign in
+
+Design & Plan
+Before you start coding, do your homework to design and plan a great app. Create a great user experience, carefully plan your app architecture, and follow recommended security and privacy practices.
+
+Design a beautiful app
+Explore UI design guides and samples to create a great visual experience. Learn about Android styles and themes, download Figma-based kits, and more.
+Design your UI
+
+Plan a robust architecture
+Learn the recommended patterns for building well-organized UI layers and data layers for your next Android app.
+Architect your app
+
+Design for app quality
+Create an app that follows privacy and security best practices. Build a high quality app that keeps your users safe and builds trust.
+Optimize for quality
+
+Create adaptive layouts
+Android apps can run on a wide variety of form factors, including phones, tablets, foldables, ChromeOS devices, car displays, and XR—and in various windowing modes like multi‑window and desktop windowing. Create adaptive layouts to provide an optimal user experience on displays of all sizes.
+Learn about adaptive layouts
+
+Plan for the next billion users
+The pace of smartphone growth around the world is unprecedented, and billions of new users will come from markets that require unique technical and design decisions. Make sure your app is ready.
+Go to Build for Billions
+Design guides
+Guide
+Mobile design guides
+Get started with Android UI design guides. Follow style guidance, learn about themes, and create a beautiful Android app experience.
+Guide
+Wear OS design guides
+Wear OS has a unique set of design principles. Learn the specifics of designing an app for Wear OS.
+Guide
+XR design guides
+Build experiences that push boundaries and transform how people create, explore, and enjoy entertainment, powered by Android XR.
+Guide
+TV design guides
+Create a dynamic and elegant Android TV app. Design for TV specs and dimensions and follow our best practices and recommendations.
+Quality guides
+
+Guide
+Security & privacy
+Safeguard your users' security and privacy. Follow Android's best practices and guidance to build an app with a foundation of trust and integrity.
+Go to security guides
+
+Guide
+Technical quality
+Technical quality is the foundation of a great app. Follow our technical quality guides to ensure stability, high performance, and a great user experience for your app.
+Go to quality guides
+XX
+Follow @AndroidDev on X
+YouTubeYouTube
+Check out Android Developers on YouTube
+LinkedInLinkedIn
+Connect with the Android Developers community on LinkedIn
+More Android
+Android
+Android for Enterprise
+Security
+Source
+News
+Blog
+Podcasts
+Discover
+Gaming
+Machine Learning
+Health & Fitness
+Camera & Media
+Privacy
+5G
+Android Devices
+Large screens
+Wear OS
+ChromeOS devices
+Android for cars
+Android TV
+Releases
+Android 15
+Android 14
+Android 13
+Android 12
+Android 11
+Android 10
+Pie
+Documentation and Downloads
+Android Studio guide
+Developers guides
+API reference
+Download Studio
+Android NDK
+Support
+Report platform bug
+Report documentation bug
+Google Play support
+Join research studies
+Google Developers
+Android
+Chrome
+Firebase
+Google Cloud Platform
+All products
+Privacy
+License
+Brand guidelines
+Get news and tips by email
+Subscribe
+
+Language

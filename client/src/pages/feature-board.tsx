@@ -112,7 +112,7 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
 
   return (
     <div
-      className="glass-surface rounded-md p-4 animate-fade-in-up"
+      className="glass-surface rounded-md p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
       data-testid={`card-feature-${item.id}`}
     >
       <div className="flex gap-3">

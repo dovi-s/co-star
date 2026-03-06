@@ -160,7 +160,7 @@ export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavi
                     return (
                       <div
                         key={item.title}
-                        className="glass-surface rounded-md p-4 animate-fade-in-up"
+                        className="glass-surface rounded-md p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
                         style={{ animationDelay: `${delay}ms` }}
                         data-testid={`card-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
                       >

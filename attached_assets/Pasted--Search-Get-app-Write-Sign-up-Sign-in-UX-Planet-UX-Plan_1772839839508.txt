@@ -1,0 +1,351 @@
+
+Search
+
+Get app
+Write
+Sign up
+
+Sign in
+
+
+
+UX Planet
+UX Planet
+UX Planet is a one-stop resource for everything related to user experience.
+
+Follow publication
+
+Press enter or click to view image in full size
+
+Member-only story
+
+UI Design with Gemini 3.1
+Nick Babich
+Nick Babich
+
+Follow
+7 min read
+·
+Feb 25, 2026
+330
+
+
+3
+
+
+
+Google recently released a new AI model, Gemini 3.1, that demonstrates great results in UI and web design tasks. I’ve already tested this model for web design tasks:
+
+Gemini 3.1 for UI & Web Design
+Google recently released its new AI model, Gemini 3.1. This model works extremely well for UI and web design. In this…
+uxplanet.org
+
+And in this article, I want to experiment with Gemini 3.1 and generate UI for a mobile application.
+
+Product details and writing the initial prompt for Gemini 3.1
+I will generate a home screen of a mobile app for food ordering (similar to Uber Eats or DoorDash), and use a prompt in markdown format:
+
+Why markdown?
+
+Markdown naturally has a content hierarchy (with headings like ## Header), offers a logical grouping of UI sections, and provides better readability for both humans and AI models.
+
+# Foodiez – Home Screen (iOS UI Design)
+
+Design a clean, modern mobile UI screen for an iOS app titled Foodiez – 
+Local Food Delivery. The layout should have the following sections:
+
+---
+
+## 1. Status Bar (Top)
+
+- **Style**: Standard iOS layout (top safe area)
+
+---
+
+## 2. Header Section
+
+- **Centered Logo**: Foodiez
+- **Font**: Medium weight, small size
+- **Color**: Orange text
+
+---
+
+## 3. Location & Search Row
+
+- **Left**: Location indicator (Los Angeles)
+- **Right**: Notification icon (rounded, 32px)
+- **Below**: Search bar with placeholder Search restaurants or dishes...
+  - Rounded corners, light gray background
+  - Search icon aligned left
+
+---
+
+## 4. Featured Restaurants Carousel
+
+- **Style**: Horizontally scrollable cards with rounded corners and 
+soft shadow
+
+### Card Items
+
+- **Card 1**
+  - Title: Sushi Master
+  - Subtitle: *20–30 min • Free delivery*
+  - Visual: Sushi photo thumbnail
+
+- **Card 2**
+  - Title: Pizza Mia
+  - Subtitle: *15–25 min • $5 delivery*
+  - Visual: Pizza image thumbnail
+
+---
+
+## 5. Filter Row
+
+- **Dropdown…
+Create an account to read the full story.
+The author made this story available to Medium members only.
+If you’re new to Medium, create a new account to read this story on us.
+
+Sign up with Google
+Sign up with Facebook
+
+Sign up with email
+Already have an account? Sign in
+330
+
+
+3
+
+
+UX Planet
+Published in UX Planet
+355K followers
+·
+Last published 5 hours ago
+UX Planet is a one-stop resource for everything related to user experience.
+
+
+Follow
+Nick Babich
+Written by Nick Babich
+138K followers
+·
+60 following
+Product designer & editor-in-chief of UX Planet. Twitter https://twitter.com/101babich
+
+
+Follow
+
+Responses (3)
+
+Write a response
+
+What are your thoughts?
+
+Cancel
+Respond
+Patrick Lukasak
+Patrick Lukasak
+
+3 days ago
+
+
+The commodification of design is offensive. This is not geared entirely at you, but this article is a perfect example of how low the bar is in UI design right now. 
+
+I think these prompts are useless at creating anything new or worthy of launching…more
+4
+
+
+1 reply
+
+Reply
+
+Kamrun Nahar
+Kamrun Nahar
+
+she/her
+Feb 26
+
+
+Loved every bit of this article. Keep creating amazing content!
+Reply
+
+Valerian Kleinschnitz
+Valerian Kleinschnitz
+
+Feb 26
+
+
+Very interesting article. AI is everywhere these days.
+Reply
+
+More from Nick Babich and UX Planet
+Claude Skills for Product Designers
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Claude Skills for Product Designers
+How to create your first Claude Skill
+
+Feb 9
+656
+8
+Nano Banana Pro for Graphic Designer
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Nano Banana Pro for Graphic Designer
+10 Practical Use Cases
+
+Jan 27
+752
+6
+Nano Banana Pro for Wireframing
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Nano Banana Pro for Wireframing
+6 Excellent examples for your inspiration
+
+Feb 6
+328
+5
+Top 7 MCP for Product Designers
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Top 7 MCP for Product Designers
+Model Context Protocol (MCP) is a technology that enables AI models to connect with external tools and data sources (such as GitHub, Slack…
+
+Feb 17
+495
+5
+See all from Nick Babich
+See all from UX Planet
+Recommended from Medium
+Figma Make with Claude 4.6 or Gemini 3
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Figma Make with Claude 4.6 or Gemini 3
+Which AI Model Works Best for UI Design
+
+Feb 23
+508
+9
+End of Figma?
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Punit Chawla
+
+Why Are Designers Leaving Figma? The Great Transition.
+The Creative Industry Is Changing Rapidly & So Is Figma’s Future
+
+Jan 11
+2.3K
+89
+Future of UI Design for 2026
+Michal Malewicz
+Michal Malewicz
+
+The Future of UI Design past 2026
+The future of UI is brighter than I thought.
+
+Feb 5
+780
+28
+The numbers “2026” in large white type with “#DesignTrends” in a smaller font underneath, on a blurred background in shades of orange and red.
+Zalando Design
+In
+
+Zalando Design
+
+by
+
+Zalando Product Design
+
+The 2026 shortlist: 11 design trends that are about to go mainstream
+What’s queued up for 2026? Agentic AI, hands-on leadership and true design craft. Explore the full map of what’s coming next.
+Feb 20
+209
+4
+My AI design workflow — what actually works in 2026
+Nurkhon
+Nurkhon
+
+My AI design workflow — what actually works in 2026
+I tested 40+ AI design tools. Most failed. Here’s the simple workflow I actually use.
+
+Feb 6
+291
+11
+Field study: prototypes over mockups
+UX Collective
+In
+
+UX Collective
+
+by
+
+Édouard Wautier
+
+Field study: prototypes over mockups
+A practical guide to designing with code in 2026
+Feb 18
+379
+4
+See more recommendations
+Help
+
+Status
+
+About
+
+Careers
+
+Press
+
+Blog
+
+Privacy
+
+Rules
+
+Terms
+
+Text to speech

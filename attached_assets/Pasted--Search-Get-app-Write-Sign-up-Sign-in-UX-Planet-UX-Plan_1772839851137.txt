@@ -1,0 +1,329 @@
+
+Search
+
+Get app
+Write
+Sign up
+
+Sign in
+
+
+
+UX Planet
+UX Planet
+UX Planet is a one-stop resource for everything related to user experience.
+
+Follow publication
+
+Top highlight
+
+Laws of UX that Airbnb follows
+Abdul Wahab
+Abdul Wahab
+
+Follow
+3 min read
+·
+May 30, 2023
+232
+
+
+1
+
+
+
+In this article, I address the remarkable UX strategies and principles employed by Airbnb in their mobile app design, resulting in an exceptionally functional and efficient user experience. So, without any delay, let’s dive right in and explore these fascinating insights!
+
+Press enter or click to view image in full size
+Laws of UX that Airbnb follows — Medium Cover
+Laws of UX that Airbnb follows — Medium Cover
+1. Hick’s Law
+Airbnb limits choices to aid quick decision-making. Focusing on relevant listings streamlines booking.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+The time to make a decision increases with the number of choices.
+
+2. Fitts’s Law
+Airbnb’s prominent “Confirm and pay” button on the confirmation screen reduces effort and follows Fitts’s Law.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+The time it takes to reach a target depends on its distance and size.
+
+3. Law of Proximity
+By grouping related information, Airbnb helps users perceive relationships and access details faster.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+Elements placed close together are perceived as related.
+
+4. Jakob’s Law
+Airbnb aligns its navigation and layout with familiar patterns from other platforms, reducing the learning curve for users.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+Users spend most of their time on other sites; designs should be consistent with familiar patterns.
+
+5. Law of Symmetry
+Airbnb uses symmetrical layouts and graphical elements for a visually appealing interface that enhances the user experience.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+Symmetrical elements are perceived as visually appealing.
+
+6. Miller’s Law
+Airbnb simplifies form filling by minimizing inputs, reducing cognitive load, and streamlining the process.
+
+Press enter or click to view image in full size
+Airbnb app screenshot from Mobbin
+Airbnb app screenshot from Mobbin
+The average person can only hold a limited amount of information in working memory.
+
+Conclusion
+To conclude, Airbnb serves as an exceptional example of effectively implementing UX laws to deliver a seamless user experience. By integrating principles such as Hick’s Law, Fitts’s Law, and other UX laws, Airbnb has crafted an intuitive and efficient user interface. The app simplifies the intricate process of navigation through the strategic utilization of visual cues, user-friendly icons, and clear instructions.
+
+Get Abdul Wahab’s stories in your inbox
+Join Medium for free to get updates from this writer.
+
+Enter your email
+Subscribe
+Overall, Airbnb’s user-friendly interface and personalized approach have established a new standard for UX design, positioning it as a benchmark for other applications to aspire to. As Airbnb continues its journey of innovation and evolution, we can anticipate further groundbreaking changes that will consistently enhance the user experience.
+
+— Wahab (Mid-level Product Designer)
+
+— Connect me on Linkedin
+
+If you like it, then share it with your friends ❤️
+
+UX
+Product Design
+Airbnb
+UI
+Ux Law
+232
+
+
+1
+
+
+UX Planet
+Published in UX Planet
+355K followers
+·
+Last published 5 hours ago
+UX Planet is a one-stop resource for everything related to user experience.
+
+
+Follow
+Abdul Wahab
+Written by Abdul Wahab
+44 followers
+·
+100 following
+Product designer with a coding background (CS) and a passion for creating experiences that bring art and technology together linkedin.com/in/heyabdulwahab/
+
+
+Follow
+Responses (1)
+
+Write a response
+
+What are your thoughts?
+
+Cancel
+Respond
+Anushka Jadhav
+Anushka Jadhav
+
+Jun 16, 2023
+
+
+Great article! I like how its well-summarized and has appropriate screens from app in according to the laws
+1
+
+Reply
+
+More from Abdul Wahab and UX Planet
+Claude Skills for Product Designers
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Claude Skills for Product Designers
+How to create your first Claude Skill
+
+Feb 9
+656
+8
+Nano Banana Pro for Graphic Designer
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Nano Banana Pro for Graphic Designer
+10 Practical Use Cases
+
+Jan 27
+752
+6
+Nano Banana Pro for Wireframing
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Nano Banana Pro for Wireframing
+6 Excellent examples for your inspiration
+
+Feb 6
+328
+5
+Figma + Claude for Design System Tasks
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Figma + Claude for Design System Tasks
+Design systems break not because designers don’t care but because maintaining consistency at scale is genuinely hard. Tokens drift, naming…
+
+Jan 24
+364
+2
+See all from Abdul Wahab
+See all from UX Planet
+Recommended from Medium
+End of Figma?
+Bootcamp
+In
+
+Bootcamp
+
+by
+
+Punit Chawla
+
+Why Are Designers Leaving Figma? The Great Transition.
+The Creative Industry Is Changing Rapidly & So Is Figma’s Future
+
+Jan 11
+2.3K
+89
+An example of a perfect, human designed dashboard interface for desktop and mobile phone
+Michal Malewicz
+Michal Malewicz
+
+The End of Dashboards and Design Systems
+Design is becoming quietly human again.
+
+Nov 26, 2025
+6K
+233
+Top 7 MCP for Product Designers
+UX Planet
+In
+
+UX Planet
+
+by
+
+Nick Babich
+
+Top 7 MCP for Product Designers
+Model Context Protocol (MCP) is a technology that enables AI models to connect with external tools and data sources (such as GitHub, Slack…
+
+Feb 17
+495
+5
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+Generative AI
+In
+
+Generative AI
+
+by
+
+Adham Khaled
+
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+ChatGPT keeps giving you the same boring response? This new technique unlocks 2× more creativity from ANY AI model — no training required…
+
+Oct 19, 2025
+24K
+650
+I Stopped Using ChatGPT for 30 Days. What Happened to My Brain Was Terrifying.
+Level Up Coding
+In
+
+Level Up Coding
+
+by
+
+Teja Kusireddy
+
+I Stopped Using ChatGPT for 30 Days. What Happened to My Brain Was Terrifying.
+91% of you will abandon 2026 resolutions by January 10th. Here’s how to be in the 9% who actually win.
+
+Dec 28, 2025
+9K
+337
+6 brain images
+Write A Catalyst
+In
+
+Write A Catalyst
+
+by
+
+Dr. Patricia Schmidt
+
+As a Neuroscientist, I Quit These 5 Morning Habits That Destroy Your Brain
+Most people do #1 within 10 minutes of waking (and it sabotages your entire day)
+
+Jan 14
+34K
+628
+See more recommendations
+Help
+
+Status
+
+About
+
+Careers
+
+Press
+
+Blog
+
+Privacy
+
+Rules
+
+Terms
+
+Text to speech

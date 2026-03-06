@@ -1,0 +1,399 @@
+
+Design
+OverviewWhat’s NewGet StartedGuidelinesResources
+Apple Design Resources
+Design apps accurately and quickly using official Apple design templates, icon production templates, color guides, and more.
+
+iOS & iPadOS
+ 
+macOS
+ 
+tvOS
+ 
+watchOS
+ 
+visionOS
+ 
+Technologies
+ 
+Fonts
+ 
+Tools
+ 
+Product Bezels
+
+iOS and iPadOS
+iOS 26 and iPadOS 26
+
+UI Kit
+Figma
+Sketch
+
+App Icon Template
+Sketch
+Photoshop, Illustrator
+Figma
+iOS 18 and iPadOS 18
+
+UI Kit
+Sketch
+
+Templates
+Sketch
+
+Production Templates
+Sketch
+Photoshop
+Figma
+iOS 16
+
+Templates
+Keynote
+macOS
+macOS 26
+
+UI Kit
+Figma
+Sketch
+macOS Sequoia
+
+UI Kit
+Sketch
+Note: Sketch must be installed to download
+
+Figma
+
+Templates
+Sketch
+
+Production Templates
+Sketch
+Photoshop
+tvOS
+tvOS 18
+
+UI Kit
+Sketch
+Note: Sketch must be installed to download
+
+
+Templates
+Sketch
+
+Production Templates
+Sketch
+427 KB
+
+Photoshop
+238 KB
+
+watchOS
+watchOS 26
+
+UI Kit
+Figma
+Sketch
+visionOS
+visionOS 26
+
+UI Kit
+Figma
+Sketch
+visionOS 2
+
+UI Kit
+Sketch
+Note: Sketch must be installed to download
+
+Figma
+
+Templates
+Sketch
+Technologies
+
+Add Apple Watch Face
+PNG, PDF, SVG
+
+AirPlay
+PDF
+Design Guidelines
+
+App Clips Design Template
+Figma
+Sketch
+
+Apple Health Icon
+PNG
+Design Guidelines
+
+Apple Pay Design Template
+Figma
+Sketch
+
+ARKit Badge and Glyph
+PDF
+Design Guidelines
+
+Camera Control
+Sketch
+
+Games and Game Center
+PNG, PDF
+
+HomeKit Icon and Glyph
+PNG, PDF
+Design Guidelines
+
+Live Activities Template
+Figma
+Sketch
+
+Messages Template
+Figma
+Sketch
+
+Sign in with Apple Logo
+PNG, PDF, SVG
+Design Guidelines
+
+Sign in with Apple Buttons
+Figma
+Sketch
+
+Siri and App Shortcuts Template
+Figma
+Sketch
+
+Siri Icons
+PNG
+
+Tap to Pay on iPhone Template
+Figma
+Sketch
+
+TipKit Template
+Figma
+Sketch
+
+Wallet Template
+Figma
+Sketch
+Fonts
+
+SF Pro
+Download SF Pro
+System font for iOS, iPadOS, macOS and tvOS.
+
+
+SF Compact
+Download SF Compact
+System font for watchOS, optimized for small sizes and narrow columns.
+
+
+SF Mono
+Download SF Mono
+Used in Xcode, enables alignment between rows and columns of text.
+
+
+New York
+Download New York
+Performs as a traditional reading face at small sizes and a graphic display face at larger sizes.
+
+
+SF Arabic
+Download SF Arabic
+Arabic system font on Apple platforms.
+
+
+SF Armenian
+Download SF Armenian
+Designed with proportions that have been adjusted for a better visual balance in multilingual typesetting.
+
+
+SF Georgian
+Download SF Georgian
+Supports modern Georgian, Mkhedruli, and Mtavruli uppercase forms.
+
+
+SF Hebrew
+Download SF Hebrew
+With full support of the Niqqud diacritical marks.
+
+SF Symbols
+SF Symbols 7 is a library of over 6,900 symbols designed to integrate seamlessly with San Francisco, the system font for Apple platforms. Symbols come in nine weights and three scales, automatically align with text, and can be exported and edited using vector graphics tools to create custom symbols with shared design characteristics and accessibility features. SF Symbols 7 introduces Draw animations and variable rendering, enhanced Magic Replace, gradients, and hundreds of new symbols.
+
+Learn more
+
+
+Download SF Symbols 7
+Requires macOS Sonoma or later.
+
+
+Download SF Symbols 6
+Requires macOS Ventura or later.
+
+
+Icon Composer
+Icon Composer lets you create layered icons out of Liquid Glass from a single design for iPhone, iPad, Mac, and Apple Watch. With a new multi-layer icon format, you can easily adjust Liquid Glass properties, preview with dynamic lighting effects, and annotate across appearance modes. Icon Composer is designed to work seamlessly with Xcode, and also provides the option to export a flattened version of your icon for marketing and communication needs.
+
+Learn more
+
+
+Download Icon Composer
+Requires macOS Sequoia or later.
+
+
+Parallax image tools
+Use Parallax Previewer and Parallax Exporter Plug-In for Adobe Photoshop to deliver parallax visual effects that transform static images into dynamic and immersive experiences on tvOS and visionOS.
+
+
+Parallax Previewer App
+Download version 2 for macOS
+Requires macOS 13.5 or later.
+
+Download version 1 for macOS
+Requires macOS 10.10.5 or later.
+
+User Guide
+
+Parallax Exporter Plug-In for Adobe Photoshop
+Download for macOS
+Requires Adobe Photoshop 2023 (v24.1) or later and macOS 12.4.0 or later.
+
+Download for Windows
+Requires Adobe Photoshop 2023 (v24.1) or later and Microsoft Windows 10 64-bit (version 22H2) or later.
+
+Product Bezels
+When using product bezels in your marketing materials, be sure to review these Marketing Resources and Identity Guidelines.
+
+
+All Product Bezels
+Sketch
+Note: Sketch must be installed to download
+
+
+Apple TV
+Photoshop, PNG
+
+Apple Watch Ultra 3 (2025)
+Photoshop, PNG
+
+Apple Watch Ultra 2 (2024)
+Photoshop, PNG
+
+Apple Watch Series 11
+Photoshop, PNG
+
+iMac
+Photoshop, PNG
+
+iPad
+Photoshop, PNG
+
+iPad Air M2
+Photoshop, PNG
+
+iPad mini
+Photoshop, PNG
+
+iPad Pro M4
+Photoshop, PNG
+
+iPhone 17
+Photoshop, PNG
+
+iPhone 16
+Photoshop, PNG
+
+MacBook Air M3
+Photoshop, PNG
+
+MacBook Pro M4
+Photoshop, PNG
+
+iPhone and iPad for Keynote Live Video
+Keynote
+Badges and Logos
+Find badges and logos for Apple technologies, such as Apple Health, Apple Wallet, Apple Music, and Apple Pay, that can be used in your app’s marketing material.
+
+View Apple Badges and Logos
+
+Developer Footer
+
+Apple
+DeveloperDesignResources
+Platforms
+iOS
+iPadOS
+macOS
+tvOS
+visionOS
+watchOS
+App Store
+Tools
+Swift
+SwiftUI
+Swift Playground
+TestFlight
+Xcode
+Xcode Cloud
+Icon Composer
+SF Symbols
+Technologies
+Accessibility
+Accessories
+Apple Intelligence
+Audio & Video
+Augmented Reality
+Business
+Design
+Distribution
+Education
+Games
+Health & Fitness
+In-App Purchase
+Localization
+Maps & Location
+Machine Learning & AI
+Security
+Safari & Web
+Resources
+Documentation
+Downloads
+Sample Code
+Videos
+Support
+Help Guides & Articles
+Contact Us
+Forums
+Feedback & Bug Reporting
+System Status
+Account
+Apple Developer
+App Store Connect
+Certificates, IDs, & Profiles
+Feedback Assistant
+Programs
+Apple Developer Program
+Apple Developer Enterprise Program
+App Store Small Business Program
+MFi Program
+Mini Apps Partner Program
+News Partner Program
+Video Partner Program
+Security Bounty Program
+Security Research Device Program
+Events
+Meet with Apple
+Apple Developer Centers
+App Store Awards
+Apple Design Awards
+Apple Developer Academies
+WWDC
+Read the latest news Get the Apple Developer app.
+Light
+Dark
+Auto
+
+English
+Copyright © 2026 Apple Inc. All rights reserved.Terms of Use Privacy Policy Agreements and Guidelines

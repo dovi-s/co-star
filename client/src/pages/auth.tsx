@@ -241,12 +241,14 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm flex flex-col items-center">
-          <div className="mb-8 flex flex-col items-center animate-fade-in-up">
-            <Logo size="lg" />
-            <h1 className="text-2xl font-semibold text-foreground mt-4" data-testid="text-auth-title">
+          <div className="mb-8 flex flex-col items-center">
+            <div className="animate-scale-in">
+              <Logo size="lg" />
+            </div>
+            <h1 className="text-2xl font-semibold text-foreground mt-4 animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="text-auth-title">
               {title}
             </h1>
-            <p className="text-sm text-muted-foreground mt-1 text-center">
+            <p className="text-sm text-muted-foreground mt-1 text-center animate-fade-in-up" style={{ animationDelay: "200ms" }}>
               {subtitle}
             </p>
           </div>
@@ -293,7 +295,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
           ) : (
             <>
               {(mode === "signin" || mode === "signup") && googleClientId && (
-                <div className="w-full mb-4 animate-fade-in-up" style={{ animationDelay: "80ms" }}>
+                <div className="w-full mb-4 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
                   <Button
                     type="button"
                     variant="outline"
@@ -320,7 +322,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="w-full space-y-3 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+              <form onSubmit={handleSubmit} className="w-full space-y-3 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
                 <div className="w-full glass-surface rounded-md p-6" data-testid="card-auth">
                   {mode === "signup" && (
                     <div className="flex gap-2 mb-3">

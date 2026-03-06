@@ -1354,6 +1354,34 @@
   animation: shimmer 2s ease-in-out infinite;
 }
 
+@keyframes fade-out {
+  0% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.98); }
+}
+
+@keyframes crossfade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+@keyframes line-slide-up {
+  0% { opacity: 0.5; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-page-exit {
+  animation: fade-out 180ms ease-in forwards;
+  pointer-events: none;
+}
+
+.animate-crossfade {
+  animation: crossfade-in 200ms ease-out;
+}
+
+.animate-line-slide {
+  animation: line-slide-up 250ms ease-out;
+}
+
 /* Stagger animations for lists */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
