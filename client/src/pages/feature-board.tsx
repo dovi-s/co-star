@@ -61,49 +61,82 @@ function timeAgo(dateStr: string): string {
   return `${months}mo ago`;
 }
 
-function VoteButton({
-  item,
-  direction,
-}: {
-  item: FeatureRequestItem;
-  direction: "up" | "down";
-}) {
+function VoteControls({ item }: { item: FeatureRequestItem }) {
+  const [optimisticVote, setOptimisticVote] = useState<number | null>(null);
+  const [optimisticCount, setOptimisticCount] = useState<number | null>(null);
+
   const voteMutation = useMutation({
     mutationFn: async (value: number) => {
       const res = await apiRequest("POST", `/api/features/${item.id}/vote`, { value });
       return res.json();
     },
     onSuccess: () => {
+      setOptimisticVote(null);
+      setOptimisticCount(null);
       queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+    },
+    onError: () => {
+      setOptimisticVote(null);
+      setOptimisticCount(null);
     },
   });
 
-  const handleVote = () => {
+  const currentVote = optimisticVote !== null ? optimisticVote : item.userVote;
+  const currentCount = optimisticCount !== null ? optimisticCount : (item.voteCount || 0);
+
+  const handleVote = (direction: "up" | "down") => {
+    if (voteMutation.isPending) return;
     const targetValue = direction === "up" ? 1 : -1;
-    const newValue = item.userVote === targetValue ? 0 : targetValue;
+    const newValue = currentVote === targetValue ? 0 : targetValue;
+    const diff = newValue - (item.userVote || 0);
+    setOptimisticVote(newValue);
+    setOptimisticCount((item.voteCount || 0) + diff);
     voteMutation.mutate(newValue);
   };
 
-  const isActive =
-    (direction === "up" && item.userVote === 1) ||
-    (direction === "down" && item.userVote === -1);
-
-  const Icon = direction === "up" ? ChevronUp : ChevronDown;
+  const upActive = currentVote === 1;
+  const downActive = currentVote === -1;
 
   return (
-    <button
-      onClick={handleVote}
-      disabled={voteMutation.isPending}
-      className={cn(
-        "p-1 rounded-md transition-colors",
-        isActive
-          ? "text-primary bg-primary/10"
-          : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
-      )}
-      data-testid={`button-vote-${direction}-${item.id}`}
-    >
-      <Icon className="h-4 w-4" />
-    </button>
+    <div className="flex flex-col items-center gap-0 shrink-0">
+      <button
+        onClick={() => handleVote("up")}
+        disabled={voteMutation.isPending}
+        aria-label={upActive ? "Remove upvote" : "Upvote"}
+        className={cn(
+          "p-1 rounded-md transition-colors",
+          upActive
+            ? "text-primary bg-primary/10"
+            : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+        )}
+        data-testid={`button-vote-up-${item.id}`}
+      >
+        <ChevronUp className="h-4 w-4" />
+      </button>
+      <span
+        className={cn(
+          "text-sm font-semibold tabular-nums min-w-[24px] text-center",
+          currentCount > 0 ? "text-primary" : "text-muted-foreground"
+        )}
+        data-testid={`text-vote-count-${item.id}`}
+      >
+        {currentCount}
+      </span>
+      <button
+        onClick={() => handleVote("down")}
+        disabled={voteMutation.isPending}
+        aria-label={downActive ? "Remove downvote" : "Downvote"}
+        className={cn(
+          "p-1 rounded-md transition-colors",
+          downActive
+            ? "text-destructive bg-destructive/10"
+            : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+        )}
+        data-testid={`button-vote-down-${item.id}`}
+      >
+        <ChevronDown className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 
@@ -116,19 +149,7 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
       data-testid={`card-feature-${item.id}`}
     >
       <div className="flex gap-3">
-        <div className="flex flex-col items-center gap-0 shrink-0">
-          <VoteButton item={item} direction="up" />
-          <span
-            className={cn(
-              "text-sm font-semibold tabular-nums min-w-[24px] text-center",
-              (item.voteCount || 0) > 0 ? "text-primary" : "text-muted-foreground"
-            )}
-            data-testid={`text-vote-count-${item.id}`}
-          >
-            {item.voteCount || 0}
-          </span>
-          <VoteButton item={item} direction="down" />
-        </div>
+        <VoteControls item={item} />
 
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
