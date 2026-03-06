@@ -245,79 +245,80 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
               </ul>
             </div>
 
-            <div className="pt-4 space-y-4">
-              <p className="text-xs text-muted-foreground text-center">Need something bigger?</p>
-
-              <div className="rounded-xl border border-border/40 p-5 space-y-4" data-testid="card-education-plan">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <GraduationCap className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold" data-testid="text-education-title">Education</h3>
-                    <p className="text-[11px] text-muted-foreground" data-testid="text-education-description">Drama programs, universities, language courses</p>
-                  </div>
-                </div>
-                <ul className="space-y-2">
-                  {[
-                    "Bulk seats for students and faculty",
-                    "Shared script library for classes",
-                    "Usage analytics per student",
-                    "Academic pricing available",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="w-3.5 h-3.5 text-primary/60" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Education%20Plan%20Inquiry"}
-                  data-testid="button-contact-education"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Contact us
-                </Button>
-              </div>
-
-              <div className="rounded-xl border border-border/40 p-5 space-y-4" data-testid="card-teams-plan">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <Building2 className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold" data-testid="text-teams-title">Teams</h3>
-                    <p className="text-[11px] text-muted-foreground" data-testid="text-teams-description">Sales, corporate training, medical programs</p>
-                  </div>
-                </div>
-                <ul className="space-y-2">
-                  {[
-                    "Team management and seat allocation",
-                    "Custom script templates",
-                    "Team-wide performance analytics",
-                    "Priority onboarding and support",
-                  ].map((f) => (
-                    <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Check className="w-3.5 h-3.5 text-primary/60" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Teams%20Plan%20Inquiry"}
-                  data-testid="button-contact-teams"
-                >
-                  <Mail className="w-4 h-4 mr-2" />
-                  Contact us
-                </Button>
-              </div>
-            </div>
           </>
         )}
+
+        <div className="pt-4 space-y-4">
+          <p className="text-xs text-muted-foreground text-center">Need something bigger?</p>
+
+          <div className="rounded-xl border border-border/40 p-5 space-y-4" data-testid="card-education-plan">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <GraduationCap className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold" data-testid="text-education-title">Education</h3>
+                <p className="text-[11px] text-muted-foreground" data-testid="text-education-description">Drama programs, universities, language courses</p>
+              </div>
+            </div>
+            <ul className="space-y-2">
+              {[
+                "Bulk seats for students and faculty",
+                "Shared script library for classes",
+                "Usage analytics per student",
+                "Academic pricing available",
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-primary/60" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Education%20Plan%20Inquiry"}
+              data-testid="button-contact-education"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact us
+            </Button>
+          </div>
+
+          <div className="rounded-xl border border-border/40 p-5 space-y-4" data-testid="card-teams-plan">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Building2 className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold" data-testid="text-teams-title">Teams</h3>
+                <p className="text-[11px] text-muted-foreground" data-testid="text-teams-description">Sales, corporate training, medical programs</p>
+              </div>
+            </div>
+            <ul className="space-y-2">
+              {[
+                "Team management and seat allocation",
+                "Custom script templates",
+                "Team-wide performance analytics",
+                "Priority onboarding and support",
+              ].map((f) => (
+                <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Check className="w-3.5 h-3.5 text-primary/60" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => window.location.href = "mailto:hello@co-star.app?subject=Teams%20Plan%20Inquiry"}
+              data-testid="button-contact-teams"
+            >
+              <Mail className="w-4 h-4 mr-2" />
+              Contact us
+            </Button>
+          </div>
+        </div>
       </main>
     </div>
   );
