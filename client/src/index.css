@@ -1090,6 +1090,25 @@
   animation: progress-energy 2s ease-in-out infinite;
 }
 
+/* --- Script Scanner: Document scan animation --- */
+@keyframes scan-sweep {
+  0% { top: 0%; opacity: 0; }
+  5% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes scan-line-reveal {
+  0% { opacity: 0; width: 0%; }
+  30% { opacity: 0.15; }
+  100% { opacity: 0.25; width: var(--line-w, 70%); }
+}
+
+@keyframes scan-glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 /* --- Scene Energy: Gradient wash for scene transitions --- */
 @keyframes scene-wash {
   0% { 

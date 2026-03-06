@@ -705,14 +705,45 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 </>
               ) : (
                 <>
-                  <div className="relative w-10 h-10">
-                    <div className="absolute inset-0 rounded-full border-2 border-primary/10" />
-                    <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
-                    <div className="absolute inset-[6px] rounded-full border-2 border-transparent border-b-primary/40 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }} />
+                  <div className="relative w-[72px] h-[92px] rounded-md border border-primary/20 bg-primary/[0.03] overflow-hidden">
+                    <div
+                      className="absolute left-0 right-0 h-[2px] pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(90deg, transparent 0%, hsl(var(--primary)) 20%, hsl(var(--primary)) 80%, transparent 100%)',
+                        boxShadow: '0 0 12px 4px hsl(var(--primary) / 0.3), 0 0 24px 8px hsl(var(--primary) / 0.15)',
+                        animation: 'scan-sweep 2.2s ease-in-out infinite',
+                      }}
+                    />
+                    <div className="absolute inset-0 px-2.5 pt-3 pb-2 flex flex-col gap-[5px]">
+                      {[85, 60, 72, 45, 80, 55, 68, 40, 75, 50].map((w, i) => (
+                        <div
+                          key={i}
+                          className="h-[3px] rounded-full bg-foreground/20"
+                          style={{
+                            '--line-w': `${w}%`,
+                            width: `${w}%`,
+                            animation: `scan-line-reveal 0.6s ease-out ${0.3 + i * 0.18}s both`,
+                          } as React.CSSProperties}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-sm font-medium text-foreground/90">
-                    {parseProgress.replace("...", "")}
-                  </p>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground/90">
+                      {parseProgress.replace("...", "")}
+                    </p>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className="w-1 h-1 rounded-full bg-primary"
+                          style={{
+                            animation: `scan-glow-pulse 1.2s ease-in-out ${i * 0.3}s infinite`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
                 </>
               )}
             </div>
