@@ -1,4 +1,4 @@
-const CACHE_NAME = 'costar-v21';
+const CACHE_NAME = 'costar-v22';
 
 self.addEventListener('install', () => {
   self.skipWaiting();

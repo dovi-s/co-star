@@ -1704,6 +1704,34 @@
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
+/* iOS PWA: use dynamic viewport height (mobile only) */
+@media (hover: none) and (pointer: coarse) {
+  @supports (min-height: 100dvh) {
+    .min-h-screen {
+      min-height: 100dvh !important;
+    }
+    .h-screen {
+      height: 100dvh !important;
+    }
+  }
+}
+
+/* PWA standalone mode fixes */
+@media all and (display-mode: standalone) {
+  html, body {
+    overscroll-behavior: none;
+    -webkit-touch-callout: none;
+    touch-action: pan-x pan-y;
+  }
+}
+
+/* Prevent iOS zoom on input focus (mobile touch devices only) */
+@media (hover: none) and (pointer: coarse) {
+  input, select, textarea {
+    font-size: max(16px, 1em) !important;
+  }
+}
+
 /* Spotlight effect for current line - visible breathing glow */
 .spotlight {
   position: relative;
