@@ -13,6 +13,7 @@ import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X, Sparkles
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
+import { cn } from "@/lib/utils";
 
 type Step = "import" | "role-select";
 
@@ -179,6 +180,16 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             const limit = 3 + (user.scriptUsageLimitBonus ?? 0);
             const used = user.scriptUsageCount ?? 0;
             const remaining = Math.max(0, limit - used);
+            const maxed = remaining === 0;
+            const resetAt = user.scriptUsageResetAt ? new Date(user.scriptUsageResetAt) : null;
+            const resetLabel = maxed && resetAt ? (() => {
+              const now = new Date();
+              const diffMs = resetAt.getTime() - now.getTime();
+              if (diffMs <= 0) return null;
+              const hours = Math.floor(diffMs / 3600000);
+              const mins = Math.floor((diffMs % 3600000) / 60000);
+              return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+            })() : null;
             return isPro ? (
               <button
                 onClick={() => onNavigate?.("subscription")}
@@ -192,13 +203,31 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             ) : (
               <button
                 onClick={() => onNavigate?.("subscription")}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/50"
+                className={cn(
+                  "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium transition-colors",
+                  maxed
+                    ? "text-destructive bg-destructive/[0.08] hover:bg-destructive/[0.12]"
+                    : "text-muted-foreground hover:bg-muted/50"
+                )}
                 data-testid="badge-plan-free"
-                aria-label={`Free plan, ${used} of ${limit} scripts used`}
+                aria-label={maxed ? `Daily limit reached, resets in ${resetLabel || "soon"}` : `Free plan, ${used} of ${limit} daily scripts used`}
+                title={maxed ? `Resets in ${resetLabel || "soon"}. Tap to upgrade.` : `${remaining} of ${limit} scripts left today`}
               >
-                <span>Free</span>
-                <span className="text-muted-foreground/40">·</span>
-                <span className={remaining === 0 ? "text-destructive" : "text-foreground/70"}>{used}/{limit}</span>
+                {maxed ? (
+                  <>
+                    <span>{used}/{limit}</span>
+                    {resetLabel && (
+                      <>
+                        <span className="text-destructive/40">·</span>
+                        <span>{resetLabel}</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <span>{used}/{limit} today</span>
+                  </>
+                )}
               </button>
             );
           })()}
