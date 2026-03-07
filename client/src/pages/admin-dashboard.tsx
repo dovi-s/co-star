@@ -685,7 +685,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
 }
 
 function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void }) {
-  const [grantAmount, setGrantAmount] = useState("5");
+  const [grantAmount, setGrantAmount] = useState("3");
 
   const { data, isLoading } = useQuery<any>({
     queryKey: ["/api/admin/users", userId],
@@ -855,7 +855,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
                   size="sm"
                   variant="outline"
                   disabled={planMutation.isPending}
-                  onClick={() => planMutation.mutate({ action: "grant_usage", amount: Number(grantAmount) || 5 })}
+                  onClick={() => planMutation.mutate({ action: "grant_usage", amount: Number(grantAmount) || 3 })}
                   data-testid="button-grant-usage"
                 >
                   Grant
