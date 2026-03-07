@@ -115,6 +115,9 @@ function AppContent() {
     if (user) {
       const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
       syncFromServer(user.profileImageUrl || null, name || undefined);
+      if (user.onboardingComplete !== "true" && view !== "onboarding" && view !== "signin") {
+        setView("onboarding");
+      }
     }
   }, [user, syncFromServer]);
   const [multiplayerInitialView, setMultiplayerInitialView] = useState<MultiplayerInitialView>("join");
