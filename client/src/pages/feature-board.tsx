@@ -16,7 +16,17 @@ import {
   X,
   Send,
   Lightbulb,
+  MoreHorizontal,
+  EyeOff,
+  Eye,
+  Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 interface FeatureRequestItem {
@@ -140,12 +150,36 @@ function VoteControls({ item }: { item: FeatureRequestItem }) {
   );
 }
 
-function RequestCard({ item }: { item: FeatureRequestItem }) {
+function RequestCard({ item, isAdmin }: { item: FeatureRequestItem; isAdmin: boolean }) {
   const category = item.category || "general";
+  const isHidden = item.status === "hidden";
+
+  const statusMutation = useMutation({
+    mutationFn: async (status: string) => {
+      const res = await apiRequest("PATCH", `/api/features/${item.id}/status`, { status });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("DELETE", `/api/features/${item.id}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/features"] });
+    },
+  });
 
   return (
     <div
-      className="glass-surface rounded-lg p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
+      className={cn(
+        "glass-surface rounded-lg p-4 animate-fade-in-up transition-shadow duration-200 hover:shadow-md",
+        isHidden && "opacity-50"
+      )}
       data-testid={`card-feature-${item.id}`}
     >
       <div className="flex gap-3">
@@ -156,16 +190,69 @@ function RequestCard({ item }: { item: FeatureRequestItem }) {
             <h2 className="text-sm font-medium text-foreground leading-snug">
               {item.title}
             </h2>
-            {item.status === "planned" && (
-              <Badge className="shrink-0 bg-primary/10 text-primary border-transparent text-[10px]">
-                Planned
-              </Badge>
-            )}
-            {item.status === "shipped" && (
-              <Badge className="shrink-0 bg-green-600/10 text-green-600 border-transparent text-[10px]">
-                Shipped
-              </Badge>
-            )}
+            <div className="flex items-center gap-1 shrink-0">
+              {item.status === "planned" && (
+                <Badge className="bg-primary/10 text-primary border-transparent text-[10px]">
+                  Planned
+                </Badge>
+              )}
+              {item.status === "shipped" && (
+                <Badge className="bg-green-600/10 text-green-600 border-transparent text-[10px]">
+                  Shipped
+                </Badge>
+              )}
+              {isHidden && (
+                <Badge className="bg-muted text-muted-foreground border-transparent text-[10px]">
+                  Hidden
+                </Badge>
+              )}
+              {isAdmin && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                      data-testid={`button-admin-menu-${item.id}`}
+                    >
+                      <MoreHorizontal className="h-3.5 w-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {isHidden ? (
+                      <DropdownMenuItem
+                        onClick={() => statusMutation.mutate("open")}
+                        disabled={statusMutation.isPending}
+                        data-testid={`button-unhide-${item.id}`}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-2" />
+                        Unhide
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem
+                        onClick={() => statusMutation.mutate("hidden")}
+                        disabled={statusMutation.isPending}
+                        data-testid={`button-hide-${item.id}`}
+                      >
+                        <EyeOff className="h-3.5 w-3.5 mr-2" />
+                        Hide
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem
+                      onClick={() => {
+                        if (confirm("Delete this request permanently?")) {
+                          deleteMutation.mutate();
+                        }
+                      }}
+                      disabled={deleteMutation.isPending}
+                      className="text-destructive focus:text-destructive"
+                      data-testid={`button-delete-${item.id}`}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-2" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
           {item.description && (
             <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-2">
@@ -291,11 +378,12 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
   const [sort, setSort] = useState<SortMode>("top");
   const [showForm, setShowForm] = useState(false);
 
-  const { data, isLoading } = useQuery<{ requests: FeatureRequestItem[] }>({
+  const { data, isLoading } = useQuery<{ requests: FeatureRequestItem[]; isAdmin?: boolean }>({
     queryKey: ["/api/features", `?sort=${sort}`],
   });
 
   const requests = data?.requests || [];
+  const adminMode = data?.isAdmin || false;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -399,7 +487,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
           ) : (
             <div className="space-y-3">
               {requests.map((item) => (
-                <RequestCard key={item.id} item={item} />
+                <RequestCard key={item.id} item={item} isAdmin={adminMode} />
               ))}
             </div>
           )}

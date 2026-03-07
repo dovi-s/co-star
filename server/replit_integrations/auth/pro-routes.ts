@@ -2,8 +2,26 @@ import type { Express, RequestHandler } from "express";
 import { isAuthenticated } from "./replitAuth";
 import { db } from "../../db";
 import { savedScripts, performanceRuns, users, featureRequests, featureVotes, recentScripts } from "@shared/models/auth";
-import { eq, desc, and, sql, inArray } from "drizzle-orm";
+import { eq, desc, and, sql, inArray, ne } from "drizzle-orm";
 import crypto from "crypto";
+
+async function isAdmin(req: any): Promise<boolean> {
+  const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+  if (!userId) return false;
+  const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").filter(Boolean);
+  if (adminIds.includes(userId)) return true;
+  const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean);
+  if (adminEmails.length > 0) {
+    try {
+      const [user] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
+      if (user?.email && adminEmails.includes(user.email.toLowerCase().trim())) return true;
+    } catch {}
+  }
+  if (adminIds.length === 0 && adminEmails.length === 0) {
+    return process.env.NODE_ENV === "development";
+  }
+  return false;
+}
 
 function scriptFingerprint(rawScript: string): string {
   return crypto.createHash("sha256").update(rawScript || "").digest("hex").substring(0, 32);
@@ -209,10 +227,13 @@ export function registerProRoutes(app: Express): void {
     try {
       const userId = req.user?.claims?.sub || `anon_${req.sessionID}`;
       const sort = req.query.sort === "newest" ? "newest" : "top";
+      const admin = await isAdmin(req);
 
-      const requests = await db
-        .select()
-        .from(featureRequests)
+      const baseQuery = admin
+        ? db.select().from(featureRequests)
+        : db.select().from(featureRequests).where(ne(featureRequests.status, "hidden"));
+
+      const requests = await baseQuery
         .orderBy(sort === "newest" ? desc(featureRequests.createdAt) : desc(featureRequests.voteCount));
 
       const votes = await db
@@ -222,6 +243,7 @@ export function registerProRoutes(app: Express): void {
       const userVotes: Record<string, number> = Object.fromEntries(votes.map(v => [v.featureRequestId, v.value]));
 
       res.json({
+        isAdmin: admin,
         requests: requests.map(r => ({
           ...r,
           userVote: userVotes[r.id] || 0,
@@ -230,6 +252,32 @@ export function registerProRoutes(app: Express): void {
     } catch (error) {
       console.error("Error fetching features:", error);
       res.status(500).json({ message: "Failed to fetch feature requests" });
+    }
+  });
+
+  app.patch("/api/features/:id/status", optionalAuth, async (req: any, res) => {
+    try {
+      if (!(await isAdmin(req))) return res.status(403).json({ message: "Not authorized" });
+      const { status } = req.body;
+      if (!["open", "planned", "shipped", "hidden"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      await db.update(featureRequests).set({ status }).where(eq(featureRequests.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error updating feature status:", error);
+      res.status(500).json({ message: "Failed to update status" });
+    }
+  });
+
+  app.delete("/api/features/:id", optionalAuth, async (req: any, res) => {
+    try {
+      if (!(await isAdmin(req))) return res.status(403).json({ message: "Not authorized" });
+      await db.delete(featureRequests).where(eq(featureRequests.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error) {
+      console.error("Error deleting feature:", error);
+      res.status(500).json({ message: "Failed to delete feature" });
     }
   });
 
