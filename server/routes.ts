@@ -2421,6 +2421,7 @@ MARY: You're kidding me.`;
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const { userId } = req.params;
+      const [targetUser] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
       await db.execute(sql`DELETE FROM analytics_events WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM error_logs WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM feedback_messages WHERE user_id = ${userId}`);
@@ -2429,8 +2430,10 @@ MARY: You're kidding me.`;
       await db.execute(sql`DELETE FROM performance_runs WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM recent_scripts WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM saved_scripts WHERE user_id = ${userId}`);
-      await db.execute(sql`DELETE FROM password_reset_tokens WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM pageviews WHERE user_id = ${userId}`);
+      if (targetUser) {
+        await db.execute(sql`DELETE FROM password_reset_tokens WHERE email = ${targetUser.email}`);
+      }
       await db.execute(sql`DELETE FROM sessions WHERE sess->>'userId' = ${userId}`);
       await db.delete(users).where(eq(users.id, userId));
       res.json({ ok: true });
