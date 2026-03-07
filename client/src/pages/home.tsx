@@ -9,7 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X, Sparkles } from "lucide-react";
+import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X, Crown } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -197,7 +197,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
                 data-testid="badge-plan-pro"
                 aria-label="Pro plan"
               >
-                <Sparkles className="h-3 w-3" />
+                <Crown className="h-3 w-3" />
                 Pro
               </button>
             ) : (
