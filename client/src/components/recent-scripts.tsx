@@ -11,7 +11,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save, User } from "lucide-react";
 import type { RecentScript } from "@/hooks/use-recent-scripts";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -33,6 +34,7 @@ function timeAgo(dateStr: string): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
+  if (days === 1) return "Yesterday";
   if (days < 7) return `${days}d ago`;
   const weeks = Math.floor(days / 7);
   if (weeks < 4) return `${weeks}w ago`;
@@ -168,24 +170,27 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                     {script.name}
                   </p>
                 )}
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
-                    <Users2 className="h-3 w-3" />
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 no-default-active-elevate" data-testid={`badge-role-count-${script.id}`}>
+                    <Users2 className="h-2.5 w-2.5 mr-0.5" />
                     {script.roleCount} {script.roleCount === 1 ? "role" : "roles"}
-                  </span>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                  </Badge>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70" data-testid={`text-line-count-${script.id}`}>
                     <FileText className="h-3 w-3" />
                     {script.lineCount} {script.lineCount === 1 ? "line" : "lines"}
                   </span>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70">
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70" data-testid={`text-time-ago-${script.id}`}>
                     <Clock className="h-3 w-3" />
                     {timeAgo(script.lastUsed)}
                   </span>
                 </div>
                 {script.lastRole && (
-                  <p className="text-[11px] text-muted-foreground/60 mt-1">
-                    Last played as {script.lastRole}
-                  </p>
+                  <div className="flex items-center gap-1 mt-1.5" data-testid={`text-last-role-${script.id}`}>
+                    <User className="h-3 w-3 text-muted-foreground/60" />
+                    <span className="text-[11px] text-muted-foreground/70">
+                      Last played as <span className="font-medium text-muted-foreground">{script.lastRole}</span>
+                    </span>
+                  </div>
                 )}
               </div>
 

@@ -9,9 +9,10 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Repeat, Clock, Volume2 } from "lucide-react";
+import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
+import { useUserStats } from "@/hooks/use-user-stats";
 
 type Step = "import" | "role-select";
 
@@ -22,14 +23,38 @@ interface HomePageProps {
   onNavigate?: (page: string) => void;
 }
 
+function getPersonalizedNudge(stats: ReturnType<typeof useUserStats>["stats"], scriptCount: number): { icon: "flame" | "trending" | "book"; message: string } | null {
+  if (stats.currentStreak >= 3) {
+    return { icon: "flame", message: `You're on a ${stats.currentStreak}-day streak. Keep it going!` };
+  }
+  if (stats.totalRunsCompleted > 0 && stats.currentStreak >= 1) {
+    return { icon: "trending", message: `${stats.totalLinesRehearsed.toLocaleString()} lines rehearsed so far. Nice work!` };
+  }
+  if (scriptCount >= 2) {
+    return { icon: "book", message: `You've worked on ${scriptCount} scripts. Ready for the next one?` };
+  }
+  if (stats.totalSessions >= 1) {
+    return { icon: "trending", message: `${stats.totalRunsCompleted} run${stats.totalRunsCompleted !== 1 ? "s" : ""} completed. Let's add another!` };
+  }
+  return null;
+}
+
+const nudgeIcons = {
+  flame: Flame,
+  trending: TrendingUp,
+  book: BookOpen,
+};
+
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const { isAuthenticated, user } = useAuth();
+  const { stats } = useUserStats();
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);
   const { scripts: recentScripts, refresh: refreshRecent, save: saveRecentScript, update: recentUpdate, remove: recentRemove } = useRecentScripts();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [nudgeDismissed, setNudgeDismissed] = useState(false);
 
   useEffect(() => {
     if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
@@ -212,6 +237,30 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             </div>
           </div>
         </div>
+
+        {(() => {
+          const nudge = isAuthenticated && !nudgeDismissed ? getPersonalizedNudge(stats, recentScripts.length) : null;
+          if (!nudge) return null;
+          const NudgeIcon = nudgeIcons[nudge.icon];
+          return (
+            <div className="px-5 pb-3 relative z-10" data-testid="personalized-nudge">
+              <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-md bg-card border border-border/60">
+                <NudgeIcon className="h-4 w-4 text-foreground/70 shrink-0" data-testid="nudge-icon" />
+                <span className="text-sm text-foreground flex-1" data-testid="nudge-message">{nudge.message}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setNudgeDismissed(true)}
+                  aria-label="Dismiss"
+                  data-testid="button-dismiss-nudge"
+                  className="text-muted-foreground shrink-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="flex-1 px-4 pb-6 relative z-10">
           <ScriptImport

@@ -18,7 +18,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -64,6 +64,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     updateSession,
     createSession,
     clearSession,
+    setUserRole,
     clearUserRole,
     isLoading,
     error,
@@ -1278,6 +1279,81 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     };
   };
 
+  const getNextStepSuggestions = () => {
+    if (!session || !completedRunStats) return [];
+    const suggestions: Array<{ id: string; label: string; detail: string; icon: typeof RefreshCcw; action: () => void }> = [];
+
+    const otherRoles = session.roles.filter(r => r.id !== session.userRoleId);
+    if (otherRoles.length > 0) {
+      const suggestedRole = otherRoles[0];
+      suggestions.push({
+        id: "switch-role",
+        label: `Try as ${suggestedRole.name}`,
+        detail: "See it from another perspective",
+        icon: Users,
+        action: () => {
+          setShowCelebration(false);
+          setSceneCompleted(false);
+          setCompletedRunStats(null);
+          setUserRole(suggestedRole.id);
+          goToLine(0);
+          resetRunPerformance();
+        },
+      });
+    }
+
+    const currentMode = session.memorizationMode || "off";
+    const modeProgression: MemorizationMode[] = ["off", "partial", "cue", "full"];
+    const modeLabels: Record<string, string> = { partial: "Partial Hide", cue: "Cue Only", full: "Full Memorization" };
+    const currentIdx = modeProgression.indexOf(currentMode);
+    if (currentIdx < modeProgression.length - 1) {
+      const nextMode = modeProgression[currentIdx + 1];
+      suggestions.push({
+        id: "next-mode",
+        label: `Try ${modeLabels[nextMode]}`,
+        detail: "Challenge yourself more",
+        icon: Sparkles,
+        action: () => {
+          setShowCelebration(false);
+          setSceneCompleted(false);
+          setCompletedRunStats(null);
+          setMemorizationMode(nextMode);
+          goToLine(0);
+          resetRunPerformance();
+          setTimeout(() => {
+            speakingLineRef.current = null;
+            setPlaying(true);
+          }, 300);
+        },
+      });
+    }
+
+    if (completedRunStats.averageAccuracy < 90 && completedRunStats.totalUserLines > 0) {
+      suggestions.push({
+        id: "improve",
+        label: "Improve your accuracy",
+        detail: `${Math.round(completedRunStats.averageAccuracy)}% — aim for 90%+`,
+        icon: Target,
+        action: handleTryAgain,
+      });
+    }
+
+    suggestions.push({
+      id: "new-script",
+      label: "Try a new script",
+      detail: "Start fresh with something new",
+      icon: ArrowRight,
+      action: () => {
+        setShowCelebration(false);
+        setSceneCompleted(false);
+        setCompletedRunStats(null);
+        handleBackToHome();
+      },
+    });
+
+    return suggestions.slice(0, 3);
+  };
+
   const screenRecordingFrameRef = useRef<number | null>(null);
   useEffect(() => {
     const canvas = camera.screenCanvasRef.current;
@@ -1577,6 +1653,35 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               {scriptSaved && (
                 <p className="text-xs text-green-600 mb-3">Script saved to your library</p>
               )}
+
+              {/* What's next suggestions */}
+              {(() => {
+                const suggestions = getNextStepSuggestions();
+                if (suggestions.length === 0) return null;
+                return (
+                  <div className="mb-4" data-testid="next-steps-section">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">What's next</p>
+                    <div className="flex flex-col gap-1.5">
+                      {suggestions.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={s.action}
+                          className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover-elevate active-elevate-2 transition-colors"
+                          data-testid={`button-next-step-${s.id}`}
+                        >
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <s.icon className="h-4 w-4 text-muted-foreground" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium leading-tight truncate">{s.label}</p>
+                            <p className="text-xs text-muted-foreground leading-tight truncate">{s.detail}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Primary action */}
               <Button

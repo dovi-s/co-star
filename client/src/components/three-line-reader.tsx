@@ -517,6 +517,7 @@ export function ThreeLineReader({
           )}
           data-testid="scene-transition-card"
         >
+          <div className="scene-energy-sweep" aria-hidden="true" />
           <div className="flex items-center gap-2 mb-1">
             <div className={cn(
               "circle-badge w-5 h-5",
