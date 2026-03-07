@@ -9,7 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X } from "lucide-react";
+import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X, Sparkles } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -174,6 +174,34 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
       <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
         <Logo size="xs" animated showWordmark onClick={() => { setStep("import"); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <div className="flex items-center gap-2">
+          {isAuthenticated && user && (() => {
+            const isPro = user.subscriptionTier === "pro";
+            const limit = 3 + (user.scriptUsageLimitBonus ?? 0);
+            const used = user.scriptUsageCount ?? 0;
+            const remaining = Math.max(0, limit - used);
+            return isPro ? (
+              <button
+                onClick={() => onNavigate?.("subscription")}
+                className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-primary/80 bg-primary/[0.08] transition-colors hover:bg-primary/[0.12]"
+                data-testid="badge-plan-pro"
+                aria-label="Pro plan"
+              >
+                <Sparkles className="h-3 w-3" />
+                Pro
+              </button>
+            ) : (
+              <button
+                onClick={() => onNavigate?.("subscription")}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/50"
+                data-testid="badge-plan-free"
+                aria-label={`Free plan, ${used} of ${limit} scripts used`}
+              >
+                <span>Free</span>
+                <span className="text-muted-foreground/40">·</span>
+                <span className={remaining === 0 ? "text-destructive" : "text-foreground/70"}>{used}/{limit}</span>
+              </button>
+            );
+          })()}
           {onMultiplayer && (
             <Button
               variant="ghost"

@@ -27,6 +27,8 @@ export function registerAuthRoutes(app: Express): void {
           onboardingComplete: users.onboardingComplete,
           subscriptionTier: users.subscriptionTier,
           subscriptionExpiresAt: users.subscriptionExpiresAt,
+          scriptUsageCount: users.scriptUsageCount,
+          scriptUsageLimitBonus: users.scriptUsageLimitBonus,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         })
