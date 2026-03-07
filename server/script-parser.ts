@@ -81,8 +81,9 @@ function areOCRVariants(name1: string, name2: string): boolean {
   }
   
   // For very high overlap (90%+), allow even if first letter doesn't match
-  // This catches cases like CROR -> GEORGE where OCR badly mangled the name
-  if (matchRatio >= 0.9 && shorter.length >= 3) {
+  // but only for longer names and similar lengths to avoid false positives
+  // (e.g. SAM/JAMES: all SAM letters exist in JAMES but they are different names)
+  if (matchRatio >= 0.9 && shorter.length >= 5 && longer.length <= shorter.length * 1.4) {
     return true;
   }
   
