@@ -27,6 +27,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
   const [showDetails, setShowDetails] = useState(false);
   const [whereItHappened, setWhereItHappened] = useState("");
   const [includeScript, setIncludeScript] = useState(false);
+  const [pastedScript, setPastedScript] = useState("");
   const [sent, setSent] = useState(false);
 
   const currentLine = session
@@ -63,6 +64,9 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       const scriptData = lastRawScript || getScriptSummary();
       parts.push(`\n--- Script data ---\n${scriptData}`);
     }
+    if (pastedScript.trim()) {
+      parts.push(`\n--- Full script (pasted) ---\n${pastedScript}`);
+    }
     const fullMessage = parts.join("\n");
 
     fetch("/api/feedback", {
@@ -72,7 +76,10 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
         type: "bug",
         subject: "Bug report",
         message: fullMessage,
-        attachmentData: includeScript ? (lastRawScript || getScriptSummary()) : null,
+        attachmentData: [
+          includeScript ? (lastRawScript || getScriptSummary()) : null,
+          pastedScript.trim() || null,
+        ].filter(Boolean).join("\n\n--- Pasted script ---\n") || null,
         contactEmail: email.trim() || null,
         path: window.location.pathname,
       }),
@@ -90,6 +97,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
       setEmail("");
       setWhereItHappened("");
       setIncludeScript(false);
+      setPastedScript("");
       setShowDetails(false);
       onOpenChange(false);
     }, 1500);
@@ -100,6 +108,7 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
     setEmail("");
     setWhereItHappened("");
     setIncludeScript(false);
+    setPastedScript("");
     setShowDetails(false);
     setSent(false);
     onOpenChange(false);
@@ -186,6 +195,25 @@ export function FeedbackSheet({ open, onOpenChange }: FeedbackSheetProps) {
                     </pre>
                   </div>
                 )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                    <Paperclip className="h-3 w-3" />
+                    Paste full script (optional)
+                  </label>
+                  <Textarea
+                    placeholder="Paste the full script text here so we can reproduce the issue"
+                    value={pastedScript}
+                    onChange={(e) => setPastedScript(e.target.value)}
+                    className="min-h-[80px] resize-none text-xs font-mono"
+                    data-testid="input-paste-script"
+                  />
+                  {pastedScript.trim() && (
+                    <p className="text-[10px] text-muted-foreground">
+                      {pastedScript.split("\n").length} lines attached
+                    </p>
+                  )}
+                </div>
 
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1">
