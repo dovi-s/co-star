@@ -1365,6 +1365,7 @@ function FeedbackTab() {
           <option value="">All types</option>
           <option value="bug">Bug Report</option>
           <option value="feedback">General</option>
+          <option value="sales">Sales Inquiry</option>
         </select>
       </div>
 

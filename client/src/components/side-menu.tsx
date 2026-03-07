@@ -33,9 +33,11 @@ import {
   Lightbulb,
   Palette,
   Users,
+  Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FeedbackSheet } from "@/components/feedback-sheet";
+import { SalesSheet } from "@/components/sales-sheet";
 
 interface SideMenuProps {
   open: boolean;
@@ -124,6 +126,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const { user, isAuthenticated: isSignedIn, logout } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [salesOpen, setSalesOpen] = useState(false);
 
   const navigate = (page: string) => {
     trackClick(`menu-${page}`);
@@ -342,6 +345,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             testId="menu-item-support"
           />
           <MenuItem
+            icon={<Handshake className="h-4 w-4" />}
+            label="Sales"
+            description="Teams, education, or demo"
+            onClick={() => setSalesOpen(true)}
+            testId="menu-item-sales"
+          />
+          <MenuItem
             icon={<Share2 className="h-4 w-4" />}
             label="Tell a Friend"
             description="Share with fellow actors"
@@ -391,6 +401,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
         </div>
       </SheetContent>
       <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />
+      <SalesSheet open={salesOpen} onOpenChange={setSalesOpen} />
     </Sheet>
   );
 }
