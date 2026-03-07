@@ -49,6 +49,13 @@ import {
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Tab = "overview" | "users" | "traffic" | "usage" | "features" | "revenue" | "feedback" | "errors" | "integrations";
 
@@ -356,7 +363,6 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const [newLastName, setNewLastName] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [actionsOpenId, setActionsOpenId] = useState<string | null>(null);
 
   const invalidateUsers = () => {
     queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
@@ -381,19 +387,31 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const blockMutation = useMutation({
     mutationFn: async ({ userId, blocked }: { userId: string; blocked: boolean }) => {
       const res = await apiRequest("POST", `/api/admin/users/${userId}/block`, { blocked });
+      if (!res.ok) throw new Error("Failed to update block status");
       return res.json();
     },
-    onSuccess: invalidateUsers,
+    onSuccess: (_data, variables) => {
+      invalidateUsers();
+      toast({ title: variables.blocked ? "User blocked" : "User unblocked" });
+    },
+    onError: () => {
+      toast({ title: "Failed to update block status", variant: "destructive" });
+    },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (userId: string) => {
       const res = await apiRequest("DELETE", `/api/admin/users/${userId}`, {});
+      if (!res.ok) throw new Error("Failed to delete user");
       return res.json();
     },
     onSuccess: () => {
       setConfirmDeleteId(null);
       invalidateUsers();
+      toast({ title: "User deleted" });
+    },
+    onError: () => {
+      toast({ title: "Failed to delete user", variant: "destructive" });
     },
   });
 
@@ -605,43 +623,42 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                             </button>
                           </div>
                         ) : (
-                          <div className="relative" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              onClick={() => setActionsOpenId(actionsOpenId === u.id ? null : u.id)}
-                              className="p-1 rounded hover:bg-muted transition-colors"
-                              data-testid={`button-actions-${u.id}`}
-                            >
-                              <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
-                            </button>
-                            {actionsOpenId === u.id && (
-                              <div className="absolute right-0 top-full mt-1 z-50 bg-background border border-border rounded-lg shadow-lg py-1 min-w-[140px]">
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
                                 <button
-                                  onClick={() => { blockMutation.mutate({ userId: u.id, blocked: !isBlocked }); setActionsOpenId(null); }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left"
+                                  className="p-1 rounded hover:bg-muted transition-colors"
+                                  data-testid={`button-actions-${u.id}`}
+                                >
+                                  <MoreVertical className="w-3.5 h-3.5 text-muted-foreground" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="min-w-[140px]">
+                                <DropdownMenuItem
+                                  onClick={() => blockMutation.mutate({ userId: u.id, blocked: !isBlocked })}
                                   data-testid={`button-block-${u.id}`}
                                 >
-                                  {isBlocked ? <ShieldCheck className="w-3.5 h-3.5 text-green-500" /> : <Ban className="w-3.5 h-3.5 text-amber-500" />}
+                                  {isBlocked ? <ShieldCheck className="w-3.5 h-3.5 mr-2 text-green-500" /> : <Ban className="w-3.5 h-3.5 mr-2 text-amber-500" />}
                                   {isBlocked ? "Unblock User" : "Block User"}
-                                </button>
-                                <button
-                                  onClick={() => { resetOnboardingMutation.mutate(u.id); setActionsOpenId(null); }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left"
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => resetOnboardingMutation.mutate(u.id)}
                                   data-testid={`button-menu-reset-onboarding-${u.id}`}
                                 >
-                                  <RotateCcw className="w-3.5 h-3.5 text-amber-600" />
+                                  <RotateCcw className="w-3.5 h-3.5 mr-2 text-amber-600" />
                                   Reset Onboarding
-                                </button>
-                                <div className="border-t border-border/30 my-1" />
-                                <button
-                                  onClick={() => { setConfirmDeleteId(u.id); setActionsOpenId(null); }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-muted transition-colors text-left text-red-500"
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => setConfirmDeleteId(u.id)}
+                                  className="text-red-500 focus:text-red-500"
                                   data-testid={`button-delete-${u.id}`}
                                 >
-                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <Trash2 className="w-3.5 h-3.5 mr-2" />
                                   Delete User
-                                </button>
-                              </div>
-                            )}
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
                         )}
                       </td>
