@@ -66,7 +66,7 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "usage", label: "Usage", icon: Activity },
   { id: "features", label: "Features", icon: MousePointerClick },
   { id: "revenue", label: "Revenue", icon: DollarSign },
-  { id: "feedback", label: "Bug Reports", icon: MessageSquare },
+  { id: "feedback", label: "Messages", icon: MessageSquare },
   { id: "errors", label: "Errors", icon: AlertTriangle },
   { id: "integrations", label: "Integrations", icon: Settings },
 ];
@@ -116,6 +116,9 @@ interface AnalyticsData {
     total: number;
     top: { title: string; category: string; status: string; vote_count: number; created_at: string }[];
   };
+  messages: {
+    newCount: number;
+  };
   revenue: {
     mrr: number;
     totalSubscriptions: number;
@@ -160,20 +163,28 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
       <nav className="border-b border-border/30 overflow-x-auto">
         <div className="flex max-w-6xl mx-auto px-2">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "px-3 py-3 text-[11px] font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-1.5",
-                tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
-              )}
-              data-testid={`tab-${t.id}`}
-            >
-              <t.icon className="w-3.5 h-3.5" />
-              {t.label}
-            </button>
-          ))}
+          {TABS.map((t) => {
+            const badgeCount = t.id === "feedback" ? data?.messages?.newCount || 0 : 0;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "px-3 py-3 text-[11px] font-medium whitespace-nowrap border-b-2 transition-colors flex items-center gap-1.5",
+                  tab === t.id ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+                data-testid={`tab-${t.id}`}
+              >
+                <t.icon className="w-3.5 h-3.5" />
+                {t.label}
+                {badgeCount > 0 && (
+                  <span className="min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center" data-testid="badge-new-messages">
+                    {badgeCount}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </nav>
 
@@ -1560,7 +1571,7 @@ function IntegrationsTab() {
             { name: "Pageview Tracking", description: "Automatic tracking of all page visits with device, browser, and referrer data" },
             { name: "Event Tracking", description: "Custom event tracking for clicks, feature usage, and user interactions" },
             { name: "Error Logging", description: "Automatic capture of client-side JavaScript errors with stack traces" },
-            { name: "Bug Reports", description: "Centralized inbox for user-reported bugs and issues" },
+            { name: "Messages", description: "Centralized inbox for support, sales, and feedback" },
             { name: "User Profiles", description: "Detailed user profiles with activity history, scripts, and rehearsal data" },
           ].map((item) => (
             <div key={item.name} className="flex items-center gap-3 p-2">

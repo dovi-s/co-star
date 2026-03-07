@@ -2087,6 +2087,12 @@ MARY: You're kidding me.`;
         sql`SELECT title, category, status, vote_count, created_at FROM feature_requests ORDER BY vote_count DESC LIMIT 10`
       );
 
+      // --- Feedback/Messages Metrics ---
+      const newMessagesResult = await db.execute(
+        sql`SELECT COUNT(*) as count FROM feedback_messages WHERE status = 'new'`
+      );
+      const newMessagesCount = Number((newMessagesResult.rows[0] as any)?.count || 0);
+
       // --- Stripe Revenue Metrics ---
       let revenue = { mrr: 0, totalSubscriptions: 0, activeSubscriptions: 0 };
       try {
@@ -2155,6 +2161,9 @@ MARY: You're kidding me.`;
         featureRequests: {
           total: totalFeatureRequests.count,
           top: topFeatureRequests.rows,
+        },
+        messages: {
+          newCount: newMessagesCount,
         },
         revenue,
       };
