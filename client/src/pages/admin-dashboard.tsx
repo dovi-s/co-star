@@ -780,7 +780,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
                 <span className="text-xs font-medium">
                   {u.subscriptionTier === "pro"
                     ? "unlimited"
-                    : `${u.scriptUsageCount || 0} / ${5 + (u.scriptUsageLimitBonus || 0)}`}
+                    : `${u.scriptUsageCount || 0} / ${3 + (u.scriptUsageLimitBonus || 0)}`}
                 </span>
               </div>
               {u.scriptUsageResetAt && (

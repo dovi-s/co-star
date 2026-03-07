@@ -364,7 +364,7 @@ export async function registerRoutes(
     res.json({ status: "ok", app: "co-star" });
   });
 
-  const FREE_DAILY_LIMIT = 5;
+  const FREE_DAILY_LIMIT = 3;
 
   function getDailyReset(fromDate: Date): Date {
     return new Date(fromDate.getTime() + 12 * 60 * 60 * 1000);
