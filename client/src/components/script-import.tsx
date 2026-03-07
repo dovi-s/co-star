@@ -675,7 +675,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           <Textarea
             ref={textareaRef}
             id="script-text"
-            placeholder="SARAH: I can't believe you're leaving..."
+            placeholder="MICHAEL: I'm gonna make him an offer he can't refuse."
             value={script}
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
             onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
@@ -827,27 +827,27 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                   <div className="space-y-1.5">
                     <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Screenplay Format</p>
                     <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                      <div className="text-center mb-1">SARAH</div>
-                      <div className="text-muted-foreground mb-2">I can't believe you're leaving.</div>
                       <div className="text-center mb-1">MICHAEL</div>
-                      <div className="text-muted-foreground">(softly)</div>
-                      <div className="text-muted-foreground">Neither can I.</div>
+                      <div className="text-muted-foreground mb-2">I'm gonna make him an offer he can't refuse.</div>
+                      <div className="text-center mb-1">TOM</div>
+                      <div className="text-muted-foreground">(uneasy)</div>
+                      <div className="text-muted-foreground">What if he says no?</div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Stage Play Format</p>
                     <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                      <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
-                      <div className="text-muted-foreground">MICHAEL: [softly] Neither can I.</div>
+                      <div className="text-muted-foreground">MICHAEL: I'm gonna make him an offer he can't refuse.</div>
+                      <div className="text-muted-foreground">TOM: [uneasy] What if he says no?</div>
                     </div>
                   </div>
                   <div className="space-y-1.5">
                     <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Scenes</p>
                     <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                      <div className="text-muted-foreground/60 mb-1">Scene 1: The Kitchen</div>
-                      <div className="text-muted-foreground">SARAH: I can't believe you're leaving.</div>
-                      <div className="text-muted-foreground/60 mt-2 mb-1">Scene 2: The Airport</div>
-                      <div className="text-muted-foreground">MICHAEL: I have to go.</div>
+                      <div className="text-muted-foreground/60 mb-1">Scene 1: The Study</div>
+                      <div className="text-muted-foreground">MICHAEL: I'm gonna make him an offer he can't refuse.</div>
+                      <div className="text-muted-foreground/60 mt-2 mb-1">Scene 2: The Meeting</div>
+                      <div className="text-muted-foreground">TOM: The family needs to hear this.</div>
                     </div>
                     <p className="text-[10px] text-muted-foreground/60 mt-1">
                       Lines starting with "Scene", "ACT", or "INT./EXT." create scene breaks during rehearsal.
