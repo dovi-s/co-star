@@ -107,6 +107,14 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         saveProfile(next);
         return next;
       }
+      if (hasLocalPhoto && !hasServerPhoto) {
+        fetch("/api/auth/profile", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ profileImageUrl: prev.photoUrl }),
+          credentials: "include",
+        }).catch(() => {});
+      }
       if (name && !prev.name) {
         const next = { ...prev, name };
         saveProfile(next);
