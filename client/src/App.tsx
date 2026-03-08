@@ -247,8 +247,8 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const [phase, setPhase] = useState<"enter" | "exit">("enter");
 
   useEffect(() => {
-    const showTimer = setTimeout(() => setPhase("exit"), 600);
-    const doneTimer = setTimeout(onComplete, 900);
+    const showTimer = setTimeout(() => setPhase("exit"), 300);
+    const doneTimer = setTimeout(onComplete, 500);
     return () => { clearTimeout(showTimer); clearTimeout(doneTimer); };
   }, [onComplete]);
 
