@@ -297,17 +297,23 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
               : "Unlimited takes, always available, zero judgment."}
           </p>
           {!isAuthenticated && (
-            <div className="flex items-center gap-5 mt-4 hero-enter-delay-2" data-testid="value-prop-steps">
-              <div className="flex items-center gap-1.5">
-                <ClipboardPaste className="h-3.5 w-3.5 text-primary" />
+            <div className="flex items-center justify-between mt-5 hero-enter-delay-2" data-testid="value-prop-steps">
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ClipboardPaste className="h-4 w-4 text-primary" />
+                </div>
                 <span className="text-xs text-muted-foreground">Paste script</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <UserCheck className="h-3.5 w-3.5 text-primary" />
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="h-4 w-4 text-primary" />
+                </div>
                 <span className="text-xs text-muted-foreground">Pick role</span>
               </div>
-              <div className="flex items-center gap-1.5">
-                <Mic className="h-3.5 w-3.5 text-primary" />
+              <div className="flex flex-col items-center gap-1.5 flex-1">
+                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Mic className="h-4 w-4 text-primary" />
+                </div>
                 <span className="text-xs text-muted-foreground">Rehearse</span>
               </div>
             </div>
