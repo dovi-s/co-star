@@ -264,6 +264,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const userToAiDelayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const speakingLineRef = useRef<string | null>(null);
   const speakTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastGapMsRef = useRef<number | null>(null);
+  const avgGapMsRef = useRef<number>(300);
   const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const matchGraceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchReachedRef = useRef(false);
@@ -276,6 +278,23 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const hintPlayingRef = useRef(false);
   const hintUsedForLineRef = useRef(false);
+
+  const applyRhythmAdaptation = useCallback((pauseMs: number, floor: number, ceiling: number): number => {
+    const last = lastGapMsRef.current;
+    const avg = avgGapMsRef.current;
+    let adapted = pauseMs;
+    if (last !== null) {
+      if (last < avg) {
+        adapted = Math.round(pauseMs * 1.08);
+      } else if (last > avg) {
+        adapted = Math.round(pauseMs * 0.92);
+      }
+    }
+    adapted = Math.max(floor, Math.min(ceiling, adapted));
+    lastGapMsRef.current = adapted;
+    avgGapMsRef.current = avg * 0.85 + adapted * 0.15;
+    return adapted;
+  }, []);
 
   const currentLine = getCurrentLine();
   const previousLine = getPreviousLine();
@@ -721,6 +740,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       startTime: Date.now(),
     };
     currentLineAccuracyRef.current = 0;
+    lastGapMsRef.current = null;
+    avgGapMsRef.current = 300;
   }, []);
 
   useEffect(() => {
@@ -804,10 +825,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     if (next) {
       const userEmotion = line ? detectEmotion(line.text, line.direction) : "neutral";
       const nextEmotion = next.emotionHint || detectEmotion(next.text, next.direction);
-      const timing = getConversationalTiming(nextEmotion, line?.text, userEmotion);
+      const timing = getConversationalTiming(nextEmotion, line?.text, userEmotion, next.direction);
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const minPause = isIOS ? 350 : 30;
-      const pauseMs = isUserLine(next) ? minPause : Math.max(timing.userToAiPauseMs, minPause);
+      const minPause = isIOS ? 350 : 180;
+      const rawPause = isUserLine(next) ? minPause : Math.max(timing.userToAiPauseMs, minPause);
+      const pauseMs = applyRhythmAdaptation(rawPause, minPause, 500);
       
       if (userToAiDelayRef.current) {
         clearTimeout(userToAiDelayRef.current);
@@ -993,7 +1015,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
     const prev = getPreviousLine();
     const prevEmotion = prev ? (prev.emotionHint || detectEmotion(prev.text, prev.direction)) : undefined;
-    const timing = getConversationalTiming(emotion, prev?.text, prevEmotion);
+    const timing = getConversationalTiming(emotion, prev?.text, prevEmotion, line.direction);
 
     const clearWordTimer = () => {
       if (wordTimerRef.current) {
@@ -1029,10 +1051,13 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           const next = getNextLine();
           const nextIsUser = next ? isUserLine(next) : false;
           const nextEmotion = next ? (next.emotionHint || detectEmotion(next.text, next.direction)) : undefined;
-          const nextTiming = next ? getConversationalTiming(nextEmotion || "neutral", line.text, emotion) : null;
-          const pauseMs = nextIsUser
-            ? (nextTiming?.aiToUserPauseMs ?? 30)
+          const nextTiming = next ? getConversationalTiming(nextEmotion || "neutral", line.text, emotion, next?.direction) : null;
+          const rawPause = nextIsUser
+            ? (nextTiming?.aiToUserPauseMs ?? 100)
             : (nextTiming?.aiToAiPauseMs ?? 400);
+          const pauseMs = nextIsUser
+            ? applyRhythmAdaptation(rawPause, 50, 300)
+            : applyRhythmAdaptation(rawPause, 150, 1200);
           
           setTimeout(() => {
             if (!isPlayingRef.current) {

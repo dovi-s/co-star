@@ -87,10 +87,34 @@ export interface ConversationalTiming {
   userToAiPauseMs: number;
 }
 
+function getDirectionPauseModifier(direction?: string): number {
+  if (!direction) return 1.0;
+  const dir = direction.toLowerCase();
+
+  if (/long\s*(pause|silence|beat|moment)|dead\s*silence/i.test(dir)) return 2.0;
+  if (/turns?\s*away|walks?\s*away|exits?|crosses|leaves/i.test(dir)) return 1.8;
+  if (/\bbeat\b|\bpause\b|\bmoment\b|after\s*a\s*(moment|beat)/i.test(dir)) return 1.5;
+  if (/slowly|carefully|hesitant|reluctant|measured|deliberate/i.test(dir)) return 1.4;
+  if (/quickly|immediately|fast|snapping|cutting\s*(in|off)|overlapping/i.test(dir)) return 0.5;
+  if (/urgent|rushing|hurried|frantic/i.test(dir)) return 0.6;
+
+  return 1.0;
+}
+
+function getPunctuationModifier(text?: string): number {
+  if (!text) return 1.0;
+  const trimmed = text.trim();
+  if (/\?$/.test(trimmed) || /\?["']?$/.test(trimmed)) return 0.6;
+  if (/!$/.test(trimmed) || /!["']?$/.test(trimmed)) return 0.75;
+  if (/[.…]$/.test(trimmed) || /\.{3}/.test(trimmed)) return 1.2;
+  return 1.0;
+}
+
 export function getConversationalTiming(
   currentEmotion: EmotionStyle,
   previousLineText?: string,
   previousEmotion?: EmotionStyle,
+  currentDirection?: string,
 ): ConversationalTiming {
   const emotionPauseBase: Record<EmotionStyle, number> = {
     angry: 200,
@@ -106,16 +130,8 @@ export function getConversationalTiming(
 
   let aiToAiBase = emotionPauseBase[currentEmotion] ?? 400;
 
-  if (previousLineText) {
-    const trimmed = previousLineText.trim();
-    if (/\?$/.test(trimmed) || /\?["']?$/.test(trimmed)) {
-      aiToAiBase = Math.round(aiToAiBase * 0.6);
-    } else if (/!$/.test(trimmed) || /!["']?$/.test(trimmed)) {
-      aiToAiBase = Math.round(aiToAiBase * 0.75);
-    } else if (/[.…]$/.test(trimmed) || /\.{3}/.test(trimmed)) {
-      aiToAiBase = Math.round(aiToAiBase * 1.2);
-    }
-  }
+  const punctMod = getPunctuationModifier(previousLineText);
+  aiToAiBase = Math.round(aiToAiBase * punctMod);
 
   if (previousEmotion && previousEmotion !== currentEmotion) {
     const weight = {
@@ -128,15 +144,25 @@ export function getConversationalTiming(
     }
   }
 
-  aiToAiBase = Math.max(150, Math.min(900, aiToAiBase));
+  const dirMod = getDirectionPauseModifier(currentDirection);
+  aiToAiBase = Math.round(aiToAiBase * dirMod);
 
-  const userToAiBase = Math.round(aiToAiBase * 0.35);
-  const aiToUserBase = Math.round(aiToAiBase * 0.02);
+  aiToAiBase = Math.max(150, Math.min(1200, aiToAiBase));
+
+  let userToAiBase = Math.round(aiToAiBase * 0.55);
+
+  let aiToUserBase = Math.round(aiToAiBase * 0.25);
+  const aiToUserPunctMod = getPunctuationModifier(previousLineText);
+  if (aiToUserPunctMod < 1.0) {
+    aiToUserBase = Math.round(aiToUserBase * (1.0 - (1.0 - aiToUserPunctMod) * 0.5));
+  } else if (aiToUserPunctMod > 1.0) {
+    aiToUserBase = Math.round(aiToUserBase * (1.0 + (aiToUserPunctMod - 1.0) * 0.5));
+  }
 
   return {
     aiToAiPauseMs: aiToAiBase,
-    aiToUserPauseMs: aiToUserBase,
-    userToAiPauseMs: Math.max(40, Math.min(350, userToAiBase)),
+    aiToUserPauseMs: Math.max(50, Math.min(300, aiToUserBase)),
+    userToAiPauseMs: Math.max(180, Math.min(500, userToAiBase)),
   };
 }
 
