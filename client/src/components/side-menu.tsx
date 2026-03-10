@@ -1,12 +1,5 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { trackClick, trackNavigation } from "@/hooks/use-analytics";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
@@ -35,11 +28,13 @@ import {
   Users,
   Handshake,
   Home,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import { SalesSheet } from "@/components/sales-sheet";
+import { createPortal } from "react-dom";
 
 interface SideMenuProps {
   open: boolean;
@@ -131,6 +126,8 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   const { user, isAuthenticated: isSignedIn, logout } = useAuth();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const drawerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<Element | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [salesOpen, setSalesOpen] = useState(false);
 
@@ -151,23 +148,94 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[300px] sm:max-w-[340px] p-0 flex flex-col overflow-hidden">
-        <SheetHeader className="px-5 pt-5 pb-3 text-left">
+  useEffect(() => {
+    if (open) {
+      triggerRef.current = document.activeElement;
+      document.body.style.overflow = "hidden";
+      requestAnimationFrame(() => {
+        const closeBtn = drawerRef.current?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
+        closeBtn?.focus();
+      });
+    } else {
+      document.body.style.overflow = "";
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus();
+        triggerRef.current = null;
+      }
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onOpenChange(false);
+      if (e.key === "Tab" && drawerRef.current) {
+        const focusable = drawerRef.current.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open, onOpenChange]);
+
+  const drawer = (
+    <>
+      <div
+        className={cn(
+          "fixed inset-0 z-50 bg-black/60 transition-opacity duration-150",
+          open ? "opacity-100" : "opacity-0 pointer-events-none"
+        )}
+        onClick={() => onOpenChange(false)}
+        aria-hidden="true"
+      />
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal={open ? true : undefined}
+        aria-label="Menu"
+        aria-hidden={!open}
+        {...(!open ? { inert: "" as any } : {})}
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
+          "flex flex-col overflow-hidden safe-area-top safe-area-bottom",
+          "transition-transform duration-150 ease-out will-change-transform",
+          open ? "translate-x-0" : "translate-x-full"
+        )}
+      >
+        <div className="px-5 pt-5 pb-3 text-left">
           <div className="flex items-center gap-3">
             <Logo size="xs" onClick={() => navigate("home")} />
-            <div>
-              <SheetTitle className="text-base">
-                <span className="font-normal">Co-star</span>{" "}
+            <div className="flex-1">
+              <h2 className="text-base font-normal">
+                <span>Co-star</span>{" "}
                 <span className="font-semibold">Studio</span>
-              </SheetTitle>
-              <SheetDescription className="text-[11px] text-muted-foreground mt-0">
+              </h2>
+              <p className="text-[11px] text-muted-foreground mt-0">
                 Your rehearsal companion
-              </SheetDescription>
+              </p>
             </div>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="rounded-sm opacity-70 transition-opacity hover:opacity-100"
+              data-testid="button-close-menu"
+            >
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </button>
           </div>
-        </SheetHeader>
+        </div>
 
         <input
           ref={fileInputRef}
@@ -422,9 +490,15 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             <span>v1.0</span>
           </div>
         </div>
-      </SheetContent>
-      <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />
-      <SalesSheet open={salesOpen} onOpenChange={setSalesOpen} />
-    </Sheet>
+      </div>
+    </>
+  );
+
+  return (
+    <>
+      {createPortal(drawer, document.body)}
+      {feedbackOpen && <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />}
+      {salesOpen && <SalesSheet open={salesOpen} onOpenChange={setSalesOpen} />}
+    </>
   );
 }
