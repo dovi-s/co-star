@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { CancelRetentionSheet } from "@/components/cancel-retention-sheet";
 import {
   ChevronLeft,
   Check,
@@ -377,9 +378,14 @@ function ActiveSubscription({
   onManage: () => void;
   isManaging: boolean;
 }) {
+  const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
+
   const rawEnd = subscription.currentPeriodEnd;
-  const periodEnd = rawEnd
-    ? new Date(typeof rawEnd === "number" && rawEnd < 1e12 ? rawEnd * 1000 : rawEnd).toLocaleDateString("en-US", {
+  const periodEndDate = rawEnd
+    ? new Date(typeof rawEnd === "number" && rawEnd < 1e12 ? rawEnd * 1000 : rawEnd)
+    : null;
+  const periodEnd = periodEndDate
+    ? periodEndDate.toLocaleDateString("en-US", {
         month: "long",
         day: "numeric",
         year: "numeric",
@@ -427,21 +433,40 @@ function ActiveSubscription({
           ))}
         </ul>
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={onManage}
-          disabled={isManaging}
-          data-testid="button-manage-subscription"
-        >
-          {isManaging ? (
-            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-          ) : (
-            <ExternalLink className="w-4 h-4 mr-2" />
+        <div className="space-y-2">
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={onManage}
+            disabled={isManaging}
+            data-testid="button-manage-subscription"
+          >
+            {isManaging ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <ExternalLink className="w-4 h-4 mr-2" />
+            )}
+            Manage billing
+          </Button>
+
+          {!subscription.cancelAtPeriodEnd && (
+            <button
+              className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
+              onClick={() => setCancelSheetOpen(true)}
+              data-testid="button-cancel-plan"
+            >
+              Cancel plan
+            </button>
           )}
-          Manage subscription
-        </Button>
+        </div>
       </div>
+
+      <CancelRetentionSheet
+        open={cancelSheetOpen}
+        onOpenChange={setCancelSheetOpen}
+        periodEnd={periodEndDate ? periodEndDate.toISOString() : null}
+        onGoToPortal={onManage}
+      />
     </div>
   );
 }

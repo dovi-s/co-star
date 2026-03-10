@@ -73,6 +73,19 @@ export const deviceUsage = pgTable("device_usage", {
 
 export type DeviceUsage = typeof deviceUsage.$inferSelect;
 
+export const cancelFeedback = pgTable("cancel_feedback", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  reason: varchar("reason").notNull(),
+  comment: text("comment"),
+  outcome: varchar("outcome").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_cancel_feedback_user").on(table.userId),
+]);
+
+export type CancelFeedback = typeof cancelFeedback.$inferSelect;
+
 // Saved scripts for Pro users
 export const savedScripts = pgTable("saved_scripts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

@@ -15,7 +15,7 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage } from "@shared/models/auth";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
@@ -1836,6 +1836,73 @@ MARY: You're kidding me.`;
     } catch (error: any) {
       console.error("[Stripe] Portal error:", error.message);
       res.status(500).json({ error: "Failed to create portal session" });
+    }
+  });
+
+  app.post("/api/stripe/pause", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const [user] = await db
+        .select({ stripeCustomerId: users.stripeCustomerId, stripeSubscriptionId: users.stripeSubscriptionId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeSubscriptionId) {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+      const resumeDate = new Date();
+      resumeDate.setMonth(resumeDate.getMonth() + 1);
+      const resumeTimestamp = Math.floor(resumeDate.getTime() / 1000);
+
+      await stripe.subscriptions.update(user.stripeSubscriptionId, {
+        pause_collection: {
+          behavior: "void",
+          resumes_at: resumeTimestamp,
+        },
+      });
+
+      res.json({ success: true, resumesAt: resumeDate.toISOString() });
+    } catch (error: any) {
+      console.error("[Stripe] Pause error:", error.message);
+      res.status(500).json({ error: "Failed to pause subscription" });
+    }
+  });
+
+  app.post("/api/stripe/cancel-feedback", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const { reason, comment, outcome } = req.body;
+      if (!reason || !outcome) {
+        return res.status(400).json({ error: "Reason and outcome are required" });
+      }
+
+      const validReasons = ["too_expensive", "not_using", "missing_features", "found_alternative", "other"];
+      const validOutcomes = ["canceled", "paused", "stayed"];
+      if (!validReasons.includes(reason) || !validOutcomes.includes(outcome)) {
+        return res.status(400).json({ error: "Invalid reason or outcome" });
+      }
+
+      await db.insert(cancelFeedback).values({
+        userId,
+        reason,
+        comment: comment?.trim() || null,
+        outcome,
+      });
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[Stripe] Cancel feedback error:", error.message);
+      res.status(500).json({ error: "Failed to save feedback" });
     }
   });
 

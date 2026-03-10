@@ -34,6 +34,15 @@ Key features include:
 - Fingerprint is sent as `deviceFingerprint` in POST body or GET query param on all usage-related API calls
 - Same 12-hour reset window applies to device usage as to user usage
 
+### Cancel Retention Flow
+- When Pro users click "Cancel plan" on the subscription page, a `CancelRetentionSheet` bottom sheet opens
+- 3-step flow: (1) "What you'll lose" with Pro features shown as crossed-out, (2) feedback with optional reason/comment + pause option, (3) confirmation
+- Cancel button is always enabled and visible — no dark patterns, no gating behind form inputs
+- Pause uses Stripe `pause_collection` with `resumes_at` (1 month)
+- Feedback saved to `cancel_feedback` table (reason, comment, outcome)
+- Server endpoints: `POST /api/stripe/pause`, `POST /api/stripe/cancel-feedback`
+- Component: `client/src/components/cancel-retention-sheet.tsx`
+
 ### Stripe Integration Note
 - Stripe Sandbox connection is configured and working in development
 - Stripe production connection was not set up by the user — subscription buttons may be disabled in deployed/production environment until the production Stripe connector is authorized
