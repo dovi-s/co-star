@@ -1343,22 +1343,23 @@ function FeedbackTab() {
     },
   });
 
+  const invalidateFeedback = () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/feedback"] });
+    queryClient.invalidateQueries({ queryKey: ["/api/admin/analytics"] });
+  };
+
   const updateMutation = useMutation({
     mutationFn: async ({ id, status, adminNotes }: { id: string; status?: string; adminNotes?: string }) => {
       await apiRequest("PATCH", `/api/admin/feedback/${id}`, { status, adminNotes });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/feedback"] });
-    },
+    onSuccess: invalidateFeedback,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
       await apiRequest("DELETE", `/api/admin/feedback/${id}`, {});
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/feedback"] });
-    },
+    onSuccess: invalidateFeedback,
   });
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);

@@ -2321,6 +2321,7 @@ MARY: You're kidding me.`;
       if (adminNotes !== undefined) updates.adminNotes = adminNotes;
 
       await db.update(feedbackMessages).set(updates).where(eq(feedbackMessages.id, req.params.id));
+      analyticsCache = null;
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to update feedback" });
@@ -2331,6 +2332,7 @@ MARY: You're kidding me.`;
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       await db.delete(feedbackMessages).where(eq(feedbackMessages.id, req.params.id));
+      analyticsCache = null;
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to delete feedback" });
