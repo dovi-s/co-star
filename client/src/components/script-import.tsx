@@ -500,6 +500,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         });
         if (usageRes.ok) {
           const usageData = await usageRes.json();
+          try { sessionStorage.setItem("costar-usage", JSON.stringify(usageData)); } catch {}
           if (!usageData.allowed) {
             if (onUpgradeRequired) onUpgradeRequired(usageData.resetsAt);
             return;

@@ -50,7 +50,8 @@ Key features include:
 
 ### Design & Growth System
 - **Mascot ("Cue")**: SVG character component (`client/src/components/mascot.tsx`) with 8 moods: idle, excited, encouraging, celebrating, thinking, waving, proud, cheering. Integrated into empty states, rehearsal ready screen, and completion modal.
-- **Pro Visibility**: Free-tier users see "Pro" badges on locked menu items (Saved Scripts, Performance History). Completion screen shows clickable "Unlock unlimited rehearsals" card for all free users.
+- **Pro Visibility**: Free-tier users see "Pro" badges on locked menu items (Saved Scripts, Performance History, Hands-Free Mode). Completion screen shows clickable "Unlock unlimited rehearsals" card for all free users. Save Script button in recent scripts is hidden for free users.
+- **Server-Side Pro Enforcement**: All `/api/scripts` and `/api/performance` routes use `requirePro` middleware (in `pro-routes.ts`). Free users get 403 if they call these APIs directly.
 - **Guest Pass Framing**: Subscription page uses "guest pass" language (not "free trial") with a day-by-day trial itinerary. Consistent across subscription, compare, and onboarding pages.
 - **Share-After-Rehearsal**: Share button appears for all completed performances (not gated by accuracy). Includes role name, accuracy, and app link.
 - **Contrast Standards**: All `text-muted-foreground` usages maintain minimum `/70` opacity. Camera-mode white text uses minimum `/55`.

@@ -57,7 +57,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   const { scripts: recentScripts, refresh: refreshRecent, save: saveRecentScript, update: recentUpdate, remove: recentRemove } = useRecentScripts();
   const [menuOpen, setMenuOpen] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
-  const [liveUsage, setLiveUsage] = useState<{ used: number; limit: number | null; resetsAt: string | null; isPro: boolean; limitReached: boolean } | null>(null);
+  const [liveUsage, setLiveUsage] = useState<{ used: number; limit: number | null; resetsAt: string | null; isPro: boolean; limitReached: boolean } | null>(() => {
+    try {
+      const stored = sessionStorage.getItem("costar-usage");
+      return stored ? JSON.parse(stored) : null;
+    } catch { return null; }
+  });
 
   useEffect(() => {
     if (!isAuthenticated) { setLiveUsage(null); return; }
@@ -68,7 +73,10 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         const res = await fetch(`/api/script-usage?deviceFingerprint=${encodeURIComponent(dfp)}`, { credentials: "include" });
         if (!res.ok || cancelled) return;
         const data = await res.json();
-        if (!cancelled) setLiveUsage(data);
+        if (!cancelled) {
+          setLiveUsage(data);
+          try { sessionStorage.setItem("costar-usage", JSON.stringify(data)); } catch {}
+        }
       } catch {}
     };
     fetchUsage();
@@ -223,7 +231,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             const limit = liveUsage?.limit ?? (3 + (user.scriptUsageLimitBonus ?? 0));
             const used = liveUsage?.used ?? (user.scriptUsageCount ?? 0);
             const remaining = Math.max(0, limit - used);
-            const maxed = liveUsage ? liveUsage.limitReached : remaining === 0;
+            const maxed = liveUsage?.limitReached ?? (remaining === 0);
             const resetAt = liveUsage?.resetsAt ? new Date(liveUsage.resetsAt) : (user.scriptUsageResetAt ? new Date(user.scriptUsageResetAt) : null);
             const resetLabel = maxed && resetAt ? (() => {
               const now = new Date();

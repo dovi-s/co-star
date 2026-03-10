@@ -5,6 +5,18 @@ import { savedScripts, performanceRuns, users, featureRequests, featureVotes, re
 import { eq, desc, and, sql, inArray, ne } from "drizzle-orm";
 import crypto from "crypto";
 
+const requirePro: RequestHandler = async (req: any, res, next) => {
+  try {
+    const userId = req.user?.claims?.sub;
+    if (!userId) return res.status(401).json({ message: "Not authenticated" });
+    const [user] = await db.select({ subscriptionTier: users.subscriptionTier }).from(users).where(eq(users.id, userId));
+    if (user?.subscriptionTier === "pro") return next();
+    return res.status(403).json({ message: "Pro subscription required" });
+  } catch {
+    return res.status(500).json({ message: "Failed to check subscription" });
+  }
+};
+
 async function isAdmin(req: any): Promise<boolean> {
   const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
   if (!userId) return false;
@@ -30,7 +42,7 @@ function scriptFingerprint(rawScript: string): string {
 export function registerProRoutes(app: Express): void {
   // --- Saved Scripts ---
 
-  app.get("/api/scripts", isAuthenticated, async (req: any, res) => {
+  app.get("/api/scripts", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const scripts = await db
@@ -53,7 +65,7 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.get("/api/scripts/:id", isAuthenticated, async (req: any, res) => {
+  app.get("/api/scripts/:id", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const [script] = await db
@@ -71,7 +83,7 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/scripts", isAuthenticated, async (req: any, res) => {
+  app.post("/api/scripts", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { name, rawScript, rolesJson, scenesJson, userRoleId } = req.body;
@@ -99,7 +111,7 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.patch("/api/scripts/:id", isAuthenticated, async (req: any, res) => {
+  app.patch("/api/scripts/:id", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { name, userRoleId, lastPosition, lastScene, rolesJson, scenesJson } = req.body;
@@ -128,7 +140,7 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.delete("/api/scripts/:id", isAuthenticated, async (req: any, res) => {
+  app.delete("/api/scripts/:id", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const [deleted] = await db
@@ -148,7 +160,7 @@ export function registerProRoutes(app: Express): void {
 
   // --- Performance Runs ---
 
-  app.get("/api/performance", isAuthenticated, async (req: any, res) => {
+  app.get("/api/performance", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const runs = await db
@@ -164,7 +176,7 @@ export function registerProRoutes(app: Express): void {
     }
   });
 
-  app.post("/api/performance", isAuthenticated, async (req: any, res) => {
+  app.post("/api/performance", isAuthenticated, requirePro, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
       const { scriptName, savedScriptId, accuracy, linesTotal, linesCorrect, linesSkipped, durationSeconds, memorizationMode } = req.body;

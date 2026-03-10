@@ -1458,6 +1458,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         return false;
       }
       const data = await res.json();
+      try { sessionStorage.setItem("costar-usage", JSON.stringify(data)); } catch {}
       if (!data.allowed) {
         setRunLimitReached(true);
         setRunLimitResetsAt(data.resetsAt);
