@@ -27,6 +27,7 @@ import {
   Moon,
   Sun,
   ChevronRight,
+  ChevronDown,
   Crown,
   Camera,
   BarChart3,
@@ -34,6 +35,8 @@ import {
   Palette,
   Users,
   Handshake,
+  Home,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FeedbackSheet } from "@/components/feedback-sheet";
@@ -127,6 +130,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [salesOpen, setSalesOpen] = useState(false);
+  const [exploreOpen, setExploreOpen] = useState(false);
 
   const navigate = (page: string) => {
     trackClick(`menu-${page}`);
@@ -220,7 +224,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             </>
           )}
 
-          <SectionLabel>Library</SectionLabel>
+          <MenuItem
+            icon={<Home className="h-4 w-4" />}
+            label="Home"
+            description="Start rehearsing"
+            onClick={() => navigate("home")}
+            testId="menu-item-home"
+          />
           <MenuItem
             icon={<Library className="h-4 w-4" />}
             label="Saved Scripts"
@@ -238,73 +248,64 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
             testId="menu-item-history"
           />
 
-          {isSignedIn && (
-            <>
-              <SectionLabel>Account</SectionLabel>
+          <Separator className="my-2 mx-3" />
+
+          <button
+            onClick={() => setExploreOpen(!exploreOpen)}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left transition-colors"
+            data-testid="button-explore-toggle"
+          >
+            <span className="text-muted-foreground shrink-0">
+              <Compass className="h-4 w-4" />
+            </span>
+            <span className="text-sm font-medium text-foreground flex-1">Explore</span>
+            <ChevronDown className={cn(
+              "h-3.5 w-3.5 text-muted-foreground/60 shrink-0 transition-transform duration-200",
+              exploreOpen && "rotate-180"
+            )} />
+          </button>
+          {exploreOpen && (
+            <div className="pl-2">
               <MenuItem
-                icon={<CircleUser className="h-4 w-4" />}
-                label="Actor Profile"
-                description="Your details and headshot"
-                onClick={() => navigate("profile")}
-                testId="menu-item-profile"
+                icon={<Users className="h-4 w-4" />}
+                label="Who Is It For"
+                description="Actors, students, teams, and more"
+                onClick={() => navigate("who-is-it-for")}
+                testId="menu-item-who-is-it-for"
               />
               <MenuItem
-                icon={<CreditCard className="h-4 w-4" />}
-                label="Subscription"
-                description="Manage your plan and billing"
-                onClick={() => navigate("subscription")}
-                testId="menu-item-billing"
+                icon={<Sparkles className="h-4 w-4" />}
+                label="How It Works"
+                description="See Co-star Studio in action"
+                onClick={() => navigate("how-it-works")}
+                testId="menu-item-how-it-works"
               />
-              {user?.email === "dovisherman@gmail.com" && (
-                <MenuItem
-                  icon={<BarChart3 className="h-4 w-4" />}
-                  label="Analytics"
-                  description="Growth metrics and insights"
-                  onClick={() => navigate("admin")}
-                  testId="menu-item-admin"
-                />
-              )}
-            </>
+              <MenuItem
+                icon={<Scale className="h-4 w-4" />}
+                label="Compare and Pricing"
+                description="See how we stack up"
+                onClick={() => navigate("compare")}
+                testId="menu-item-compare"
+              />
+              <MenuItem
+                icon={<Map className="h-4 w-4" />}
+                label="Roadmap"
+                description="What we are building next"
+                onClick={() => navigate("roadmap")}
+                testId="menu-item-roadmap"
+              />
+              <MenuItem
+                icon={<Palette className="h-4 w-4" />}
+                label="Brand"
+                description="Logos, colors, and guidelines"
+                onClick={() => navigate("brand")}
+                testId="menu-item-brand"
+              />
+            </div>
           )}
 
-          <SectionLabel>Explore</SectionLabel>
-          <MenuItem
-            icon={<Users className="h-4 w-4" />}
-            label="Who Is It For"
-            description="Actors, students, teams, and more"
-            onClick={() => navigate("who-is-it-for")}
-            testId="menu-item-who-is-it-for"
-          />
-          <MenuItem
-            icon={<Sparkles className="h-4 w-4" />}
-            label="How It Works"
-            description="See Co-star Studio in action"
-            onClick={() => navigate("how-it-works")}
-            testId="menu-item-how-it-works"
-          />
-          <MenuItem
-            icon={<Scale className="h-4 w-4" />}
-            label="Compare and Pricing"
-            description="See how we stack up"
-            onClick={() => navigate("compare")}
-            testId="menu-item-compare"
-          />
-          <MenuItem
-            icon={<Map className="h-4 w-4" />}
-            label="Roadmap"
-            description="What we are building next"
-            onClick={() => navigate("roadmap")}
-            testId="menu-item-roadmap"
-          />
-          <MenuItem
-            icon={<Palette className="h-4 w-4" />}
-            label="Brand"
-            description="Logos, colors, and guidelines"
-            onClick={() => navigate("brand")}
-            testId="menu-item-brand"
-          />
+          <Separator className="my-2 mx-3" />
 
-          <SectionLabel>More</SectionLabel>
           <div className="flex items-center justify-between px-3 py-2.5">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">
@@ -373,6 +374,31 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
 
           {isSignedIn && (
             <>
+              <Separator className="my-2 mx-3" />
+              <SectionLabel>Account</SectionLabel>
+              <MenuItem
+                icon={<CircleUser className="h-4 w-4" />}
+                label="Actor Profile"
+                description="Your details and headshot"
+                onClick={() => navigate("profile")}
+                testId="menu-item-profile"
+              />
+              <MenuItem
+                icon={<CreditCard className="h-4 w-4" />}
+                label="Subscription"
+                description="Manage your plan and billing"
+                onClick={() => navigate("subscription")}
+                testId="menu-item-billing"
+              />
+              {user?.email === "dovisherman@gmail.com" && (
+                <MenuItem
+                  icon={<BarChart3 className="h-4 w-4" />}
+                  label="Analytics"
+                  description="Growth metrics and insights"
+                  onClick={() => navigate("admin")}
+                  testId="menu-item-admin"
+                />
+              )}
               <Separator className="my-2 mx-3" />
               <button
                 onClick={() => { onOpenChange(false); logout(); }}

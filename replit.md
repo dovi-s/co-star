@@ -25,6 +25,17 @@ The design philosophy is sophisticated and minimal, leveraging Apple's Liquid Gl
 ### Technical Implementations
 The application handles script import from various formats (`.txt`, `.pdf`, images, camera photos) with AI-powered OCR for scanned documents. It features robust script parsing that detects characters, stage directions, and multi-scene layouts, including OCR artifact cleaning and strict character name validation. An AI post-processing step further refines parsed scripts. Key features include intelligent role selection with Smart Cast for AI voice assignment, a Three-Line Reader for guided rehearsal, and comprehensive transport controls. The voice engine utilizes ElevenLabs AI voices with emotion detection and customizable presets. Speech recognition is robust, handling single utterances with error recovery. Dialogue flow includes watchdog timers and natural pauses. Settings allow customization of ambient sound, voice presets, font size, and dark/light mode. Advanced features include a Performance Feedback System tracking accuracy, an Audition Mode for self-tapes (audio or video), a "LINE" voice command for hints, a Hands-Free Mode with Wake Lock, and a multi-level Line Memorization system. The application is PWA-optimized with `viewport-fit=cover` for safe area insets, `100dvh` viewport height on mobile (fixes iOS toolbar overlap), `overscroll-behavior: none` in standalone mode, and 16px minimum input font size to prevent iOS zoom. It supports keyboard shortcuts. Multiplayer Table Read functionality enables real-time remote rehearsals via WebSocket, including host controls and synchronized line progression. WebRTC integrates peer-to-peer video calls for table reads. Authentication supports custom email/password and Google Sign-In, with a secure forgot password flow. An Admin Dashboard provides access to analytics, user management, feedback, and error logs, protected by environment variables and server-side authentication.
 
+### UX Improvements (Session 10)
+- **Home Visual Hierarchy**: Personalized greeting for authenticated users; value props hidden when logged in; tighter spacing
+- **Rehearsal Exit Controls**: Prominent exit button in hands-free overlay and camera mode; Escape key uses refs to avoid stale closures
+- **TTS Feedback**: `ttsGenerating` state shows "Preparing line..." indicator during audio generation; transport bar thinking state animation
+- **Script Preview**: Parse warnings and scene structure preview shown in role selector before rehearsal starts
+- **Browser Navigation**: history.pushState/popstate support for back/forward navigation between views; isPopstateNav reset on no-op transitions
+- **Settings Drawer Grouping**: Settings organized into Playback, Audio, and Script sections with labeled headers
+- **TTS Pre-fetch**: Concurrent prefetching with 2-line lookahead; early prefetch trigger when current line starts
+- **Script Complete Celebration**: Trophy icon and enhanced confetti for finishing all scenes of a multi-scene script
+- **Side Menu Reorder**: Primacy/recency ordering with collapsible Explore section for info pages
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines and scene descriptions are automatically linked to subsequent dialogue.
 - **Scene Transition Cards**: Visual cues for scene changes with animated displays.

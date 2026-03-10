@@ -31,42 +31,80 @@ import type { SavedScript } from "@shared/models/auth";
 type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
 type MultiplayerInitialView = "create" | "join";
 
+const viewToPath: Record<View, string> = {
+  home: "/",
+  rehearsal: "/rehearsal",
+  multiplayer: "/multiplayer",
+  "how-it-works": "/how-it-works",
+  "who-is-it-for": "/who-is-it-for",
+  compare: "/compare",
+  roadmap: "/roadmap",
+  signin: "/signin",
+  library: "/library",
+  history: "/history",
+  "feature-board": "/feature-board",
+  onboarding: "/onboarding",
+  profile: "/profile",
+  subscription: "/subscription",
+  admin: "/admin",
+  brand: "/brand",
+};
+
+const pathToView: Record<string, View> = Object.fromEntries(
+  Object.entries(viewToPath).map(([v, p]) => [p, v as View])
+) as Record<string, View>;
+
+function resolveInitialView(): { view: View; checkoutSuccess: boolean } {
+  const params = new URLSearchParams(window.location.search);
+
+  if (params.get("reset-token")) {
+    return { view: "signin", checkoutSuccess: false };
+  }
+  if (params.get("checkout") === "success") {
+    window.history.replaceState({ view: "subscription" }, "", "/subscription");
+    return { view: "subscription", checkoutSuccess: true };
+  }
+
+  const viewParam = params.get("view");
+  if (viewParam && viewParam in viewToPath) {
+    const v = viewParam as View;
+    window.history.replaceState({ view: v }, "", viewToPath[v]);
+    return { view: v, checkoutSuccess: false };
+  }
+
+  const pathname = window.location.pathname;
+  const matched = pathToView[pathname];
+  if (matched) {
+    window.history.replaceState({ view: matched }, "", pathname);
+    return { view: matched, checkoutSuccess: false };
+  }
+
+  window.history.replaceState({ view: "home" }, "", "/");
+  return { view: "home", checkoutSuccess: false };
+}
+
 function AppContent() {
   const { session, createSessionFromParsed, setUserRole } = useSessionContext();
   const { syncFromServer } = useProfile();
   const { user } = useAuth();
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const isPopstateNav = useRef(false);
   const [view, setView] = useState<View>(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("reset-token")) {
-      return "signin";
+    const initial = resolveInitialView();
+    if (initial.checkoutSuccess) {
+      setTimeout(() => setCheckoutSuccess(true), 0);
     }
-    if (params.get("checkout") === "success") {
-      window.history.replaceState({}, "", "/");
-      setCheckoutSuccess(true);
-      return "subscription";
-    }
-    if (params.get("view") === "subscription") {
-      window.history.replaceState({}, "", "/");
-      return "subscription";
-    }
-    if (params.get("view") === "admin") {
-      window.history.replaceState({}, "", "/");
-      return "admin";
-    }
-    const viewParam = params.get("view");
-    if (viewParam === "brand" || viewParam === "how-it-works" || viewParam === "who-is-it-for" || viewParam === "compare" || viewParam === "roadmap" || viewParam === "feature-board") {
-      window.history.replaceState({}, "", "/");
-      return viewParam as View;
-    }
-    return "home";
+    return initial.view;
   });
 
   const [isExiting, setIsExiting] = useState(false);
   const pendingViewRef = useRef<View | null>(null);
 
   const transitionTo = useCallback((nextView: View) => {
-    if (nextView === view && !isExiting) return;
+    if (nextView === view && !isExiting) {
+      isPopstateNav.current = false;
+      return;
+    }
     if (isExiting) {
       pendingViewRef.current = nextView;
       return;
@@ -79,13 +117,31 @@ function AppContent() {
     if (!isExiting) return;
     const timer = setTimeout(() => {
       if (pendingViewRef.current) {
-        setView(pendingViewRef.current);
+        const newView = pendingViewRef.current;
         pendingViewRef.current = null;
+
+        if (!isPopstateNav.current) {
+          const path = viewToPath[newView] || "/";
+          window.history.pushState({ view: newView }, "", path);
+        }
+        isPopstateNav.current = false;
+
+        setView(newView);
       }
       setIsExiting(false);
     }, 180);
     return () => clearTimeout(timer);
   }, [isExiting]);
+
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      const targetView: View = event.state?.view || pathToView[window.location.pathname] || "home";
+      isPopstateNav.current = true;
+      transitionTo(targetView);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [transitionTo]);
 
   usePageTracking(view);
 
@@ -116,6 +172,7 @@ function AppContent() {
       const name = [user.firstName, user.lastName].filter(Boolean).join(" ");
       syncFromServer(user.profileImageUrl || null, name || undefined);
       if (user.onboardingComplete !== "true" && view !== "onboarding" && view !== "signin") {
+        window.history.replaceState({ view: "onboarding" }, "", "/onboarding");
         setView("onboarding");
       }
     }
@@ -160,6 +217,7 @@ function AppContent() {
       if (loaded && script.userRoleId) {
         setUserRole(script.userRoleId);
       }
+      window.history.pushState({ view: "rehearsal" }, "", "/rehearsal");
       setView("rehearsal");
     }
   }, [createSessionFromParsed, setUserRole]);
@@ -210,7 +268,9 @@ function AppContent() {
           onBack={handleBackToHome} 
           onSignUp={() => {
             const hasPendingScript = !!sessionStorage.getItem("costar-pending-script");
-            setView(hasPendingScript ? "home" : "onboarding");
+            const target: View = hasPendingScript ? "home" : "onboarding";
+            window.history.pushState({ view: target }, "", viewToPath[target]);
+            setView(target);
           }}
         />
       )}

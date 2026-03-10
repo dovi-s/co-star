@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car } from "lucide-react";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car, Music } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -52,6 +53,15 @@ interface SettingsDrawerProps {
   isLoading?: boolean;
   error?: string | null;
   onHandsFreeMode?: () => void;
+}
+
+function SectionHeader({ icon: Icon, label }: { icon: typeof Gauge; label: string }) {
+  return (
+    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider pb-1" data-testid={`section-header-${label.toLowerCase().replace(/\s+/g, "-")}`}>
+      <Icon className="h-3.5 w-3.5" />
+      {label}
+    </div>
+  );
 }
 
 export function SettingsDrawer({
@@ -112,259 +122,264 @@ export function SettingsDrawer({
 
           <div className="flex-1 overflow-auto px-5 pb-10">
             <div className="space-y-6">
-              {/* Ambient Sound Toggle */}
-              <div className="flex items-center justify-between py-2 animate-fade-in-up" style={{ animationDelay: "50ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-9 h-9 rounded-lg flex items-center justify-center",
-                    ambientEnabled ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
-                  )}>
-                    {ambientEnabled ? (
-                      <Volume2 className="h-4 w-4" />
-                    ) : (
-                      <VolumeX className="h-4 w-4" />
-                    )}
+
+              <div className="space-y-4" data-testid="section-playback">
+                <SectionHeader icon={Gauge} label="Playback" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                      <Gauge className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm font-medium">
+                        Pace
+                      </label>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        {playbackSpeed < 0.9 ? "Slower" : playbackSpeed > 1.1 ? "Faster" : "Normal"} ({playbackSpeed.toFixed(1)}x)
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label htmlFor="ambient" className="text-sm font-medium cursor-pointer">
-                      Ambient Sound
-                    </label>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      Subtle background hum for focus
-                    </p>
+                  <Slider
+                    value={[playbackSpeed]}
+                    onValueChange={([value]) => onPlaybackSpeedChange(value)}
+                    min={0.5}
+                    max={1.5}
+                    step={0.1}
+                    className="w-full"
+                    data-testid="slider-playback-speed"
+                  />
+                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                    <span>0.5x</span>
+                    <span>1.0x</span>
+                    <span>1.5x</span>
                   </div>
                 </div>
-                <Switch
-                  id="ambient"
-                  checked={ambientEnabled}
-                  onCheckedChange={onAmbientToggle}
-                  data-testid="switch-ambient"
-                />
-              </div>
 
-              {/* Tap Mode Toggle */}
-              <div className="flex items-center justify-between py-2 animate-fade-in-up" style={{ animationDelay: "100ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "w-9 h-9 rounded-lg flex items-center justify-center",
-                    tapMode ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
-                  )}>
-                    <Hand className="h-4 w-4" />
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                      <Timer className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm font-medium">
+                        Reader Delay
+                      </label>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before reader speaks
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <label htmlFor="tapMode" className="text-sm font-medium cursor-pointer">
-                      Tap to Advance
-                    </label>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      Tap or press space to advance your lines
-                    </p>
+                  <Slider
+                    value={[readerDelay]}
+                    onValueChange={([value]) => onReaderDelayChange(value)}
+                    min={0}
+                    max={3}
+                    step={0.5}
+                    className="w-full"
+                    data-testid="slider-reader-delay"
+                  />
+                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                    <span>0s</span>
+                    <span>1.5s</span>
+                    <span>3s</span>
                   </div>
                 </div>
-                <Switch
-                  id="tapMode"
-                  checked={tapMode}
-                  onCheckedChange={onTapModeChange}
-                  data-testid="switch-tap-mode"
-                />
-              </div>
 
-              {onHandsFreeMode && (
-                <button
-                  onClick={() => {
-                    setIsOpen(false);
-                    setTimeout(onHandsFreeMode, 300);
-                  }}
-                  className="w-full flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-muted/30 transition-colors animate-fade-in-up"
-                  style={{ animationDelay: "150ms" }}
-                  data-testid="button-hands-free-mode"
-                >
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
-                    <Car className="h-4 w-4" />
-                  </div>
-                  <div className="text-left">
-                    <span className="text-sm font-medium">Hands-Free Mode</span>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      Audio-only rehearsal, no screen needed
-                    </p>
-                  </div>
-                </button>
-              )}
-
-              {/* Earbuds-Only Recording - only show when camera is enabled */}
-              {cameraEnabled && onEarbudsOnlyChange && (
                 <div className="flex items-center justify-between py-2">
                   <div className="flex items-center gap-3">
                     <div className={cn(
                       "w-9 h-9 rounded-lg flex items-center justify-center",
-                      earbudsOnly ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
+                      tapMode ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
                     )}>
-                      <Headphones className="h-4 w-4" />
+                      <Hand className="h-4 w-4" />
                     </div>
                     <div>
-                      <label htmlFor="earbudsOnly" className="text-sm font-medium cursor-pointer">
-                        Earbuds Only
+                      <label htmlFor="tapMode" className="text-sm font-medium cursor-pointer">
+                        Tap to Advance
                       </label>
                       <p className="text-[11px] text-muted-foreground/60">
-                        Reader voice in earbuds, not in recording
+                        Tap or press space to advance your lines
                       </p>
                     </div>
                   </div>
                   <Switch
-                    id="earbudsOnly"
-                    checked={earbudsOnly}
-                    onCheckedChange={onEarbudsOnlyChange}
-                    data-testid="switch-earbuds-only"
+                    id="tapMode"
+                    checked={tapMode}
+                    onCheckedChange={onTapModeChange}
+                    data-testid="switch-tap-mode"
                   />
                 </div>
-              )}
 
-              {/* Playback Speed */}
-              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
-                    <Gauge className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      Pace
-                    </label>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      {playbackSpeed < 0.9 ? "Slower" : playbackSpeed > 1.1 ? "Faster" : "Normal"} ({playbackSpeed.toFixed(1)}x)
-                    </p>
-                  </div>
-                </div>
-                <Slider
-                  value={[playbackSpeed]}
-                  onValueChange={([value]) => onPlaybackSpeedChange(value)}
-                  min={0.5}
-                  max={1.5}
-                  step={0.1}
-                  className="w-full"
-                  data-testid="slider-playback-speed"
-                />
-                <div className="flex justify-between text-[11px] text-muted-foreground/60">
-                  <span>0.5x</span>
-                  <span>1.0x</span>
-                  <span>1.5x</span>
-                </div>
+                {onHandsFreeMode && (
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      setTimeout(onHandsFreeMode, 300);
+                    }}
+                    className="w-full flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-muted/30 transition-colors"
+                    data-testid="button-hands-free-mode"
+                  >
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                      <Car className="h-4 w-4" />
+                    </div>
+                    <div className="text-left">
+                      <span className="text-sm font-medium">Hands-Free Mode</span>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        Audio-only rehearsal, no screen needed
+                      </p>
+                    </div>
+                  </button>
+                )}
               </div>
 
-              {/* Reader Delay */}
-              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
-                    <Timer className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      Reader Delay
-                    </label>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before reader speaks
-                    </p>
-                  </div>
-                </div>
-                <Slider
-                  value={[readerDelay]}
-                  onValueChange={([value]) => onReaderDelayChange(value)}
-                  min={0}
-                  max={3}
-                  step={0.5}
-                  className="w-full"
-                  data-testid="slider-reader-delay"
-                />
-                <div className="flex justify-between text-[11px] text-muted-foreground/60">
-                  <span>0s</span>
-                  <span>1.5s</span>
-                  <span>3s</span>
-                </div>
-              </div>
+              <Separator />
 
-              {/* Reader Volume */}
-              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
-                    <Volume2 className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-sm font-medium">
-                      Reader Volume
-                    </label>
-                    <p className="text-[11px] text-muted-foreground/60">
-                      {readerVolume === 0 ? "Muted" : `${Math.round(readerVolume * 100)}%`}
-                    </p>
-                  </div>
-                </div>
-                <Slider
-                  value={[readerVolume]}
-                  onValueChange={([value]) => onReaderVolumeChange(value)}
-                  min={0}
-                  max={1}
-                  step={0.05}
-                  className="w-full"
-                  data-testid="slider-reader-volume"
-                />
-                <div className="flex justify-between text-[11px] text-muted-foreground/60">
-                  <span>0%</span>
-                  <span>50%</span>
-                  <span>100%</span>
-                </div>
-              </div>
+              <div className="space-y-4" data-testid="section-audio">
+                <SectionHeader icon={Music} label="Audio" />
 
-              {/* Scenes */}
-              {scenes.length > 1 && (
-                <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "350ms" }}>
-                  <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    <Layers className="h-3.5 w-3.5" />
-                    Scenes
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
+                      <Volume2 className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <label className="text-sm font-medium">
+                        Reader Volume
+                      </label>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        {readerVolume === 0 ? "Muted" : `${Math.round(readerVolume * 100)}%`}
+                      </p>
+                    </div>
                   </div>
-                  <div className="grid gap-1.5">
-                    {scenes.map((scene, index) => (
-                      <Button
-                        key={scene.id}
-                        onClick={() => {
-                          onSceneChange(index);
-                          setIsOpen(false);
-                        }}
-                        variant={index === currentSceneIndex ? "default" : "ghost"}
-                        className="w-full h-auto py-2.5 px-3 justify-start text-left"
-                        data-testid={`button-scene-${index}`}
-                      >
-                        <div className="flex flex-col items-start gap-0.5 min-w-0">
-                          <div className="text-sm font-medium truncate max-w-full">{scene.name}</div>
-                          <div className="text-[11px] opacity-70">
-                            {scene.lines.length} lines
-                          </div>
-                        </div>
-                      </Button>
+                  <Slider
+                    value={[readerVolume]}
+                    onValueChange={([value]) => onReaderVolumeChange(value)}
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    className="w-full"
+                    data-testid="slider-reader-volume"
+                  />
+                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                    <span>0%</span>
+                    <span>50%</span>
+                    <span>100%</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-9 h-9 rounded-lg flex items-center justify-center",
+                      ambientEnabled ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
+                    )}>
+                      {ambientEnabled ? (
+                        <Volume2 className="h-4 w-4" />
+                      ) : (
+                        <VolumeX className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div>
+                      <label htmlFor="ambient" className="text-sm font-medium cursor-pointer">
+                        Ambient Sound
+                      </label>
+                      <p className="text-[11px] text-muted-foreground/60">
+                        Subtle background hum for focus
+                      </p>
+                    </div>
+                  </div>
+                  <Switch
+                    id="ambient"
+                    checked={ambientEnabled}
+                    onCheckedChange={onAmbientToggle}
+                    data-testid="switch-ambient"
+                  />
+                </div>
+
+                {cameraEnabled && onEarbudsOnlyChange && (
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "w-9 h-9 rounded-lg flex items-center justify-center",
+                        earbudsOnly ? "bg-foreground text-background" : "bg-muted/60 text-muted-foreground"
+                      )}>
+                        <Headphones className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <label htmlFor="earbudsOnly" className="text-sm font-medium cursor-pointer">
+                          Earbuds Only
+                        </label>
+                        <p className="text-[11px] text-muted-foreground/60">
+                          Reader voice in earbuds, not in recording
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      id="earbudsOnly"
+                      checked={earbudsOnly}
+                      onCheckedChange={onEarbudsOnlyChange}
+                      data-testid="switch-earbuds-only"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Voice Presets
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/60">
+                    Tap to change voice style
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {roles.map((role) => (
+                      <RoleChip
+                        key={role.id}
+                        role={role}
+                        isUserRole={role.id === userRoleId}
+                        showPresetPicker={role.id !== userRoleId}
+                        onPresetChange={(preset) => onRolePresetChange(role.id, preset)}
+                      />
                     ))}
                   </div>
                 </div>
-              )}
-
-              {/* Voice Presets */}
-              <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: "400ms" }}>
-                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Voice Presets
-                </div>
-                <p className="text-[11px] text-muted-foreground/60">
-                  Tap to change voice style
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {roles.map((role) => (
-                    <RoleChip
-                      key={role.id}
-                      role={role}
-                      isUserRole={role.id === userRoleId}
-                      showPresetPicker={role.id !== userRoleId}
-                      onPresetChange={(preset) => onRolePresetChange(role.id, preset)}
-                    />
-                  ))}
-                </div>
               </div>
 
-              <div className="border-t border-border/40 pt-6 space-y-2">
-                {/* Import New Script */}
+              {scenes.length > 1 && (
+                <>
+                  <Separator />
+
+                  <div className="space-y-3" data-testid="section-script">
+                    <SectionHeader icon={Layers} label="Script" />
+
+                    <div className="grid gap-1.5">
+                      {scenes.map((scene, index) => (
+                        <Button
+                          key={scene.id}
+                          onClick={() => {
+                            onSceneChange(index);
+                            setIsOpen(false);
+                          }}
+                          variant={index === currentSceneIndex ? "default" : "ghost"}
+                          className="w-full h-auto py-2.5 px-3 justify-start text-left"
+                          data-testid={`button-scene-${index}`}
+                        >
+                          <div className="flex flex-col items-start gap-0.5 min-w-0">
+                            <div className="text-sm font-medium truncate max-w-full">{scene.name}</div>
+                            <div className="text-[11px] opacity-70">
+                              {scene.lines.length} lines
+                            </div>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <Separator />
+
+              <div className="space-y-2">
                 <Button
                   variant="outline"
                   size="lg"
@@ -392,7 +407,6 @@ export function SettingsDrawer({
                   </Card>
                 )}
 
-                {/* Clear Session */}
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button

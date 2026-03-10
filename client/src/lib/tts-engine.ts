@@ -192,8 +192,8 @@ class TTSEngine {
   private currentBlobUrl: string | null = null;
   
   private prefetchCache: Map<string, PrefetchedAudio> = new Map();
-  private prefetchController: AbortController | null = null;
-  private prefetchInFlight: string | null = null;
+  private prefetchControllers: Map<string, AbortController> = new Map();
+  private prefetchInFlight: Set<string> = new Set();
   
   private audioContext: AudioContext | null = null;
   private ttsDestination: MediaStreamAudioDestinationNode | null = null;
@@ -377,17 +377,13 @@ class TTSEngine {
     if (this.prefetchCache.has(key)) {
       return;
     }
-    if (this.prefetchInFlight === key) {
+    if (this.prefetchInFlight.has(key)) {
       return;
     }
     
-    if (this.prefetchController) {
-      this.prefetchController.abort();
-    }
-    
     const controller = new AbortController();
-    this.prefetchController = controller;
-    this.prefetchInFlight = key;
+    this.prefetchControllers.set(key, controller);
+    this.prefetchInFlight.add(key);
     
     const cleanText = stripEmphasisMarkers(text);
     console.log("[TTS Prefetch] Starting for:", options.characterName, cleanText.substring(0, 40));
@@ -421,7 +417,7 @@ class TTSEngine {
       
       const staleKeys: string[] = [];
       this.prefetchCache.forEach((cached, oldKey) => {
-        if (oldKey !== key && Date.now() - cached.timestamp > 60000) {
+        if (Date.now() - cached.timestamp > 120000) {
           URL.revokeObjectURL(cached.url);
           staleKeys.push(oldKey);
         }
@@ -438,20 +434,17 @@ class TTSEngine {
     })
     .finally(() => {
       clearTimeout(timeout);
-      if (this.prefetchInFlight === key) {
-        this.prefetchInFlight = null;
-      }
+      this.prefetchInFlight.delete(key);
+      this.prefetchControllers.delete(key);
     });
   }
 
   clearPrefetchCache(): void {
     this.prefetchCache.forEach(cached => URL.revokeObjectURL(cached.url));
     this.prefetchCache.clear();
-    if (this.prefetchController) {
-      this.prefetchController.abort();
-      this.prefetchController = null;
-    }
-    this.prefetchInFlight = null;
+    this.prefetchControllers.forEach(controller => controller.abort());
+    this.prefetchControllers.clear();
+    this.prefetchInFlight.clear();
   }
 
   private consumePrefetched(text: string, options: SpeakOptions): PrefetchedAudio | null {

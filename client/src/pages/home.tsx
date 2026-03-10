@@ -162,6 +162,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
     return (
       <RoleSelector
         roles={session.roles}
+        scenes={session.scenes}
         onRoleSelect={handleRoleSelect}
         onBack={handleBackToImport}
         onTableRead={onTableRead}
@@ -267,32 +268,34 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
           }}
         />
-        <div className="px-5 pt-10 pb-5 relative z-10">
+        <div className="px-5 pt-8 pb-4 relative z-10">
           <div className="absolute -top-6 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             {isAuthenticated && user?.firstName
               ? `What are we rehearsing today, ${user.firstName}?`
               : "Your on demand scene partner."}
           </h1>
-          <p className="text-muted-foreground text-sm mt-2 relative leading-relaxed">
+          <p className="text-muted-foreground text-sm mt-1.5 relative leading-relaxed">
             {isAuthenticated && user?.firstName
               ? "Paste a script, upload a file, or pick up where you left off."
               : "Paste a script. Pick your role. Start rehearsing."}
           </p>
-          <div className="flex items-center gap-4 mt-4 relative" data-testid="value-props">
-            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-unlimited-takes">
-              <Repeat className="h-3 w-3" />
-              <span className="text-[11px]">Unlimited takes</span>
+          {!isAuthenticated && (
+            <div className="flex items-center gap-4 mt-3 relative" data-testid="value-props">
+              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-unlimited-takes">
+                <Repeat className="h-3 w-3" />
+                <span className="text-[11px]">Unlimited takes</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-always-available">
+                <Clock className="h-3 w-3" />
+                <span className="text-[11px]">Always available</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-zero-judgment">
+                <Volume2 className="h-3 w-3" />
+                <span className="text-[11px]">Zero judgment</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-always-available">
-              <Clock className="h-3 w-3" />
-              <span className="text-[11px]">Always available</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-zero-judgment">
-              <Volume2 className="h-3 w-3" />
-              <span className="text-[11px]">Zero judgment</span>
-            </div>
-          </div>
+          )}
         </div>
 
         {(() => {

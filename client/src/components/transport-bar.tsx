@@ -15,6 +15,7 @@ interface TransportBarProps {
   cameraMode?: boolean;
   isSpeaking?: boolean;
   isListening?: boolean;
+  ttsGenerating?: boolean;
 }
 
 export function TransportBar({
@@ -30,6 +31,7 @@ export function TransportBar({
   cameraMode = false,
   isSpeaking = false,
   isListening = false,
+  ttsGenerating = false,
 }: TransportBarProps) {
   const progress = totalLines > 0 ? ((currentLine + 1) / totalLines) * 100 : 0;
   const circumference = 2 * Math.PI * 28;
@@ -85,7 +87,7 @@ export function TransportBar({
             !isPlaying && "state-idle",
             isPlaying && isSpeaking && "state-speaking",
             isPlaying && isListening && "state-listening",
-            isPlaying && !isSpeaking && !isListening && "state-thinking"
+            isPlaying && ttsGenerating && !isSpeaking && !isListening && "state-thinking"
           )}>
             <svg 
               className="w-[68px] h-[68px] -rotate-90"

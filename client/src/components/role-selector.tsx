@@ -1,21 +1,37 @@
 import { useState, useRef, useEffect } from "react";
-import { Check, User, ChevronLeft, Users } from "lucide-react";
+import { Check, ChevronLeft, Users, AlertTriangle, FileText, Theater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Logo } from "@/components/logo";
+import { Badge } from "@/components/ui/badge";
 import { ThemeToggle } from "@/components/theme-toggle";
-import type { Role } from "@shared/schema";
+import type { Role, Scene } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
 interface RoleSelectorProps {
   roles: Role[];
+  scenes?: Scene[];
   onRoleSelect: (roleId: string) => void;
   onBack: () => void;
   onTableRead?: () => void;
   scriptName?: string;
 }
 
-export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptName }: RoleSelectorProps) {
+function getParseWarnings(roles: Role[], scenes: Scene[], totalLines: number): string[] {
+  const warnings: string[] = [];
+  if (roles.length === 1) {
+    warnings.push("Only 1 role detected — the AI will have no lines to read. Check that character names parsed correctly.");
+  }
+  if (totalLines < 5) {
+    warnings.push("Very few lines detected. The script may not have parsed correctly.");
+  }
+  if (roles.length > 0 && roles.some(r => r.lineCount === 0)) {
+    const emptyRoles = roles.filter(r => r.lineCount === 0).map(r => r.name);
+    warnings.push(`${emptyRoles.join(", ")} ${emptyRoles.length === 1 ? "has" : "have"} 0 lines — may be a parsing artifact.`);
+  }
+  return warnings;
+}
+
+export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTableRead, scriptName }: RoleSelectorProps) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [titleOverflows, setTitleOverflows] = useState(false);
 
@@ -44,6 +60,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
   const sortedRoles = [...roles].sort((a, b) => b.lineCount - a.lineCount);
   const totalLines = roles.reduce((sum, r) => sum + r.lineCount, 0);
   const selectedRole = roles.find(r => r.id === selectedRoleId);
+  const warnings = getParseWarnings(roles, scenes, totalLines);
 
   const handleContinue = () => {
     if (selectedRoleId) {
@@ -91,7 +108,7 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
               {scriptName || "Your Script"}
             </h1>
             <p className="text-[11px] text-muted-foreground">
-              {roles.length} characters
+              {roles.length} {roles.length === 1 ? "character" : "characters"}
             </p>
           </div>
         </div>
@@ -99,8 +116,59 @@ export function RoleSelector({ roles, onRoleSelect, onBack, onTableRead, scriptN
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-5 pt-6 pb-4 animate-fade-in-up relative">
-          {/* Subtle gradient accent */}
+        <div className="px-4 pt-4 pb-3 animate-fade-in-up space-y-3">
+          <div className="flex items-center gap-2 flex-wrap" data-testid="script-preview-summary">
+            <Badge variant="secondary" className="gap-1.5" data-testid="badge-roles-count">
+              <Users className="h-3 w-3" />
+              {roles.length} {roles.length === 1 ? "role" : "roles"}
+            </Badge>
+            <Badge variant="secondary" className="gap-1.5" data-testid="badge-lines-count">
+              <FileText className="h-3 w-3" />
+              {totalLines} {totalLines === 1 ? "line" : "lines"}
+            </Badge>
+            {scenes.length > 0 && (
+              <Badge variant="secondary" className="gap-1.5" data-testid="badge-scenes-count">
+                <Theater className="h-3 w-3" />
+                {scenes.length} {scenes.length === 1 ? "scene" : "scenes"}
+              </Badge>
+            )}
+          </div>
+
+          {warnings.length > 0 && (
+            <div className="space-y-2" data-testid="script-warnings">
+              {warnings.map((warning, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-2 rounded-md bg-destructive/10 dark:bg-destructive/15 px-3 py-2 text-xs text-destructive animate-fade-in"
+                  data-testid={`warning-${i}`}
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span>{warning}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {scenes.length > 1 && (
+            <div className="space-y-1" data-testid="scene-preview">
+              <p className="text-xs font-medium text-muted-foreground">Scenes</p>
+              <div className="flex flex-wrap gap-1.5">
+                {scenes.map((scene, i) => (
+                  <Badge
+                    key={scene.id}
+                    variant="outline"
+                    className="text-[11px] font-normal"
+                    data-testid={`badge-scene-${i}`}
+                  >
+                    {scene.name} · {scene.lines.length}L
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 pb-2 animate-fade-in-up relative">
           <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h2 className="text-lg font-semibold text-foreground relative">
             Select your role

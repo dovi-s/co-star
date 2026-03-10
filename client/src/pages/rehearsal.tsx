@@ -18,9 +18,10 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator";
 
 // Performance tracking for the current run
 interface LinePerformance {
@@ -96,6 +97,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const tapModeRef = useRef(tapMode);
   const [readerVolume, setReaderVolume] = useState(() => ttsEngine.masterVolume);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [ttsGenerating, setTtsGenerating] = useState(false);
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const [showCountdown, setShowCountdown] = useState(false);
   const pendingPlayFromLineRef = useRef<number | null>(null);
@@ -441,9 +443,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           break;
         case "Escape":
           e.preventDefault();
-          if (session?.isPlaying) {
+          if (handsFreeModeRef.current) {
+            exitHandsFreeMode();
+          } else if (isPlayingRef.current) {
             stopAllPlayback();
             setPlaying(false);
+          } else {
+            handleBackToHome();
           }
           break;
       }
@@ -717,13 +723,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
   }, [micBlocked, toast]);
 
-  const prefetchNextAILine = useCallback(() => {
+  const prefetchNextAILine = useCallback((maxLines: number = 2) => {
     if (!session) return;
     const scene = session.scenes[session.currentSceneIndex];
     if (!scene) return;
     
     const startIdx = session.currentLineIndex + 1;
-    for (let i = startIdx; i < Math.min(startIdx + 3, scene.lines.length); i++) {
+    let prefetched = 0;
+    for (let i = startIdx; i < Math.min(startIdx + 5, scene.lines.length); i++) {
       const line = scene.lines[i];
       if (!line || line.roleId === session.userRoleId) continue;
       
@@ -744,7 +751,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         previousText: prevLine?.text || "",
         nextText: nextLine?.text || "",
       });
-      break;
+      prefetched++;
+      if (prefetched >= maxLines) break;
     }
   }, [session, getRoleById]);
 
@@ -772,6 +780,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       userToAiDelayRef.current = null;
     }
     setIsSpeaking(false);
+    setTtsGenerating(false);
     setSpeakingWordIndex(-1);
   }, []);
 
@@ -799,6 +808,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       wordTimerRef.current = null;
     }
     setIsSpeaking(false);
+    setTtsGenerating(false);
     setSpeakingWordIndex(-1);
 
     speakingLineRef.current = lineKey;
@@ -806,10 +816,13 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const isUser = isUserLine(line);
     if (isUser) {
       console.log("[Rehearsal] User's line, starting listening");
+      setTtsGenerating(false);
       startListeningForUser();
       prefetchNextAILine();
       return;
     }
+
+    prefetchNextAILine(1);
 
     const role = getRoleById(line.roleId);
     const roleIndex = session.roles.findIndex(r => r.id === line.roleId);
@@ -850,8 +863,10 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         return;
       }
       
+      setTtsGenerating(true);
       ttsEngine.speak(ttsText, prosody, (result: SpeakResult) => {
         console.log("[Rehearsal] TTS complete:", result, "for line:", lineKey);
+        setTtsGenerating(false);
         clearWordTimer();
         
         if (isPlayingRef.current && speakingLineRef.current === lineKey) {
@@ -895,6 +910,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         previousText: prev?.text || "",
         nextText: getNextLine()?.text || "",
         onStart: (duration: number, wordCount: number) => {
+          setTtsGenerating(false);
           if (wordCount > 0 && duration > 0) {
             const msPerWord = (duration * 1000) / wordCount;
             let currentWord = 0;
@@ -940,6 +956,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         wordTimerRef.current = null;
       }
       setIsSpeaking(false);
+      setTtsGenerating(false);
       setSpeakingWordIndex(-1);
       
       if (currentIsUserLine) {
@@ -1446,6 +1463,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const isListening = listeningState === "listening" && currentIsUserLine;
   const showUserTurnIndicator = currentIsUserLine && session.isPlaying;
 
+  const aiState: AIState = isSpeaking ? "speaking"
+    : isListening ? "listening"
+    : (ttsGenerating && session.isPlaying && !currentIsUserLine) ? "thinking"
+    : "idle";
+
   return (
     <div className={cn(
       "min-h-screen flex flex-col",
@@ -1472,6 +1494,16 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             aria-label={cameraFocus === 'script' ? "Focus on face" : "Focus on script"}
             data-testid="button-toggle-camera-focus"
           />
+          {cameraFocus === 'face' && (
+            <button
+              onClick={handleBackToHome}
+              className="fixed top-4 left-4 z-[15] flex items-center gap-2 px-4 py-2.5 rounded-full bg-black/50 backdrop-blur-sm hover:bg-black/70 text-white transition-colors safe-top"
+              data-testid="button-camera-exit"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">Exit</span>
+            </button>
+          )}
         </>
       )}
       
@@ -1504,13 +1536,14 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
       {showCelebration && (() => {
         const feedback = getPerformanceFeedback();
+        const isLastScene = session.scenes.length > 1 && session.currentSceneIndex === session.scenes.length - 1;
+        const isScriptComplete = isLastScene;
         
-        // Deterministic confetti particles for perfect runs (seeded by position)
-        const confettiParticles = feedback?.type === "perfect" 
-          ? Array.from({ length: 12 }, (_, i) => ({
+        const confettiParticles = (feedback?.type === "perfect" || isScriptComplete)
+          ? Array.from({ length: isScriptComplete ? 20 : 12 }, (_, i) => ({
               id: i,
-              left: 5 + (i * 8) + (i % 3) * 2,
-              delay: i * 0.08,
+              left: 3 + (i * (isScriptComplete ? 5 : 8)) + (i % 3) * 2,
+              delay: i * 0.06,
               duration: 2.5 + (i % 3) * 0.3,
             }))
           : [];
@@ -1520,13 +1553,17 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md animate-fade-in"
             onClick={handleDismissCelebration}
           >
-            {/* Confetti for perfect runs */}
-            {feedback?.type === "perfect" && (
+            {(feedback?.type === "perfect" || isScriptComplete) && (
               <div className="confetti-container">
                 {confettiParticles.map(p => (
                   <div
                     key={p.id}
-                    className="confetti-particle bg-yellow-400 dark:bg-yellow-500"
+                    className={cn(
+                      "confetti-particle",
+                      isScriptComplete && feedback?.type !== "perfect"
+                        ? "bg-primary/60 dark:bg-primary/50"
+                        : "bg-yellow-400 dark:bg-yellow-500"
+                    )}
                     style={{
                       left: `${p.left}%`,
                       animationDelay: `${p.delay}s`,
@@ -1547,18 +1584,29 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
               <div className="flex items-center justify-center gap-3 mb-4">
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                  isScriptComplete && feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
+                  isScriptComplete ? "bg-primary text-primary-foreground" :
                   feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
                   feedback?.type === "great" ? "bg-green-500 text-white" :
                   "bg-foreground text-background"
                 )}>
-                  {feedback?.type === "perfect" ? (
+                  {isScriptComplete ? (
+                    <Trophy className="h-5 w-5" />
+                  ) : feedback?.type === "perfect" ? (
                     <Star className="h-5 w-5 fill-current" />
                   ) : (
                     <Check className="h-5 w-5" />
                   )}
                 </div>
                 <div className="text-left">
-                  <h3 className="text-lg font-semibold leading-tight">Scene Complete</h3>
+                  <h3 className="text-lg font-semibold leading-tight">
+                    {isScriptComplete ? "Script Complete" : "Scene Complete"}
+                  </h3>
+                  {isScriptComplete && (
+                    <p className="text-xs text-muted-foreground">
+                      All {session.scenes.length} scenes finished
+                    </p>
+                  )}
                   {feedback && (
                     <p className={cn(
                       "text-sm",
@@ -1746,13 +1794,27 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
       {handsFreeMode && (
         <div className="fixed inset-0 z-[70] bg-black flex flex-col items-center justify-center text-white" data-testid="hands-free-overlay">
-          <button
-            onClick={exitHandsFreeMode}
-            className="absolute top-4 right-4 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors safe-top"
-            data-testid="button-exit-hands-free"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="absolute top-4 left-4 right-4 flex items-center justify-between safe-top">
+            <button
+              onClick={() => {
+                exitHandsFreeMode();
+                handleBackToHome();
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              data-testid="button-exit-to-home"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="text-sm font-medium">Exit</span>
+            </button>
+            <button
+              onClick={exitHandsFreeMode}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              data-testid="button-exit-hands-free"
+            >
+              <X className="h-4 w-4" />
+              <span className="text-sm font-medium">Script view</span>
+            </button>
+          </div>
 
           <div className="flex-1 flex flex-col items-center justify-center gap-8 px-6 max-w-sm">
             {sceneCompleted ? (
@@ -1766,20 +1828,24 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             ) : currentLine ? (
               <>
                 <div className={cn(
-                  "w-20 h-20 rounded-full flex items-center justify-center",
+                  "w-20 h-20 rounded-full flex items-center justify-center transition-all duration-300",
                   currentIsUserLine
                     ? isListening
                       ? "bg-primary/20 ring-2 ring-primary/50 pulse-ring"
                       : "bg-white/10"
                     : isSpeaking
                       ? "bg-white/10"
-                      : "bg-white/5"
+                      : aiState === "thinking"
+                        ? "bg-white/5 ring-1 ring-white/20"
+                        : "bg-white/5"
                 )}>
                   {currentIsUserLine ? (
                     <Mic className={cn(
                       "h-8 w-8",
                       isListening ? "text-primary" : "text-white/70"
                     )} />
+                  ) : aiState === "thinking" ? (
+                    <Loader2 className="h-8 w-8 text-white/60 animate-spin" />
                   ) : (
                     <Volume2 className={cn(
                       "h-8 w-8",
@@ -1790,7 +1856,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
                 <div className="text-center space-y-2">
                   <p className="text-sm uppercase tracking-widest text-white/40">
-                    {currentIsUserLine ? "Your line" : (
+                    {currentIsUserLine ? "Your line" : aiState === "thinking" ? "Preparing..." : (
                       getRoleById(currentLine.roleId)?.name || "Scene partner"
                     )}
                   </p>
@@ -1919,6 +1985,28 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             }}
           />
           
+          {aiState === "thinking" && !handsFreeMode && (
+            <div className="flex items-center justify-center mt-4 animate-fade-in" data-testid="tts-generating-indicator">
+              <div className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full border",
+                camera.isEnabled
+                  ? "bg-white/5 border-white/10"
+                  : "bg-muted/50 border-border/50"
+              )}>
+                <Loader2 className={cn(
+                  "h-3.5 w-3.5 animate-spin",
+                  camera.isEnabled ? "text-white/60" : "text-muted-foreground"
+                )} />
+                <span className={cn(
+                  "text-xs font-medium",
+                  camera.isEnabled ? "text-white/50" : "text-muted-foreground"
+                )}>
+                  Preparing line...
+                </span>
+              </div>
+            </div>
+          )}
+
           {showUserTurnIndicator && (
             <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
               {tapMode ? (
@@ -2025,6 +2113,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
             cameraMode={camera.isEnabled}
             isSpeaking={isSpeaking}
             isListening={listeningState === "listening"}
+            ttsGenerating={ttsGenerating}
           />
         </div>
 
