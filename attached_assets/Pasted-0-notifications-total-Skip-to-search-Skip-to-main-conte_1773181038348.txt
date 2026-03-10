@@ -1,0 +1,296 @@
+0 notifications total
+
+Skip to search
+
+Skip to main content
+
+Keyboard shortcuts
+Close jump menu
+I’m looking for...
+new feed updates notifications
+Home
+My Network
+Jobs
+Messaging
+Notifications
+Dovi Sherman
+Me
+
+For Business
+Learning
+Premium
+
+Dovi Sherman
+Operator across growth, strategy, and M&A
+
+Miami, Florida
+
+
+Experience
+Profile viewers
+41
+View all analytics
+Your Premium features
+
+Feed detail update
+Feed post
+View Will Bodewes’  graphic link
+Will BodewesWill Bodewes
+   • 3rd+Premium • 3rd+
+CEO of Phonely | PhD AI researcherCEO of Phonely | PhD AI researcher
+1yr •  1 year ago • Visible to anyone on or off LinkedIn
+
+Follow
+
+How does AI know when you’re done talking?
+
+Its not as easy as you might think, people don’t speak at the same cadence and occasionally pause in the middle of their conversations. In all situations, having realtime conversations between a human and an AI its a balancing act between low latency, and AI interruptions.
+
+The “right” way to solve the problem is to do exactly what humans do. Humans wait for a little delay in the conversation, and we use the context of the conversation to know when its our time to jump in.
+
+The way to translate this to code is to 1) have a little pause after someone is done talking and 2) train a lightweight machine learning model to predict if the person is done talking
+
+Check out the video to learn more or try our smart endpointing feature in the platform today!
+
+Play
+Remaining time 
+2:13
+1x
+
+Playback speed
+
+Turn closed captions on
+
+Unmute
+
+Turn fullscreen on
+likeinsightfullove
+114
+13 comments
+3 reposts
+Reactions
+View Ghiles Asmani’s  graphic link
+like
+View Bhairab Singh S.’s  graphic link
+like
+View David Pang’s  graphic link
+like
+View Mikita Mikitsiuk’s  graphic link
+like
+View Val Kamenski’s  graphic link
+like
+View Ziaullah Khan’s  graphic link
+like
+View Sahil Suman’s  graphic link
+like
+View Amit Chandra, MBA, MSL, MLS’  graphic link
+like
+…
+
+Like
+
+Comment
+
+Repost
+
+Send
+Dovi Sherman
+
+
+Add a comment…
+Open Emoji Keyboard
+
+Current selected sort order is Most relevant
+Most relevant
+View Vishesh Duggar’s  graphic link
+Vishesh Duggar
+   • 2nd
+5× Founder l CTO
+1y
+
+Interesting … Will AI be able to deal with people who are never done talking? 😅 May be a timing and context instead of pause.
+
+Like
+likefunny
+4
+
+Reply
+View Anusha Malla’s  graphic link
+Anusha Malla
+   • 3rd+
+Research . Design . Growth
+1y
+
+Very interesting point! Is there a way to detect tones people use at the end of sentence as a question(how the ending of sentences usually sound of a high tone than rest of the sentence, eg: Check it out! or Can you help me with it?) 
+
+Like
+like
+1
+
+Reply
+2 replies
+2 Replies on Anusha Malla’s comment
+View Will Bodewes’  graphic link
+Will Bodewes
+ 
+Author
+CEO of Phonely | PhD AI researcher
+1y
+
+Anusha Malla Great point! Should be something that is captured in a voice to voice endpointing model, currently we're only looking at the text piece, and it is working pretty well. Its certainly a fine line between what works and over engineering :)
+
+Like
+like
+2
+
+Reply
+View Anusha Malla’s  graphic link
+Anusha Malla
+   • 3rd+
+Research . Design . Growth
+1y
+
+I was thinking out loud, I have been working on non-verbal cues in voice interaction and would love to brainstorm sometime! 
+
+Like
+like
+1
+
+Reply
+
+Collapse replies
+View Luke "Marshy" Marshall’s  graphic link
+Luke "Marshy" Marshall
+   • 3rd+
+marketing recruitment | growth systems for founders | keynote speaker | go-to-market
+1y
+
+Yes!
+
+I love pausing and going and ChatGPT is horrific at catching this even when I tell it to exaggerate its waiting.
+
+Nice share Will.
+…more
+
+Like
+like
+2
+
+Reply
+View AI Agents Directory’s profile
+AI Agents Directory
+11,017 followers
+1y
+
+Great insights about voice agents specific!
+
+Like
+like
+2
+
+Reply
+View AI Automation Service’s profile
+AI Automation Service
+30 followers
+1y
+
+Interesting and Thanks for sharing Will Bodewes
+
+Like
+like
+1
+
+Reply
+View Varun Soni’s  graphic link
+Varun Soni
+   • 3rd+
+GTM @ LiveKit
+1y
+
+Neat solution! We ran into this exact same problem here at LiveKit.. and we also trained a transformer model to incorporate semantic understanding into the turn-detection system. It works like magic! It now knows to wait longer during the 'uhmms' and 'ahhs', or when you're reciting a longer string like an address. 
+
+It's still transcription-based, but excited to see how this evolves when it's an audio-based model that takes tone and cadence into account.
+…more
+
+Like
+insightfullike
+3
+
+Reply
+View Tuan Nguyen’s  graphic link
+Tuan Nguyen
+   • 3rd+
+Director at Upscalix – Empowering innovative businesses with skilled offshore software developers for long-term growth.
+1y
+
+I talked to a client of mine who was building a voice AI, and they ran into a different problem: How do the AI know when to stop talking? The situation is sometimes the user will say something in the middle of the AI talking, but depending on the context, the AI needs to stop or continue talking.
+For example, if the user says "Ummm..." or "Yes....", they can continue talking. But if the user starts talking for a long time, then the AI needs to be able to stop and listen to what they say.
+
+Could it be something worth tackling?
+…more
+
+Like
+like
+1
+
+Reply
+View Aditya Lahiri’s  graphic link
+Aditya Lahiri
+   • 2nd
+Co-founder & Data at OpenFunnel
+1y
+
+I love how you took it from basic quick fixes to more sophisticated ones!
+I was also looking at Cekura platform yesterday in our office and their analytics and testing would also be a cool way to flag these and maybe train or fine tune something on this? Or maybe you all already do something like this to release that endpoint 😁
+
+Like
+lovelike
+5
+
+Reply
+1 reply
+1 Comment on Aditya Lahiri’s comment
+View Sidhant Kabra’s  graphic link
+Sidhant Kabra
+   • 2nd
+Co-Founder at Cekura - Conversational AI QA | Y Combinator | IITB
+1y
+
+Aditya Lahiri Thanks for the shoutout!
+
+Like
+like
+1
+
+Reply
+View Ziaullah Khan’s  graphic link
+Ziaullah Khan
+ • 3rd+
+Founder & Director | Empowering Businesses Globally with Innovative Solutions
+1y
+
+We took care of this in our prompts and asked to introduce fillers to give it more human like effect.
+
+Like
+
+Reply
+ 
+Load more comments
+
+About
+Accessibility
+Help Center
+
+Privacy & Terms
+Ad Choices
+Advertising
+
+Business Services
+Get the LinkedIn app
+More
+ LinkedIn Corporation © 2026
+Dovi ShermanStatus is online
+MessagingYou are on the messaging overlay. Press enter to open the list of conversations.
+
+Compose message
+You are on the messaging overlay. Press enter to open the list of conversations.

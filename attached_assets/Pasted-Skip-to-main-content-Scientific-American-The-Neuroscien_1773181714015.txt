@@ -1,0 +1,174 @@
+Skip to main content
+Scientific American
+The Neuroscience of Taking Turns in a Conversation
+Opinion
+
+July 13, 2021
+
+3 min read
+
+Google Logo
+Add Us On Google
+The Neuroscience of Taking Turns in a Conversation
+
+Research in birds suggests that when one partner speaks, the other partner’s brain is inhibited from talking over them
+
+By Melissa J. Coleman & Eric Fortune
+
+Two brown and white birds perched on a piece of wood.
+White-browed sparrow weavers, Kenya. Alamy
+September 2021 Issue
+Neuroscience
+Opinion
+A fundamental feature of vocal communication is taking turns: when one person says something, the other person listens and then responds. Turn-taking requires precise coordination of the timing of signals between individuals. We have all found over the past year communicating over Zoom that disruptions of the timing of auditory cues—like those annoying delays caused by poor connections—make effective communication difficult and frustrating. How do the brains of two individuals synchronize their activity patterns for rapid turn-taking during vocal communication?
+
+We addressed this question in a recently published paper by studying turn-taking in a specialist, the plain-tailed wren (Pheugopedius euophrys), which sings precisely timed duets. Our findings demonstrate the ability to coordinate relies on sensory cues from one partner that temporarily inhibit vocalizations in the other.
+
+These birds sing duets in which females and males alternate their vocalizations, called syllables, so rapidly it sounds as if a single bird is singing. These wrens live in dense bamboo on the slopes of the Andes. To study the neural basis of duet singing, we flew to Ecuador where we loaded up a truck with equipment and drove to a remote field-site called the Yanayacu Biological Field Station and Center for Creative Studies. Much of our equipment required electricity, so we had to bring car batteries for backup and used a six-meter copper rod that we drove into the soft mountain earth for our electrical ground. Our “lab bench” was a door that we placed on two Pelican suitcases.
+
+First, we had to catch pairs of wrens, so we hacked through bamboo with machetes and set up mist nets. We then attracted pairs to the nets by playing the duets of wrens. To see how neurons responded during duets, we surgically implanted very small wires into a specific region of the brain, called HVC. Neurons in this region are responsible for producing the song—that is, they are premotor—and they also respond to auditory signals. To transmit the neural signals (i.e., action potentials) to a computer, a small wireless digital transmitter was then connected to the wires. We then had to wait for the birds to sing their remarkable duets.
+
+During duet singing, there was an increase in the number of action potentials when each bird sang its part of the duet. A similar finding was made recently in another duetting bird from Africa, the white-browed sparrow-weavers. However, we found when each bird heard its partner, the number of action potentials decreased below baseline; that is, the brain was inhibited.
+
+Recommended Stories
+
+New research reveals how the brain separates speech into words
+Elise Cutts
+
+
+The science of why video evidence can mess with our brain
+Jackie Flynn Mogensen
+
+
+Can science explain consciousness?
+Kendra Pierre-Louis, Allison Parshall, Fonda Mwangi, Jeffery DelViscio & Alex Sugiura
+
+
+New brain training study could help explain the placebo effect
+Allison Parshall
+
+In a final set of experiments, as an indirect test that HVC was inhibited while hearing the partner, the birds were anesthetized with a substance that blocks inhibitory neurotransmission in the brain. With inhibition blocked, hearing the partner’s syllables produced an increase in the number of action potentials in HVC. This experiment gave us additional evidence that auditory cues from the partner, revealed under anesthesia, inhibit the song premotor circuitry in HVC when the birds are awake.
+
+We use vendors like YouTube and Vimeo to provide this video content. In order to play this video, you’ll need to accept certain non-essential cookies. These cookies ensure video players work and allow us to share your video viewing information with third parties for analytics, advertising and editorial purposes.
+
+Accept Cookies to Play Video
+Inhibition is an interesting mechanism for turn-taking as it prevents the two birds from singing over each other. In addition, similar to bouncing on a trampoline, the inhibition creates the ability to “rebound,” or respond more quickly, which may contribute to the rapid alternation of syllables. Taken together, the alternating activity between the two birds is driven by an auditory link between the two individuals. That is, there is an increase in activity in the female HVC which produces her syllable. This signal is perceived by the male and inhibits activity in HVC, preventing him from singing. HVC activity then rebounds, and HVC is very active, producing the male syllable, which in turn is perceived by the female and inhibits her brain.  Similarly, during a Zoom call with auditory delays, our brains are inhibited when we finally hear what someone is saying. This disrupts our speech pattern and makes taking turns more difficult.
+
+This study also suggests that when individuals are interacting in a shared behavior they act as a single entity. This concept is important for any group of organisms cooperating to produce a shared behavior that is more than the sum of its parts; for example, people dancing the tango, or several people playing in band. To coordinate their behavior, the brains of all participants must link together to become a single unit.
+
+This is an opinion and analysis article; the views expressed by the author or authors are not necessarily those of Scientific American.
+
+Rights & Permissions
+Melissa J. Coleman is a professor of neuroscience at the W.M. Keck Department of Science at Scripps College.
+
+More by Melissa J. Coleman
+Eric Fortune is a neurobiologist at New Jersey Institute of Technology's Department of Biological Sciences.
+
+More by Eric Fortune
+SA Mind Vol 32 Issue 5
+This article was published with the title “The Neuroscience of Taking Turns in a Conversation” in SA Mind Vol. 32 No. 5 (September 2021), p. 33
+doi:10.1038/scientificamericanmind0921-33
+View This Issue
+It’s Time to Stand Up for Science
+If you enjoyed this article, I’d like to ask for your support. Scientific American has served as an advocate for science and industry for 180 years, and right now may be the most critical moment in that two-century history.
+
+I’ve been a Scientific American subscriber since I was 12 years old, and it helped shape the way I look at the world. SciAm always educates and delights me, and inspires a sense of awe for our vast, beautiful universe. I hope it does that for you, too.
+
+If you subscribe to Scientific American, you help ensure that our coverage is centered on meaningful research and discovery; that we have the resources to report on the decisions that threaten labs across the U.S.; and that we support both budding and working scientists at a time when the value of science itself too often goes unrecognized.
+
+In return, you get essential news, captivating podcasts, brilliant infographics, can't-miss newsletters, must-watch videos, challenging games, and the science world's best writing and reporting. You can even gift someone a subscription.
+
+There has never been a more important time for us to stand up and show why science matters. I hope you’ll support us in that mission.
+
+
+Thank you,
+
+David M. Ewalt, Editor in Chief, Scientific American
+
+Subscribe
+Popular Stories
+A U.S. Army Corps boat pumps sediment off the North Carolina coast
+Pollution
+March 9, 2026
+Dredging up a toxic past in the Cape Fear River
+
+A proposed $1.3-billion U.S. Army Corps of Engineers port expansion in North Carolina threatens to unearth decades of “forever chemicals.” The government’s initial plan: don’t test the mud
+
+Patrick Sisson
+
+white pills on a orange-yellow background
+Health
+March 9, 2026
+Taking a multivitamin could slow some signs of aging, new study suggests
+
+A new study shows that taking a daily multivitamin could boost longevity, but the results aren’t conclusive
+
+Jackie Flynn Mogensen
+
+Long exposure photography composite showing light trails from low-Earth orbit satellites filling the sky, a treeline is in silhouette at the bottom of the frame
+The Universe
+March 6, 2026
+It’s time to speak out against the unchecked growth of satellite mega constellations
+
+Satellites are wonders of modern technology that have improved all of our lives. But having more than a million of them in orbit could destroy our view of the heavens and seriously damage our planet
+
+Phil Plait
+
+A person with chalk at a blackboard solves a math problem
+Education
+March 9, 2026
+A clever math shortcut could reveal your problem-solving superpower
+
+Mental math shortcuts suggest future STEM performance—and gender is a significant predictor
+
+Emma R. Hasson
+
+Zodiac spiral and signs of the zodiac in space.
+Astronomy
+March 8, 2026
+Your zodiac sign is likely wrong. Here’s how to find the correct one
+
+The science of the zodiac is more intriguing than astrology would have you think
+
+Manon Bischoff
+
+A burst of 1999 Leonid meteors in a black and white image
+Astronomy
+March 9, 2026
+Stunning video shows huge fireball blazing over Europe
+
+A large, bright meteor fell over Europe on Sunday, with some observers saying they could hear the rock’s explosive descent from the ground
+
+Claire Cameron
+
+Subscribe to Scientific American to learn and share the most exciting discoveries, innovations and ideas shaping our world today.
+
+Subscription Plans
+Give a Gift Subscription
+Explore SciAm
+Latest Issue
+News
+Opinion
+Newsletters
+Podcasts
+Games
+Travel
+Company
+About
+Press Room
+FAQs
+Contact Us
+Standards & Ethics
+International Editions
+Advertise
+More
+Accessibility
+Terms of Use
+Privacy Policy
+US State Privacy Rights
+Use of cookies/Do not sell my data
+Return & Refund Policy
+Scientific American is part of Springer Nature, which owns or has commercial relations with thousands of scientific publications (many of them can be found at www.springernature.com/us). Scientific American maintains a strict policy of editorial independence in reporting developments in science to our readers.
+
+© 2026 SCIENTIFIC AMERICAN, A DIVISION OF SPRINGER NATURE AMERICA, INC.
+ALL RIGHTS RESERVED.

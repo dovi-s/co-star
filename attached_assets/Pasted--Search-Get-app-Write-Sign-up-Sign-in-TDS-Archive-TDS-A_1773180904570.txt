@@ -1,0 +1,460 @@
+
+Search
+
+Get app
+Write
+Sign up
+
+Sign in
+
+
+
+TDS Archive
+TDS Archive
+An archive of data science, data analytics, data engineering, machine learning, and artificial intelligence writing from the former Towards Data Science Medium publication.
+
+Follow publication
+
+Beginning to Replicate Natural Conversation in Real Time
+A first step into the literature
+Angus Addlesee
+Angus Addlesee
+
+Follow
+13 min read
+·
+Apr 14, 2019
+204
+
+
+
+
+To start my new project, the first thing I of course have to do is run through the current research and state of the art models.
+
+I was interviewed recently in which I explain this new project with Wallscope but in short (extremely short): I aim to step towards making conversational agents more natural to talk with.
+
+I have by no means exhausted all literature in this field, I have barely scratched the surface (link relevant papers below if you know of any I must read). Here is an overview of some of this research and the journey towards more natural conversational agents. In this I will refer to the following papers:
+
+[1]
+
+Investigating Speech Features for Continuous Turn-Taking Prediction Using LSTMs by Matthew Roddy, Gabriel Skantze and Naomi Harte
+
+[2]
+
+Detection of social signals for recognizing engagement in human-robot interaction by Divesh Lala, Koji Inoue, Pierrick Milhorat and Tatsuya Kawahara
+
+[3]
+
+Investigating fluidity for human-robot interaction with real-time, real-world grounding strategies by Julian Hough and David Schlangen
+
+[4]
+
+Towards Deep End-of-Turn Predication for Situated Spoken Dialogue Systems by Angelika Maier, Julian Hough and David Schlangen
+
+[5]
+
+Coordination in Spoken Human-Robot Interaction by Gabriel Skantze (Lecture Presentation in Glasgow 07/03/2019)
+
+Contents
+Introduction
+Turn Taking - End of Turn Prediction
+Engagement
+Embodiment
+Fluid Incremental Grounding Strategies
+Conclusion
+
+Introduction
+If we think of two humans having a fluid conversation, it is very different from conversations between humans and Siri, Google Assistant, Alexa or Cortana.
+
+Press enter or click to view image in full size
+
+source
+One reason for this loss of flow is the number of large pauses. For a conversational agent (CA) to detect that you have finished what you are saying (finished your turn), it waits for a duration of silence. If it detects a long pause, it assumes you have finished your turn and then processes your utterance.
+
+This set duration of silence varies slightly between systems. If it is set too low, the CA will interrupt you mid-turn as human dialogue is littered with pauses. If it is set too high, the system will be more accurate at detecting your end-of-turn but the CA will take painfully long to respond - killing the flow of the conversation and frustrating the user [4].
+
+When two humans speak, we tend to minimise the gap between turns in the conversation and this is cross-cultural. Across the globe, the gap between turns is around 200ms which is close to the limit of human response time [1]. We must therefore predict the speakers end-of-turn (EOT) while listening to someone speak.
+
+Turn Taking - End of Turn Prediction
+To recreate this fluid dialogue with fast turn-switches and slight overlap in CAs, we must first understand how we do it ourselves.
+
+Shameless, but slightly related, self-promotion. In order to work on Computer Vision, we must first understand Human Vision
+
+We subconsciously interpret turn-taking cues to detect when it is our turn to speak so what cues do we use? Similarly, we do this continuously while listening to someone speak so can we recreate this incremental processing?
+
+[4] used both acoustic and linguistic features to train an LSTM to tag 10ms windows. Their system is tasked to label these windows as either Speech, mid-turn pause (MTP) or EOT but the main focus of course is the first point in a sequence which is labelled as EOT.
+
+The acoustic features used in the LSTM were: raw pitch, smoothed F0, root mean squared signal energy, logarithmised signal energy, intensity, loudness and derived features for each frame as acoustic features.
+
+In addition to these acoustic features, linguistic features consisted of the words and an approximation of the incremental syntactic probability called the weighted mean log trigram probability (WML).
+
+Many other signals have been identified to indicate whether the speaker is going to continue speaking or has finished their turn in [5]:
+
+Press enter or click to view image in full size
+
+[5]
+As mentioned, a wait time of 10 seconds for a response is just as irritating as the CA cutting into you mid-turn constantly [4]. Multiple baselines were therefore considered regularly between 50ms and 6000ms to ensure multiple trade-offs were included in the baseline.
+
+Apart from one case (linguistic features only, 500ms silence threshold), every single model beat the baselines. Using only the linguistic or acoustic features didn’t make much of a difference but performance was always best when the model used both sets of features together. The best overall system had a latency of 1195ms and cut in rate of just 18%.
+
+
+[4]
+[1] states that we predict EOT from multi-modal signals including: prosody, semantics, syntax, gesture and eye-gaze.
+
+Instead of labelling 10ms windows (as speech, MTPs or EOTs), traditional models predict whether a speaker will continue speaking (HOLD) or is finished their turn (SHIFT) but only does this when it detects a pause. One major problem with this traditional approach is that backchannels are neither a HOLD or SHIFT but one of these are predicted anyway.
+
+LSTMs have been used to make predictions continuously at 50 ms intervals and these models outperform traditional EOT models and even humans when applied to HOLD/SHIFT predictions. Their hidden layers allow them to learn long range dependencies but it is unknown exactly which features influence the performance the most.
+
+In [1], the new system completes three different turn-taking prediction tasks: (1) prediction at pauses, (2) prediction at onset and (3) prediction at overlap.
+
+Prediction at Pauses is the standard prediction that takes place at brief pauses in the interaction to predict whether there will be a HOLD or SHIFT. Essentially, when there is a pause above a threshold time, the person with the highest average output probability (score) is predicted to speak next. This classification model is evaluated with weighted F-scores.
+
+Prediction at Onsets classifies the utterances during speech, not at a pause. This model is slightly different however as it predicts whether the currently ongoing utterance will be short or long. Again, as also a classifier, this model was evaluated using the weighted F-scores.
+
+Prediction at Overlap is introduced for the first time in this paper. This is essentially a HOLD/SHIFT predication again but when an overlapping period of at least 100ms occurs. The decision to HOLD (continue speaking) is predicted when the overlap is a backchannel and SHIFT when the system should stop speaking. This again was evaluated using weighted F-scores.
+
+Here is an example of predicted turn-taking in action:
+
+As mentioned above, we don’t know exactly which features we use to predict when it is our turn to speak. [1] used many features in different arrangements to distinguish which are most useful. The features used were as follows:
+
+Acoustic features are low level descriptors that include loudness, shimmer, pitch, jitter, spectral flux and MFCCs. These were extracted using the OpenSmile toolkit.
+
+Linguistic features were investigated at two levels: part-of-speech (POS) and word. Literature often suggests that POS tags are good at predicting turn-switches but words (from an ASR system) are needed to then extract POS tags from so it is useful to check whether this extra processing is needed.
+
+Using words instead of POS would be a great advantage for systems that need to run in real time.
+
+Phonetic features were output from a deep neural network (DNN) that classifies senones.
+
+Voice activity was included in their transcriptions so also used as a feature.
+
+So what features were the most useful for EOT prediction according to [1]?
+
+Acoustic features were great for EOT prediction, all but one experiments best results included acoustic features. This was particularly the case for prediction at overlap.
+
+Words mostly outperformed POS tags apart from prediction at onset so use POS tags if you are wanting to predict utterance length (like backchannels).
+
+In all cases, including voice activity improved performance.
+
+Get Angus Addlesee’s stories in your inbox
+Join Medium for free to get updates from this writer.
+
+Enter your email
+Subscribe
+
+Remember me for faster sign in
+
+In terms of acoustic features, the most important features were loudness, F0, low order MFCCs and spectral slope features.
+
+Overall, the best performance was obtained by using voice activity, acoustic features and words.
+
+As mentioned, the fact that using words instead of POS tags leads to better performance is brilliant for faster processing. This of course is beneficial for real-time incremental prediction - just like what we humans do.
+
+All of these features are not just used to detect when we can next speak but are even used to guide what we say. We will expand on what we are saying, skip details or change topic depending on how engaged the other person is with what we are saying.
+
+Therefore to model natural human conversation, it is important for a CA to measure engagement.
+
+Engagement
+Engagement shows interest and attention to a conversation and, as we want user’s to stay engaged, influences the dialogue strategy of the CA. This optimisation of the user experience all has to be done in real time to keep a fluid conversation.
+
+[2] detects the following signals to measure engagement: nodding, laughter, verbal backchannels and eye gaze. The fact that these signals show attention and interest is relatively common sense but were learned from a large corpus of human-robot interactions.
+
+
+[2]
+[2] doesn’t just focus on recognising social signals but also on creating an engagement recognition model.
+
+This experiment was run in Japan where nodding is particularly common. Seven features were were extracted to detect nodding: (per frame) the yaw, roll and pitch of the person’s head (per 15 frames) the average speed, average velocity, average acceleration and range of the person’s head.
+
+Their LSTM model outperformed the other approaches to detect nodding across all metrics.
+
+Smiling is often used to detect engagement but to avoid using a camera (they use microphones + Kinect) laughter is detected instead. Each model was tasked to classify whether an inter-pausal unit (IPU) of sound contained laughter or not. Using both prosody and linguistic features to train a two layer DNN performed the best but using other spectral features instead of linguistic features (not necessarily available from the ASR) could be used to improve the model.
+
+Similarly to nodding, verbal backchannels are more frequent in Japan (called aizuchi). Additionally in Japan, verbal backchannels are often accompanied by head movements but only the sound was provided to the model. Similar to the laughter detection, this model classifies whether an IPU is a backchannel or the person is starting their turn (especially difficult when barging in). The best performing model was found to be a random forest, with 56 estimators, using both prosody and linguistic features. The model still performed reasonably when given only prosodic features (again because linguistic features may not be available from the ASR).
+
+Finally, eye gaze is commonly known as a clear sign of engagement. From the inter-annotator agreement, looking at Erica’s head (the robot embodiment in this experiment) for 10 seconds continuously was considered as a engagement. Less than 10 seconds were therefore negative cases.
+
+Press enter or click to view image in full size
+
+Erica: source
+The information from the kinect sensor was used to calculate a vector from the user’s head orientation and the user was considered ‘looking at Erica’ if that vector collided with Erica’s head (plus 30cm to accommodate error). This geometry based model worked relatively well but the position of Erica’s head was estimated so this will have effected results. It is expected that this model will improve significantly when exact values are known.
+
+This paper doesn’t aim to create the best individual systems but instead hypothesises that these models in conjunction will perform better than the individual models at detecting engagement.
+
+
+[2]
+The ensemble of the above models were used as a binary classifier (either a person was engaged or not). In particular, they built a hierarchical Bayesian binary classifier which judged whether the listener was engaged from the 16 possible combinations of outputs from the 4 models above.
+
+From the annotators, a model was built to deduce which features are more or less important when detecting engagement. Some annotators found laughter to be a particularly important factor for example whereas others did not. They found that inputting a character variable with three different character types improved the models performance.
+
+Additionally, including the previous engagement of a listener also improved the model. This makes sense as someone that is not interested currently is more likely to stay uninterested during your next turn.
+
+Measuring engagement can only really be done when a CA is embodied (eye contact with Siri is non-existent for example). Social robots are being increasingly used in areas such as Teaching, Public Spaces, Healthcare and Manufacturing. These can all contain spoken dialogue systems but why do they have to be embodied?
+
+Press enter or click to view image in full size
+
+[5]
+Embodiment
+People will travel across the globe to have a face-to-face meeting when they could just phone [5]. We don’t like to interact without seeing the other person as we miss many of the signals that we talked about above. In today's world we can also video-call but this is still avoided when possible for the same reasons. The difference between talking on the phone or face-to-face is similar to the difference between talking to Siri and an embodied dialogue system [5].
+
+Current voice systems cannot show facial expressions, indicate attention through eye contact or move their lips. Lip reading is obviously very useful for those with impaired hearing but we all lip read during conversation (this is how we know what people are saying even in very noisy environments).
+
+Not only can a face output these signals, it also allows the system to detect who is speaking, who is paying attention, who the actual people are (Rory, Jenny, etc…) and recognise their facial expressions.
+
+Robot faces come in many forms however and some are better than others for use in conversation. Most robot faces, such as the face of Nao, are very static and therefore cannot show a wide range of emotion through expression like we do.
+
+
+Nao: source
+Some more abstract robot face depictions, such as Jibo, can show emotion using shapes and colour but some expressions must be learned.
+
+
+Jibo: source
+We know how to read a human face so it makes sense to show a human face. Hyper-realistic robot faces exist but are a bit creepy, like Sophia, and are very expensive.
+
+Press enter or click to view image in full size
+
+Sophia: source
+They are very realistic but just not quite right which makes conversation very uncomfortable. To combat this, avatars have been made to have conversations on screen.
+
+Press enter or click to view image in full size
+
+source
+These can mimic humans relatively closely without being creepy as it’s not a physical robot. This is almost like Skype however and this method suffers from the ‘Mona-Lisa effect’. In multi-party dialogue, it is impossible for the avatar on screen to look at one person and not the other. Either the avatar is looking ‘out’ at all parties or away at no one.
+
+Gabrial Skantze (presenter of [5] to be clear) is the Co-Founder of Furhat robotics and argues that Furhat is the best balance between all of these systems. Furhat has been developed to be used for conversational applications as a receptionist, social-trainer, therapist, interviewer, etc…
+
+Press enter or click to view image in full size
+
+source
+Furhat needs to know where it should be looking, when it should speak, what it should say and what facial expressions it should be displaying [5].
+
+Finally (for now), once embodied - dialogues with a robot need to be grounded in real-time with the real-world. In [3] the example given is a CA embodied in an industrial machine which [5] states is becoming more and more common.
+
+Press enter or click to view image in full size
+
+source
+Fluid, Incremental Grounding Strategies
+For a conversation to be natural, human-robot conversations must be grounded in a fluid manner [3].
+
+With non-incremental grounding, users can give positive feedback and repair but only after the robot has shown full understanding of the request. If you ask a robot to move an object somewhere for example, you must wait until the object is moved before you can correct it with an utterance like “no, move the red one”. No overlapping speech is possible so actions must be reversed entirely if a repair is needed.
+
+With incremental grounding, overlapping is still not possible but feedback can be given at more regular intervals. Instead of the entire task being completed before feedback can be given, feedback can be given at sub-task intervals. “no, move the red one” can be said just after the robot picks up a blue object, repairing quickly. In the previous example, the blue object was then placed in a given location before the repair could be given which resulted in a reversal of the whole task! This is much more efficient but still not fluid like in human-human interactions.
+
+Fluid incremental grounding is possible if overlaps are processed. Allowing and reasoning over concurrent speech and action is much more natural. Continuing with our repair example, “no, move the red one” can be said as soon as the robot is about to pick up the blue object, no task has to be completed and reversed as concurrency is allowed. The pickup task can be aborted and the red object picked up fluidly as you say what to do with it.
+
+Press enter or click to view image in full size
+
+[2]
+To move towards this more fluid grounding, real-time processing needs to take place. Not only does the system need to process utterances word by word, real-time context needs to be monitored such as the robots current state and planned actions (both of which can change dynamically through the course of an utterance or word).
+
+The robot must know when it has sufficiently shown what it is doing to handle both repairs and confirmations. The robot needs to know what the user is confirming and even more importantly, what is needing repaired.
+
+Conclusion
+In this brief overview, I have covered just a tiny amount of the current work towards more natural conversational systems.
+
+Even if turn-taking prediction, engagement measuring, embodiment and fluid grounding were all perfected, CAs would not have conversations like we humans do. I plan to write more of these overviews over the next few years so look out for them if interested.
+
+In the meantime, please do comment with discussion points, critique my understanding and suggest papers that I (and anyone reading this) may find interesting.
+
+Machine Learning
+NLP
+Conversational AI
+Data Science
+Towards Data Science
+204
+
+
+
+TDS Archive
+Published in TDS Archive
+828K followers
+·
+Last published Feb 3, 2025
+An archive of data science, data analytics, data engineering, machine learning, and artificial intelligence writing from the former Towards Data Science Medium publication.
+
+
+Follow
+Angus Addlesee
+Written by Angus Addlesee
+635 followers
+·
+41 following
+Applied Scientist at Amazon AGI (Alexa) with a PhD in Artificial Intelligence. Contact details at http://addlesee.co.uk/
+
+
+Follow
+
+No responses yet
+
+Write a response
+
+What are your thoughts?
+
+Cancel
+Respond
+More from Angus Addlesee and TDS Archive
+Constructing SPARQL Queries
+Wallscope
+In
+
+Wallscope
+
+by
+
+Angus Addlesee
+
+Constructing SPARQL Queries
+From simple queries to federated queries and property paths
+Nov 16, 2018
+584
+5
+How to Implement Graph RAG Using Knowledge Graphs and Vector Databases
+TDS Archive
+In
+
+TDS Archive
+
+by
+
+Steve Hedden
+
+How to Implement Graph RAG Using Knowledge Graphs and Vector Databases
+A Step-by-Step Tutorial on Implementing Retrieval-Augmented Generation (RAG), Semantic Search, and Recommendations
+Sep 6, 2024
+2K
+20
+Understanding LLMs from Scratch Using Middle School Math
+TDS Archive
+In
+
+TDS Archive
+
+by
+
+Rohit Patel
+
+Understanding LLMs from Scratch Using Middle School Math
+In this article, we talk about how LLMs work, from scratch — assuming only that you know how to add and multiply two numbers. The article…
+Oct 19, 2024
+8.3K
+105
+Understanding Linked Data Formats
+Wallscope
+In
+
+Wallscope
+
+by
+
+Angus Addlesee
+
+Understanding Linked Data Formats
+RDF/XML vs Turtle vs N-Triples vs JSON-LD.
+Oct 10, 2018
+724
+6
+See all from Angus Addlesee
+See all from TDS Archive
+Recommended from Medium
+6 brain images
+Write A Catalyst
+In
+
+Write A Catalyst
+
+by
+
+Dr. Patricia Schmidt
+
+As a Neuroscientist, I Quit These 5 Morning Habits That Destroy Your Brain
+Most people do #1 within 10 minutes of waking (and it sabotages your entire day)
+
+Jan 14
+36K
+644
+Screenshot of a desktop with the Cursor application open
+Jacob Bennett
+Jacob Bennett
+
+The 5 paid subscriptions I actually use in 2026 as a Staff Software Engineer
+Tools I use that are (usually) cheaper than Netflix
+
+Jan 18
+3.7K
+88
+Anthropic Just Released Claude Code Course (And I Earned My Certificate)
+AI Software Engineer
+In
+
+AI Software Engineer
+
+by
+
+Joe Njenga
+
+Anthropic Just Released Claude Code Course (And I Earned My Certificate)
+Anthropic just launched their Claude Code in Action course, and I’ve just passed — how about you?
+
+Jan 21
+3.4K
+52
+I Stopped Using ChatGPT for 30 Days. What Happened to My Brain Was Terrifying.
+Level Up Coding
+In
+
+Level Up Coding
+
+by
+
+Teja Kusireddy
+
+I Stopped Using ChatGPT for 30 Days. What Happened to My Brain Was Terrifying.
+91% of you will abandon 2026 resolutions by January 10th. Here’s how to be in the 9% who actually win.
+
+Dec 28, 2025
+9.8K
+355
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+Generative AI
+In
+
+Generative AI
+
+by
+
+Adham Khaled
+
+Stanford Just Killed Prompt Engineering With 8 Words (And I Can’t Believe It Worked)
+ChatGPT keeps giving you the same boring response? This new technique unlocks 2× more creativity from ANY AI model — no training required…
+
+Oct 19, 2025
+24K
+656
+Forget ChatGPT & Gemini — Here Are New AI Tools That Will Blow Your Mind
+Nitin Sharma
+Nitin Sharma
+
+Forget ChatGPT & Gemini — Here Are New AI Tools That Will Blow Your Mind
+Here, I’m going to talk about the new AI tools that are actually worth your time.
+
+Nov 17, 2025
+7.2K
+237
+See more recommendations
+Help
+
+Status
+
+About
+
+Careers
+
+Press
+
+Blog
+
+Privacy
+
+Rules
+
+Terms
+
+Text to speech

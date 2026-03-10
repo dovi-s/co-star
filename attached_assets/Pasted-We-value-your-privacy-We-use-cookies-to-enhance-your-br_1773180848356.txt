@@ -1,0 +1,174 @@
+We value your privacy
+
+We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic. By clicking "Accept All", you consent to our use of cookies.
+
+Customize
+Reject All
+Accept All
+
+
+
+
+
+
+
+
+Skip to content
+Ice, Nature, Outdoors, Text, Sea, WaterDigital Watch ObservatoryDigital Governance in 50+ issues, 500+ actors, 5+ processes
+Subscribe
+Topics
+Infrastructure
+Telecommunications infrastructure
+Critical internet resources
+Digital standards
+Net neutrality and zero-rating
+Cybersecurity
+Cybercrime
+Critical infrastructure
+Cyberconflict and warfare
+Violent extremism
+Child safety online
+Encryption
+Network security
+Human rights
+Privacy and data protection
+Right to be forgotten
+Freedom of expression
+Rights of persons with disabilities
+Gender rights online
+Freedom of the press
+Children rights
+Human rights principles
+Legal and regulatory
+Jurisdiction
+Alternative dispute resolution
+Data governance
+Intellectual property rights
+Liability of intermediaries
+Convergence and OTT
+Digital legacies
+Economic
+E-commerce and Digital Trade
+Digital business models
+Taxation
+Consumer protection
+Future of work
+Cryptocurrencies
+Development
+Sustainable development
+Digital access
+Inclusive finance
+Capacity development
+E-waste
+Sociocultural
+Content policy
+Cultural diversity
+Multilingualism
+Digital identities
+Online education
+Interdisciplinary approaches
+Technologies
+Metaverse
+Quantum computing
+5G
+Internet of things
+Cloud computing
+Emerging technologies
+Blockchain
+Artificial intelligence
+Semiconductors
+Processes
+UN CSTD WG on data governance
+UN Global Mechanism on cybersecurity
+Global Digital Compact process
+WSIS+20 Process
+2027 Geneva AI Summit
+EU’s DSA & DMA
+Geneva Dialogue on Responsible Behaviour in Cyberspace
+Convention on AI and human rights (CoE)
+GGE on LAWS
+Internet Governance Forum
+Ad Hoc Committee on Cybercrime
+The WTO Joint Initiative on e-commerce
+Trends
+Events
+Event calendar
+Reporting
+Analyses
+Policy players
+Digital Geneva Atlas
+Organisations
+Countries
+Resources
+Newsletters
+The Digital Watch Weekly
+The Digital Watch Monthly
+Lettre d’information mensuelle
+The Digital Watch Shorts
+Team
+Home | Updates | AI still struggles to mimic natural human conversation
+
+21 Oct 2025
+AI still struggles to mimic natural human conversation
+Researchers found AI can be grammatically perfect yet still sound artificial due to poor handling of subtle social cues.
+
+ Furniture, Table, Beverage, Coffee, Coffee Cup, Text, Person, Computer, Electronics, Laptop, Pc, Cup
+A recent study reveals that large language models such as ChatGPT-4, Claude, Vicuna, and Wayfarer still struggle to replicate natural human conversation. Researchers found AI over-imitates, misuses filler words, and struggles with natural openings and closings, revealing its artificial nature.
+
+The research, led by Eric Mayor with contributions from Lucas Bietti and Adrian Bangerter, compared transcripts of human phone conversations with AI-generated ones. AI can speak correctly, but subtle social cues like timing, phrasing, and discourse markers remain hard to mimic.
+
+Misplaced words such as ‘so’ or ‘well’ and awkward conversation transitions make AI dialogue recognisably non-human. Openings and endings also pose a challenge. Humans naturally engage in small talk or closing phrases such as ‘see you soon’ or ‘alright, then,’ which AI systems often fail to reproduce convincingly.
+
+These gaps in social nuance, researchers argue, prevent large language models from consistently fooling people in conversation tests.
+
+Despite rapid progress, experts caution that AI may never fully capture all elements of human interaction, such as empathy and social timing. Advances may narrow the gap, but key differences will likely remain, keeping AI speech subtly distinguishable from real human dialogue.
+
+Would you like to learn more about AI, tech and digital diplomacy? If so, ask our Diplo chatbot! 
+
+Related topics
+Capacity developmentDevelopmentDigital business modelsDigital identitiesDigital standardsEconomicHuman rightsHuman rights principlesInfrastructureInterdisciplinary approachesMultilingualismSociocultural
+Related technologies
+Artificial intelligence
+Related videos
+Digital Watch video
+Related news
+Promptfoo joins OpenAI to secure AI deployments
+US government faces lawsuits over Anthropic AI move
+Astronauts test AI-assisted health checks in orbit
+Blockchain network Tron joins Agentic AI Foundation to advance AI infrastructure
+Qualcomm and NEURA Robotics partner to accelerate physical AI and cognitive robotics
+Smart Classrooms initiative transforms learning in 10 Thai pilot schools
+Latest news
+EU launches AI platform to detect food fraud and contamination
+The US releases national cyber strategy, prioritising offense and AI
+Promptfoo joins OpenAI to secure AI deployments
+US government faces lawsuits over Anthropic AI move
+Canada warns about AI-generated scams targeting citizens online
+Astronauts test AI-assisted health checks in orbit
+More news
+
+
+Keep in touch
+
+Subscribe to the Digital Watch newsletters
+Choose whether you would like to receive our weekly and/or monthly newsletters.
+By clicking on the Subscribe button, you are agreeing to our Privacy Policy.
+Email
+  Digital Watch weekly  Digital Watch monthly  Lettre d'information mensuelle Digital Watch
+
+Subscribe
+The Digital Watch is an initiative of the Geneva Internet Platform, supported by the Swiss Confederation and the Republic and Canton of Geneva. The GIP is operated by DiploFoundation.
+
+
+
+
+
+Contribute to the observatory
+The GIP Digital Watch observatory reflects on a wide variety of themes and actors involved in global digital policy, curated by a dedicated team of experts from around the world. To submit updates about your organisation, or to join our team of curators, or to enquire about partnerships, write to us at digitalwatch@diplomacy.edu. We look forward to hearing from you.
+
+
+Except where otherwise noted, the content on this website is licensed by DiploFoundation under CC BY-NC-ND 4.0 International. External content is licensed by the respective authors. Please inform us when making use of the content.
+About
+Privacy Policy
+Terms
+Log in

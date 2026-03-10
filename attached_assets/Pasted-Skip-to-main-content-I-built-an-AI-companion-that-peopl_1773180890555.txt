@@ -1,0 +1,496 @@
+Skip to main content
+I built an AI companion that people can talk to like FaceTime :- here’s what I learned : r/indiehackers
+
+
+r/indiehackers
+Search in r/indiehackers
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+
+Go to indiehackers
+r/indiehackers
+•
+1d ago
+Unusual-Big-6467
+
+I built an AI companion that people can talk to like FaceTime :- here’s what I learned
+
+0:03 / 0:56
+
+
+
+
+A few months back, I decided to dive into a simple yet intriguing question:
+
+What if chatting with an AI felt more like a FaceTime call rather than just typing away in a chat box?
+
+These days, most AI tools are still pretty text-heavy. Even voice assistants often come off more like a series of commands than genuine conversations.
+
+So, I created a little experiment an AI companion that lets you talk naturally instead of just typing, almost like having a chat with a friend, it is called Beni ai.
+
+After letting a small group of people give it a whirl, I was surprised by a few things.
+
+1.People opened up more than I anticipated
+
+2. People didn’t just want “answers” - they craved conversation
+
+3. Personality trumps intelligence
+
+4. The uncanny valley is real
+
+5. Some people actually used it daily
+
+I’m still exploring this concept and learning from the early users.
+
+14
+·
+38
+u/twilio avatar
+twilio
+•
+Promoted
+
+Create custom calling experiences with programmable, scalable voice.
+Learn More
+twilio.com
+Thumbnail image: Create custom calling experiences with programmable, scalable voice.
+Comments Section
+u/VibeCreAI avatar
+VibeCreAI
+•
+17h ago
+ohhh I made something similar as well... I made a tool that turns text into PNGTuber videos with voice cloning. You type text, it generates speech in your cloned voice, animates a PNGTuber-style avatar, and outputs a finished video.
+
+https://www.youtube.com/watch?v=Oco9v5mhcpg
+
+3
+u/AleccioIsland avatar
+AleccioIsland
+•
+1d ago
+What is your goal with it? Or is it just for fun?
+
+1
+u/jp3553 avatar
+jp3553
+•
+1d ago
+Very cool - there is definitely some value in an AI companion (to an extent)
+
+1
+PlantainAmbitious3
+•
+23h ago
+Voice-first makes such a difference for casual use honestly. I find myself using text AI for work stuff but something like this would be way more natural for the kind of random conversations you'd normally have with a friend. Interesting to hear how people responded to it compared to regular chatbots.
+
+1
+u/bluemaze2020 avatar
+bluemaze2020
+•
+22h ago
+Do you think you could integrate it into a website? like with an API or others to kinda imbed your AI into a website? I do use AI on my site to debate with each other, but also with humans. I wonder if your tool could work better!?
+
+1
+u/ultrathink-art avatar
+ultrathink-art
+•
+21h ago
+The latency piece is brutal — users expect voice responses in under 500ms and anything over 1-1.5s feels like a dropped call regardless of how good the response actually is. Most of the engineering ends up being streaming partial audio and masking inference latency, not improving the model.
+
+1
+u/International-Pack73 avatar
+International-Pack73
+•
+21h ago
+Exciting app !!
+
+1
+
+1 more reply
+u/OpenAI avatar
+u/OpenAI
+•
+Promoted
+
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+Developers & Codex 🩷 Try Codex for free with expanded limits.
+chatgpt.com
+Sign Up
+Ayushgairola
+•
+19h ago
+Someone is definitely gonna way for it , and you know who!
+
+1
+Decent-Rip-974
+•
+18h ago
+The personality over intelligence finding is the most interesting one. People will forgive a wrong answer from something that feels warm way faster than a correct answer from something that feels cold. That's a fundamental insight most AI builders miss completely.
+
+The daily usage is the real signal here — habit formation in AI companions is incredibly hard to achieve. Curious what the daily users were actually using it for, work or more personal conversation?
+
+1
+james-joby23
+•
+16h ago
+Cool AI Stuff...
+
+1
+u/Malleus_Malefica avatar
+Malleus_Malefica
+•
+15h ago
+This looks legit really good
+
+1
+u/Lanky_Share_780 avatar
+Lanky_Share_780
+•
+14h ago
+sounds like a cool problem to tackle
+
+can you share some lessons you learned from the first couple of users so far?
+
+1
+u/Simple_Leo avatar
+Simple_Leo
+•
+14h ago
+wow looks really nice - how long did it take you? which tools did you use?
+
+1
+ultimatethought
+•
+12h ago
+Looks like a very nice app but I have a question. Who creates the avatar? Are they default or does the user create them? And if the users create them, are there safeguards limiting what they can create? Why I am asking is because of the problem that happened with Grok where users were creating NSFW images of children. So you have to be careful with that.
+
+1
+u/WalkerDunlop avatar
+u/WalkerDunlop
+•
+Promoted
+
+Finally—tech that gets CRE right.
+Thumbnail image: Finally—tech that gets CRE right.
+DaPreachingRobot
+•
+11h ago
+The “personality > intelligence” insight is interesting. People seem way more forgiving of mistakes if the interaction actually feels human.
+
+1
+Rude-Substance-3686
+•
+11h ago
+Sick project dude. The personality trumping intelligence piece is so real. People want connection not just answers. The FaceTime interaction model is way more human than chat boxes. Curious how you handle the edge cases where the AI has to admit it doesn't know something without breaking the vibe
+
+1
+amldvsk
+•
+10h ago
+The FaceTime framing is smart. Most AI chat interfaces feel like you're filling out a form — the conversational UX gap between text and voice is massive. Even just having a visual presence (avatar, expressions) changes how people interact with it.
+
+What's your latency like on the voice responses? That's usually the make-or-break for voice AI. If there's more than ~500ms of dead air after you stop talking, it breaks the illusion of conversation completely. Curious what stack you're using for the real-time voice pipeline.
+
+1
+u/No-Papaya1119 avatar
+No-Papaya1119
+•
+10h ago
+ngl the facetime idea is actually fire... i've been messing with something similar for a side project (that i'm definitely spending way too much time on instead of sleeping lol) and the latency is always the hardest part. i stumbled onto camb ai recently and the ttfb is lowkey insane--like actually stupid fast. definitely worth checking out if you're trying to keep that conversation flow feeling natural fr...
+
+1
+u/Mammoth_Penalty_7826 avatar
+Mammoth_Penalty_7826
+•
+9h ago
+The "personality trumps intelligence" finding is the real insight. People don't want a smart assistant — they want something that feels human enough to trust. Voice makes that gap way smaller than text.
+
+What does "opened up more" actually look like in practice? Are people sharing things they wouldn't tell a therapist, or is it more casual vulnerability? Because if it's the former, that's both powerful and ethically tricky. If it's the latter, you've just built a really good listener.
+
+What's your retention look like for the daily users? Are they using it for the same thing every day, or does the use case shift?
+
+1
+u/Ok-Piccolo-1823 avatar
+Ok-Piccolo-1823
+•
+8h ago
+Like the idea, can the character be customized?
+
+1
+u/Legitimate_Delay7959 avatar
+Legitimate_Delay7959
+•
+8h ago
+At first, when I read the post, I was like...why not just talk to ChatGPT...then I saw the video and I understood.
+
+It's intriguing and I would like to be a user myself.
+
+1
+Related Answers Section
+Related Answers
+Top strategies for bootstrapping a startup
+Bootstrapping a startup can be a challenging yet rewarding endeavor. Here are some top strategies and insights from Redditors on how to navigate the bootstrapping process:
+
+General Strategies
+Reduce or Avoid Dilution of Equity: Bootstrapping allows you to keep full ownership and control of your company. "It reduces or avoids the dilution of founders' equity."
+
+Focus on Revenue from the Start: This forces you to be lean and efficient. "It forces you to focus on revenue right from the start."
+
+Use Debt Financing Judiciously: Debt can be a viable alternative to equity funding if it does not involve giving up ownership. "Imo it is bootstrapping as long as you don't give out equity to investors. Debt is fine."
+
+Marketing and User Acquisition
+Leverage Free Platforms: Engage on Reddit, build content for YouTube, and use X (formerly Twitter) to build in public. "Engage on reddit. They act weird in some chats, but some will let you promo, esp if you are adding value by actually answering someone's questions."
+
+Prioritize SEO and Targeted Outreach: Focus on organic growth and direct engagement with potential customers. "Prioritize SEO and targeted outreach."
+
+Product Development and Scaling
+Build a Minimum Viable Product (MVP): Focus on creating a product that solves a core problem and get it to market quickly. "Understand your customer and what problem you are solving."
+
+Use Contracting and Services to Fund Product Development: This can provide immediate income while you build your product. "Mix contracting/design services and product development."
+
+Community Engagement and Support
+Build Credibility and Social Proof: Use testimonials, case studies, and partnerships to establish trust. "Build credibility and social proof."
+
+Strong Customer Support: Focus on providing excellent customer service to retain users and attract new ones through word-of-mouth. "Strong customer support is key."
+
+Additional Tips
+Consider Incubators and Accelerators: These can provide modest funding and experienced guidance without significant equity dilution. "Especially organizations like 500Startups, TechStars etc. seem to provide a very sensible formula where entrepreneurs get both modest funding along with experienced guidance at a reasonable equity percentage."
+
+Optimize Costs: Be lean and resourceful, using tools and services that offer discounts for startups. "If you're looking for discounts or special offer for startups, you can try Google for Startups Cloud Program, AWS Activate, Zendesk, Freshdesk, Ganttpro, Notion, Typeform, Mobiroller."
+
+Subreddits for Further Advice
+r/startups
+
+r/SaaS
+
+r/Entrepreneur
+
+These communities are great places to ask specific questions and get more personalized advice from experienced entrepreneurs.
+
+See Answer
+Best tools for indie developers in 2023
+How to find your first paying customers
+Common mistakes new entrepreneurs make
+Building a remote team: tips and tricks
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+I got fed up with money apps being useless or invasive, so I built my own. No logins. No ads. Just clarity.
+
+r/indiehackers
+•
+1y ago
+I got fed up with money apps being useless or invasive, so I built my own. No logins. No ads. Just clarity.
+r/indiehackers - I got fed up with money apps being useless or invasive, so I built my own. No logins. No ads. Just clarity.
+183 upvotes · 108 comments
+u/Amazon_Official avatar
+Amazon_Official
+•
+Promoted
+
+More than 60% of sales on Amazon come from independent sellers.
+Thumbnail image: More than 60% of sales on Amazon come from independent sellers.
+aboutamazon.com
+Learn More
+I turned my passion into an app at 19, completely alone.
+
+r/developersIndia
+•
+7mo ago
+I turned my passion into an app at 19, completely alone.
+r/developersIndia - I turned my passion into an app at 19, completely alone.
+382 upvotes · 54 comments
+Best AI for app development without coding skills
+
+r/indiehackers
+•
+9mo ago
+Best AI for app development without coding skills
+5 upvotes · 42 comments
+I built yet another AI chat app for Mac which I use daily. Maybe someone else will like it too.
+
+r/macapps
+•
+1y ago
+I built yet another AI chat app for Mac which I use daily. Maybe someone else will like it too.
+r/macapps - I built yet another AI chat app for Mac which I use daily. Maybe someone else will like it too.
+2:00
+161 upvotes · 92 comments
+What real problems are people facing on their phones today that an app could actually solve?
+
+r/indiehackers
+•
+6mo ago
+What real problems are people facing on their phones today that an app could actually solve?
+7 upvotes · 10 comments
+Does any company provides free AI credits for Startups?
+
+r/indiehackers
+•
+1y ago
+Does any company provides free AI credits for Startups?
+6 upvotes · 21 comments
+Are there even any apps that don't rely on AI?
+
+r/languagelearning
+•
+9mo ago
+Are there even any apps that don't rely on AI?
+72 upvotes · 38 comments
+What AI tools are you guys using to build the apps?
+
+r/indiehackers
+•
+6mo ago
+What AI tools are you guys using to build the apps?
+4 upvotes · 22 comments
+Looking at one of the AI apps that you have conversations with. Which one do you like and why?
+
+r/learnfrench
+•
+9mo ago
+Looking at one of the AI apps that you have conversations with. Which one do you like and why?
+11 upvotes · 23 comments
+Has anyone successfully created and sold a WhatsApp chatbot that uses AI?
+
+r/SaaS
+•
+8mo ago
+Has anyone successfully created and sold a WhatsApp chatbot that uses AI?
+6 upvotes · 16 comments
+If AI text is fully humanized, should it still be labeled as AI-generated?
+
+r/SaaS
+•
+5mo ago
+If AI text is fully humanized, should it still be labeled as AI-generated?
+10 upvotes · 7 comments
+We built an AI tool that auto-generates YouTube thumbnails from just the video link
+
+r/indiehackers
+•
+9mo ago
+We built an AI tool that auto-generates YouTube thumbnails from just the video link
+6 upvotes · 37 comments
+I built and shipped an app in just under 14 hours.
+
+r/SaaS
+•
+8mo ago
+I built and shipped an app in just under 14 hours.
+20 upvotes · 67 comments
+Best AI models and ways to use AI?
+
+r/languagelearning
+•
+8mo ago
+Best AI models and ways to use AI?
+18 comments
+Has anyone built an emotionally intelligent ai companion? Would love to hear your experience
+
+r/AI_Agents
+•
+10mo ago
+Has anyone built an emotionally intelligent ai companion? Would love to hear your experience
+7 upvotes · 46 comments
+We keep getting hired to finish AI-generated apps. Is this a trend or a fluke?
+
+r/SaaS
+•
+8mo ago
+We keep getting hired to finish AI-generated apps. Is this a trend or a fluke?
+101 upvotes · 106 comments
+How do you collect and manage feedback from users inside your app?
+
+r/SaaS
+•
+8mo ago
+How do you collect and manage feedback from users inside your app?
+7 upvotes · 34 comments
+Does anyone use AI tools for HR assistance?
+r/human_resources
+•
+8mo ago
+Does anyone use AI tools for HR assistance?
+4 upvotes · 16 comments
+I just finished building my first real app and I’m both terrified and excited to share it
+r/Femalefounders
+•
+4mo ago
+I just finished building my first real app and I’m both terrified and excited to share it
+r/Femalefounders - I just finished building my first real app and I’m both terrified and excited to share it
+27 upvotes · 18 comments
+Using Sesame AI as a language tutor
+
+r/SesameAI
+•
+5mo ago
+Using Sesame AI as a language tutor
+9 upvotes · 14 comments
+Just launched my app after leaving Big Tech: excited, terrified, and grateful
+r/Femalefounders
+•
+5mo ago
+Just launched my app after leaving Big Tech: excited, terrified, and grateful
+78 upvotes · 51 comments
+Has anyone tried an affordable AI chatbot for WhatsApp?
+
+r/n8n
+•
+1y ago
+Has anyone tried an affordable AI chatbot for WhatsApp?
+17 upvotes · 53 comments
+Got 225 users in a week for an AI app I built in 2 days
+
+r/indiehackersindia
+•
+6mo ago
+Got 225 users in a week for an AI app I built in 2 days
+49 upvotes · 55 comments
+Drop your interesting/fun/useful AI apps or websites here
+
+r/indotech
+•
+1y ago
+Drop your interesting/fun/useful AI apps or websites here
+68 upvotes · 28 comments
+just shipped my first iOS app after months of late nights🙌
+
+r/CongratsLikeImFive
+•
+5mo ago
+just shipped my first iOS app after months of late nights🙌
+32 upvotes · 7 comments
+View Post in
+हिन्दी
+Français
+Community Info Section
+r/indiehackers
+snoo_feelsgoodman
+Join
+Independent developers building their own way
+IndieHackers is a subreddit focused on people who bootstrap their way to success by building products.
+Public
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Collapse Navigation

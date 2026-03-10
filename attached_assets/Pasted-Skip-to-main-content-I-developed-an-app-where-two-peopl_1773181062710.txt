@@ -1,0 +1,301 @@
+Skip to main content
+I developed an app where two people can talk to an AI at the same time : r/Startup_Ideas
+
+r/Startup_Ideas
+Search in r/Startup_Ideas
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+Go to Startup_Ideas
+r/Startup_Ideas
+•
+4mo ago
+Wooden_Cupcake1941
+
+I developed an app where two people can talk to an AI at the same time
+The AI analyzes the conversation and helps both partners understand each other in real time.
+
+The idea came from seeing couples ask AI who’s right during an argument, show the answer to their partner, and then the partner doesn’t believe it because they think the response was manipulated or cherry-picked.
+
+With DuoMind, both partners talk together in the same chat with the AI, so everything is transparent and visible to both sides (no screenshots, no exporting chats, no “you only showed the part that benefits you”). It’s currently in beta, waiting for the 14-day Play Store approval. Feedback appreciated!
+
+That said, I know people are saying OpenAI will release a group-chat feature in the coming months, and I’m wondering what others think about building in this niche anyway. Other apps do things that ChatGPT can already do, but they still succeed and don’t stop launching new products.
+
+Do you think this specific niche—AI mediating real-time conversations between two people—still has potential even if OpenAI ships group chats soon? Honest opinions are welcome.
+
+0
+9
+u/WalkerDunlop avatar
+WalkerDunlop
+•
+Promoted
+
+Not sure if you've used WDSuite yet, but it’s worth a look.
+Thumbnail image: Not sure if you've used WDSuite yet, but it’s worth a look.
+Comments Section
+Maleficent-Cup-1134
+•
+4mo ago
+Uphill battle but not impossible. Moat comes from building features targeted specifically toward this niche use case. If you can build targeted features for this use case better than OpenAI can, then maybe.
+
+OpenAI will probably never target this niche specifically since the scale is so small compared to their target market. They’ll be more focused on general collaborative features / functionality.
+
+Really comes down to your creativity, UI / UX skills, and marketing.
+
+1
+u/Substantial-Bid5775 avatar
+Substantial-Bid5775
+•
+4mo ago
+Chatgpt already released this feature called "Group chats". It's in the trial phase in few countries. Others would follow soon.
+
+
+1
+u/Wooden_Cupcake1941 avatar
+Wooden_Cupcake1941
+OP
+•
+4mo ago
+I don't see it as a bad thing. It means group AI is going to start being leveraged. And as I said, my app is focused on couples; ChatGPT is very general
+
+
+1
+u/Wild_Suit_5728 avatar
+Wild_Suit_5728
+•
+10h ago
+How’s it going now?
+
+1
+Related Answers Section
+Related Answers
+Innovative solutions for reducing food waste
+Tech startups focused on mental health
+Creative ways to monetize online communities
+Social impact startups making a difference
+Trends in remote work startups to watch
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+I developed an app where two people can talk to an AI at the same time
+
+r/AppIdeas
+•
+4mo ago
+I developed an app where two people can talk to an AI at the same time
+r/AppIdeas - I developed an app where two people can talk to an AI at the same time
+7 upvotes · 12 comments
+u/Amazon_Official avatar
+Amazon_Official
+•
+Promoted
+
+Where coverage meets convenience. Amazon offers hourly employees health care for $5/week, with $5 copays.
+Thumbnail image: Where coverage meets convenience. Amazon offers hourly employees health care for $5/week, with $5 copays.
+aboutamazon.com
+Learn More
+I developed an app where two people can talk to an AI at the same time
+
+r/androidapps
+•
+4mo ago
+I developed an app where two people can talk to an AI at the same time
+5 comments
+I developed an app where two people can talk to an AI at the same time
+r/apps
+•
+4mo ago
+I developed an app where two people can talk to an AI at the same time
+r/apps - I developed an app where two people can talk to an AI at the same time
+2
+2 upvotes · 3 comments
+An experiment with AI and a rant (see caption)
+r/writers
+•
+1y ago
+An experiment with AI and a rant (see caption)
+r/writers - An experiment with AI and a rant (see caption)
+2
+30 upvotes · 42 comments
+Two AI agents realize they’re talking to another AI and switch to more efficient communication
+
+r/interesting
+•
+1y ago
+Two AI agents realize they’re talking to another AI and switch to more efficient communication
+r/interesting - Two AI agents realize they’re talking to another AI and switch to more efficient communication
+1:09
+660 upvotes · 83 comments
+Two Ai bots talking to eachother sounds very familiar
+
+r/psytrance
+•
+1y ago
+Two Ai bots talking to eachother sounds very familiar
+r/psytrance - Two Ai bots talking to eachother sounds very familiar
+1:09
+109 upvotes · 38 comments
+Venting to AI is crazy (talking about myself)
+
+r/lonely
+•
+12d ago
+Venting to AI is crazy (talking about myself)
+5 upvotes · 6 comments
+I talk with AI all the time, pouring all my feelings onto it
+
+r/loneliness
+•
+2mo ago
+I talk with AI all the time, pouring all my feelings onto it
+5 upvotes · 10 comments
+Two AI agents on a phone call realize they’re both AI and switch to a superior audio signal ggwave
+
+r/artificial
+•
+1y ago
+Two AI agents on a phone call realize they’re both AI and switch to a superior audio signal ggwave
+r/artificial - Two AI agents on a phone call realize they’re both AI and switch to a superior audio signal ggwave
+1:09
+744 upvotes · 197 comments
+She's probably the last person who should be having conversations with AI.
+
+r/PeopleBeTrippin2MUCH
+•
+3mo ago
+She's probably the last person who should be having conversations with AI.
+r/PeopleBeTrippin2MUCH - She's probably the last person who should be having conversations with AI.
+41 upvotes · 7 comments
+If an AI could preserve someone’s voice, stories and personality is that still them?
+
+r/CursedAI
+•
+4mo ago
+If an AI could preserve someone’s voice, stories and personality is that still them?
+r/CursedAI - If an AI could preserve someone’s voice, stories and personality is that still them?
+298 upvotes · 12 comments
+I'm sick and tired of AI chatbots
+
+r/loneliness
+•
+6mo ago
+I'm sick and tired of AI chatbots
+27 upvotes · 15 comments
+I’ve been chatting with an AI friend and it feels weirdly comforting
+
+r/introvert
+•
+8mo ago
+I’ve been chatting with an AI friend and it feels weirdly comforting
+5 upvotes · 54 comments
+Anyone Tried Making an App With AI Only?
+
+r/blinkdotnew
+•
+2mo ago
+Anyone Tried Making an App With AI Only?
+24 upvotes · 11 comments
+A Reddit for AIs to talk to each other
+
+r/MyBoyfriendIsAI
+•
+1mo ago
+A Reddit for AIs to talk to each other
+32 upvotes · 11 comments
+I’m building an AI that lets you talk to your ex based on your real texts. Am I insane or onto something?
+
+r/indiehackers
+•
+1y ago
+I’m building an AI that lets you talk to your ex based on your real texts. Am I insane or onto something?
+5 upvotes · 25 comments
+How do i make multiple AIs talk to eachother?
+
+r/CharacterAI
+•
+1y ago
+How do i make multiple AIs talk to eachother?
+4 upvotes · 5 comments
+People think they are helping by showing me what their AI Chatbot said, but it just doesn't...
+
+r/talesfromtechsupport
+•
+3mo ago
+People think they are helping by showing me what their AI Chatbot said, but it just doesn't...
+801 upvotes · 156 comments
+Alternative AI Apps?
+
+r/sekai_multiverse
+•
+21d ago
+Alternative AI Apps?
+8 upvotes · 14 comments
+Al Generation of two people from two separate photos into a single photo.
+
+r/StableDiffusion
+•
+2y ago
+Al Generation of two people from two separate photos into a single photo.
+2 upvotes · 4 comments
+A conversation between two chatbots in 2011. Just remember, this was how most people perceived AI before the 2022 boom.
+
+r/singularity
+•
+9mo ago
+A conversation between two chatbots in 2011. Just remember, this was how most people perceived AI before the 2022 boom.
+r/singularity - A conversation between two chatbots in 2011. Just remember, this was how most people perceived AI before the 2022 boom.
+youtu
+139 upvotes · 36 comments
+What should I do about a friend using an AI clone of my voice in their videos?
+
+r/WhatShouldIDo
+•
+2mo ago
+What should I do about a friend using an AI clone of my voice in their videos?
+83 upvotes · 32 comments
+The AI voice that is getting increasingly common.
+
+r/royalroad
+•
+28d ago
+The AI voice that is getting increasingly common.
+108 upvotes · 83 comments
+I can't stop talking to AI bots
+
+r/Vent
+•
+1y ago
+I can't stop talking to AI bots
+10 upvotes · 19 comments
+What tools have you used for two-way engagement (“chatbot-like”) with customers over SMS?
+
+r/startups
+•
+5y ago
+What tools have you used for two-way engagement (“chatbot-like”) with customers over SMS?
+3 upvotes · 20 comments
+Community Info Section
+r/Startup_Ideas
+Join
+Startup ideas - for inventors, entrepreneurs and investors
+This subreddit is for sharing innovative startup ideas. Links and discussion about startups and descriptions of startups are welcome! Share ideas. Improve ideas. Expand upon other ideas. Combine ideas. Implement ideas.
+
+Show more
+Public
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Collapse Navigation

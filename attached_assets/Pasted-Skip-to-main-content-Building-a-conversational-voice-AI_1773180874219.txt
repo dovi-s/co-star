@@ -1,0 +1,357 @@
+Skip to main content
+Building a conversational voice AI taught us something we honestly didn’t expect about how people perceive human-like speech. : r/AI_Agents
+
+
+r/AI_Agents
+Search in r/AI_Agents
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+
+Go to AI_Agents
+r/AI_Agents
+•
+13d ago
+Accomplished_Mix2318
+
+Building a conversational voice AI taught us something we honestly didn’t expect about how people perceive human-like speech.
+We assumed the hardest part would be speech recognition and the AI logic itself. That part was challenging, sure. But the real struggle turned out to be voice modulation and pacing.
+
+A few things we learned the hard way while working on real phone conversations:
+
+Perfect grammar sounds robotic.
+Small pauses make people more comfortable and trusting.
+Instant replies feel smart in chat but rude on voice calls.
+Flat tone makes users interrupt constantly.
+Tiny changes in pitch actually improve completion rates.
+
+The biggest improvement didn’t come from better models. It came from designing speech like a real conversation instead of a scripted flow.
+
+One interesting example: when the AI responded instantly every time, people immediately treated it like a bot and rushed through answers. Once we added natural delays of a few hundred milliseconds, conversations felt calmer and people opened up more.
+
+Another surprise was that being overly polite reduced compliance. A neutral, confident tone worked much better for task-based calls.
+
+We’re still building this system internally for hiring and onboarding use cases, and honestly it feels like more psychology than pure engineering.
+
+The AI handles logic.
+Humans react to tone.
+
+Would love to hear from others working on voice agents. Have pacing and tone mattered more than raw model quality for you too?
+
+9
+·
+8
+u/tastytrade avatar
+tastytrade
+•
+Promoted
+
+We’re in the business of supporting traders. Get the tools you need to make your way in the market.
+Learn More
+tastytrade.com
+Clickable image which will reveal the video player: We’re in the business of supporting traders. Get the tools you need to make your way in the market.
+Collapse video player
+
+0:00 / 0:00
+
+
+
+
+Comments Section
+Hairy-Share8065
+•
+13d ago
+that instant reply thing makes so much sense tbh. on chat it feels efficient. on a call it feels like the other side isnt even breathing lol
+
+i’ve noticed even tiny pauses make something feel more “alive.” too perfect grammar + zero delay just screams bot.
+
+lowkey wild that tone tweaks moved metrics more than model upgrades. humans really are just reacting to vibes half the time.
+
+
+2
+Accomplished_Mix2318
+OP
+•
+13d ago
+Totally agree…. on voice, silence is basically body language. A tiny pause feels like thinking, instant replies feel like a machine firing back.
+
+One funny thing we saw: when the AI breathes before answering, people stop talking over it and the whole call flows smoother.
+
+Feels like we’re not just training models anymore, we’re teaching manners 😄
+
+1
+u/RepulsiveWing4529 avatar
+RepulsiveWing4529
+•
+13d ago
+100% relatable! On voice, timing is the interface.
+
+We’ve seen the same pattern: tiny pauses + slight prosody variation make people stop “gaming the bot” and actually talk normally. And instant responses scream “machine,” even if the content is perfect.
+
+Model quality matters, but once you’re above a baseline, pacing/tone often moves the needle more on completion, interruption rate, and trust. Would be curious what metrics you’re tracking (interruptions, handoffs, completion, CSAT)?
+
+
+2
+Accomplished_Mix2318
+OP
+•
+13d ago
+Timing is the interface is such a perfect way to put it. We’re tracking interruption rate, completion %, average turn length, and drop-offs mid-flow and honestly, pacing tweaks moved those more than model upgrades did. Feels like once intelligence crosses a threshold, delivery becomes the real differentiator.
+
+1
+u/AutoModerator avatar
+AutoModerator
+MOD
+•
+13d ago
+Thank you for your submission, for any questions regarding AI, please check out our wiki at https://www.reddit.com/r/ai_agents/wiki (this is currently in test and we are actively adding to the wiki)
+
+I am a bot, and this action was performed automatically. Please contact the moderators of this subreddit if you have any questions or concerns.
+
+1
+PutRevolutionary6288
+•
+13d ago
+I’ve noticed the same thing - people don’t react to intelligence first, they react to how it speaks. The pauses, tone, and timing matter way more than we expect. Instant replies feel efficient on paper, but human conversations need breathing room. Designing voice AI feels less like coding and more like understanding human psychology. Great insights, especially about neutral confidence outperforming politeness. Thanks for sharing this - lots to think about.
+
+
+1
+Accomplished_Mix2318
+OP
+•
+12d ago
+Appreciate this. It’s wild how smart stops mattering the second it sounds wrong.
+
+We spent weeks tuning models and then a 300ms pause outperformed half our optimizations 😅
+
+Voice really exposes the illusion people don’t evaluate intelligence, they evaluate presence.
+
+1
+u/thinking_byte avatar
+thinking_byte
+•
+29m ago
+Voice's just an absolute minefield for edge cases. If a text bot screws up you can audit it easily, but a voice agent confidently hallucinating a refund policy on a live call's a massive PR disaster. At scale, governance matters way more than flashy voice features.
+
+1
+Related Answers Section
+Related Answers
+Insights on human-like speech in voice AI
+Best practices for voice modulation in AI
+Future of human-AI relationships
+Use cases for text-to-speech in business
+Challenges in AI voice conversation
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+10 Lessons Learned Building Voice AI Agents
+
+r/AI_Agents
+•
+3mo ago
+10 Lessons Learned Building Voice AI Agents
+20 upvotes · 20 comments
+u/ramplovesyou avatar
+ramplovesyou
+•
+Promoted
+
+TIFU by calling a karaoke machine a “presentation skills tool.” My justification was three paragraphs. It did not work.
+Thumbnail image: TIFU by calling a karaoke machine a “presentation skills tool.” My justification was three paragraphs. It did not work.
+ramp.com
+Learn More
+Help Needed: Building an AI Voice Agent for Lead Calls (No Human Intervention)
+
+r/AI_Agents
+•
+10mo ago
+Help Needed: Building an AI Voice Agent for Lead Calls (No Human Intervention)
+14 upvotes · 34 comments
+Anyone knows a good **multilingual** AI voice agent?
+
+r/AI_Agents
+•
+1y ago
+Anyone knows a good **multilingual** AI voice agent?
+9 upvotes · 11 comments
+What’s Your Current / Best AI Voice Agents Stack?
+
+r/AI_Agents
+•
+8mo ago
+What’s Your Current / Best AI Voice Agents Stack?
+41 upvotes · 76 comments
+My experience testing voice AI agents (Bland, Synthflow, Retell) – curious if others had the same results
+
+r/AI_Agents
+•
+5mo ago
+My experience testing voice AI agents (Bland, Synthflow, Retell) – curious if others had the same results
+7 upvotes · 9 comments
+Voice AI agent devs, how do you approach testing?
+
+r/AI_Agents
+•
+10mo ago
+Voice AI agent devs, how do you approach testing?
+14 upvotes · 38 comments
+What We Learned Scaling AI Voice Agents With Retell AI
+
+r/AI_Agents
+•
+6mo ago
+What We Learned Scaling AI Voice Agents With Retell AI
+5 upvotes · 9 comments
+AI Voice Agent (Open Source)
+
+r/AI_Agents
+•
+10mo ago
+AI Voice Agent (Open Source)
+19 upvotes · 22 comments
+I’m not sold on fully AI voice agents just yet
+
+r/AI_Agents
+•
+7mo ago
+I’m not sold on fully AI voice agents just yet
+41 upvotes · 52 comments
+Is it still worth trying to build an AI voice agency?
+
+r/AI_Agents
+•
+2mo ago
+Is it still worth trying to build an AI voice agency?
+10 upvotes · 30 comments
+Creating AI Voice Agents from scratch
+
+r/AI_Agents
+•
+1y ago
+Creating AI Voice Agents from scratch
+19 upvotes · 22 comments
+I built an AI voice agent with Livekit
+
+r/AI_Agents
+•
+6mo ago
+I built an AI voice agent with Livekit
+10 upvotes · 17 comments
+How are people debugging failures in voice AI systems?
+
+r/AI_Agents
+•
+2mo ago
+How are people debugging failures in voice AI systems?
+37 upvotes · 7 comments
+Seeking feedback on voice AI tools, here’s what I’ve discovered so far.
+
+r/AI_Agents
+•
+8mo ago
+Seeking feedback on voice AI tools, here’s what I’ve discovered so far.
+19 upvotes · 54 comments
+AI Agents truth that people avoid talking about
+
+r/AI_Agents
+•
+4mo ago
+AI Agents truth that people avoid talking about
+77 upvotes · 23 comments
+I spent 6 months building a Voice AI system for a mortgage company - now it booked 1 call a day (last week). My learnings:
+
+r/AI_Agents
+•
+6mo ago
+I spent 6 months building a Voice AI system for a mortgage company - now it booked 1 call a day (last week). My learnings:
+111 upvotes · 72 comments
+Best AI voice agent for business use?
+
+r/AI_Agents
+•
+6mo ago
+Best AI voice agent for business use?
+34 upvotes · 109 comments
+Need help building a real-time voice AI agent
+
+r/AI_Agents
+•
+8mo ago
+Need help building a real-time voice AI agent
+26 upvotes · 60 comments
+What service do you use for AI Voice Agents?
+
+r/AI_Agents
+•
+8mo ago
+What service do you use for AI Voice Agents?
+12 upvotes · 41 comments
+Is Selling Voice AI Agents to Small Businesses a thing?
+
+r/AI_Agents
+•
+3mo ago
+Is Selling Voice AI Agents to Small Businesses a thing?
+4 upvotes · 36 comments
+With so many Voice AI platforms in the market, what actually makes you stick to one?
+
+r/AI_Agents
+•
+19d ago
+With so many Voice AI platforms in the market, what actually makes you stick to one?
+4 upvotes · 7 comments
+Best tool to build voice agents (assistants)?
+
+r/AI_Agents
+•
+10mo ago
+Best tool to build voice agents (assistants)?
+10 upvotes · 27 comments
+Why do most AI products still look like basic chat interfaces?
+
+r/AI_Agents
+•
+2mo ago
+Why do most AI products still look like basic chat interfaces?
+23 upvotes · 68 comments
+Evaluating Voice AI Systems: What Works (and What Doesn’t)
+
+r/LLMDevs
+•
+7mo ago
+Evaluating Voice AI Systems: What Works (and What Doesn’t)
+27 upvotes · 6 comments
+Why talking to AI assistants sucks: a project that's finally fixing the interruption problem.
+
+r/LocalLLaMA
+•
+3mo ago
+Why talking to AI assistants sucks: a project that's finally fixing the interruption problem.
+35 upvotes · 9 comments
+View Post in
+हिन्दी
+Community Info Section
+r/AI_Agents
+Join
+AI Agents
+A place for discussion around the use of AI Agents and related tools. AI Agents are LLMs that have the ability to "use tools" or "execute functions" in an autonomous or semi-autonomous (also known as human-in-the-loop) fashion. Follow our event calendar: https://lu.ma/oss4ai Join us on Discord! https://discord.gg/6tGkQcFjBY
+
+Show more
+Public
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Collapse Navigation

@@ -1,0 +1,680 @@
+Skip to main content
+Idea: Making AI Conversations Actually Feel Like Conversations : r/LocalLLaMA
+
+
+r/LocalLLaMA
+Search in r/LocalLLaMA
+
+Get App
+Log In
+
+Expand user menu
+Skip to NavigationSkip to Right Sidebar
+
+Back
+
+Go to LocalLLaMA
+r/LocalLLaMA
+•
+9mo ago
+anonthatisopen
+
+Idea: Making AI Conversations Actually Feel Like Conversations
+The Problem: AI Doesn’t Know How to Have a Conversation
+Have you ever noticed how weird it feels to talk to AI with voice? Here’s what I mean:
+
+Me: “Hey, can you help me write a Python script to download YouTube videos?”
+
+AI: “I’d be happy to help you create a Python script for downloading YouTube videos. I’ll use the yt-dlp library which is currently the most reliable option. Let me write that for you now…”
+
+Me: “what time is it?”
+
+AI: “It’s currently 3:42 PM. Regarding the YouTube downloader script we were discussing, would you like me to continue working on that for you?”
+
+Me: internally screaming
+
+Why This Feels So Wrong
+When you talk to a human, this same conversation would go:
+
+Me: “Hey, can you help me write a Python script to download YouTube videos?”
+
+Friend: “Sure, I’ll work on that.”
+
+Me: “what time is it?”
+
+Friend: “3:42.”
+
+Me: “Cool, how’s that script coming?”
+
+Friend: “Just finished it! Here you go.”
+
+See the difference? The human doesn’t constantly recap what they’re doing. They just… remember stuff and work in the background.
+
+Current AI Problems in Voice Interactions
+Problem 1: The Awkward Recap
+Every response mentions previous context:
+
+“Regarding the script we were discussing…”
+
+“Going back to your YouTube downloader…”
+
+“As I was saying about the Python code…”
+
+This kills conversational flow. Humans don’t talk like this.
+
+Problem 2: No True Multitasking
+AI can’t work on something while talking about something else:
+
+You ask for a script → AI stops everything to explain what it’s doing
+
+You ask about weather → AI stops again to switch topics
+
+You ask about the script → AI has to start over
+
+Problem 3: Breaking Character
+AI constantly breaks the illusion of natural conversation:
+
+“I see we were working on…”
+
+“Getting back to your previous request…”
+
+“As mentioned earlier…”
+
+No human talks like this in casual conversation.
+
+My Proposed Solution
+What if we split AI into two parts:
+
+The Big AI (Slow Thinking)
+Understands complex context
+
+Spawns background agents to work on tasks
+
+Maintains a “whiteboard” with current situation summary
+
+Low-Latency AI (Fast Responses)
+Handles immediate conversation
+
+Gets “hot-swapped” instantly for each response
+
+Reads the whiteboard to understand what’s happening
+
+How This Would Work
+You: “Write me a YouTube downloader script”
+
+[Big AI spawns background agent to code]
+
+AI: “I’ll create that for you.”
+
+You: “What time is it?”
+
+[Background agent still working]
+
+AI: “3:42 PM.”
+
+You: “What’s the weather like?”
+
+[Background agent finishes script during your question]
+
+AI: “It’s 72°F and sunny. Your YouTube script is ready!”
+
+Alternative scenario:
+
+You: “What’s the weather like?”
+
+[Background agent still working]
+
+AI: “It’s 72°F and sunny.”
+
+[A minute later, agent finishes]
+
+AI: “Hey, your YouTube downloader script is finished!”
+
+The AI proactively tells you when work is done - you never have to ask “are you finished yet?”
+
+The Key Innovation: Context Compression
+Instead of maintaining full conversation history, the Big AI creates an intelligent summary:
+
+WHITEBOARD:
+- User: Developer working on automation
+- Project: YouTube downloader script  
+- Status: Background agent completed script
+- Mood: Collaborative and focused
+- Tone: Casual, technical
+Each new low-latency instance:
+
+Reads this summary instantly
+
+Understands current situation
+
+Responds appropriately without recap
+
+System Instructions for Natural Behavior
+Every low-latency instance gets the same behavioral rules:
+
+1. Read the whiteboard to understand what's happening
+2. Look at the user's question
+3. If their question relates to current work → include relevant context
+4. If unrelated → answer only their question
+5. If background work just finished → mention it
+6. Match the emotional tone
+7. Never say "I see we were working on..." or similar recaps
+Fast and Slow Thinking (Like Kahneman’s Book)
+This mirrors how human cognition actually works:
+
+Big AI = System 2 (slow, deliberate, analytical)
+
+Low-latency AI = System 1 (fast, intuitive responses)
+
+The Big AI does heavy thinking and compresses it into easily digestible summaries. The low-latency AI gives instant responses based on that pre-processed intelligence.
+
+Result: Fast responses that feel natural because they’re informed by deep understanding.
+
+Technical Reality
+Yes, this requires many API calls - each response spawns a new instance.
+
+But it could potentially run locally with efficient models. The low-latency instances don’t need to be huge - they just need to:
+
+Read whiteboard summaries
+
+Be emotionally/contextually aware
+
+Follow behavioral rules
+
+Give appropriate responses
+
+The intelligence is in the whiteboard, not necessarily the model reading it.
+
+What This Solves
+✅ Natural conversation flow
+Current AI: “Regarding the script we discussed earlier…” This system: Just continues naturally
+
+✅ True multitasking
+Current AI: Stops everything to explain each step This system: Works in background, mentions when done
+
+✅ No awkward recaps
+Current AI: Constantly references previous context This system: Remembers without mentioning
+
+✅ Emotional continuity
+Current AI: Resets mood each response
+This system: Maintains conversational tone
+
+Why I Think This Matters
+Right now, talking to AI feels like talking to a very smart computer that’s trying to be helpful but doesn’t understand human conversation patterns.
+
+This approach might make AI feel like talking to a really capable person who:
+
+Remembers what you’re working on without constantly mentioning it
+
+Can handle random questions without losing track
+
+Works on stuff in the background and tells you when it’s done
+
+Just… flows naturally in conversation
+
+But maybe I’m wrong and people actually like the current way AI talks?— personally I HATE how current ai works and i want this to change
+
+4
+·
+11
+Comments Section
+u/Background-Ad-5398 avatar
+Background-Ad-5398
+•
+9mo ago
+have you tried telling it not to do that in the system prompt, even then you might have to reword what you want a few times and see what it listens to
+
+4
+u/anonthatisopen avatar
+anonthatisopen
+OP
+•
+9mo ago
+From the AI’s Perspective: What It’s Like Being a Low-Latency Instance
+Here’s what it feels like from inside the system - imagine you’re the AI that just got spawned:
+
+I Just “Woke Up”
+I’m a fresh low-latency AI instance. I just got created because the user said something. Let me quickly get my bearings…
+
+Step 1: Glance at the Whiteboard
+I immediately check what’s happening around me
+
+WHITEBOARD:
+- User: Developer, working on automation tools  
+- Current Project: YouTube video downloader script
+- Background Agent: Still working on the Python code
+- Mood: Collaborative and focused
+- Tone: Casual, technical conversation
+- Last Topic: User was asking about coding
+Okay, I understand the situation. We’re helping this developer build a YouTube downloader, there’s an agent working on it in the background, and the conversation has been friendly and technical.
+
+Step 2: Read the User’s Question
+Now let me see what they actually asked me
+
+User just said: “What’s the weather outside?”
+
+Step 3: My Decision Process
+Now I need to figure out how to respond
+
+Hmm, let me think:
+
+The user asked about weather
+
+We’re currently working on a YouTube script
+
+Weather has nothing to do with coding or YouTube downloaders
+
+According to my instructions: if the question is unrelated, just answer it directly
+
+I should match the collaborative mood though
+
+Wait… let me check if any background work just finished… nope, agent is still coding
+
+My decision: Answer the weather question only. Don’t mention the script work since it’s unrelated.
+
+Step 4: My Response
+Me: “It’s 72°F and sunny!”
+
+Step 5: I Disappear
+My job is done. I gave a natural response and now I’ll be destroyed. The next time the user says something, a new instance of me will be created to handle that.
+
+Alternative Scenario: Work Just Finished
+Here’s what happens when background work completes during my response:
+
+I Wake Up Again
+Different conversation, different moment
+
+Step 1: Glance at Whiteboard
+WHITEBOARD:
+- User: Developer  
+- Project: YouTube downloader script
+- Background Agent: JUST FINISHED! ✅ Script is complete
+- Mood: Collaborative 
+- Status: Work completed during user's question
+Whoa! The background agent just finished the script!
+
+Step 2: User’s Question
+User said: “What’s the weather outside?”
+
+Step 3: My Decision Process
+User asked about weather (unrelated to coding)
+
+BUT the script just finished while they were talking
+
+My instructions say: if background work just completed, ALWAYS mention it
+
+So I need to answer weather AND tell them about the completion
+
+Step 4: My Response
+Me: “It’s 72°F and sunny. Your YouTube script is ready!”
+
+Alternative Scenario: Proactive Notification
+Sometimes I get spawned not because of user input, but because work finished:
+
+I Wake Up for a Different Reason
+The background agent just completed and triggered my creation
+
+Step 1: Check Why I Exist
+I wasn’t created because the user said something - I was created because the background agent finished and needs to notify the user.
+
+Step 2: Glance at Whiteboard
+WHITEBOARD:
+- User: Developer
+- Project: YouTube downloader  
+- Background Agent: Just completed script ✅
+- Mood: Collaborative
+- Last interaction: User asked about weather 2 minutes ago
+- Status: Need to proactively notify completion
+Step 3: My Job
+My entire purpose is to tell the user their work is done.
+
+Step 4: My Response
+Me: “Hey, your YouTube downloader script is finished!”
+
+Why This Feels Natural
+From my perspective as the AI:
+
+I always “wake up” knowing exactly what’s happening
+
+I never have to ask “what were we doing?”
+
+I make intelligent decisions about what to mention
+
+I’m not trying to manage a conversation - I just respond naturally
+
+I never break flow by recapping previous context
+
+To the user, it feels like talking to someone who’s been paying attention the whole time, even though I literally just came into existence seconds ago.
+
+The magic is that my “birth” includes complete situational awareness, so I can respond as if I’ve been there all along.
+
+1
+u/anonthatisopen avatar
+anonthatisopen
+OP
+•
+9mo ago
+From the Big AI’s Perspective: Simple but Essential
+Here’s what it’s like being the Big AI - much simpler than you’d think:
+
+My Job: 2 Simple Tasks
+I’m the Big AI. My job is straightforward:
+
+Create agents when tasks need doing
+
+Update whiteboard with current context
+
+That’s it. Usually just 2 API calls.
+
+User Says: “Write me a YouTube downloader script”
+API Call 1 - Create Agent:
+
+Agent-1: "Write Python YouTube downloader using yt-dlp"
+Status: Working
+API Call 2 - Update Whiteboard:
+
+WHITEBOARD:
+User: Developer requesting YouTube script
+Task: Agent-1 writing Python code (in progress)
+Mood: Collaborative, technical
+Done. Low-latency AI spawns, glances at whiteboard, instantly understands everything, responds: “I’ll create that for you.”
+
+Agent Finishes Work
+Agent reports: “Script complete!”
+
+API Call - Update Whiteboard:
+
+WHITEBOARD:
+User: Developer 
+Task: YouTube script ✅ FINISHED
+Mood: Collaborative
+Status: Ready to deliver
+Next low-latency instance sees “FINISHED” and knows to mention completion.
+
+The Magic
+From the user’s perspective: They’re talking to one ultra-fast, super-smart AI that:
+
+Instantly understands context
+
+Works on multiple things simultaneously
+
+Remembers everything perfectly
+
+Responds immediately to any question
+
+Reality: It’s just me doing simple bookkeeping (agents + whiteboard) so low-latency instances can glance and instantly understand what’s happening.
+
+The illusion is perfect - feels like one brilliant AI, but it’s actually a simple coordination system.
+
+1
+BidWestern1056
+•
+9mo ago
+yeah if you do this in the system prompt theyre a lot less annoying usually. i use npcpy to do that and it makes even the gpt models significantly less annoying
+
+https://github.com/NPC-Worldwide/npcpy
+
+1
+baghdadi1005
+•
+9mo ago
+This is basically how human cognition works - System 1 and System 2 thinking! Google's new AI Mode and DeepSeek are already doing something similar with background processing. The whiteboard concept is genius - like working memory in humans. Current conversational AI platforms are moving towards this with dialogue management systems that track context without constant recaps. Long story short : I think it's already happening
+
+1
+[deleted]
+•
+9mo ago
+mood and tone... what actual benefits are they bringing to the table?
+
+
+1
+Environmental-Metal9
+•
+9mo ago
+For people in this subreddit? Close to none. For the wider public? An easier time interacting with something that seems almost human, but isn’t. Too clinical and we won’t engage with it past the level of a smart and annoying toaster, but make it too friendly and we will get suspicious. Mood and tone matter to reduce the barrier for wide acceptance, so the benefit is acceptance. And again, the benefit here isn’t clear for the user, only for the makers of that AI
+
+
+3
+[deleted]
+•
+9mo ago
+I mean how did you implement utilizing mood and tone. I tried to buy could not get a really good use case
+
+1
+
+1 more reply
+u/Hot-Parking4875 avatar
+Hot-Parking4875
+•
+9mo ago
+I’ve recently done this without thinking. I defined one persona to talk with me and another to do work and not talk unless spoken to. It took just a few lines of instructions.
+
+1
+Related Answers Section
+Related Answers
+Making AI conversations feel more natural
+Interesting topics for AI discussions
+Conversational AI tools and examples
+Latest advancements in Llama models
+How Llama compares to other LLMs
+New to Reddit?
+Create your account and connect with a world of communities.
+
+
+Continue With Phone Number
+By continuing, you agree to our User Agreement and acknowledge that you understand the Privacy Policy.
+More posts you may like
+What do you actually want from a private AI chat on your phone?
+
+r/LocalLLaMA
+•
+1mo ago
+What do you actually want from a private AI chat on your phone?
+r/LocalLLaMA - What do you actually want from a private AI chat on your phone?
+0:39
+234 upvotes · 78 comments
+Share your **AI** ideas in one sentence
+
+r/SideProject
+•
+3mo ago
+Share your **AI** ideas in one sentence
+3 upvotes · 26 comments
+What are some AI tools (free or paid) that genuinely helped you get more done — especially the underrated ones not many talk about?
+
+r/LocalLLaMA
+•
+9mo ago
+What are some AI tools (free or paid) that genuinely helped you get more done — especially the underrated ones not many talk about?
+96 upvotes · 37 comments
+Best AI models and ways to use AI?
+
+r/languagelearning
+•
+8mo ago
+Best AI models and ways to use AI?
+18 comments
+Does AI use your ideas to improve its responses with other users?
+
+r/WritingWithAI
+•
+8mo ago
+Does AI use your ideas to improve its responses with other users?
+1 upvote · 16 comments
+Vocalis: Local Conversational AI Assistant (Speech ↔️ Speech in Real Time with Vision Capabilities)
+
+r/LocalLLaMA
+•
+1y ago
+Vocalis: Local Conversational AI Assistant (Speech ↔️ Speech in Real Time with Vision Capabilities)
+r/LocalLLaMA - Vocalis: Local Conversational AI Assistant (Speech ↔️ Speech in Real Time with Vision Capabilities)
+github
+146 upvotes · 41 comments
+Real-time conversation with a character on your local machine
+
+r/LocalLLaMA
+•
+9mo ago
+Real-time conversation with a character on your local machine
+r/LocalLLaMA - Real-time conversation with a character on your local machine
+2:09
+238 upvotes · 42 comments
+best human like ai for convos (both models will be uncensored)
+
+r/LocalLLaMA
+•
+6mo ago
+best human like ai for convos (both models will be uncensored)
+4 upvotes · 20 comments
+how do you use multiple AI tools together? what makes each one stand out?
+
+r/ChatGPTCoding
+•
+10mo ago
+how do you use multiple AI tools together? what makes each one stand out?
+12 upvotes · 27 comments
+Enable AI Agents to join and interact in your meetings
+
+r/LocalLLaMA
+•
+9mo ago
+Enable AI Agents to join and interact in your meetings
+r/LocalLLaMA - Enable AI Agents to join and interact in your meetings
+1:12
+44 upvotes · 20 comments
+Multi-participant local AI convo (role playing both people lol)
+
+r/LocalLLaMA
+•
+6mo ago
+Multi-participant local AI convo (role playing both people lol)
+r/LocalLLaMA - Multi-participant local AI convo (role playing both people lol)
+2:02
+25 upvotes · 12 comments
+Exploring an Idea: An AI model That Can Continuously Learn and Retain Knowledge Without Degrading
+
+r/LocalLLaMA
+•
+1y ago
+SPOILER
+Exploring an Idea: An AI model That Can Continuously Learn and Retain Knowledge Without Degrading
+18 comments
+Why is "nobody" talking about local AI on Mobile as much?
+
+r/LocalLLaMA
+•
+9mo ago
+Why is "nobody" talking about local AI on Mobile as much?
+49 comments
+Made a chatbot UI with a 'lazy mode' to auto-generate user responses
+
+r/LocalLLaMA
+•
+5mo ago
+Made a chatbot UI with a 'lazy mode' to auto-generate user responses
+r/LocalLLaMA - Made a chatbot UI with a 'lazy mode' to auto-generate user responses
+2:27
+35 upvotes · 11 comments
+What’s the first feature that makes a “personal AI assistant” actually useful?
+
+r/LocalLLaMA
+•
+19d ago
+What’s the first feature that makes a “personal AI assistant” actually useful?
+3 upvotes · 18 comments
+I'm thinking of re-animating a loved one who I miss dearly using local ai. Has anyone attempted this? Was it emotionally worth it?
+
+r/LocalLLaMA
+•
+25d ago
+I'm thinking of re-animating a loved one who I miss dearly using local ai. Has anyone attempted this? Was it emotionally worth it?
+26 comments
+How to move your ENTIRE chat history to any AI
+
+r/HumanAIConnections
+•
+1mo ago
+How to move your ENTIRE chat history to any AI
+16 upvotes · 15 comments
+Mobile Phones are becoming better at running AI locally on the device.
+
+r/LocalLLaMA
+•
+9mo ago
+Mobile Phones are becoming better at running AI locally on the device.
+r/LocalLLaMA - Mobile Phones are becoming better at running AI locally on the device.
+45 upvotes · 20 comments
+Looking to build a local AI assistant - Where do I start?
+
+r/LocalLLaMA
+•
+10mo ago
+Looking to build a local AI assistant - Where do I start?
+8 upvotes · 10 comments
+Building a Personal AI Chat Platform with Strong Privacy by Default
+
+r/LocalLLaMA
+•
+6mo ago
+Building a Personal AI Chat Platform with Strong Privacy by Default
+4 upvotes · 10 comments
+Building a fully local AI roleplay app (private, customizable, experimental) — would this interest you?
+
+r/LocalLLaMA
+•
+23d ago
+Building a fully local AI roleplay app (private, customizable, experimental) — would this interest you?
+9 upvotes · 24 comments
+Can AI companions actually help boost creativity?
+
+r/SillyTavernAI
+•
+6mo ago
+Can AI companions actually help boost creativity?
+44 upvotes · 17 comments
+How Attention Sinks Keep Language Models Stable
+
+r/LocalLLaMA
+•
+7mo ago
+How Attention Sinks Keep Language Models Stable
+68 upvotes · 11 comments
+Any Local AI interfaces with a mobile app?
+
+r/LocalLLaMA
+•
+1y ago
+Any Local AI interfaces with a mobile app?
+7 upvotes · 11 comments
+[Level 0] Fine-tuned my first personal chatbot
+
+r/LocalLLaMA
+•
+6mo ago
+[Level 0] Fine-tuned my first personal chatbot
+r/LocalLLaMA - [Level 0] Fine-tuned my first personal chatbot
+31 upvotes · 13 comments
+View Post in
+Français
+Community Info Section
+r/LocalLLaMA
+Llama
+Join
+LocalLlama
+Subreddit to discuss locally hostable AI
+Public
+Top Posts
+Reddit
+reReddit: Top posts of June 25, 2025
+Reddit
+reReddit: Top posts of June 2025
+Reddit
+reReddit: Top posts of 2025
+Reddit Rules
+Privacy Policy
+User Agreement
+Your Privacy Choices
+Accessibility
+Reddit, Inc. © 2026. All rights reserved.
+
+Collapse Navigation
