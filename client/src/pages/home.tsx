@@ -172,7 +172,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background overflow-x-hidden" data-testid="home-page">
+    <div className="min-h-screen flex flex-col bg-background" data-testid="home-page">
       <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
         <Logo size="xs" animated showWordmark onClick={() => { setStep("import"); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
 
       <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
 
-      <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative">
+      <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative overflow-x-hidden">
         <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
           style={{
             background: 'radial-gradient(ellipse at 50% 50%, hsl(28 35% 54% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
