@@ -50,6 +50,27 @@ The application handles script import from various formats (`.txt`, `.pdf`, imag
 - **Recent Scripts Accessibility**: Cards have aria-labels, keyboard event isolation on nested action buttons
 - **Error Feedback**: Actor profile and onboarding save failures now show toast notifications
 
+### UX Audit Implementation (Session 12)
+- **Error Boundary**: Global React ErrorBoundary wraps app in App.tsx with friendly fallback UI + retry button
+- **Reduced Motion**: `@media (prefers-reduced-motion: reduce)` CSS rules disable/minimize animations
+- **JSON-LD**: SoftwareApplication structured data in client/index.html
+- **Undo Delete**: Script deletion uses 5-second undo toast instead of confirmation modal (recent-scripts.tsx)
+- **Console Cleanup**: Removed all debug console.log from use-webrtc.ts and speech-recognition.ts
+- **Ready Screen**: "Ready to rehearse" interstitial with role/scene/mode info + 3-second countdown before rehearsal starts
+- **Tooltip Tour**: One-time 4-step tour for first-time users (stored in localStorage)
+- **Resume Position**: Saves line/scene position on exit, offers "Resume" or "Start Fresh" on next load (localStorage keyed by script content hash)
+- **Voice Preview**: Play sample buttons on voice preset picker (Natural/Deadpan/Theatrical) in role-chip.tsx
+- **LINE Hint**: One-time tooltip after 8s pause on user's line: "Say LINE for a hint"
+- **Camera Contrast**: Text shadow CSS classes for readability over bright video backgrounds
+- **Completed Lines**: Checkmark icon on completed lines in three-line-reader timeline
+- **Haptic Feedback**: `use-haptics.ts` hook with triggerHaptic() for tap/select/success/achievement/error patterns; wired into transport bar buttons, line completion, and run completion
+- **Animated Accuracy**: Accuracy percentage counts up from 0 with ease-out animation on completion screen
+- **Multiplayer Glow**: Ready participants get pulsing green glow animation in lobby
+- **Role Selector Keyboard**: ARIA listbox pattern with arrow key navigation in role-selector.tsx
+- **Offline Banner**: Top banner when navigator.onLine is false, auto-dismisses on reconnection
+- **Screen Reader Progress**: Visually-hidden span announces "Line X of Y" in transport bar
+- **Smarter Suggestions**: Context-aware "What's Next" on completion: next scene, slow pace, improve accuracy, challenge mode, switch role, retention test
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines and scene descriptions are automatically linked to subsequent dialogue.
 - **Scene Transition Cards**: Visual cues for scene changes with animated displays.

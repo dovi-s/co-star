@@ -2114,9 +2114,11 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                   <div
                     key={p.id}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-md",
-                      p.id === multiplayer.participantId ? "bg-primary/10" : "bg-muted/50"
+                      "flex items-center justify-between p-3 rounded-md transition-all duration-300",
+                      p.id === multiplayer.participantId ? "bg-primary/10" : "bg-muted/50",
+                      p.isReady && "lobby-ready-glow"
                     )}
+                    data-testid={`participant-card-${p.id}`}
                   >
                     <div className="flex items-center gap-2">
                       <UserCircle className="h-5 w-5 text-muted-foreground" />

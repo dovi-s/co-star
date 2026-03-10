@@ -48,11 +48,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
   const createPeerConnection = useCallback((participantId: string, isInitiator: boolean) => {
     if (!socket || !myParticipantId || !localStreamRef.current) {
-      console.log('[WebRTC] Cannot create peer connection:', {
-        socket: !!socket,
-        myParticipantId,
-        localStream: !!localStreamRef.current,
-      });
       return null;
     }
     
@@ -61,9 +56,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
     // Log what tracks we're adding
     const localTracks = localStreamRef.current.getTracks();
-    console.log(`[WebRTC] Adding ${localTracks.length} tracks to peer connection with ${participantId}:`, 
-      localTracks.map(t => `${t.kind}:${t.enabled}:${t.readyState}`).join(', ')
-    );
     
     localTracks.forEach(track => {
       pc.addTrack(track, localStreamRef.current!);
@@ -88,14 +80,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       const incomingStream = event.streams?.[0];
       const incomingTrack = event.track;
       
-      console.log(`[WebRTC] ontrack from ${participantId}:`, {
-        kind: incomingTrack?.kind,
-        enabled: incomingTrack?.enabled,
-        muted: incomingTrack?.muted,
-        readyState: incomingTrack?.readyState,
-        streamExists: !!incomingStream,
-        streamTracks: incomingStream ? `${incomingStream.getAudioTracks().length}a/${incomingStream.getVideoTracks().length}v` : 'n/a',
-      });
       
       setPeerStreams(prev => {
         const existing = prev.find(p => p.participantId === participantId);
@@ -121,11 +105,9 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           incomingStream.getTracks().forEach(track => newStream.addTrack(track));
         } else if (incomingTrack) {
           // Safari fallback: no streams array, use track directly
-          console.log(`[WebRTC] Safari fallback: adding ${incomingTrack.kind} track directly`);
           newStream.addTrack(incomingTrack);
         }
         
-        console.log(`[WebRTC] Created stream for ${participantId} with ${newStream.getAudioTracks().length} audio, ${newStream.getVideoTracks().length} video tracks`);
         
         if (existing) {
           return prev.map(p => 
@@ -139,11 +121,9 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
 
     pc.onconnectionstatechange = () => {
-      console.log(`[WebRTC] Connection state with ${participantId}: ${pc.connectionState}`);
       if (pc.connectionState === 'connected') {
         setConnectedPeers(prev => new Set(Array.from(prev).concat(participantId)));
       } else if (pc.connectionState === 'failed') {
-        console.log(`[WebRTC] Connection failed with ${participantId}, attempting reconnect`);
         setConnectedPeers(prev => {
           const next = new Set(prev);
           next.delete(participantId);
@@ -153,7 +133,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         if (localStreamRef.current) {
           setTimeout(() => {
             if (localStreamRef.current && !peerConnectionsRef.current.has(participantId)) {
-              console.log(`[WebRTC] Reconnecting to ${participantId}`);
               createPeerConnection(participantId, true);
             }
           }, 1000);
@@ -161,7 +140,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       } else if (pc.connectionState === 'disconnected') {
         setTimeout(() => {
           if (pc.connectionState === 'disconnected') {
-            console.log(`[WebRTC] Still disconnected from ${participantId}, reconnecting`);
             setConnectedPeers(prev => {
               const next = new Set(prev);
               next.delete(participantId);
@@ -177,9 +155,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     };
     
     pc.oniceconnectionstatechange = () => {
-      console.log(`[WebRTC] ICE state with ${participantId}: ${pc.iceConnectionState}`);
       if (pc.iceConnectionState === 'failed') {
-        console.log(`[WebRTC] ICE failed, restarting ICE for ${participantId}`);
         pc.restartIce();
       }
     };
@@ -217,7 +193,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     if (!socket || !myParticipantId) return;
     
     if (!localStreamRef.current) {
-      console.log('[WebRTC] Buffering offer from', fromId, '- local stream not ready');
       pendingOffersRef.current.set(fromId, offer);
       return;
     }
@@ -231,11 +206,9 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     if (pc && pc.signalingState !== 'stable') {
       if (!isPolite) {
         // We're impolite and already have an outgoing offer - ignore incoming offer
-        console.log(`[WebRTC] Glare detected with ${fromId} - we're impolite, ignoring their offer`);
         return;
       }
       // We're polite - rollback our offer and accept theirs
-      console.log(`[WebRTC] Glare detected with ${fromId} - we're polite, rolling back`);
       await pc.setLocalDescription({ type: 'rollback' });
     }
     
@@ -246,7 +219,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     }
 
     try {
-      console.log(`[WebRTC] Setting remote offer from ${fromId}`);
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
       
       const pendingCandidates = pendingCandidatesRef.current.get(fromId) || [];
@@ -258,7 +230,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
-      console.log(`[WebRTC] Sending answer to ${fromId}`);
       socket.emit('room_event', {
         type: 'rtc_answer',
         targetId: fromId,
@@ -275,22 +246,18 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const handleRtcAnswer = useCallback(async (fromId: string, answer: { type: 'answer'; sdp: string }) => {
     const pc = peerConnectionsRef.current.get(fromId);
     if (!pc) {
-      console.log('[WebRTC] No peer connection for answer from', fromId);
       return;
     }
 
     // Check signaling state - can only set answer when in "have-local-offer" state
     if (pc.signalingState !== 'have-local-offer') {
-      console.log(`[WebRTC] Ignoring answer from ${fromId} - wrong state: ${pc.signalingState}`);
       return;
     }
 
     try {
-      console.log(`[WebRTC] Setting remote answer from ${fromId}`);
       await pc.setRemoteDescription(new RTCSessionDescription(answer));
       
       const pendingCandidates = pendingCandidatesRef.current.get(fromId) || [];
-      console.log(`[WebRTC] Adding ${pendingCandidates.length} pending ICE candidates for ${fromId}`);
       for (const candidate of pendingCandidates) {
         await pc.addIceCandidate(candidate);
       }
@@ -319,7 +286,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
 
   const processPendingOffers = useCallback(() => {
     pendingOffersRef.current.forEach((offer, fromId) => {
-      console.log('[WebRTC] Processing buffered offer from', fromId);
       handleRtcOffer(fromId, offer);
     });
     pendingOffersRef.current.clear();
@@ -328,7 +294,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   const processPendingPeers = useCallback(() => {
     pendingPeersRef.current.forEach((peerId) => {
       if (!peerConnectionsRef.current.has(peerId)) {
-        console.log('[WebRTC] Processing pending peer connection to', peerId);
         createPeerConnection(peerId, true);
       }
     });
@@ -344,7 +309,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       // If no existing video stream, request both camera AND mic together in one prompt
       // This avoids annoying the user with two separate permission dialogs
       if (!videoStream || videoStream.getVideoTracks().length === 0) {
-        console.log('[WebRTC] No existing video, requesting camera + mic together');
         try {
           const combinedStream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
@@ -353,16 +317,13 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           // Split the combined stream into video and audio parts
           videoStream = new MediaStream(combinedStream.getVideoTracks());
           micStream = new MediaStream(combinedStream.getAudioTracks());
-          console.log('[WebRTC] Camera + mic access granted together');
         } catch (combinedErr) {
-          console.log('[WebRTC] Combined access failed, trying audio only:', combinedErr);
           // Fall back to audio only
           micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
           videoStream = null;
         }
       } else {
         // Have existing video, just get mic
-        console.log('[WebRTC] Reusing existing video, requesting mic only');
         micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       }
       
@@ -371,7 +332,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       
       // If host and we have TTS audio stream, mix it with mic so everyone hears TTS
       if (isHost && ttsAudioStream && ttsAudioStream.getAudioTracks().length > 0) {
-        console.log('[WebRTC] Host: mixing TTS audio with mic for participants');
         
         try {
           // Create audio context for mixing
@@ -381,7 +341,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           // Ensure AudioContext is running (important for iOS/Safari)
           if (audioContext.state === 'suspended') {
             await audioContext.resume();
-            console.log('[WebRTC] AudioContext resumed');
           }
           
           // Create destination for mixed audio
@@ -420,10 +379,8 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
             setIsVideoEnabled(false);
           }
           
-          console.log('[WebRTC] Host: mixed stream created with TTS + mic');
           ttsIncludedInMixRef.current = true; // Mark TTS as included
         } catch (e) {
-          console.log('[WebRTC] Audio mixing failed, falling back to mic only:', e);
           ttsIncludedInMixRef.current = false;
           // Create new stream, don't mutate micStream
           stream = new MediaStream();
@@ -448,24 +405,16 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
         });
         
         if (videoStream && videoStream.getVideoTracks().length > 0) {
-          console.log('[WebRTC] Using video stream');
           videoStream.getVideoTracks().forEach(track => {
             stream.addTrack(track);
           });
           setIsVideoEnabled(true);
         } else {
-          console.log('[WebRTC] No camera available, audio only');
           setIsVideoEnabled(false);
         }
       }
       
       // Log final stream details
-      console.log('[WebRTC] Final local stream:', {
-        id: stream.id,
-        audioTracks: stream.getAudioTracks().length,
-        videoTracks: stream.getVideoTracks().length,
-        tracks: stream.getTracks().map(t => `${t.kind}:${t.enabled}:${t.readyState}`).join(', '),
-      });
       
       localStreamRef.current = stream;
       setLocalStream(stream);
@@ -516,7 +465,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     if (micGainNodeRef.current && ttsIncludedInMixRef.current) {
       const newEnabled = !isAudioEnabled;
       micGainNodeRef.current.gain.value = newEnabled ? 1.0 : 0.0;
-      console.log(`[WebRTC] Host mic gain set to: ${micGainNodeRef.current.gain.value}`);
       setIsAudioEnabled(newEnabled);
       return;
     }
@@ -525,14 +473,12 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     if (micStreamRef.current) {
       micStreamRef.current.getAudioTracks().forEach(track => {
         track.enabled = !track.enabled;
-        console.log(`[WebRTC] Mic track ${track.id} enabled: ${track.enabled}`);
       });
       setIsAudioEnabled(prev => !prev);
     } else if (localStreamRef.current) {
       // Fallback to local stream if no separate mic stream
       localStreamRef.current.getAudioTracks().forEach(track => {
         track.enabled = !track.enabled;
-        console.log(`[WebRTC] Audio track ${track.id} enabled: ${track.enabled}`);
       });
       setIsAudioEnabled(prev => !prev);
     }
@@ -557,7 +503,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
             if (localStreamRef.current) {
               createPeerConnection(update.participantId, true);
             } else {
-              console.log('[WebRTC] Buffering peer connection to', update.participantId, '- local stream not ready');
               pendingPeersRef.current.add(update.participantId);
             }
           }
@@ -588,7 +533,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   
   useEffect(() => {
     if (enabled && !localStreamRef.current && !initializingRef.current) {
-      console.log('[WebRTC] Triggering startMedia (enabled, no local stream)');
       initializingRef.current = true;
       startMedia().finally(() => {
         initializingRef.current = false;
@@ -605,7 +549,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     // If we're enabled but don't have a local stream after a delay, retry
     const retryTimer = setTimeout(() => {
       if (enabled && !localStreamRef.current && !initializingRef.current) {
-        console.log('[WebRTC] Retrying startMedia (no stream after delay)');
         initializingRef.current = true;
         startMedia().finally(() => {
           initializingRef.current = false;
@@ -620,10 +563,8 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
   useEffect(() => {
     if (!enabled || !localStream || !myParticipantId) return;
     
-    console.log('[WebRTC] Local stream available, checking for participants to connect to');
     participants.forEach(p => {
       if (p.id !== myParticipantId && !peerConnectionsRef.current.has(p.id)) {
-        console.log('[WebRTC] Creating connection to existing participant:', p.id, p.name);
         createPeerConnection(p.id, true);
       }
     });
@@ -642,7 +583,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
     // If TTS is already included in the mix, nothing to do
     if (ttsIncludedInMixRef.current) return;
     
-    console.log('[WebRTC] Late TTS stream available - updating audio mixing');
     
     try {
       // Create AudioContext if not already created
@@ -653,9 +593,7 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       
       // Ensure AudioContext is running (important for iOS/Safari)
       if (audioContext.state === 'suspended') {
-        console.log('[WebRTC] AudioContext suspended, attempting resume...');
         audioContext.resume().then(() => {
-          console.log('[WebRTC] AudioContext resumed successfully');
         }).catch(err => {
           console.warn('[WebRTC] AudioContext resume failed:', err);
         });
@@ -685,7 +623,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
           const audioSender = senders.find(s => s.track?.kind === 'audio');
           if (audioSender) {
             audioSender.replaceTrack(newAudioTrack).then(() => {
-              console.log(`[WebRTC] Replaced audio track for peer ${peerId} with TTS-mixed audio`);
             }).catch(err => {
               console.warn(`[WebRTC] Failed to replace audio track for peer ${peerId}:`, err);
             });
@@ -704,7 +641,6 @@ export function useWebRTC({ socket, myParticipantId, participants, enabled, exis
       }
       
       ttsIncludedInMixRef.current = true; // Mark TTS as now included
-      console.log('[WebRTC] Late TTS mixing complete');
     } catch (err) {
       console.error('[WebRTC] Failed to update audio mixing with late TTS:', err);
     }

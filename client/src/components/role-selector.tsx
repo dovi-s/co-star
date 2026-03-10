@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { Check, ChevronLeft, Users, AlertTriangle, FileText, Theater } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -56,6 +56,8 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
     roles.length === 1 ? roles[0].id : null
   );
   const [isExiting, setIsExiting] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number>(-1);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const sortedRoles = [...roles].sort((a, b) => b.lineCount - a.lineCount);
   const totalLines = roles.reduce((sum, r) => sum + r.lineCount, 0);
@@ -72,6 +74,44 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
   const handleCardClick = (roleId: string) => {
     setSelectedRoleId(roleId);
   };
+
+  const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
+    const count = sortedRoles.length;
+    if (count === 0) return;
+
+    let newIndex = focusedIndex;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      newIndex = focusedIndex < count - 1 ? focusedIndex + 1 : 0;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      newIndex = focusedIndex > 0 ? focusedIndex - 1 : count - 1;
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      newIndex = 0;
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      newIndex = count - 1;
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (focusedIndex >= 0 && focusedIndex < count) {
+        setSelectedRoleId(sortedRoles[focusedIndex].id);
+      }
+      return;
+    } else {
+      return;
+    }
+
+    setFocusedIndex(newIndex);
+    setSelectedRoleId(sortedRoles[newIndex].id);
+
+    const listEl = listRef.current;
+    if (listEl) {
+      const child = listEl.children[newIndex] as HTMLElement;
+      child?.focus();
+    }
+  }, [focusedIndex, sortedRoles]);
 
   return (
     <div 
@@ -176,21 +216,44 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           )}
         </div>
 
-        <div className="flex-1 px-4 pt-2 pb-4 space-y-2 overflow-y-auto">
+        <div
+          ref={listRef}
+          role="listbox"
+          aria-label="Select your role"
+          aria-activedescendant={focusedIndex >= 0 ? `role-option-${sortedRoles[focusedIndex]?.id}` : undefined}
+          tabIndex={0}
+          onKeyDown={handleListKeyDown}
+          onFocus={() => {
+            if (focusedIndex < 0) {
+              const idx = selectedRoleId ? sortedRoles.findIndex(r => r.id === selectedRoleId) : 0;
+              setFocusedIndex(idx >= 0 ? idx : 0);
+            }
+          }}
+          className="flex-1 px-4 pt-2 pb-4 space-y-2 overflow-y-auto outline-none"
+        >
           {sortedRoles.map((role, index) => {
             const isSelected = selectedRoleId === role.id;
+            const isFocused = focusedIndex === index;
             const linePercentage = Math.round((role.lineCount / totalLines) * 100);
             const isLead = index === 0;
             
             return (
               <Card
                 key={role.id}
-                onClick={() => handleCardClick(role.id)}
+                id={`role-option-${role.id}`}
+                role="option"
+                aria-selected={isSelected}
+                tabIndex={-1}
+                onClick={() => {
+                  handleCardClick(role.id);
+                  setFocusedIndex(index);
+                }}
                 className={cn(
                   "w-full flex items-center gap-3 p-4 text-left cursor-pointer",
                   "transition-all duration-200 hover-elevate press-effect",
-                  "animate-fade-in-up rounded-xl",
+                  "animate-fade-in-up rounded-xl outline-none",
                   isSelected && "ring-2 ring-primary shadow-sm bg-primary/[0.03]",
+                  isFocused && !isSelected && "ring-1 ring-primary/50",
                 )}
                 style={{ animationDelay: `${index * 40}ms` }}
                 data-testid={`card-role-${role.name}`}

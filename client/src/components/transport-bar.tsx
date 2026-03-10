@@ -1,6 +1,7 @@
 import { ChevronLeft, Play, Pause, ChevronRight, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { triggerHaptic } from "@/hooks/use-haptics";
 
 interface TransportBarProps {
   isPlaying: boolean;
@@ -63,7 +64,7 @@ export function TransportBar({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (canGoBack) onBack();
+              if (canGoBack) { triggerHaptic("tap"); onBack(); }
             }}
             title="Previous"
             aria-label="Previous line"
@@ -154,9 +155,13 @@ export function TransportBar({
                 className="transition-all duration-500 ease-out"
               />
             </svg>
+
+            <span className="sr-only" aria-live="polite" aria-atomic="true">
+              Line {currentLine + 1} of {totalLines}
+            </span>
             
             <Button
-              onClick={onPlayPause}
+              onClick={() => { triggerHaptic("tap"); onPlayPause(); }}
               title="Play/Pause (Space)"
               aria-label={isPlaying ? "Pause" : "Play"}
               size="icon"
@@ -183,7 +188,7 @@ export function TransportBar({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              if (canGoNext) onNext();
+              if (canGoNext) { triggerHaptic("tap"); onNext(); }
             }}
             title="Next"
             aria-label="Next line"

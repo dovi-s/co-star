@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { ScriptLine, Role, MemorizationMode, Scene } from "@shared/schema";
-import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play, Hand } from "lucide-react";
+import { Bookmark, BookmarkCheck, User, Mic, Volume2, Eye, EyeOff, Film, ChevronDown, ChevronUp, Play, Hand, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { matchWordsSequential } from "@/lib/word-matcher";
@@ -509,7 +509,7 @@ export function ThreeLineReader({
   };
 
   return (
-    <div className="space-y-3" data-testid="three-line-reader">
+    <div className={cn("space-y-3", cameraMode && "camera-text-shadow")} data-testid="three-line-reader">
       {/* Scene transition card - shows when entering a new scene */}
       {isFirstLineOfScene && currentScene && (
         <div 
@@ -616,13 +616,20 @@ export function ThreeLineReader({
       <div className="flex gap-3">
         {/* Timeline indicator */}
         <div className="flex flex-col items-center py-6 flex-shrink-0">
-          {/* Previous dot */}
+          {/* Previous dot - completed indicator */}
           <div className={cn(
-            "w-2 h-2 rounded-full transition-all duration-300",
+            "rounded-full transition-all duration-300 flex items-center justify-center",
             previousLine 
-              ? (cameraMode ? "bg-white/30" : "bg-muted-foreground/30") 
-              : "bg-transparent"
-          )} />
+              ? (cameraMode ? "w-3.5 h-3.5 bg-white/25" : "w-3.5 h-3.5 bg-emerald-500/20") 
+              : "w-2 h-2 bg-transparent"
+          )}>
+            {previousLine && (
+              <Check className={cn(
+                "w-2.5 h-2.5",
+                cameraMode ? "text-white/60" : "text-emerald-600/70 dark:text-emerald-400/70"
+              )} strokeWidth={3} />
+            )}
+          </div>
           
           {/* Line connecting to current */}
           <div className={cn(

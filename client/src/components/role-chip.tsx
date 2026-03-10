@@ -1,4 +1,5 @@
-import { User, Volume2, Check } from "lucide-react";
+import { useState } from "react";
+import { User, Volume2, Check, Play, Loader2 } from "lucide-react";
 import type { Role, VoicePreset } from "@shared/schema";
 import {
   DropdownMenu,
@@ -9,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { ttsEngine } from "@/lib/tts-engine";
 
 interface RoleChipProps {
   role: Role;
@@ -29,7 +31,14 @@ const presetDescriptions: Record<VoicePreset, string> = {
   theatrical: "Dramatic",
 };
 
+const presetSamples: Record<VoicePreset, string> = {
+  natural: "To be, or not to be, that is the question.",
+  deadpan: "I suppose that's one way to look at it.",
+  theatrical: "Once more unto the breach, dear friends!",
+};
+
 export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }: RoleChipProps) {
+  const [previewingPreset, setPreviewingPreset] = useState<VoicePreset | null>(null);
   const chipContent = (
     <div
       className={cn(
@@ -95,6 +104,32 @@ export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }:
                   {presetDescriptions[preset]}
                 </div>
               </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  if (previewingPreset === preset) {
+                    ttsEngine.stop();
+                    setPreviewingPreset(null);
+                    return;
+                  }
+                  setPreviewingPreset(preset);
+                  ttsEngine.stop();
+                  ttsEngine.speak(presetSamples[preset], {
+                    voiceId: role.voiceId,
+                    voicePreset: preset,
+                    emotion: "neutral",
+                  }).finally(() => setPreviewingPreset(null));
+                }}
+                className="p-1 rounded-full hover:bg-muted/80 transition-colors shrink-0"
+                data-testid={`button-preview-${preset}`}
+              >
+                {previewingPreset === preset ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                ) : (
+                  <Play className="h-3.5 w-3.5 text-muted-foreground" />
+                )}
+              </button>
             </DropdownMenuItem>
           );
         })}

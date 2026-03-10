@@ -18,10 +18,12 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy, Info, Zap, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator";
+import { triggerHaptic } from "@/hooks/use-haptics";
+import { saveResumePosition, getResumePosition, clearResumePosition } from "@/lib/recent-scripts";
 
 // Performance tracking for the current run
 interface LinePerformance {
@@ -102,6 +104,15 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const [speakingWordIndex, setSpeakingWordIndex] = useState(-1);
   const [showCountdown, setShowCountdown] = useState(false);
   const pendingPlayFromLineRef = useRef<number | null>(null);
+  const [showReadyScreen, setShowReadyScreen] = useState(true);
+  const [readyCountdown, setReadyCountdown] = useState(3);
+  const [showTourTip, setShowTourTip] = useState<number>(0);
+  const [lineHintShown, setLineHintShown] = useState(false);
+  const userPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasSeenTour = useRef(false);
+  const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
+  const [resumePrompt, setResumePrompt] = useState<{ lineIndex: number; sceneIndex: number } | null>(null);
+  const scriptFingerprintRef = useRef("");
   const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
   const [handsFreeMode, setHandsFreeMode] = useState(false);
   const handsFreeModeRef = useRef(false);
@@ -134,7 +145,69 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   useEffect(() => {
     if (!camera.isEnabled) setCameraFocus('script');
   }, [camera.isEnabled]);
-  
+
+  useEffect(() => {
+    try {
+      hasSeenTour.current = localStorage.getItem("costar-tour-seen") === "true";
+      if (localStorage.getItem("costar-line-hint-seen") === "true") setLineHintShown(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    const allText = session.scenes.flatMap(s => s.lines.map(l => l.text)).join("|");
+    let hash = 0;
+    for (let i = 0; i < allText.length; i++) {
+      hash = ((hash << 5) - hash + allText.charCodeAt(i)) | 0;
+    }
+    const fp = session.name + ":" + hash;
+    scriptFingerprintRef.current = fp;
+    const saved = getResumePosition(fp);
+    if (saved && (saved.lineIndex > 0 || saved.sceneIndex > 0)) {
+      setResumePrompt({ lineIndex: saved.lineIndex, sceneIndex: saved.sceneIndex });
+    }
+    setShowReadyScreen(true);
+    setReadyCountdown(3);
+  }, [session?.name, session?.scenes]);
+
+  useEffect(() => {
+    if (!showReadyScreen) return;
+    if (readyCountdown <= 0) {
+      setShowReadyScreen(false);
+      if (!hasSeenTour.current) {
+        setShowTourTip(1);
+        try { localStorage.setItem("costar-tour-seen", "true"); } catch {}
+        hasSeenTour.current = true;
+      }
+      return;
+    }
+    const timer = setTimeout(() => setReadyCountdown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [showReadyScreen, readyCountdown]);
+
+  useEffect(() => {
+    if (showTourTip > 0 && showTourTip <= 4) {
+      const timer = setTimeout(() => setShowTourTip(0), 6000);
+      return () => clearTimeout(timer);
+    }
+  }, [showTourTip]);
+
+  useEffect(() => {
+    if (currentIsUserLine && session?.isPlaying && !lineHintShown && !tapMode) {
+      userPauseTimerRef.current = setTimeout(() => {
+        setLineHintShown(true);
+        try { localStorage.setItem("costar-line-hint-seen", "true"); } catch {}
+        toast({
+          title: "Stuck on a line?",
+          description: "Say \"LINE\" out loud to get a hint.",
+        });
+      }, 8000);
+      return () => {
+        if (userPauseTimerRef.current) clearTimeout(userPauseTimerRef.current);
+      };
+    }
+  }, [currentIsUserLine, session?.isPlaying, lineHintShown, tapMode, toast]);
+
   // Performance tracking - use ref to avoid closure issues
   const runPerformanceRef = useRef<RunPerformance>({
     linePerformances: [],
@@ -490,7 +563,21 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     setPlaying(false);
     incrementRunsCompleted();
     recordRehearsal(0, 1);
-    
+    triggerHaptic(avgAccuracy >= 95 ? "achievement" : "success");
+
+    setAnimatedAccuracy(0);
+    const targetAcc = Math.round(avgAccuracy);
+    let frame = 0;
+    const totalFrames = 40;
+    const animateUp = () => {
+      frame++;
+      const progress = Math.min(frame / totalFrames, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedAccuracy(Math.round(targetAcc * eased));
+      if (frame < totalFrames) requestAnimationFrame(animateUp);
+    };
+    requestAnimationFrame(animateUp);
+
     if (handsFreeModeRef.current) {
       setSceneCompleted(true);
       setTimeout(() => {
@@ -607,6 +694,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     
     incrementLinesRehearsed();
     recordRehearsal(1, 0);
+    triggerHaptic("tap");
     setUserTranscript("");
     setIsUserTurn(false);
     waitingForUserRef.current = false;
@@ -1068,6 +1156,14 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   };
 
   const handleBackToHome = useCallback(() => {
+    if (scriptFingerprintRef.current && session) {
+      saveResumePosition(scriptFingerprintRef.current, {
+        lineIndex: session.currentLineIndex ?? 0,
+        sceneIndex: session.currentSceneIndex ?? 0,
+        roleId: session.userRoleId,
+        timestamp: Date.now(),
+      });
+    }
     try {
       ttsEngine.stop();
     } catch {}
@@ -1076,7 +1172,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     } catch {}
     clearUserRole();
     onBack();
-  }, [clearUserRole, onBack]);
+  }, [clearUserRole, onBack, session]);
 
   const handleClearSession = () => {
     ttsEngine.stop();
@@ -1264,7 +1360,81 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const getNextStepSuggestions = () => {
     if (!session || !completedRunStats) return [];
-    const suggestions: Array<{ id: string; label: string; detail: string; icon: typeof RefreshCcw; action: () => void }> = [];
+    const suggestions: Array<{ id: string; label: string; detail: string; icon: typeof RefreshCcw; action: () => void; priority: number }> = [];
+
+    const dismissAndReset = () => {
+      setShowCelebration(false);
+      setSceneCompleted(false);
+      setCompletedRunStats(null);
+    };
+
+    const hasMultipleScenes = session.scenes.length > 1;
+    const isLastScene = session.currentSceneIndex === session.scenes.length - 1;
+    const nextSceneIndex = session.currentSceneIndex + 1;
+
+    if (hasMultipleScenes && !isLastScene) {
+      suggestions.push({
+        id: "next-scene",
+        label: `Continue to Scene ${nextSceneIndex + 1}`,
+        detail: `${session.scenes.length - nextSceneIndex} scenes remaining`,
+        icon: ArrowRight,
+        priority: 10,
+        action: () => {
+          dismissAndReset();
+          goToScene(nextSceneIndex);
+          resetRunPerformance();
+          setTimeout(() => { speakingLineRef.current = null; setPlaying(true); }, 300);
+        },
+      });
+    }
+
+    if (completedRunStats.averageAccuracy < 70 && completedRunStats.totalUserLines > 0) {
+      suggestions.push({
+        id: "slow-down",
+        label: "Slow the pace down",
+        detail: `${Math.round(completedRunStats.averageAccuracy)}% — try at 0.8x speed`,
+        icon: Clock,
+        priority: 9,
+        action: () => {
+          dismissAndReset();
+          updateSession({ playbackSpeed: 0.8 });
+          goToLine(0);
+          resetRunPerformance();
+          setTimeout(() => { speakingLineRef.current = null; setPlaying(true); }, 300);
+        },
+      });
+    } else if (completedRunStats.averageAccuracy < 90 && completedRunStats.totalUserLines > 0) {
+      suggestions.push({
+        id: "improve",
+        label: "Improve your accuracy",
+        detail: `${Math.round(completedRunStats.averageAccuracy)}% — aim for 90%+`,
+        icon: Target,
+        priority: 7,
+        action: handleTryAgain,
+      });
+    }
+
+    const currentMode = session.memorizationMode || "off";
+    const modeProgression: MemorizationMode[] = ["off", "partial", "cue", "full"];
+    const modeLabels: Record<string, string> = { partial: "Partial Hide", cue: "Cue Only", full: "Full Memorization" };
+    const currentIdx = modeProgression.indexOf(currentMode);
+    if (currentIdx < modeProgression.length - 1 && completedRunStats.averageAccuracy >= 80) {
+      const nextMode = modeProgression[currentIdx + 1];
+      suggestions.push({
+        id: "next-mode",
+        label: `Try ${modeLabels[nextMode]}`,
+        detail: "Challenge yourself more",
+        icon: Sparkles,
+        priority: 6,
+        action: () => {
+          dismissAndReset();
+          setMemorizationMode(nextMode);
+          goToLine(0);
+          resetRunPerformance();
+          setTimeout(() => { speakingLineRef.current = null; setPlaying(true); }, 300);
+        },
+      });
+    }
 
     const otherRoles = session.roles.filter(r => r.id !== session.userRoleId);
     if (otherRoles.length > 0) {
@@ -1274,50 +1444,19 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         label: `Try as ${suggestedRole.name}`,
         detail: "See it from another perspective",
         icon: Users,
-        action: () => {
-          setShowCelebration(false);
-          setSceneCompleted(false);
-          setCompletedRunStats(null);
-          setUserRole(suggestedRole.id);
-          goToLine(0);
-          resetRunPerformance();
-        },
+        priority: 4,
+        action: () => { dismissAndReset(); setUserRole(suggestedRole.id); goToLine(0); resetRunPerformance(); },
       });
     }
 
-    const currentMode = session.memorizationMode || "off";
-    const modeProgression: MemorizationMode[] = ["off", "partial", "cue", "full"];
-    const modeLabels: Record<string, string> = { partial: "Partial Hide", cue: "Cue Only", full: "Full Memorization" };
-    const currentIdx = modeProgression.indexOf(currentMode);
-    if (currentIdx < modeProgression.length - 1) {
-      const nextMode = modeProgression[currentIdx + 1];
+    if (completedRunStats.averageAccuracy >= 95 && completedRunStats.totalUserLines > 0 && isLastScene) {
       suggestions.push({
-        id: "next-mode",
-        label: `Try ${modeLabels[nextMode]}`,
-        detail: "Challenge yourself more",
-        icon: Sparkles,
-        action: () => {
-          setShowCelebration(false);
-          setSceneCompleted(false);
-          setCompletedRunStats(null);
-          setMemorizationMode(nextMode);
-          goToLine(0);
-          resetRunPerformance();
-          setTimeout(() => {
-            speakingLineRef.current = null;
-            setPlaying(true);
-          }, 300);
-        },
-      });
-    }
-
-    if (completedRunStats.averageAccuracy < 90 && completedRunStats.totalUserLines > 0) {
-      suggestions.push({
-        id: "improve",
-        label: "Improve your accuracy",
-        detail: `${Math.round(completedRunStats.averageAccuracy)}% — aim for 90%+`,
-        icon: Target,
-        action: handleTryAgain,
+        id: "retention",
+        label: "Test your retention",
+        detail: "Come back tomorrow to see what stuck",
+        icon: Zap,
+        priority: 3,
+        action: () => { dismissAndReset(); handleBackToHome(); },
       });
     }
 
@@ -1326,15 +1465,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       label: "Try a new script",
       detail: "Start fresh with something new",
       icon: ArrowRight,
-      action: () => {
-        setShowCelebration(false);
-        setSceneCompleted(false);
-        setCompletedRunStats(null);
-        handleBackToHome();
-      },
+      priority: 1,
+      action: () => { dismissAndReset(); handleBackToHome(); },
     });
 
-    return suggestions.slice(0, 3);
+    return suggestions.sort((a, b) => b.priority - a.priority).slice(0, 3);
   };
 
   const screenRecordingFrameRef = useRef<number | null>(null);
@@ -1501,6 +1636,116 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         />
       </div>
 
+      {showReadyScreen && session && (() => {
+        const sceneCount = session.scenes.length;
+        const currentSceneLines = session.scenes[session.currentSceneIndex]?.lines || [];
+        const userLines = currentSceneLines.filter(l => l.roleId === session.userRoleId).length;
+        const modeLabel: Record<string, string> = { off: "Full Script", partial: "Partial Hide", cue: "Cue Only", full: "Memory" };
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md animate-fade-in" data-testid="ready-screen">
+            <div className="text-center max-w-xs mx-4 animate-scale-in">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                <Play className="h-7 w-7 text-primary ml-0.5" />
+              </div>
+              <h3 className="text-lg font-semibold mb-1">Ready to rehearse</h3>
+              <p className="text-sm text-muted-foreground mb-5">
+                Playing as <span className="font-medium text-foreground">{userRole?.name || "—"}</span>
+              </p>
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground mb-6">
+                {sceneCount > 1 && <span>Scene {session.currentSceneIndex + 1}/{sceneCount}</span>}
+                <span>{userLines} lines</span>
+                <span>{modeLabel[session.memorizationMode || "off"]}</span>
+              </div>
+
+              {resumePrompt && (
+                <div className="bg-muted/50 rounded-lg p-3 mb-4 text-left" data-testid="resume-prompt">
+                  <p className="text-sm font-medium mb-2">Pick up where you left off?</p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    {resumePrompt.sceneIndex > 0
+                      ? `Scene ${resumePrompt.sceneIndex + 1}, Line ${resumePrompt.lineIndex + 1}`
+                      : `Line ${resumePrompt.lineIndex + 1}`}
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      className="flex-1"
+                      onClick={() => {
+                        goToLine(resumePrompt.sceneIndex, resumePrompt.lineIndex);
+                        setResumePrompt(null);
+                        setReadyCountdown(0);
+                      }}
+                      data-testid="button-resume"
+                    >
+                      Resume
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => {
+                        setResumePrompt(null);
+                        if (scriptFingerprintRef.current) clearResumePosition(scriptFingerprintRef.current);
+                      }}
+                      data-testid="button-start-fresh"
+                    >
+                      Start Fresh
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {!resumePrompt && (
+                <>
+                  <div className="text-3xl font-bold text-primary tabular-nums mb-4">{readyCountdown}</div>
+                  <Button
+                    onClick={() => { setReadyCountdown(0); }}
+                    className="w-full"
+                    data-testid="button-start-now"
+                  >
+                    Start Now
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
+      {showTourTip > 0 && showTourTip <= 4 && (
+        <div className="fixed top-20 left-4 right-4 z-[55] flex justify-center animate-fade-in" data-testid="tour-tooltip">
+          <div className="bg-foreground text-background rounded-xl px-4 py-3 max-w-xs shadow-lg">
+            <div className="flex items-start gap-3">
+              <Info className="h-4 w-4 shrink-0 mt-0.5 opacity-70" />
+              <div>
+                <p className="text-sm font-medium">
+                  {showTourTip === 1 && "Your lines are highlighted"}
+                  {showTourTip === 2 && "Tap any line to jump there"}
+                  {showTourTip === 3 && "Say \"LINE\" for a hint"}
+                  {showTourTip === 4 && "Space to play/pause"}
+                </p>
+                <p className="text-xs opacity-70 mt-0.5">
+                  {showTourTip === 1 && "Lines with your character's name are yours to speak."}
+                  {showTourTip === 2 && "Click or tap any line in the script to jump directly to it."}
+                  {showTourTip === 3 && "If you forget a line, say \"LINE\" and the AI will give you a hint."}
+                  {showTourTip === 4 && "Use the spacebar or the play button to pause and resume."}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  if (showTourTip < 4) setShowTourTip(showTourTip + 1);
+                  else setShowTourTip(0);
+                }}
+                className="text-xs opacity-70 hover:opacity-100 shrink-0 mt-0.5"
+                data-testid="button-tour-next"
+              >
+                {showTourTip < 4 ? "Next" : "Done"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showCelebration && (() => {
         const feedback = getPerformanceFeedback();
         const isLastScene = session.scenes.length > 1 && session.currentSceneIndex === session.scenes.length - 1;
@@ -1600,7 +1845,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                   {completedRunStats.totalUserLines > 0 ? (
                     <>
                       <div className="text-center">
-                        <span className="text-xl font-bold text-foreground">{Math.round(completedRunStats.averageAccuracy)}%</span>
+                        <span className="text-xl font-bold text-foreground" data-testid="text-accuracy">{animatedAccuracy}%</span>
                         <p className="text-[11px] text-muted-foreground uppercase tracking-wide">accuracy</p>
                       </div>
                       <div className="w-px h-6 bg-border" />
@@ -1900,7 +2145,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       <main
         className={cn(
           "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
-          camera.isEnabled && "text-white",
+          camera.isEnabled && "text-white camera-text-shadow",
           camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
         )}
       >
@@ -2037,7 +2282,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       <footer className={cn(
         "sticky bottom-0 border-t safe-bottom z-40 transition-opacity duration-300",
         camera.isEnabled 
-          ? "bg-black/60 backdrop-blur-xl border-white/10" 
+          ? "bg-black/60 backdrop-blur-xl border-white/10 camera-text-shadow" 
           : "glass",
         camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
       )}>

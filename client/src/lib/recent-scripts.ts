@@ -9,6 +9,8 @@ export interface RecentScript {
   lineCount: number;
   lastRole?: string;
   lastUsed: string;
+  lastPosition?: number;
+  lastScene?: number;
 }
 
 function generateId(): string {
@@ -60,7 +62,7 @@ export function saveRecentScript(entry: Omit<RecentScript, "id" | "lastUsed">): 
   } catch {}
 }
 
-export function updateRecentScript(id: string, updates: Partial<Pick<RecentScript, "name" | "lastRole">>): void {
+export function updateRecentScript(id: string, updates: Partial<Pick<RecentScript, "name" | "lastRole" | "lastPosition" | "lastScene">>): void {
   try {
     const scripts = getRecentScripts();
     const index = scripts.findIndex((s) => s.id === id);
@@ -81,5 +83,49 @@ export function deleteRecentScript(id: string): void {
 export function clearRecentScripts(): void {
   try {
     localStorage.removeItem(STORAGE_KEY);
+  } catch {}
+}
+
+const RESUME_KEY = "costar-resume-positions";
+
+interface ResumeState {
+  lineIndex: number;
+  sceneIndex: number;
+  roleId?: string;
+  timestamp: number;
+}
+
+export function saveResumePosition(scriptFingerprint: string, state: ResumeState): void {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    const data: Record<string, ResumeState> = raw ? JSON.parse(raw) : {};
+    data[scriptFingerprint] = state;
+    const keys = Object.keys(data);
+    if (keys.length > 20) {
+      const sorted = keys.sort((a, b) => (data[a].timestamp ?? 0) - (data[b].timestamp ?? 0));
+      sorted.slice(0, keys.length - 20).forEach(k => delete data[k]);
+    }
+    localStorage.setItem(RESUME_KEY, JSON.stringify(data));
+  } catch {}
+}
+
+export function getResumePosition(scriptFingerprint: string): ResumeState | null {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    return data[scriptFingerprint] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearResumePosition(scriptFingerprint: string): void {
+  try {
+    const raw = localStorage.getItem(RESUME_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    delete data[scriptFingerprint];
+    localStorage.setItem(RESUME_KEY, JSON.stringify(data));
   } catch {}
 }

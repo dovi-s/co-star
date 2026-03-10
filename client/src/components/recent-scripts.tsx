@@ -1,17 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { ToastAction } from "@/components/ui/toast";
 import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save, User } from "lucide-react";
 import type { RecentScript } from "@/hooks/use-recent-scripts";
 import { useAuth } from "@/hooks/use-auth";
@@ -44,12 +35,55 @@ function timeAgo(dateStr: string): string {
 export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentScriptsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
-  const [deleteTarget, setDeleteTarget] = useState<RecentScript | null>(null);
   const [savingId, setSavingId] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
+  const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
+
+  const handleDelete = useCallback((script: RecentScript) => {
+    const scriptId = script.id;
+    setPendingDeleteIds(prev => new Set(prev).add(scriptId));
+
+    const timer = setTimeout(() => {
+      deleteTimersRef.current.delete(scriptId);
+      setPendingDeleteIds(prev => {
+        const next = new Set(prev);
+        next.delete(scriptId);
+        return next;
+      });
+      onDelete(scriptId);
+    }, 5000);
+
+    deleteTimersRef.current.set(scriptId, timer);
+
+    const { dismiss } = toast({
+      description: `"${script.name}" removed`,
+      action: (
+        <ToastAction
+          altText="Undo delete"
+          data-testid="button-undo-delete"
+          onClick={() => {
+            const existingTimer = deleteTimersRef.current.get(scriptId);
+            if (existingTimer) {
+              clearTimeout(existingTimer);
+              deleteTimersRef.current.delete(scriptId);
+            }
+            setPendingDeleteIds(prev => {
+              const next = new Set(prev);
+              next.delete(scriptId);
+              return next;
+            });
+            dismiss();
+          }}
+        >
+          Undo
+        </ToastAction>
+      ),
+    });
+  }, [onDelete, toast]);
 
   const handleSaveToLibrary = async (script: RecentScript) => {
     if (savingId || savedIds.has(script.id)) return;
@@ -77,7 +111,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
     }
   };
 
-  if (scripts.length === 0) return null;
+  if (scripts.length === 0 && pendingDeleteIds.size === 0) return null;
 
   const startEdit = (script: RecentScript) => {
     setEditingId(script.id);
@@ -96,12 +130,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
     setEditingId(null);
   };
 
-  const confirmDelete = () => {
-    if (deleteTarget) {
-      onDelete(deleteTarget.id);
-      setDeleteTarget(null);
-    }
-  };
+  const visibleScripts = scripts.filter(s => !pendingDeleteIds.has(s.id));
 
   return (
     <div data-testid="recent-scripts-section">
@@ -112,7 +141,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
       </div>
 
       <div className="space-y-2">
-        {scripts.map((script) => (
+        {visibleScripts.map((script) => (
           <div
             key={script.id}
             className="group glass-surface rounded-lg p-3 cursor-pointer"
@@ -236,7 +265,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                     variant="ghost"
                     size="icon"
                     className="text-muted-foreground"
-                    onClick={() => setDeleteTarget(script)}
+                    onClick={() => handleDelete(script)}
                     title="Delete"
                     aria-label="Delete script"
                     data-testid={`button-delete-script-${script.id}`}
@@ -250,22 +279,6 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
         ))}
       </div>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remove from recent</AlertDialogTitle>
-            <AlertDialogDescription>
-              Remove "{deleteTarget?.name}" from your recent scripts? This only removes the history entry.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} data-testid="button-confirm-delete">
-              Remove
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
