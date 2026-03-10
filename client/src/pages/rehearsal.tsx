@@ -38,9 +38,10 @@ interface RunPerformance {
 
 interface RehearsalPageProps {
   onBack: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function RehearsalPage({ onBack }: RehearsalPageProps) {
+export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const {
     session,
     getCurrentLine,
@@ -1493,6 +1494,7 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
           onJumpToLine={handleJumpToLine}
           cameraMode={camera.isEnabled}
           onToast={(msg) => toast({ description: msg })}
+          onNavigate={onNavigate}
           onSaveScript={isAuthenticated ? handleSaveScript : undefined}
           savingScript={savingScript}
           scriptSaved={scriptSaved}

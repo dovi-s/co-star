@@ -247,7 +247,7 @@ function AppContent() {
         />
       )}
       {view === "rehearsal" && (
-        <RehearsalPage key="rehearsal" onBack={handleBackToHome} />
+        <RehearsalPage key="rehearsal" onBack={handleBackToHome} onNavigate={handleNavigate} />
       )}
       {view === "multiplayer" && (
         <MultiplayerPage 

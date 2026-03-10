@@ -214,7 +214,7 @@ export function WhoIsItForPage({ onBack }: { onBack: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Go back"
+          aria-label="Go home"
           onClick={onBack}
           data-testid="button-back"
           className="shrink-0 -ml-1"
