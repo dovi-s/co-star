@@ -192,22 +192,6 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     }
   }, [showTourTip]);
 
-  useEffect(() => {
-    if (currentIsUserLine && session?.isPlaying && !lineHintShown && !tapMode) {
-      userPauseTimerRef.current = setTimeout(() => {
-        setLineHintShown(true);
-        try { localStorage.setItem("costar-line-hint-seen", "true"); } catch {}
-        toast({
-          title: "Stuck on a line?",
-          description: "Say \"LINE\" out loud to get a hint.",
-        });
-      }, 8000);
-      return () => {
-        if (userPauseTimerRef.current) clearTimeout(userPauseTimerRef.current);
-      };
-    }
-  }, [currentIsUserLine, session?.isPlaying, lineHintShown, tapMode, toast]);
-
   // Performance tracking - use ref to avoid closure issues
   const runPerformanceRef = useRef<RunPerformance>({
     linePerformances: [],
@@ -252,6 +236,22 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const globalLineNumber = getGlobalLineNumber(); // Current position in entire script
   const userRole = session?.userRoleId ? getRoleById(session.userRoleId) : null;
   const currentIsUserLine = isUserLine(currentLine);
+
+  useEffect(() => {
+    if (currentIsUserLine && session?.isPlaying && !lineHintShown && !tapMode) {
+      userPauseTimerRef.current = setTimeout(() => {
+        setLineHintShown(true);
+        try { localStorage.setItem("costar-line-hint-seen", "true"); } catch {}
+        toast({
+          title: "Stuck on a line?",
+          description: "Say \"LINE\" out loud to get a hint.",
+        });
+      }, 8000);
+      return () => {
+        if (userPauseTimerRef.current) clearTimeout(userPauseTimerRef.current);
+      };
+    }
+  }, [currentIsUserLine, session?.isPlaying, lineHintShown, tapMode, toast]);
 
   const handleTapModeChange = useCallback((enabled: boolean) => {
     setTapMode(enabled);
