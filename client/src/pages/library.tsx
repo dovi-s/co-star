@@ -90,7 +90,7 @@ export function LibraryPage({
       </header>
 
       <main className="flex-1 px-5 py-6">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-2xl mx-auto">
           {isLoading && (
             <div className="space-y-3" data-testid="skeleton-library">
               {Array.from({ length: 4 }).map((_, i) => (

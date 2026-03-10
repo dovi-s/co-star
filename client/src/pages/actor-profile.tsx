@@ -194,7 +194,7 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
         </Button>
       </header>
 
-      <main className="flex-1 px-4 py-6 max-w-lg mx-auto w-full">
+      <main className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
         <input
           ref={fileInputRef}
           type="file"

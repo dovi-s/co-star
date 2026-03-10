@@ -138,7 +138,7 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
   return (
     <div className="min-h-screen bg-background">
       <header className="glass-surface sticky top-0 z-40 border-b border-border/40 safe-top">
-        <div className="flex items-center justify-between px-4 h-14 max-w-lg mx-auto">
+        <div className="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
           <button
             onClick={onBack}
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -152,7 +152,7 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+      <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

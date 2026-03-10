@@ -417,7 +417,7 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="flex-1 px-4 py-5">
-        <div className="max-w-lg mx-auto space-y-4">
+        <div className="max-w-2xl mx-auto space-y-4">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSort("top")}

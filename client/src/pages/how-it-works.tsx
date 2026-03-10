@@ -130,7 +130,7 @@ export function HowItWorksPage({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="flex-1 px-4 py-8">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-2xl mx-auto">
           <div className="mb-8 animate-fade-in-up">
             <h2 className="text-xl font-semibold text-foreground mb-1">Your scene partner, on demand</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">

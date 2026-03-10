@@ -26,6 +26,11 @@ Key features include:
 - **Context Peek Feature**: Allows viewing stage directions and preceding actions.
 - **Global Script Navigation**: Progress indicator across the entire script with automatic scene advancement.
 
+### Stripe Integration Note
+- Stripe Sandbox connection is configured and working in development
+- Stripe production connection was not set up by the user — subscription buttons may be disabled in deployed/production environment until the production Stripe connector is authorized
+- If needed in the future, search for the Stripe connector and propose it to the user
+
 ## External Dependencies
 - **Web Speech API**: Text-to-Speech functionalities.
 - **ElevenLabs API**: Professional AI voices.

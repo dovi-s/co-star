@@ -82,7 +82,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
       </header>
 
       <main className="flex-1 px-5 py-6">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-2xl mx-auto">
           {isLoading && (
             <div data-testid="skeleton-history">
               <div className="grid grid-cols-3 gap-3 mb-6">

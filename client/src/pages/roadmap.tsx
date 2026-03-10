@@ -122,7 +122,7 @@ export function RoadmapPage({ onBack, onNavigate }: { onBack: () => void; onNavi
       </header>
 
       <main className="flex-1 px-5 py-8">
-        <div className="max-w-lg mx-auto">
+        <div className="max-w-2xl mx-auto">
           <div className="mb-8 animate-fade-in-up" data-testid="roadmap-progress">
             <div className="glass-surface rounded-lg p-4">
               <div className="flex items-baseline justify-between mb-2">
