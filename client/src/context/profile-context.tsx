@@ -36,6 +36,15 @@ function saveProfile(data: ProfileData) {
   }
 }
 
+function persistPhotoToServer(photoUrl: string | null) {
+  fetch("/api/auth/profile", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ profileImageUrl: photoUrl }),
+    credentials: "include",
+  }).catch(() => {});
+}
+
 export function compressPhoto(dataUrl: string): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -88,6 +97,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           saveProfile(next);
           return next;
         });
+        persistPhotoToServer(compressed);
       });
     } else {
       setProfile(prev => {
@@ -95,25 +105,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         saveProfile(next);
         return next;
       });
+      persistPhotoToServer(null);
     }
   }, []);
 
   const syncFromServer = useCallback((photoUrl: string | null, name?: string) => {
     setProfile(prev => {
-      const hasLocalPhoto = !!prev.photoUrl;
       const hasServerPhoto = !!photoUrl;
-      if (!hasLocalPhoto && hasServerPhoto) {
+      if (hasServerPhoto) {
         const next = { ...prev, photoUrl, ...(name ? { name } : {}) };
         saveProfile(next);
         return next;
       }
-      if (hasLocalPhoto && !hasServerPhoto) {
-        fetch("/api/auth/profile", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ profileImageUrl: prev.photoUrl }),
-          credentials: "include",
-        }).catch(() => {});
+      if (prev.photoUrl && !hasServerPhoto) {
+        persistPhotoToServer(prev.photoUrl);
       }
       if (name && !prev.name) {
         const next = { ...prev, name };
