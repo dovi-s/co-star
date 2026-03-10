@@ -2394,16 +2394,13 @@ MARY: You're kidding me.`;
 
       const { passwordHash, ...safeUser } = user;
 
-      const allScripts = [...(userSavedScripts.rows || []), ...(userRecentScripts.rows || [])]
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 20);
-
       res.json({
         user: safeUser,
         pageviews: userPageviews.rows,
         events: userEvents.rows,
         runs: userRuns.rows,
-        scripts: allScripts,
+        scripts: userSavedScripts.rows,
+        recentScripts: userRecentScripts.rows,
         errors: userErrors.rows,
       });
     } catch (error: any) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
@@ -951,10 +952,24 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
           </Card>
 
           <Card>
-            <SectionTitle>Saved Scripts</SectionTitle>
-            {data.scripts.length > 0 ? (
-              <div className="space-y-1.5">
+            <SectionTitle>Scripts</SectionTitle>
+            {data.scripts.length > 0 && (
+              <div className="space-y-1.5 mb-3">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Library (Pro)</p>
                 {data.scripts.map((s: any) => (
+                  <div key={s.id} className="flex items-center gap-2 text-sm">
+                    <BookOpen className="w-3.5 h-3.5 text-primary shrink-0" />
+                    <span className="flex-1 truncate text-xs">{s.name}</span>
+                    <span className="text-[10px] text-muted-foreground">{formatTimeAgo(s.created_at)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(data.recentScripts || []).length > 0 ? (
+              <div className="space-y-1.5">
+                {data.scripts.length > 0 && <Separator className="my-2" />}
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Recent</p>
+                {(data.recentScripts || []).map((s: any) => (
                   <div key={s.id} className="flex items-center gap-2 text-sm">
                     <BookOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                     <span className="flex-1 truncate text-xs">{s.name}</span>
@@ -962,7 +977,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
                   </div>
                 ))}
               </div>
-            ) : <EmptyState icon={BookOpen} message="No saved scripts" />}
+            ) : data.scripts.length === 0 ? <EmptyState icon={BookOpen} message="No scripts" /> : null}
           </Card>
         </div>
 
