@@ -1756,6 +1756,14 @@
   padding-top: max(0.75rem, env(safe-area-inset-top));
 }
 
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
 /* iOS PWA: use dynamic viewport height (mobile only) */
 @media (hover: none) and (pointer: coarse) {
   @supports (min-height: 100dvh) {

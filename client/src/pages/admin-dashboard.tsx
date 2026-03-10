@@ -148,7 +148,7 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass-surface sticky top-0 z-40 border-b border-border/40">
+      <header className="glass-surface sticky top-0 z-40 border-b border-border/40 safe-top">
         <div className="flex items-center justify-between px-4 h-14 max-w-6xl mx-auto">
           <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="button-admin-back">
             <ChevronLeft className="w-4 h-4" />
@@ -730,7 +730,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass-surface sticky top-0 z-40 border-b border-border/40">
+      <header className="glass-surface sticky top-0 z-40 border-b border-border/40 safe-top">
         <div className="flex items-center justify-between px-4 h-14 max-w-6xl mx-auto">
           <button onClick={onBack} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors" data-testid="button-user-back">
             <ArrowLeft className="w-4 h-4" /> Users

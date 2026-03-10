@@ -186,7 +186,7 @@ export function BrandPage({ onBack }: { onBack: () => void }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass-surface sticky top-0 z-40 border-b border-border/40">
+      <header className="glass-surface sticky top-0 z-40 border-b border-border/40 safe-top">
         <div className="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
           <button
             onClick={onBack}
