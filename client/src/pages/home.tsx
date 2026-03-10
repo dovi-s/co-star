@@ -268,7 +268,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
           }}
         />
-        <div className="px-5 pt-8 pb-4 relative z-10">
+        <div className="px-5 pt-10 pb-4 relative z-10">
           <div className="absolute -top-6 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             {isAuthenticated && user?.firstName
