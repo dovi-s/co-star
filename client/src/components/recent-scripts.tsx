@@ -41,7 +41,8 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
   const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set());
   const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isPro = user?.subscriptionTier === "pro";
   const { toast } = useToast();
 
   const handleDelete = useCallback((script: RecentScript) => {
@@ -250,7 +251,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                   onClick={(e) => e.stopPropagation()}
                   onKeyDown={(e) => e.stopPropagation()}
                 >
-                  {isAuthenticated && (
+                  {isAuthenticated && isPro && (
                     <Button
                       variant="ghost"
                       size="icon"
