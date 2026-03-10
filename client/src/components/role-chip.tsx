@@ -115,11 +115,13 @@ export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }:
                   }
                   setPreviewingPreset(preset);
                   ttsEngine.stop();
-                  ttsEngine.speak(presetSamples[preset], {
-                    voiceId: role.voiceId,
-                    voicePreset: preset,
-                    emotion: "neutral",
-                  }).finally(() => setPreviewingPreset(null));
+                  const ok = ttsEngine.speak(
+                    presetSamples[preset],
+                    { rate: 1, pitch: 0, volume: 1 },
+                    () => setPreviewingPreset(null),
+                    { preset, emotion: "neutral" }
+                  );
+                  if (!ok) setPreviewingPreset(null);
                 }}
                 className="p-1 rounded-full hover:bg-muted/80 transition-colors shrink-0"
                 data-testid={`button-preview-${preset}`}
