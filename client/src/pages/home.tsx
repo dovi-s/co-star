@@ -13,6 +13,7 @@ import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy, ClipboardPaste, U
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
+import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { cn } from "@/lib/utils";
 
 type Step = "import" | "role-select";
@@ -56,6 +57,24 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   const { scripts: recentScripts, refresh: refreshRecent, save: saveRecentScript, update: recentUpdate, remove: recentRemove } = useRecentScripts();
   const [menuOpen, setMenuOpen] = useState(false);
   const [nudgeDismissed, setNudgeDismissed] = useState(false);
+  const [liveUsage, setLiveUsage] = useState<{ used: number; limit: number | null; resetsAt: string | null; isPro: boolean; limitReached: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) { setLiveUsage(null); return; }
+    let cancelled = false;
+    const fetchUsage = async () => {
+      try {
+        const dfp = await getDeviceFingerprint();
+        const res = await fetch(`/api/script-usage?deviceFingerprint=${encodeURIComponent(dfp)}`, { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setLiveUsage(data);
+      } catch {}
+    };
+    fetchUsage();
+    const interval = setInterval(fetchUsage, 60000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (session && session.scenes?.length > 0 && !session.userRoleId && !userWentBackRef.current) {
@@ -200,12 +219,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             </div>
           )}
           {isAuthenticated && user && (() => {
-            const isPro = user.subscriptionTier === "pro";
-            const limit = 3 + (user.scriptUsageLimitBonus ?? 0);
-            const used = user.scriptUsageCount ?? 0;
+            const isPro = liveUsage ? liveUsage.isPro : user.subscriptionTier === "pro";
+            const limit = liveUsage?.limit ?? (3 + (user.scriptUsageLimitBonus ?? 0));
+            const used = liveUsage?.used ?? (user.scriptUsageCount ?? 0);
             const remaining = Math.max(0, limit - used);
-            const maxed = remaining === 0;
-            const resetAt = user.scriptUsageResetAt ? new Date(user.scriptUsageResetAt) : null;
+            const maxed = liveUsage ? liveUsage.limitReached : remaining === 0;
+            const resetAt = liveUsage?.resetsAt ? new Date(liveUsage.resetsAt) : (user.scriptUsageResetAt ? new Date(user.scriptUsageResetAt) : null);
             const resetLabel = maxed && resetAt ? (() => {
               const now = new Date();
               const diffMs = resetAt.getTime() - now.getTime();

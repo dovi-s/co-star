@@ -125,6 +125,41 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const [runLimitReached, setRunLimitReached] = useState(false);
   const [runLimitResetsAt, setRunLimitResetsAt] = useState<string | null>(null);
   const [checkingRunLimit, setCheckingRunLimit] = useState(false);
+
+  useEffect(() => {
+    if (!runLimitReached) return;
+    const recheckUsage = async () => {
+      try {
+        const dfp = await getDeviceFingerprint();
+        const res = await fetch(`/api/script-usage?deviceFingerprint=${encodeURIComponent(dfp)}`, { credentials: "include" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.limitReached) {
+          setRunLimitReached(false);
+          setRunLimitResetsAt(null);
+        }
+      } catch {}
+    };
+    if (runLimitResetsAt) {
+      const resetTime = new Date(runLimitResetsAt).getTime();
+      if (Number.isNaN(resetTime)) {
+        setRunLimitReached(false);
+        setRunLimitResetsAt(null);
+        return;
+      }
+      const now = Date.now();
+      const delay = resetTime - now;
+      if (delay <= 0) {
+        recheckUsage();
+        return;
+      }
+      const timer = setTimeout(recheckUsage, Math.min(delay, 2147483647));
+      const poll = setInterval(recheckUsage, 60000);
+      return () => { clearTimeout(timer); clearInterval(poll); };
+    }
+    const poll = setInterval(recheckUsage, 60000);
+    return () => clearInterval(poll);
+  }, [runLimitReached, runLimitResetsAt]);
   const [handsFreeMode, setHandsFreeMode] = useState(false);
   const handsFreeModeRef = useRef(false);
   const wakeLockRef = useRef<any>(null);
