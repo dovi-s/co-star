@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { trackClick, trackNavigation } from "@/hooks/use-analytics";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -127,6 +127,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<Element | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [salesOpen, setSalesOpen] = useState(false);
@@ -148,31 +149,32 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  useLayoutEffect(() => {
-    const el = drawerRef.current;
+  useEffect(() => {
     if (open) {
       triggerRef.current = document.activeElement;
-      document.body.style.overflow = "hidden";
-      if (el) {
-        el.removeAttribute("inert");
-        el.style.pointerEvents = "";
-      }
       requestAnimationFrame(() => {
-        const closeBtn = el?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
+        const closeBtn = drawerRef.current?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
         closeBtn?.focus();
       });
     } else {
-      document.body.style.overflow = "";
-      if (el) {
-        el.setAttribute("inert", "");
-        el.style.pointerEvents = "none";
-      }
       if (triggerRef.current instanceof HTMLElement) {
         triggerRef.current.focus();
         triggerRef.current = null;
       }
     }
-    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+    const prevent = (e: Event) => e.preventDefault();
+    overlay.addEventListener("wheel", prevent, { passive: false });
+    overlay.addEventListener("touchmove", prevent, { passive: false });
+    return () => {
+      overlay.removeEventListener("wheel", prevent);
+      overlay.removeEventListener("touchmove", prevent);
+    };
   }, [open]);
 
   useEffect(() => {
@@ -202,13 +204,12 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   const drawer = (
     <>
       <div
+        ref={overlayRef}
         className={cn(
-          "fixed inset-0 z-50 bg-black/60 transition-opacity duration-150",
+          "fixed inset-0 z-50 bg-black/60 transition-opacity duration-150 overscroll-contain",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
-        style={open ? { pointerEvents: "auto" } : undefined}
         onClick={() => onOpenChange(false)}
-        onTouchEnd={(e) => { e.preventDefault(); onOpenChange(false); }}
         aria-hidden="true"
       />
       <div
@@ -223,7 +224,6 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           "transition-transform duration-150 ease-out will-change-transform",
           open ? "translate-x-0" : "translate-x-full pointer-events-none"
         )}
-        style={open ? { pointerEvents: "auto" } : undefined}
       >
         <div className="px-5 pt-5 pb-3 text-left">
           <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           data-testid="input-profile-photo"
         />
 
-        <div className="flex-1 overflow-y-auto px-2 pb-4">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pb-4">
           {!isSignedIn ? (
             <div className="mx-3 mb-2 p-4 rounded-md glass-surface">
               <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
