@@ -83,7 +83,7 @@ export function PracticeToolbar({
           onClick={() => setExpanded(true)}
           className={cn(
             "gap-1.5 text-[11px] px-2.5 min-h-[44px]",
-            cameraEnabled ? "text-white/50" : "text-muted-foreground/60"
+            cameraEnabled ? "text-white/60" : "text-muted-foreground/70"
           )}
           title="Practice tools"
           data-testid="button-expand-toolbar"
@@ -196,7 +196,7 @@ export function PracticeToolbar({
             onClick={() => setExpanded(false)}
             className={cn(
               "min-h-[44px] min-w-[44px]",
-              cameraEnabled ? "text-white/40" : "text-muted-foreground/50"
+              cameraEnabled ? "text-white/60" : "text-muted-foreground/70"
             )}
             title="Collapse toolbar"
             data-testid="button-collapse-toolbar"

@@ -224,7 +224,7 @@ export function ReaderMenu({
               placeholder="Search lines..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-9 pr-9 rounded-lg bg-muted/50 border-0 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              className="w-full h-10 pl-9 pr-9 rounded-lg bg-muted/50 border-0 text-sm placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               data-testid="input-search-lines"
             />
             {searchQuery && (

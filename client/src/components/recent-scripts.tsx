@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ToastAction } from "@/components/ui/toast";
 import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save, User } from "lucide-react";
+import { Mascot } from "@/components/mascot";
 import type { RecentScript } from "@/hooks/use-recent-scripts";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -120,12 +121,10 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
           </h2>
         </div>
         <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up glass-surface rounded-lg">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <h3 className="text-sm font-semibold text-foreground mb-1">Your stage is set</h3>
+          <Mascot mood="waving" size="sm" className="mb-3" />
+          <h3 className="text-sm font-semibold text-foreground mb-1">Ready when you are</h3>
           <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed">
-            Paste or import a script above to start rehearsing. Your recent scripts will appear here.
+            Paste a script above to get started. Your recent scripts will appear here.
           </p>
         </div>
       </div>

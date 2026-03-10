@@ -243,7 +243,7 @@ function StatCard({ icon: Icon, label, value, sub, color = "primary", testId }: 
     amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
     blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     red: "bg-red-500/10 text-red-600 dark:text-red-400",
-    purple: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
+    purple: "bg-primary/10 text-primary",
   };
   return (
     <div className="rounded-xl border border-border/40 p-4 space-y-2" data-testid={testId}>
@@ -1531,7 +1531,7 @@ function FeedbackTab() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-2">
                   <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                    msg.type === "bug" ? "bg-red-500/10 text-red-600" : msg.type === "feature" ? "bg-purple-500/10 text-purple-600" : "bg-blue-500/10 text-blue-600"
+                    msg.type === "bug" ? "bg-red-500/10 text-red-600" : msg.type === "feature" ? "bg-primary/10 text-primary" : "bg-blue-500/10 text-blue-600"
                   )}>{msg.type}</span>
                   <span className="text-xs font-medium">{msg.user_name || msg.user_email || "Anonymous"}</span>
                   <span className="text-[10px] text-muted-foreground">{formatTimeAgo(msg.created_at)}</span>

@@ -395,7 +395,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               Choose your plan
             </h1>
             <p className="text-sm text-muted-foreground mt-1 mb-6">
-              You can upgrade anytime from settings.
+              Start free and upgrade whenever you need more rehearsal time.
             </p>
 
             <div className="flex-1 space-y-3">
@@ -499,10 +499,10 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   ) : (
                     <Crown className="h-4 w-4 mr-2" />
                   )}
-                  Subscribe to Pro
+                  Start your guest pass
                 </Button>
                 <p className="text-[11px] text-muted-foreground mt-2 text-center">
-                  Cancel anytime from settings.
+                  No charge until your trial ends. Cancel anytime.
                 </p>
               </div>
             </div>

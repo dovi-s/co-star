@@ -687,7 +687,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
             onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
             onBlur={() => { if (script.trim() && previewData.roles > 0) setIsEditingScript(false); }}
-            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
+            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/70 font-mono tracking-[0.01em]"
             data-testid="textarea-script"
           />
         )}

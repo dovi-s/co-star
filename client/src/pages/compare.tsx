@@ -451,7 +451,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
               Pricing
             </h2>
             <p className="text-sm text-muted-foreground mb-6 animate-fade-in-up" style={{ animationDelay: "250ms" }}>
-              Start free. Upgrade when you need more.
+              Start with a 7-day guest pass. Keep what works for you.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -486,10 +486,13 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                     Best value
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  <span className="text-foreground font-semibold">$9/mo</span> or <span className="text-foreground font-semibold">$79/year</span>
-                  <span className="text-green-600 ml-1">(save 27%)</span>
+                <p className="text-xs text-muted-foreground mb-1">
+                  <span className="text-foreground font-semibold text-lg">$9</span><span className="text-muted-foreground">/mo</span>
+                  <span className="mx-1.5 text-muted-foreground">or</span>
+                  <span className="text-foreground font-semibold text-lg">$79</span><span className="text-muted-foreground">/yr</span>
+                  <span className="text-green-600 ml-1 text-[11px]">(save 27%)</span>
                 </p>
+                <p className="text-[11px] text-primary font-medium mb-4">Try free for 7 days</p>
                 <div className="space-y-2">
                   {proTierFeatures.map((f) => (
                     <div key={f} className="flex items-center gap-2" data-testid={`text-pro-feature-${f.toLowerCase().replace(/\s+/g, "-").slice(0, 30)}`}>

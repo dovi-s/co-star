@@ -323,6 +323,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             disabled={!isSignedIn}
             active={activePage === "library"}
             testId="menu-item-library"
+            badge={isSignedIn && user?.subscriptionTier !== "pro" ? "Pro" : undefined}
           />
           <MenuItem
             icon={<BarChart3 className="h-4 w-4" />}
@@ -332,6 +333,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             disabled={!isSignedIn}
             active={activePage === "history"}
             testId="menu-item-history"
+            badge={isSignedIn && user?.subscriptionTier !== "pro" ? "Pro" : undefined}
           />
 
           {isSignedIn && (

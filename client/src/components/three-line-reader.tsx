@@ -330,7 +330,7 @@ export function ThreeLineReader({
                 size="sm"
                 onClick={(e) => { e.stopPropagation(); onPlayFromHere(line); }}
                 className={cn(
-                  "mt-1.5 gap-1 text-[10px] px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity",
+                  "mt-1.5 gap-1 text-[10px] px-2 sm:invisible sm:group-hover:visible transition-opacity",
                   cameraMode ? "text-white/70" : "text-muted-foreground"
                 )}
                 data-testid={`button-play-from-${type}`}
@@ -347,7 +347,7 @@ export function ThreeLineReader({
                 onClick={(e) => { e.stopPropagation(); setShowHint(!showHint); }}
                 className={cn(
                   "mt-2 h-7 gap-1.5",
-                  isUser && "text-background/80 hover:text-background hover:bg-background/10"
+                  isUser && "text-background/80"
                 )}
                 data-testid="button-show-hint"
               >
@@ -494,7 +494,7 @@ export function ThreeLineReader({
               aria-label={line.isBookmarked ? "Remove bookmark" : "Add bookmark"}
               className={cn(
                 "flex-shrink-0",
-                isUser && "text-background/70 hover:text-background hover:bg-background/10"
+                isUser && "text-background/70"
               )}
               onClick={(e) => { e.stopPropagation(); onToggleBookmark(line.id); }}
               data-testid="button-bookmark"

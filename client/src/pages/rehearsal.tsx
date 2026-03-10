@@ -27,6 +27,7 @@ import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator"
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { saveResumePosition, getResumePosition, clearResumePosition } from "@/lib/recent-scripts";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import { Mascot } from "@/components/mascot";
 
 // Performance tracking for the current run
 interface LinePerformance {
@@ -1796,9 +1797,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md animate-fade-in" data-testid="ready-screen">
             <div className="text-center max-w-xs mx-4 animate-scale-in">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Play className="h-7 w-7 text-primary ml-0.5" />
-              </div>
+              <Mascot mood="excited" size="sm" className="mx-auto mb-3" />
               <h3 className="text-lg font-semibold mb-1">Ready to rehearse</h3>
               <p className="text-sm text-muted-foreground mb-5">
                 Playing as <span className="font-medium text-foreground">{userRole?.name || "—"}</span>
@@ -1955,22 +1954,16 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 "transition-all duration-500",
                 celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
               )}>
-                <div className={cn(
-                  "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 celebrate",
-                  isScriptComplete && feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
-                  isScriptComplete ? "bg-primary text-primary-foreground" :
-                  feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
-                  feedback?.type === "great" ? "bg-green-500 text-white" :
-                  "bg-foreground text-background"
-                )}>
-                  {isScriptComplete ? (
-                    <Trophy className="h-7 w-7" />
-                  ) : feedback?.type === "perfect" ? (
-                    <Star className="h-7 w-7 fill-current" />
-                  ) : (
-                    <Check className="h-7 w-7" />
-                  )}
-                </div>
+                <Mascot
+                  mood={
+                    feedback?.type === "perfect" ? "celebrating" :
+                    feedback?.type === "great" ? "cheering" :
+                    feedback?.type === "good" ? "encouraging" :
+                    "proud"
+                  }
+                  size="sm"
+                  className="mx-auto mb-2 celebrate"
+                />
                 
                 <h3 className="text-xl font-bold leading-tight mb-0.5">
                   {isScriptComplete ? "Script Complete" : "Scene Complete"}
@@ -2085,7 +2078,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 </div>
               )}
               
-              {completedRunStats && completedRunStats.averageAccuracy > 85 && completedRunStats.totalUserLines > 0 && (
+              {completedRunStats && completedRunStats.totalUserLines > 0 && (
                 <div className={cn(
                   "mb-3 transition-all duration-700 delay-250",
                   celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
@@ -2094,10 +2087,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                     variant="outline"
                     className="w-full"
                     onClick={async () => {
-                      const shareText = `I just scored ${Math.round(completedRunStats.averageAccuracy)}% accuracy rehearsing "${session.name}" on Co-star! ${completedRunStats.perfectLines}/${completedRunStats.totalUserLines} lines perfect.`;
+                      const accuracy = Math.round(completedRunStats.averageAccuracy);
+                      const shareText = `I just rehearsed "${session.name}" as ${userRole?.name || "my role"} and hit ${accuracy}% accuracy on Co-star Studio 🎭 ${completedRunStats.perfectLines}/${completedRunStats.totalUserLines} lines perfect.`;
                       if (navigator.share) {
                         try {
-                          await navigator.share({ title: "My Co-star Score", text: shareText });
+                          await navigator.share({ title: "My Co-star Score", text: shareText, url: window.location.origin });
                         } catch {}
                       } else {
                         try {
@@ -2116,21 +2110,27 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 </div>
               )}
 
-              {completedRunStats && completedRunStats.averageAccuracy >= 90 && completedRunStats.totalUserLines > 0 && (!user || user.subscriptionTier === "free") && (
-                <div className={cn(
-                  "mb-3 rounded-lg border border-primary/15 bg-primary/[0.04] px-4 py-3 text-left transition-all duration-700 delay-300",
-                  celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
-                )} data-testid="pro-tip-card">
+              {completedRunStats && completedRunStats.totalUserLines > 0 && (!user || user.subscriptionTier === "free") && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onNavigate?.("subscription"); }}
+                  className={cn(
+                    "mb-3 w-full rounded-lg border border-primary/15 bg-primary/[0.04] px-4 py-3 text-left transition-all duration-700 delay-300",
+                    celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                  )}
+                  data-testid="pro-tip-card"
+                >
                   <div className="flex items-start gap-2.5">
                     <Crown className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-xs font-medium text-foreground">Pro tip</p>
+                      <p className="text-xs font-medium text-foreground">Unlock unlimited rehearsals</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                        Pro members can save recordings and track progress over time to see how they improve.
+                        {completedRunStats.averageAccuracy >= 85
+                          ? "You're on a roll. Pro gives you unlimited takes, performance history, and saved recordings."
+                          : "Pro gives you unlimited rehearsals, performance tracking, and saved recordings."}
                       </p>
                     </div>
                   </div>
-                </div>
+                </button>
               )}
 
               {camera.hasRecording && (
@@ -2407,7 +2407,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                       ? "bg-primary/20 ring-2 ring-primary/50 pulse-ring"
                       : "bg-white/10"
                     : isSpeaking
-                      ? "bg-white/10"
+                      ? "bg-white/10 ring-2 ring-white/20 animate-pulse"
                       : aiState === "thinking"
                         ? "bg-white/5 ring-1 ring-white/20"
                         : "bg-white/5"
@@ -2556,11 +2556,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
               )}>
                 <Loader2 className={cn(
                   "h-3 w-3 animate-spin",
-                  camera.isEnabled ? "text-white/40" : "text-muted-foreground/50"
+                  camera.isEnabled ? "text-white/60" : "text-muted-foreground/70"
                 )} />
                 <span className={cn(
                   "text-[10px]",
-                  camera.isEnabled ? "text-white/35" : "text-muted-foreground/50"
+                  camera.isEnabled ? "text-white/55" : "text-muted-foreground/70"
                 )}>
                   Preparing...
                 </span>
@@ -2603,7 +2603,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                     )}
                   </div>
                   {userTranscript && (
-                    <p className="mt-2 text-xs text-muted-foreground/60 max-w-xs text-center transition-opacity duration-300">
+                    <p className="mt-2 text-xs text-muted-foreground/75 max-w-xs text-center transition-opacity duration-300">
                       {userTranscript}
                     </p>
                   )}
@@ -2619,7 +2619,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         <div className="fixed bottom-24 left-0 right-0 z-30 flex justify-center px-4 animate-fade-in">
           <button
             onClick={handleTryAgain}
-            className="flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-transform"
+            className="flex items-center gap-2 px-5 py-2.5 bg-foreground text-background rounded-full shadow-lg hover-elevate active:scale-[0.98] transition-transform"
             data-testid="button-sticky-run-again"
           >
             <RefreshCcw className="h-4 w-4" />

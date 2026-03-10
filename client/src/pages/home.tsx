@@ -9,7 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy } from "lucide-react";
+import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy, ClipboardPaste, UserCheck, Mic } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -296,6 +296,22 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
               ? "Paste a script, upload a file, or pick up where you left off."
               : "Unlimited takes, always available, zero judgment."}
           </p>
+          {!isAuthenticated && (
+            <div className="flex items-center gap-5 mt-4 hero-enter-delay-2" data-testid="value-prop-steps">
+              <div className="flex items-center gap-1.5">
+                <ClipboardPaste className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">Paste script</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <UserCheck className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">Pick role</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Mic className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs text-muted-foreground">Rehearse</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {(() => {
@@ -356,7 +372,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
 
       <footer className="content-inset py-4 pb-6 border-t border-border/40 safe-bottom">
         <p className="text-[11px] text-muted-foreground text-center">
-          {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
+          {isAuthenticated ? "Your data can be saved to the cloud." : "For actors who want to rehearse anytime, anywhere."}
         </p>
       </footer>
 

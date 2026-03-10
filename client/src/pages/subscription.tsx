@@ -20,6 +20,9 @@ import {
   GraduationCap,
   Building2,
   Mail,
+  Gift,
+  Calendar,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -168,12 +171,12 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
           <>
             <div className="text-center space-y-2">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                <Crown className="w-3.5 h-3.5" />
-                Co-star Pro
+                <Gift className="w-3.5 h-3.5" />
+                7-day guest pass
               </div>
-              <h2 className="text-xl font-semibold">Upgrade your rehearsals</h2>
+              <h2 className="text-xl font-semibold" data-testid="text-subscription-headline">Unlock unlimited rehearsals — on us for a week</h2>
               <p className="text-sm text-muted-foreground">
-                Professional tools for serious performers
+                Try every Pro feature free. Cancel anytime, no questions asked.
               </p>
             </div>
 
@@ -184,17 +187,17 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
             />
 
             <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5 space-y-5">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-bold" data-testid="text-price">
-                  ${billingPeriod === "month" ? monthlyAmount : yearlyAmount}
-                </span>
-                <span className="text-sm text-muted-foreground">
-                  /{billingPeriod === "month" ? "mo" : "yr"}
-                </span>
-                {billingPeriod === "year" && (
-                  <span className="ml-2 text-xs text-primary font-medium">
-                    ${yearlyMonthly}/mo effective
+              <div className="text-center">
+                <div className="flex items-baseline justify-center gap-1">
+                  <span className="text-4xl font-bold" data-testid="text-price">
+                    ${billingPeriod === "month" ? monthlyAmount : yearlyMonthly}
                   </span>
+                  <span className="text-sm text-muted-foreground">/mo</span>
+                </div>
+                {billingPeriod === "year" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Billed as ${yearlyAmount}/year
+                  </p>
                 )}
               </div>
 
@@ -227,9 +230,14 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
                 {checkoutMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin mr-2" />
                 ) : null}
-                {isAuthenticated ? "Subscribe to Pro" : "Sign in to subscribe"}
+                {isAuthenticated ? "Start your guest pass" : "Sign in to get your guest pass"}
               </Button>
+              <p className="text-[11px] text-muted-foreground text-center">
+                No charge until your trial ends. Cancel anytime.
+              </p>
             </div>
+
+            <TrialItinerary />
 
             <div className="rounded-xl border border-border/40 p-5 space-y-4">
               <div className="flex items-baseline justify-between">
@@ -321,6 +329,42 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
           </div>
         </div>
       </main>
+    </div>
+  );
+}
+
+const trialSteps = [
+  { day: "Day 1", label: "Unlimited rehearsals unlocked", icon: Sparkles },
+  { day: "Day 3", label: "Full performance history", icon: BarChart3 },
+  { day: "Day 5", label: "All voice presets & hands-free mode", icon: Headphones },
+  { day: "Day 7", label: "You decide — keep Pro or go back to free", icon: Shield },
+];
+
+function TrialItinerary() {
+  return (
+    <div className="rounded-xl border border-border/40 p-5 space-y-4" data-testid="card-trial-itinerary">
+      <div className="flex items-center gap-2">
+        <Calendar className="w-4 h-4 text-primary" />
+        <h3 className="text-sm font-semibold">Your guest pass, day by day</h3>
+      </div>
+      <div className="relative space-y-0">
+        {trialSteps.map(({ day, label, icon: Icon }, i) => (
+          <div key={day} className="flex items-start gap-3 relative" data-testid={`trial-step-${i}`}>
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 z-10 relative">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              {i < trialSteps.length - 1 && (
+                <div className="w-px h-6 bg-border/60" />
+              )}
+            </div>
+            <div className="pt-1.5 pb-4">
+              <span className="text-[11px] font-semibold text-primary">{day}</span>
+              <p className="text-sm text-muted-foreground">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

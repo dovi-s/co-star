@@ -305,7 +305,7 @@ function ColorsSection() {
                     }}
                     title={`Light: ${color.light}`}
                   >
-                    <Sun className="w-3 h-3 text-white mix-blend-difference opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Sun className="w-3 h-3 text-white mix-blend-difference invisible group-hover:visible transition-opacity" />
                   </div>
                   <div
                     className="w-10 h-10 rounded-lg border border-border/40 flex items-center justify-center relative group cursor-pointer"
@@ -315,7 +315,7 @@ function ColorsSection() {
                     }}
                     title={`Dark: ${color.dark}`}
                   >
-                    <Moon className="w-3 h-3 text-white mix-blend-difference opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <Moon className="w-3 h-3 text-white mix-blend-difference invisible group-hover:visible transition-opacity" />
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">

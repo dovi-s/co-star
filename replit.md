@@ -48,6 +48,15 @@ Key features include:
 - Stripe production connection was not set up by the user — subscription buttons may be disabled in deployed/production environment until the production Stripe connector is authorized
 - If needed in the future, search for the Stripe connector and propose it to the user
 
+### Design & Growth System
+- **Mascot ("Cue")**: SVG character component (`client/src/components/mascot.tsx`) with 8 moods: idle, excited, encouraging, celebrating, thinking, waving, proud, cheering. Integrated into empty states, rehearsal ready screen, and completion modal.
+- **Pro Visibility**: Free-tier users see "Pro" badges on locked menu items (Saved Scripts, Performance History). Completion screen shows clickable "Unlock unlimited rehearsals" card for all free users.
+- **Guest Pass Framing**: Subscription page uses "guest pass" language (not "free trial") with a day-by-day trial itinerary. Consistent across subscription, compare, and onboarding pages.
+- **Share-After-Rehearsal**: Share button appears for all completed performances (not gated by accuracy). Includes role name, accuracy, and app link.
+- **Contrast Standards**: All `text-muted-foreground` usages maintain minimum `/70` opacity. Camera-mode white text uses minimum `/55`.
+- **Hover Pattern**: Pop-not-fade — hover states always brighten/elevate, never dim. Uses `hover-elevate` utility and `invisible`/`visible` for reveal-on-hover.
+- **Home Page "What Is This?"**: Logged-out users see 3-step value prop (Paste script → Pick role → Rehearse) with icons below the hero.
+
 ## External Dependencies
 - **Web Speech API**: Text-to-Speech functionalities.
 - **ElevenLabs API**: Professional AI voices.
