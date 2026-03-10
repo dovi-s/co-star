@@ -1016,8 +1016,6 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         clearWordTimer();
         
         if (isPlayingRef.current && speakingLineRef.current === lineKey) {
-          incrementLinesRehearsed();
-          
           const next = getNextLine();
           const nextIsUser = next ? isUserLine(next) : false;
           const nextEmotion = next ? (next.emotionHint || detectEmotion(next.text, next.direction)) : undefined;
@@ -1077,7 +1075,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         },
       });
     }, speakDelay);
-  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, incrementLinesRehearsed, startListeningForUser, completeRun, prefetchNextAILine]);
+  }, [getCurrentLine, getNextLine, getRoleById, isUserLine, nextLine, setPlaying, session, startListeningForUser, completeRun, prefetchNextAILine]);
 
   useEffect(() => { speakLineRef.current = speakLine; }, [speakLine]);
   useEffect(() => { startListeningForUserRef.current = startListeningForUser; }, [startListeningForUser]);
