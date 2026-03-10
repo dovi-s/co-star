@@ -120,6 +120,9 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const scriptFingerprintRef = useRef("");
   const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [runLimitReached, setRunLimitReached] = useState(false);
+  const [runLimitResetsAt, setRunLimitResetsAt] = useState<string | null>(null);
+  const [checkingRunLimit, setCheckingRunLimit] = useState(false);
   const [handsFreeMode, setHandsFreeMode] = useState(false);
   const handsFreeModeRef = useRef(false);
   const wakeLockRef = useRef<any>(null);
@@ -670,7 +673,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
     if (handsFreeModeRef.current) {
       setSceneCompleted(true);
-      setTimeout(() => {
+      setTimeout(async () => {
+        if (!(await checkRunUsageAllowed())) {
+          setShowCelebration(true);
+          setHandsFreeMode(false);
+          return;
+        }
         setSceneCompleted(false);
         setCompletedRunStats(null);
         goToLine(0);
@@ -1358,15 +1366,40 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     setHandsFreeMode(false);
   };
 
-  const handleTryAgain = () => {
+  const checkRunUsageAllowed = async (): Promise<boolean> => {
+    const isPro = user?.subscriptionTier === "pro";
+    if (!isAuthenticated || isPro) return true;
+    setCheckingRunLimit(true);
+    try {
+      const res = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
+      if (!res.ok) {
+        setCheckingRunLimit(false);
+        return false;
+      }
+      const data = await res.json();
+      if (!data.allowed) {
+        setRunLimitReached(true);
+        setRunLimitResetsAt(data.resetsAt);
+        setCheckingRunLimit(false);
+        return false;
+      }
+    } catch {
+      setCheckingRunLimit(false);
+      return false;
+    }
+    setCheckingRunLimit(false);
+    return true;
+  };
+
+  const handleTryAgain = async () => {
+    if (!(await checkRunUsageAllowed())) return;
+    setRunLimitReached(false);
     setShowCelebration(false);
     setSceneCompleted(false);
     setCompletedRunStats(null);
     setPreviousRunAccuracy(null);
     goToLine(0);
-    // Reset performance tracking
     resetRunPerformance();
-    // Start playing
     setTimeout(() => {
       speakingLineRef.current = null;
       setPlaying(true);
@@ -1475,7 +1508,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         detail: `${session.scenes.length - nextSceneIndex} scenes remaining`,
         icon: ArrowRight,
         priority: 10,
-        action: () => {
+        action: async () => {
+          if (!(await checkRunUsageAllowed())) return;
           dismissAndReset();
           goToScene(nextSceneIndex);
           resetRunPerformance();
@@ -1491,7 +1525,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         detail: `${Math.round(completedRunStats.averageAccuracy)}% — try at 0.8x speed`,
         icon: Clock,
         priority: 9,
-        action: () => {
+        action: async () => {
+          if (!(await checkRunUsageAllowed())) return;
           dismissAndReset();
           updateSession({ playbackSpeed: 0.8 });
           goToLine(0);
@@ -1522,7 +1557,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         detail: "Challenge yourself more",
         icon: Sparkles,
         priority: 6,
-        action: () => {
+        action: async () => {
+          if (!(await checkRunUsageAllowed())) return;
           dismissAndReset();
           setMemorizationMode(nextMode);
           goToLine(0);
@@ -1541,7 +1577,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         detail: "See it from another perspective",
         icon: Users,
         priority: 4,
-        action: () => { dismissAndReset(); setUserRole(suggestedRole.id); goToLine(0); resetRunPerformance(); },
+        action: async () => { if (!(await checkRunUsageAllowed())) return; dismissAndReset(); setUserRole(suggestedRole.id); goToLine(0); resetRunPerformance(); },
       });
     }
 
@@ -2184,14 +2220,40 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 );
               })()}
 
-              <Button
-                className="w-full"
-                onClick={handleTryAgain}
-                data-testid="button-try-again"
-              >
-                <RefreshCcw className="h-4 w-4 mr-2" />
-                Run Again
-              </Button>
+              {runLimitReached ? (
+                <div className="space-y-2" data-testid="run-limit-reached">
+                  <div className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3 text-center">
+                    <p className="text-sm font-medium text-foreground">Daily limit reached</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {runLimitResetsAt
+                        ? `Resets ${new Date(runLimitResetsAt).toLocaleString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })}`
+                        : "Come back tomorrow for more rehearsals"}
+                    </p>
+                  </div>
+                  <Button
+                    className="w-full"
+                    onClick={() => onNavigate?.("subscription")}
+                    data-testid="button-upgrade-from-limit"
+                  >
+                    <Crown className="h-4 w-4 mr-2" />
+                    Upgrade for Unlimited
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={handleTryAgain}
+                  disabled={checkingRunLimit}
+                  data-testid="button-try-again"
+                >
+                  {checkingRunLimit ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCcw className="h-4 w-4 mr-2" />
+                  )}
+                  Run Again
+                </Button>
+              )}
               
               <button
                 onClick={handleDismissCelebration}
@@ -2391,15 +2453,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
               <button
                 onClick={() => {
                   stopAllPlayback();
-                  setSceneCompleted(false);
-                  setShowCelebration(false);
-                  setUserTranscript("");
-                  goToLine(0);
-                  resetRunPerformance();
-                  setTimeout(() => {
-                    speakingLineRef.current = null;
-                    setPlaying(true);
-                  }, 500);
+                  handleTryAgain();
                 }}
                 className="p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                 data-testid="button-hands-free-restart"
