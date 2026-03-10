@@ -2382,8 +2382,11 @@ MARY: You're kidding me.`;
       const userRuns = await db.execute(
         sql`SELECT id, script_name, accuracy, lines_total, lines_correct, lines_skipped, duration_seconds, memorization_mode, created_at FROM performance_runs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 20`
       );
-      const userScripts = await db.execute(
+      const userSavedScripts = await db.execute(
         sql`SELECT id, name, created_at FROM saved_scripts WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 20`
+      );
+      const userRecentScripts = await db.execute(
+        sql`SELECT id, name, last_used as created_at FROM recent_scripts WHERE user_id = ${userId} ORDER BY last_used DESC LIMIT 20`
       );
       const userErrors = await db.execute(
         sql`SELECT id, message, source, path, created_at FROM error_logs WHERE user_id = ${userId} ORDER BY created_at DESC LIMIT 10`
@@ -2391,12 +2394,16 @@ MARY: You're kidding me.`;
 
       const { passwordHash, ...safeUser } = user;
 
+      const allScripts = [...(userSavedScripts.rows || []), ...(userRecentScripts.rows || [])]
+        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .slice(0, 20);
+
       res.json({
         user: safeUser,
         pageviews: userPageviews.rows,
         events: userEvents.rows,
         runs: userRuns.rows,
-        scripts: userScripts.rows,
+        scripts: allScripts,
         errors: userErrors.rows,
       });
     } catch (error: any) {
