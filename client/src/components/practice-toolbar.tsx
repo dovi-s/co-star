@@ -57,7 +57,7 @@ export function PracticeToolbar({
               size="sm"
               onClick={() => onMemorizationChange(m.value)}
               className={cn(
-                "gap-1 text-[11px] px-2",
+                "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px]",
                 memorizationMode === m.value && "shadow-sm",
                 cameraEnabled && memorizationMode !== m.value && "text-white/60",
                 cameraEnabled && memorizationMode === m.value && "bg-white/20 text-white"
@@ -78,7 +78,7 @@ export function PracticeToolbar({
           size="sm"
           onClick={onMicToggle}
           className={cn(
-            "gap-1 text-[11px] px-2",
+            "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px]",
             cameraEnabled && micEnabled && "shadow-sm bg-white/20 text-white",
             cameraEnabled && !micEnabled && "text-white/60"
           )}
@@ -98,7 +98,7 @@ export function PracticeToolbar({
           size="sm"
           onClick={onCameraToggle}
           className={cn(
-            "gap-1 text-[11px] px-2",
+            "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px]",
             cameraEnabled && "shadow-sm bg-white/20 text-white"
           )}
           title={cameraEnabled ? "Turn camera off" : "Turn camera on"}
@@ -117,7 +117,7 @@ export function PracticeToolbar({
           size="sm"
           onClick={onRecordToggle}
           className={cn(
-            "gap-1 text-[11px] px-2",
+            "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px]",
             isRecording && "animate-pulse",
             cameraEnabled && !isRecording && "text-white/60"
           )}

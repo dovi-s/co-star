@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const eyeColorOptions = ["Brown", "Blue", "Green", "Hazel", "Gray", "Amber"];
 const hairColorOptions = ["Black", "Brown", "Blonde", "Red", "Auburn", "Gray", "White", "Other"];
@@ -71,6 +72,7 @@ interface ActorProfilePageProps {
 export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
   const { user } = useAuth();
   const { setPhoto } = useProfile();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [saved, setSaved] = useState(false);
 
@@ -116,6 +118,9 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Could not save profile", description: error.message, variant: "destructive" });
     },
   });
 

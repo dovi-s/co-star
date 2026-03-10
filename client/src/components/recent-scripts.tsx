@@ -118,6 +118,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
             className="group glass-surface rounded-lg p-3 cursor-pointer"
             role="button"
             tabIndex={0}
+            aria-label={`Open script: ${script.name}`}
             onClick={() => {
               if (editingId !== script.id) onSelect(script);
             }}
@@ -132,7 +133,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 {editingId === script.id ? (
-                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center gap-1" role="group" aria-label="Edit script name" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                     <Input
                       ref={inputRef}
                       value={editName}
@@ -197,7 +198,10 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
               {editingId !== script.id && (
                 <div
                   className="flex items-center gap-0.5 shrink-0"
+                  role="group"
+                  aria-label="Script actions"
                   onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
                 >
                   {isAuthenticated && (
                     <Button

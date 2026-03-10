@@ -197,7 +197,11 @@ export function ThreeLineReader({
 
     return (
       <div
+        role="button"
+        tabIndex={0}
+        aria-label={`${line.roleName}'s line: ${line.text.substring(0, 80)}${line.text.length > 80 ? '...' : ''}`}
         onClick={() => onLineClick?.(line)}
+        onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); onLineClick?.(line); } }}
         className={cn(
           "relative py-4 px-4 rounded-xl transition-all duration-300 cursor-pointer group",
           type === "previous" && "opacity-30 scale-[0.98]",
@@ -543,8 +547,12 @@ export function ThreeLineReader({
           </p>
           {currentScene.description && (
             <div 
+              role="button"
+              tabIndex={0}
+              aria-label={descriptionExpanded ? "Collapse scene description" : "Expand scene description"}
               className="mt-1.5 cursor-pointer group"
               onClick={() => setDescriptionExpanded(!descriptionExpanded)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDescriptionExpanded(!descriptionExpanded); } }}
               data-testid="scene-description-toggle"
             >
               {descriptionExpanded ? (

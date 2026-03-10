@@ -101,6 +101,7 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
       <div className="flex items-center justify-between p-3 safe-top" style={{ zIndex: 10 }}>
         <button
           onClick={handleClose}
+          aria-label="Close scanner"
           className="w-10 h-10 flex items-center justify-center text-white rounded-full bg-white/10 active:bg-white/20"
           data-testid="button-close-scanner"
         >
@@ -109,6 +110,7 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
         <span className="text-white/60 text-xs font-medium">Scan script page</span>
         <button
           onClick={flipCamera}
+          aria-label="Flip camera"
           className="w-10 h-10 flex items-center justify-center text-white/80 rounded-full bg-white/10 active:bg-white/20"
           data-testid="button-flip-camera"
         >
@@ -146,6 +148,7 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
         <button
           onClick={takePhoto}
           disabled={!ready || !!error}
+          aria-label="Take photo"
           className="w-16 h-16 rounded-full border-4 border-white/80 bg-white/20 backdrop-blur-sm flex items-center justify-center disabled:opacity-30 press-effect"
           data-testid="button-take-photo"
         >

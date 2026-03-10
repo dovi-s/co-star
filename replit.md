@@ -36,6 +36,20 @@ The application handles script import from various formats (`.txt`, `.pdf`, imag
 - **Script Complete Celebration**: Trophy icon and enhanced confetti for finishing all scenes of a multi-scene script
 - **Side Menu Reorder**: Primacy/recency ordering with collapsible Explore section for info pages
 
+### UX Polish Pass (Session 11)
+- **Skeleton Loaders**: Library and History pages use skeleton card placeholders instead of spinners during loading
+- **Dynamic Tier Badge**: Side menu shows "Pro" or "Free" based on actual subscriptionTier (was hardcoded "Pro")
+- **Toast Consistency**: "Tell a Friend" clipboard copy uses toast instead of browser alert()
+- **ThreeLineReader Accessibility**: Script lines have role="button", tabIndex, keyboard handlers (Enter/Space), and aria-labels with character name and truncated text; event bubbling prevented for nested controls
+- **Camera Scanner Accessibility**: All icon-only buttons (Close, Flip camera, Take photo) have descriptive aria-labels
+- **Focus Management**: After view transitions, focus resets to main content area with scroll-to-top
+- **Touch Targets**: Practice toolbar buttons increased to 44px minimum per Apple HIG
+- **Onboarding States**: Continue/Skip buttons disabled during save mutations with loading indicators
+- **Production Cleanup**: Removed 28 console.log statements from rehearsal.tsx (kept console.error/warn for actual errors)
+- **Transport Bar Accessibility**: SVG progress ring marked aria-hidden; line counter uses aria-live="polite"
+- **Recent Scripts Accessibility**: Cards have aria-labels, keyboard event isolation on nested action buttons
+- **Error Feedback**: Actor profile and onboarding save failures now show toast notifications
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines and scene descriptions are automatically linked to subsequent dialogue.
 - **Scene Transition Cards**: Visual cues for scene changes with animated displays.

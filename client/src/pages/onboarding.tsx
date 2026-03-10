@@ -119,6 +119,9 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
     },
+    onError: (error: Error) => {
+      toast({ title: "Could not save profile", description: error.message, variant: "destructive" });
+    },
   });
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -196,7 +199,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
         </div>
         <button
           onClick={skipAll}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+          disabled={saveMutation.isPending}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 disabled:pointer-events-none"
           data-testid="button-skip-onboarding"
         >
           Skip for now
@@ -250,7 +254,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </div>
             </div>
 
-            <Button onClick={saveStep1} className="w-full h-11 mt-6" data-testid="button-onboarding-next-0">
+            <Button onClick={saveStep1} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-0">
+              {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Continue
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -322,7 +327,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </div>
             </div>
 
-            <Button onClick={saveStep2} className="w-full h-11 mt-6" data-testid="button-onboarding-next-1">
+            <Button onClick={saveStep2} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-1">
+              {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Continue
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -375,7 +381,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </p>
             </div>
 
-            <Button onClick={saveStep3} className="w-full h-11 mt-6" data-testid="button-onboarding-next-2">
+            <Button onClick={saveStep3} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-2">
+              {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               {photoPreview ? "Continue" : "Skip for now"}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -394,7 +401,8 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             <div className="flex-1 space-y-3">
               <button
                 onClick={finishOnboarding}
-                className="w-full rounded-lg border border-border p-4 text-left transition-colors hover:border-foreground/20 hover:bg-muted/30"
+                disabled={saveMutation.isPending}
+                className="w-full rounded-lg border border-border p-4 text-left transition-colors hover:border-foreground/20 hover:bg-muted/30 disabled:opacity-50 disabled:pointer-events-none"
                 data-testid="button-plan-free"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -502,9 +510,11 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             <Button
               variant="outline"
               onClick={finishOnboarding}
+              disabled={saveMutation.isPending}
               className="w-full h-11 mt-4"
               data-testid="button-continue-free"
             >
+              {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Continue with Free
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>

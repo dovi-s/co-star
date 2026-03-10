@@ -127,6 +127,11 @@ function AppContent() {
         isPopstateNav.current = false;
 
         setView(newView);
+        requestAnimationFrame(() => {
+          window.scrollTo(0, 0);
+          const main = document.querySelector("[data-main-content]") as HTMLElement | null;
+          if (main) main.focus({ preventScroll: true });
+        });
       }
       setIsExiting(false);
     }, 180);
@@ -231,7 +236,7 @@ function AppContent() {
       >
         Skip to content
       </a>
-      <div id="main-content">
+      <div id="main-content" data-main-content tabIndex={-1} className="outline-none">
       {view === "home" && (
         <HomePage 
           key="home" 

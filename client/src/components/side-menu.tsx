@@ -39,6 +39,7 @@ import {
   Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 import { FeedbackSheet } from "@/components/feedback-sheet";
 import { SalesSheet } from "@/components/sales-sheet";
 
@@ -127,6 +128,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
   const { theme, toggleTheme } = useTheme();
   const { profile, setPhoto } = useProfile();
   const { user, isAuthenticated: isSignedIn, logout } = useAuth();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [salesOpen, setSalesOpen] = useState(false);
@@ -216,8 +218,13 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                     </p>
                     <p className="text-[11px] text-muted-foreground truncate">{user?.email || ""}</p>
                   </div>
-                  <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary">
-                    Pro
+                  <span className={cn(
+                    "text-[10px] font-medium px-1.5 py-0.5 rounded-sm",
+                    user?.subscriptionTier === "pro"
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted-foreground/10 text-muted-foreground"
+                  )}>
+                    {user?.subscriptionTier === "pro" ? "Pro" : "Free"}
                   </span>
                 </div>
               </div>
@@ -365,7 +372,7 @@ export function SideMenu({ open, onOpenChange, onNavigate }: SideMenuProps) {
                 }).catch(() => {});
               } else {
                 navigator.clipboard.writeText(window.location.origin).then(() => {
-                  alert("Link copied to clipboard");
+                  toast({ description: "Link copied to clipboard" });
                 }).catch(() => {});
               }
             }}

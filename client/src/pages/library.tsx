@@ -92,8 +92,27 @@ export function LibraryPage({
       <main className="flex-1 px-5 py-6">
         <div className="max-w-lg mx-auto">
           {isLoading && (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div className="space-y-3" data-testid="skeleton-library">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="glass-surface rounded-lg p-4 animate-pulse"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <div className="h-4 w-36 bg-muted/60 rounded" />
+                      <div className="flex items-center gap-2">
+                        <div className="h-3 w-3 bg-muted/60 rounded" />
+                        <div className="h-3 w-16 bg-muted/60 rounded" />
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <div className="h-9 w-9 bg-muted/60 rounded" />
+                      <div className="h-9 w-9 bg-muted/60 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 

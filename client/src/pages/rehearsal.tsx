@@ -116,10 +116,8 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         try {
           if ('wakeLock' in navigator) {
             wakeLockRef.current = await (navigator as any).wakeLock.request('screen');
-            console.log("[Rehearsal] Wake lock acquired for hands-free mode");
           }
-        } catch (e) {
-          console.log("[Rehearsal] Wake lock not available:", e);
+        } catch {
         }
       };
       requestWakeLock();
@@ -194,7 +192,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   const requestMicPermission = useCallback(async () => {
     if (!navigator.mediaDevices?.getUserMedia) {
-      console.log('[Rehearsal] getUserMedia not available');
       setMicEnabledSync(true);
       return true;
     }
@@ -204,7 +201,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       setMicPermissionGranted(true);
       setMicBlocked(false);
       setMicEnabledSync(true);
-      console.log('[Rehearsal] Mic permission granted');
       return true;
     } catch (err) {
       console.error('[Rehearsal] Mic permission denied:', err);
@@ -264,7 +260,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
   useEffect(() => {
     speechRecognition.onStateChange((state) => {
-      console.log("[Rehearsal] Speech state:", state);
       setListeningState(state);
     });
 
@@ -287,7 +282,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
         const cleanTranscript = transcript.replace(/\b(line|lne|lying)[!?.]*\s*$/i, "").trim();
         const isJustLine = cleanTranscript.length === 0;
         if (isJustLine || matchWords(line.text, cleanTranscript).percentMatched < 40) {
-          console.log("[Rehearsal] LINE command detected, whispering hint");
           hintPlayingRef.current = true;
           hintUsedForLineRef.current = true;
           speechRecognition.stop();
@@ -356,20 +350,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     });
 
     speechRecognition.onEnd(() => {
-      console.log("[Rehearsal] Speech ended, waiting:", waitingForUserRef.current, "playing:", isPlayingRef.current, "hintPlaying:", hintPlayingRef.current);
       if (waitingForUserRef.current && isPlayingRef.current) {
         if (hintPlayingRef.current) {
-          console.log("[Rehearsal] Hint is playing, skipping auto-restart");
           return;
         }
         const isMobile = speechRecognition.isMobileDevice;
         const restartDelay = isMobile ? 500 : 150;
-        console.log("[Rehearsal] Speech ended but still user's turn, auto-restarting in", restartDelay, "ms");
-        
         const attemptRestart = (attempt: number) => {
           if (!waitingForUserRef.current || !isPlayingRef.current || speechRecognition.listening) return;
           if (hintPlayingRef.current) return;
-          console.log("[Rehearsal] Restarting speech recognition, attempt:", attempt);
           const started = speechRecognition.start();
           if (!started && attempt < 3 && isMobile) {
             setTimeout(() => attemptRestart(attempt + 1), 800);
@@ -381,7 +370,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     });
 
     speechRecognition.onError((error) => {
-      console.log("[Rehearsal] Speech error:", error);
       if (error === "not-allowed") {
         setMicBlocked(true);
         if (waitingForUserRef.current && isPlayingRef.current) {
@@ -486,9 +474,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const expectedUserLines = currentScene?.lines?.filter(
       (line) => line.roleId === session?.userRoleId
     ).length ?? 0;
-    
-    console.log("[Performance] Run complete. Spoken:", totalUserLines, "/", expectedUserLines, "Avg accuracy:", avgAccuracy);
-    console.log("[Performance] Line accuracies:", allPerfs.map(p => Math.round(p.accuracy)));
     
     // Set completed stats
     setCompletedRunStats({
@@ -606,8 +591,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const line = getCurrentLine();
     const accuracy = currentLineAccuracyRef.current;
     
-    console.log("[Performance] Recording line:", line?.id, "accuracy:", accuracy);
-    
     if (line) {
       const wasSkipped = accuracy < 20;
       recordLinePerformance({
@@ -636,8 +619,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       const minPause = isIOS ? 350 : 30;
       const pauseMs = isUserLine(next) ? minPause : Math.max(timing.userToAiPauseMs, minPause);
       
-      console.log("[Rehearsal] User-to-next pause:", pauseMs + "ms", "nextEmotion:", nextEmotion);
-      
       if (userToAiDelayRef.current) {
         clearTimeout(userToAiDelayRef.current);
       }
@@ -657,8 +638,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   }, [advanceAfterUserLine]);
 
   const startListeningForUser = useCallback(() => {
-    console.log("[Rehearsal] Starting user turn, mic available:", speechRecognition.available, "blocked:", micBlocked, "tapMode:", tapModeRef.current);
-    
     waitingForUserRef.current = true;
     matchReachedRef.current = false;
     setIsUserTurn(true);
@@ -675,13 +654,11 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     }
     
     if (tapModeRef.current) {
-      console.log("[Rehearsal] Tap mode active, waiting for tap/spacebar to advance");
       return;
     }
     
     if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
       const micDelay = speechRecognition.isMobileDevice ? 500 : 0;
-      console.log("[Rehearsal] Mic delay:", micDelay, "ms, mobile:", speechRecognition.isMobileDevice, "iOS:", speechRecognition.isIOSPWA);
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.start();
@@ -690,7 +667,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
-          console.log("[Rehearsal] User turn safety timeout, advancing");
           speechRecognition.abort();
           waitingForUserRef.current = false;
           advanceAfterUserLineRef.current();
@@ -698,7 +674,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       }, 60000);
     } else {
       if (!speechRecognition.available) {
-        console.log("[Rehearsal] Speech recognition not available on this device");
         if (!tapModeRef.current) {
           setTapMode(true);
           tapModeRef.current = true;
@@ -715,7 +690,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       }
       autoAdvanceTimeoutRef.current = setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
-          console.log("[Rehearsal] No mic fallback, advancing");
           waitingForUserRef.current = false;
           advanceAfterUserLineRef.current();
         }
@@ -787,14 +761,12 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
   const speakLine = useCallback(() => {
     const line = getCurrentLine();
     if (!line || !session) {
-      console.log("[Rehearsal] No line or session to speak");
       return;
     }
 
     const lineKey = `${session.currentSceneIndex}-${session.currentLineIndex}`;
     
     if (speakingLineRef.current === lineKey) {
-      console.log("[Rehearsal] Already speaking this line:", lineKey);
       return;
     }
 
@@ -815,7 +787,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
 
     const isUser = isUserLine(line);
     if (isUser) {
-      console.log("[Rehearsal] User's line, starting listening");
       setTtsGenerating(false);
       startListeningForUser();
       prefetchNextAILine();
@@ -833,8 +804,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     const prev = getPreviousLine();
     const prevEmotion = prev ? (prev.emotionHint || detectEmotion(prev.text, prev.direction)) : undefined;
     const timing = getConversationalTiming(emotion, prev?.text, prevEmotion);
-
-    console.log("[Rehearsal] Speaking AI line:", role?.name, "emotion:", emotion, "timing:", timing.aiToAiPauseMs + "ms");
 
     const clearWordTimer = () => {
       if (wordTimerRef.current) {
@@ -854,18 +823,15 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
     speakTimeoutRef.current = setTimeout(() => {
       speakTimeoutRef.current = null;
       if (!isPlayingRef.current) {
-        console.log("[Rehearsal] Not playing anymore, skipping TTS");
         speakingLineRef.current = null;
         return;
       }
       if (speakingLineRef.current !== lineKey) {
-        console.log("[Rehearsal] Line changed before speak, skipping");
         return;
       }
       
       setTtsGenerating(true);
       ttsEngine.speak(ttsText, prosody, (result: SpeakResult) => {
-        console.log("[Rehearsal] TTS complete:", result, "for line:", lineKey);
         setTtsGenerating(false);
         clearWordTimer();
         
@@ -1046,7 +1012,6 @@ export function RehearsalPage({ onBack }: RehearsalPageProps) {
       if (line) {
         const accuracy = currentLineAccuracyRef.current;
         const wasSkipped = accuracy < 20; // Same threshold as advanceAfterUserLine
-        console.log("[Performance] handleNext recording line:", line.id, "accuracy:", accuracy, "skipped:", wasSkipped);
         recordLinePerformance({
           lineId: line.id,
           accuracy,

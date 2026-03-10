@@ -92,6 +92,7 @@ export function TransportBar({
             <svg 
               className="w-[68px] h-[68px] -rotate-90"
               viewBox="0 0 64 64"
+              aria-hidden="true"
             >
               <defs>
                 <linearGradient id="progress-gradient" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
@@ -202,7 +203,7 @@ export function TransportBar({
           </button>
         </div>
 
-        <div className="flex flex-col items-center min-w-[44px]">
+        <div className="flex flex-col items-center min-w-[44px]" aria-live="polite" aria-atomic="true">
           <span 
             className={cn(
               "text-sm font-medium tabular-nums transition-colors",

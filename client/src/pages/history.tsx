@@ -7,7 +7,6 @@ import {
   TrendingUp,
   Target,
   Clock,
-  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { PerformanceRun } from "@shared/models/auth";
@@ -85,8 +84,35 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
       <main className="flex-1 px-5 py-6">
         <div className="max-w-lg mx-auto">
           {isLoading && (
-            <div className="flex items-center justify-center py-16">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            <div data-testid="skeleton-history">
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="glass-surface rounded-lg p-3 text-center animate-pulse">
+                    <div className="h-4 w-4 bg-muted/60 rounded mx-auto mb-1" />
+                    <div className="h-6 w-10 bg-muted/60 rounded mx-auto mb-1" />
+                    <div className="h-3 w-12 bg-muted/60 rounded mx-auto" />
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="glass-surface rounded-lg p-3 animate-pulse">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div className="h-4 w-32 bg-muted/60 rounded" />
+                        <div className="flex items-center gap-3">
+                          <div className="h-3 w-14 bg-muted/60 rounded" />
+                          <div className="h-3 w-10 bg-muted/60 rounded" />
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 space-y-1">
+                        <div className="h-4 w-10 bg-muted/60 rounded ml-auto" />
+                        <div className="h-3 w-12 bg-muted/60 rounded ml-auto" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
