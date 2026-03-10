@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useLayoutEffect, useCallback } from "react";
 import { trackClick, trackNavigation } from "@/hooks/use-analytics";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -148,19 +148,25 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = drawerRef.current;
     if (open) {
       triggerRef.current = document.activeElement;
       document.body.style.overflow = "hidden";
-      if (el) el.removeAttribute("inert");
+      if (el) {
+        el.removeAttribute("inert");
+        el.style.pointerEvents = "";
+      }
       requestAnimationFrame(() => {
         const closeBtn = el?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
         closeBtn?.focus();
       });
     } else {
       document.body.style.overflow = "";
-      if (el) el.setAttribute("inert", "");
+      if (el) {
+        el.setAttribute("inert", "");
+        el.style.pointerEvents = "none";
+      }
       if (triggerRef.current instanceof HTMLElement) {
         triggerRef.current.focus();
         triggerRef.current = null;
@@ -200,7 +206,9 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           "fixed inset-0 z-50 bg-black/60 transition-opacity duration-150",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
+        style={open ? { pointerEvents: "auto" } : undefined}
         onClick={() => onOpenChange(false)}
+        onTouchEnd={(e) => { e.preventDefault(); onOpenChange(false); }}
         aria-hidden="true"
       />
       <div
@@ -213,8 +221,9 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           "fixed inset-y-0 right-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
           "flex flex-col overflow-hidden safe-area-top safe-area-bottom",
           "transition-transform duration-150 ease-out will-change-transform",
-          open ? "translate-x-0" : "translate-x-full"
+          open ? "translate-x-0" : "translate-x-full pointer-events-none"
         )}
+        style={open ? { pointerEvents: "auto" } : undefined}
       >
         <div className="px-5 pt-5 pb-3 text-left">
           <div className="flex items-center gap-3">
@@ -426,14 +435,20 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             icon={<MessageCircle className="h-4 w-4" />}
             label="Support"
             description="Report a bug or issue"
-            onClick={() => setFeedbackOpen(true)}
+            onClick={() => {
+              onOpenChange(false);
+              setTimeout(() => setFeedbackOpen(true), 180);
+            }}
             testId="menu-item-support"
           />
           <MenuItem
             icon={<Handshake className="h-4 w-4" />}
             label="Sales"
             description="Teams, education, or demo"
-            onClick={() => setSalesOpen(true)}
+            onClick={() => {
+              onOpenChange(false);
+              setTimeout(() => setSalesOpen(true), 180);
+            }}
             testId="menu-item-sales"
           />
           <MenuItem
