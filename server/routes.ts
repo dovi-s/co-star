@@ -2241,6 +2241,33 @@ MARY: You're kidding me.`;
         };
       } catch (e) {}
 
+      // --- Cancel/Churn Metrics ---
+      let churn = { total: 0, canceled: 0, paused: 0, stayed: 0, reasonBreakdown: [] as any[], recent: [] as any[] };
+      try {
+        const [totalCancelFeedback] = await db.select({ count: count() }).from(cancelFeedback);
+        const outcomeBreakdown = await db.execute(
+          sql`SELECT outcome, COUNT(*) as count FROM cancel_feedback GROUP BY outcome`
+        );
+        const reasonBreakdown = await db.execute(
+          sql`SELECT reason, COUNT(*) as count FROM cancel_feedback GROUP BY reason ORDER BY count DESC`
+        );
+        const recentCancelFeedback = await db.execute(
+          sql`SELECT cf.id, cf.reason, cf.comment, cf.outcome, cf.created_at, u.email, u.first_name, u.last_name
+              FROM cancel_feedback cf
+              LEFT JOIN users u ON cf.user_id = u.id
+              ORDER BY cf.created_at DESC LIMIT 20`
+        );
+        const outcomes = outcomeBreakdown.rows as any[];
+        churn = {
+          total: totalCancelFeedback.count,
+          canceled: Number(outcomes.find((o: any) => o.outcome === "canceled")?.count || 0),
+          paused: Number(outcomes.find((o: any) => o.outcome === "paused")?.count || 0),
+          stayed: Number(outcomes.find((o: any) => o.outcome === "stayed")?.count || 0),
+          reasonBreakdown: reasonBreakdown.rows,
+          recent: recentCancelFeedback.rows,
+        };
+      } catch (e) {}
+
       // --- Recent Users ---
       const recentUsers = await db
         .select({
@@ -2297,6 +2324,7 @@ MARY: You're kidding me.`;
           newCount: newMessagesCount,
         },
         revenue,
+        churn,
       };
 
       analyticsCache = { data: result, timestamp: Date.now() };

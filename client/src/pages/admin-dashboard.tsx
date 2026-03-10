@@ -45,6 +45,10 @@ import {
   Ban,
   ShieldCheck,
   MoreVertical,
+  Pause,
+  LogOut,
+  Heart,
+  MessageCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -123,6 +127,23 @@ interface AnalyticsData {
     mrr: number;
     totalSubscriptions: number;
     activeSubscriptions: number;
+  };
+  churn: {
+    total: number;
+    canceled: number;
+    paused: number;
+    stayed: number;
+    reasonBreakdown: { reason: string; count: string }[];
+    recent: {
+      id: string;
+      reason: string;
+      comment: string | null;
+      outcome: string;
+      created_at: string;
+      email: string | null;
+      first_name: string | null;
+      last_name: string | null;
+    }[];
   };
 }
 
@@ -1322,6 +1343,112 @@ function RevenueTab({ data }: { data: AnalyticsData }) {
             </table>
           </div>
         </Card>
+      )}
+
+      {data.churn?.total > 0 && (
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard icon={LogOut} label="Cancel Intents" value={data.churn.total} color="red" testId="stat-churn-total" />
+            <StatCard icon={XCircle} label="Canceled" value={data.churn.canceled} color="red" />
+            <StatCard icon={Pause} label="Paused" value={data.churn.paused} sub="chose to pause" color="amber" />
+            <StatCard icon={Heart} label="Retained" value={data.churn.stayed} sub={data.churn.total > 0 ? `${((data.churn.stayed / data.churn.total) * 100).toFixed(0)}% save rate` : ""} color="green" testId="stat-churn-retained" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <SectionTitle>Cancel Reasons</SectionTitle>
+              <div className="space-y-3 mt-2">
+                {data.churn.reasonBreakdown.map((r) => {
+                  const pct = data.churn.total > 0 ? (Number(r.count) / data.churn.total) * 100 : 0;
+                  const reasonLabels: Record<string, string> = {
+                    too_expensive: "Too expensive",
+                    not_using: "Not using enough",
+                    missing_features: "Missing features",
+                    found_alternative: "Found alternative",
+                    other: "Other",
+                  };
+                  return (
+                    <div key={r.reason} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{reasonLabels[r.reason] || r.reason}</span>
+                        <span className="font-medium">{r.count} ({pct.toFixed(0)}%)</span>
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full bg-destructive/60 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                {data.churn.reasonBreakdown.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No cancel reasons recorded yet</p>
+                )}
+              </div>
+            </Card>
+
+            <Card>
+              <SectionTitle>Retention Outcomes</SectionTitle>
+              <div className="space-y-4 mt-2">
+                {[
+                  { label: "Stayed (kept plan)", value: data.churn.stayed, color: "bg-green-500" },
+                  { label: "Paused (1 month)", value: data.churn.paused, color: "bg-amber-500" },
+                  { label: "Canceled", value: data.churn.canceled, color: "bg-destructive" },
+                ].map((item) => {
+                  const pct = data.churn.total > 0 ? (item.value / data.churn.total) * 100 : 0;
+                  return (
+                    <div key={item.label} className="space-y-1">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground">{item.label}</span>
+                        <span className="font-medium">{item.value} ({pct.toFixed(0)}%)</span>
+                      </div>
+                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div className={cn("h-full rounded-full transition-all", item.color)} style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          </div>
+
+          <Card className="p-0 overflow-hidden">
+            <div className="px-4 py-3 border-b border-border/30">
+              <SectionTitle>Recent Cancel Feedback</SectionTitle>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/30 text-left">
+                    <th className="px-4 py-2 text-xs font-medium text-muted-foreground">User</th>
+                    <th className="px-4 py-2 text-xs font-medium text-muted-foreground">Reason</th>
+                    <th className="px-4 py-2 text-xs font-medium text-muted-foreground">Comment</th>
+                    <th className="px-4 py-2 text-xs font-medium text-muted-foreground">Outcome</th>
+                    <th className="px-4 py-2 text-xs font-medium text-muted-foreground">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.churn.recent.map((f) => (
+                    <tr key={f.id} className="border-t border-border/20">
+                      <td className="px-4 py-2 text-xs font-medium">{[f.first_name, f.last_name].filter(Boolean).join(" ") || f.email || "Unknown"}</td>
+                      <td className="px-4 py-2 text-xs text-muted-foreground">{f.reason.replace(/_/g, " ")}</td>
+                      <td className="px-4 py-2 text-xs text-muted-foreground max-w-[200px] truncate">{f.comment || "—"}</td>
+                      <td className="px-4 py-2">
+                        <span className={cn(
+                          "text-[10px] px-1.5 py-0.5 rounded-full font-medium",
+                          f.outcome === "stayed" ? "bg-green-500/10 text-green-600" :
+                          f.outcome === "paused" ? "bg-amber-500/10 text-amber-600" :
+                          "bg-red-500/10 text-red-600"
+                        )}>
+                          {f.outcome}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2 text-xs text-muted-foreground">{formatTime(f.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </>
       )}
     </div>
   );
