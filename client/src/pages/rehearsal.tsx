@@ -80,7 +80,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const { isAuthenticated, user } = useAuth();
   const { lastRawScript } = useSessionContext();
 
-  const { stats, recordRehearsal, recordRunHistory, getLastRunForScript, didRehearsalToday } = useUserStats();
+  const { stats, recordRehearsal, recordRunHistory, getLastRunForScript, didRehearsalToday } = useUserStats(user?.id);
   const camera = useCamera();
   const { setThemeColorOverride } = useTheme();
   const { toast } = useToast();

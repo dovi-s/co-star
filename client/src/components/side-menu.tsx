@@ -131,6 +131,16 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   const triggerRef = useRef<Element | null>(null);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [salesOpen, setSalesOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+    } else {
+      const timer = setTimeout(() => setMounted(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   const navigate = (page: string) => {
     trackClick(`menu-${page}`);
@@ -515,7 +525,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
 
   return (
     <>
-      {createPortal(drawer, document.body)}
+      {mounted && createPortal(drawer, document.body)}
       {feedbackOpen && <FeedbackSheet open={feedbackOpen} onOpenChange={setFeedbackOpen} />}
       {salesOpen && <SalesSheet open={salesOpen} onOpenChange={setSalesOpen} />}
     </>

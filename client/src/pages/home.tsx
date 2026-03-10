@@ -49,7 +49,7 @@ const nudgeIcons = {
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const { isAuthenticated, user } = useAuth();
-  const { stats } = useUserStats();
+  const { stats } = useUserStats(user?.id);
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
   const userWentBackRef = useRef(false);

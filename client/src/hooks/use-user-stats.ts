@@ -1,8 +1,18 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import type { UserStats } from "@shared/schema";
 
-const STATS_KEY = "costar-user-stats";
-const RUN_HISTORY_KEY = "costar-run-history";
+const STATS_KEY_PREFIX = "costar-user-stats";
+const RUN_HISTORY_KEY_PREFIX = "costar-run-history";
+const LEGACY_STATS_KEY = "costar-user-stats";
+const LEGACY_RUN_HISTORY_KEY = "costar-run-history";
+
+function getStatsKey(userId?: string | number | null): string {
+  return userId ? `${STATS_KEY_PREFIX}-${userId}` : LEGACY_STATS_KEY;
+}
+
+function getRunHistoryKey(userId?: string | number | null): string {
+  return userId ? `${RUN_HISTORY_KEY_PREFIX}-${userId}` : LEGACY_RUN_HISTORY_KEY;
+}
 
 export interface RunHistoryEntry {
   scriptFingerprint: string;
@@ -14,17 +24,17 @@ export interface RunHistoryEntry {
 
 const MAX_HISTORY_ENTRIES = 50;
 
-function getRunHistory(): RunHistoryEntry[] {
+function getRunHistory(key: string): RunHistoryEntry[] {
   try {
-    const saved = localStorage.getItem(RUN_HISTORY_KEY);
+    const saved = localStorage.getItem(key);
     if (saved) return JSON.parse(saved) as RunHistoryEntry[];
   } catch {}
   return [];
 }
 
-function saveRunHistory(history: RunHistoryEntry[]) {
+function saveRunHistory(key: string, history: RunHistoryEntry[]) {
   try {
-    localStorage.setItem(RUN_HISTORY_KEY, JSON.stringify(history.slice(-MAX_HISTORY_ENTRIES)));
+    localStorage.setItem(key, JSON.stringify(history.slice(-MAX_HISTORY_ENTRIES)));
   } catch {}
 }
 
@@ -57,24 +67,45 @@ function isToday(dateStr: string | null): boolean {
   return dateStr === getToday();
 }
 
-export function useUserStats() {
-  const [stats, setStats] = useState<UserStats>(() => {
+export function useUserStats(userId?: string | number | null) {
+  const statsKey = getStatsKey(userId);
+  const runHistoryKey = getRunHistoryKey(userId);
+  const hydratedKeyRef = useRef(statsKey);
+
+  function loadStats(key: string, uid?: string | number | null): UserStats {
     try {
-      const saved = localStorage.getItem(STATS_KEY);
+      let saved = localStorage.getItem(key);
+      if (!saved && uid) {
+        saved = localStorage.getItem(LEGACY_STATS_KEY);
+      }
       if (saved) {
         const parsed = JSON.parse(saved) as UserStats;
-        if (!isToday(parsed.lastRehearsalDate)) {
+        const wasToday = isToday(parsed.lastRehearsalDate);
+        const wasYesterday = isYesterday(parsed.lastRehearsalDate);
+        if (!wasToday && !wasYesterday) {
+          return { ...parsed, currentStreak: 0, todayLines: 0 };
+        }
+        if (!wasToday) {
           return { ...parsed, todayLines: 0 };
         }
         return parsed;
       }
     } catch {}
     return defaultStats;
-  });
+  }
+
+  const [stats, setStats] = useState<UserStats>(() => loadStats(statsKey, userId));
 
   useEffect(() => {
-    localStorage.setItem(STATS_KEY, JSON.stringify(stats));
-  }, [stats]);
+    hydratedKeyRef.current = statsKey;
+    setStats(loadStats(statsKey, userId));
+  }, [statsKey, userId]);
+
+  useEffect(() => {
+    if (hydratedKeyRef.current === statsKey) {
+      localStorage.setItem(statsKey, JSON.stringify(stats));
+    }
+  }, [stats, statsKey]);
 
   const recordRehearsal = useCallback((linesRehearsed: number, runsCompleted: number) => {
     setStats((prev) => {
@@ -136,18 +167,30 @@ export function useUserStats() {
 
   const hasReachedGoal = stats.todayLines >= stats.dailyGoal;
 
+  const resolveRunHistory = useCallback((): RunHistoryEntry[] => {
+    let history = getRunHistory(runHistoryKey);
+    if (history.length === 0 && userId) {
+      const legacy = getRunHistory(LEGACY_RUN_HISTORY_KEY);
+      if (legacy.length > 0) {
+        saveRunHistory(runHistoryKey, legacy);
+        return legacy;
+      }
+    }
+    return history;
+  }, [runHistoryKey, userId]);
+
   const recordRunHistory = useCallback((entry: Omit<RunHistoryEntry, "timestamp">) => {
-    const history = getRunHistory();
+    const history = resolveRunHistory();
     history.push({ ...entry, timestamp: Date.now() });
-    saveRunHistory(history);
-  }, []);
+    saveRunHistory(runHistoryKey, history);
+  }, [runHistoryKey, resolveRunHistory]);
 
   const getLastRunForScript = useCallback((scriptFingerprint: string): RunHistoryEntry | null => {
-    const history = getRunHistory();
+    const history = resolveRunHistory();
     const scriptRuns = history.filter(h => h.scriptFingerprint === scriptFingerprint);
     if (scriptRuns.length < 2) return null;
     return scriptRuns[scriptRuns.length - 2];
-  }, []);
+  }, [resolveRunHistory]);
 
   const didRehearsalToday = isToday(stats.lastRehearsalDate);
 
