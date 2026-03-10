@@ -122,15 +122,15 @@ export function LibraryPage({
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
                 <FileText className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="text-base font-semibold text-foreground mb-1.5">Your library is empty</h3>
+              <h3 className="text-base font-semibold text-foreground mb-1.5">No saved scripts yet</h3>
               <p className="text-sm text-muted-foreground max-w-[260px] mb-5 leading-relaxed">
-                Import a script and tap save to build your personal collection. Saved scripts are always just a tap away.
+                Your saved scripts will appear here. Rehearse a script to get started — you can save it for quick access later.
               </p>
               <Button
                 onClick={onBack}
                 data-testid="button-import-first-script"
               >
-                Import your first script
+                Start Rehearsing
               </Button>
             </div>
           )}

@@ -9,7 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Flame, TrendingUp, BookOpen, X, Crown } from "lucide-react";
+import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -180,9 +180,25 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
 
   return (
     <div className="min-h-screen flex flex-col bg-background" data-testid="home-page">
-      <header className="flex items-center justify-between px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
+      <header className="flex items-center justify-between content-inset py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
         <Logo size="xs" animated showWordmark onClick={() => { setStep("import"); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <div className="flex items-center gap-2">
+          {stats.currentStreak > 0 && (
+            <div
+              className={cn(
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-bold",
+                stats.currentStreak >= 7
+                  ? "bg-orange-500/15 text-orange-600 dark:text-orange-400"
+                  : "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+              )}
+              data-testid="badge-streak"
+              title={`${stats.currentStreak}-day streak`}
+            >
+              <Flame className={cn("h-3 w-3", stats.currentStreak >= 3 && "animate-pulse")} />
+              <span>{stats.currentStreak}</span>
+              {stats.currentStreak >= 7 && <Trophy className="h-3 w-3" />}
+            </div>
+          )}
           {isAuthenticated && user && (() => {
             const isPro = user.subscriptionTier === "pro";
             const limit = 3 + (user.scriptUsageLimitBonus ?? 0);
@@ -269,13 +285,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
       <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} activePage="home" />
 
       <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative overflow-x-hidden">
-        <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
-          style={{
-            background: 'radial-gradient(ellipse at 50% 50%, hsl(28 35% 54% / 0.10) 0%, hsl(47 96% 53% / 0.06) 40%, transparent 70%)',
-            animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
-          }}
-        />
-        <div className="px-4 pt-6 pb-2 relative z-10 hero-enter">
+        <div className="content-inset pt-6 pb-2 relative z-10 hero-enter">
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             {isAuthenticated && user?.firstName
               ? `What are we rehearsing today, ${user.firstName}?`
@@ -293,7 +303,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           if (!nudge) return null;
           const NudgeIcon = nudgeIcons[nudge.icon];
           return (
-            <div className="px-4 pb-2 relative z-10" data-testid="personalized-nudge">
+            <div className="content-inset pb-3 relative z-10" data-testid="personalized-nudge">
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-card/60 border border-border/40">
                 <NudgeIcon className="h-3.5 w-3.5 text-foreground/70 shrink-0" data-testid="nudge-icon" />
                 <span className="text-[13px] text-foreground/80 flex-1" data-testid="nudge-message">{nudge.message}</span>
@@ -310,7 +320,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           );
         })()}
 
-        <div className="flex-1 px-4 pb-4 relative z-10 hero-enter-delay-2">
+        <div className="flex-1 content-inset pb-4 relative z-10 hero-enter-delay-2">
           <ScriptImport
             key={prefillKey}
             onImport={handleImport}
@@ -334,7 +344,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           />
         </div>
 
-        <div className="px-4 pb-4 relative z-10">
+        <div className="content-inset pt-4 pb-4 relative z-10 zone-separator-subtle">
           <RecentScripts
             scripts={recentScripts}
             onSelect={handleSelectRecent}
@@ -344,7 +354,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         </div>
       </main>
 
-      <footer className="px-4 py-4 pb-6 border-t border-border/40 safe-bottom">
+      <footer className="content-inset py-4 pb-6 border-t border-border/40 safe-bottom">
         <p className="text-[11px] text-muted-foreground text-center">
           {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
         </p>

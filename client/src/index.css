@@ -1822,6 +1822,47 @@
   }
 }
 
+/* ============================================
+   VISUAL RHYTHM & WHITESPACE SYSTEM
+   Consistent content insets, zone separators,
+   and spatial hierarchy across the app
+   ============================================ */
+
+.content-inset {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .content-inset {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .content-inset {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+.zone-separator {
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.zone-separator-subtle {
+  border-top: 1px solid hsl(var(--border) / 0.25);
+}
+
+.section-gap {
+  margin-top: 1.5rem;
+}
+
+.section-gap-sm {
+  margin-top: 1rem;
+}
+
 /* Prevent horizontal scroll/bounce on all devices */
 html {
   overflow-x: clip;

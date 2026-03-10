@@ -12,18 +12,20 @@ import { useSessionContext } from "@/context/session-context";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { useAuth } from "@/hooks/use-auth";
 import { useCamera } from "@/hooks/use-camera";
+import { useTheme } from "@/lib/theme-provider";
 import { useToast } from "@/hooks/use-toast";
 import { ttsEngine, calculateProsody, detectEmotion, getConversationalTiming, addBreathingPauses, type SpeakResult } from "@/lib/tts-engine";
 import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-recognition";
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy, Info, Zap, Clock, Flame } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Loader2, Trophy, Info, Zap, Clock, Flame, Share2, Crown, User, WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator";
 import { triggerHaptic } from "@/hooks/use-haptics";
 import { saveResumePosition, getResumePosition, clearResumePosition } from "@/lib/recent-scripts";
+import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 // Performance tracking for the current run
 interface LinePerformance {
@@ -76,9 +78,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const { isAuthenticated, user } = useAuth();
   const { lastRawScript } = useSessionContext();
 
-  const { stats, recordRehearsal } = useUserStats();
+  const { stats, recordRehearsal, recordRunHistory, getLastRunForScript, didRehearsalToday } = useUserStats();
   const camera = useCamera();
+  const { setThemeColorOverride } = useTheme();
   const { toast } = useToast();
+  const pwaInstall = usePwaInstall();
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -115,6 +119,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const [resumePrompt, setResumePrompt] = useState<{ lineIndex: number; sceneIndex: number } | null>(null);
   const scriptFingerprintRef = useRef("");
   const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
   const [handsFreeMode, setHandsFreeMode] = useState(false);
   const handsFreeModeRef = useRef(false);
   const wakeLockRef = useRef<any>(null);
@@ -144,8 +149,43 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   }, [handsFreeMode]);
 
   useEffect(() => {
+    const goOffline = () => setIsOffline(true);
+    const goOnline = () => setIsOffline(false);
+    window.addEventListener("offline", goOffline);
+    window.addEventListener("online", goOnline);
+    return () => {
+      window.removeEventListener("offline", goOffline);
+      window.removeEventListener("online", goOnline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (session) {
+      try {
+        const cacheData = {
+          name: session.name,
+          roles: session.roles,
+          scenes: session.scenes,
+          userRoleId: session.userRoleId,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("costar-offline-script", JSON.stringify(cacheData));
+      } catch {}
+    }
+  }, [session?.name, session?.roles, session?.scenes, session?.userRoleId]);
+
+  useEffect(() => {
     if (!camera.isEnabled) setCameraFocus('script');
   }, [camera.isEnabled]);
+
+  useEffect(() => {
+    if (camera.isEnabled) {
+      setThemeColorOverride("#000000");
+    } else {
+      setThemeColorOverride(null);
+    }
+    return () => setThemeColorOverride(null);
+  }, [camera.isEnabled, setThemeColorOverride]);
 
   useEffect(() => {
     try {
@@ -207,6 +247,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     skippedLines: number;
     duration: number;
   } | null>(null);
+  const [previousRunAccuracy, setPreviousRunAccuracy] = useState<number | null>(null);
   const [savingScript, setSavingScript] = useState(false);
   const [scriptSaved, setScriptSaved] = useState(false);
   const currentLineAccuracyRef = useRef<number>(0);
@@ -565,6 +606,19 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       duration,
     });
     
+    const fp = scriptFingerprintRef.current;
+    const prevRun = fp ? getLastRunForScript(fp) : null;
+    setPreviousRunAccuracy(prevRun ? prevRun.accuracy : null);
+
+    if (fp) {
+      recordRunHistory({
+        scriptFingerprint: fp,
+        accuracy: avgAccuracy,
+        linesSpoken: totalUserLines,
+        duration,
+      });
+    }
+
     setPlaying(false);
     incrementRunsCompleted();
     recordRehearsal(0, 1);
@@ -629,6 +683,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     } else {
       setShowCelebration(true);
       setSceneCompleted(true);
+      setTimeout(() => pwaInstall.triggerInstallPrompt(), 2000);
     }
 
     if (isAuthenticated && session?.name) {
@@ -1200,6 +1255,13 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         timestamp: Date.now(),
       });
     }
+    if (didRehearsalToday && stats.currentStreak > 0 && !sessionStorage.getItem("costar-streak-toast-shown")) {
+      sessionStorage.setItem("costar-streak-toast-shown", "1");
+      toast({
+        title: `${stats.currentStreak}-day streak`,
+        description: "Come back tomorrow to keep it going.",
+      });
+    }
     try {
       ttsEngine.stop();
     } catch {}
@@ -1208,7 +1270,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     } catch {}
     clearUserRole();
     onBack();
-  }, [clearUserRole, onBack, session]);
+  }, [clearUserRole, onBack, session, didRehearsalToday, stats.currentStreak, toast]);
 
   const handleClearSession = () => {
     ttsEngine.stop();
@@ -1302,7 +1364,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     setShowCelebration(false);
     setSceneCompleted(false);
     setCompletedRunStats(null);
-    // Reset to beginning
+    setPreviousRunAccuracy(null);
     goToLine(0);
     // Reset performance tracking
     resetRunPerformance();
@@ -1672,6 +1734,16 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         />
       </div>
 
+      {isOffline && session?.isPlaying && (
+        <div
+          className="fixed top-14 left-1/2 -translate-x-1/2 z-[45] flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/80 backdrop-blur-sm border border-border/50 animate-fade-in"
+          data-testid="indicator-offline-mode"
+        >
+          <WifiOff className="h-3 w-3 text-muted-foreground" />
+          <span className="text-[11px] text-muted-foreground font-medium">Offline mode — using device voices</span>
+        </div>
+      )}
+
       {showReadyScreen && session && (() => {
         const sceneCount = session.scenes.length;
         const currentSceneLines = session.scenes[session.currentSceneIndex]?.lines || [];
@@ -1897,6 +1969,28 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                         {animatedAccuracy}%
                       </div>
                       <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">accuracy</p>
+                      {previousRunAccuracy !== null && completedRunStats.totalUserLines > 0 && (() => {
+                        const diff = Math.round(completedRunStats.averageAccuracy) - Math.round(previousRunAccuracy);
+                        if (diff > 0) {
+                          return (
+                            <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1" data-testid="text-accuracy-trend">
+                              <TrendingUp className="inline h-3 w-3 mr-1" />
+                              Up {diff}% from last time
+                            </p>
+                          );
+                        } else if (diff < 0) {
+                          return (
+                            <p className="text-xs font-medium text-muted-foreground mt-1" data-testid="text-accuracy-trend">
+                              {Math.abs(diff)}% lower than last time
+                            </p>
+                          );
+                        }
+                        return (
+                          <p className="text-xs font-medium text-muted-foreground mt-1" data-testid="text-accuracy-trend">
+                            Same as last time
+                          </p>
+                        );
+                      })()}
                       <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-border/50 mx-6">
                         <div className="text-center">
                           <span className="text-sm font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
@@ -1947,6 +2041,54 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 </div>
               )}
               
+              {completedRunStats && completedRunStats.averageAccuracy > 85 && completedRunStats.totalUserLines > 0 && (
+                <div className={cn(
+                  "mb-3 transition-all duration-700 delay-250",
+                  celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                )}>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={async () => {
+                      const shareText = `I just scored ${Math.round(completedRunStats.averageAccuracy)}% accuracy rehearsing "${session.name}" on Co-star! ${completedRunStats.perfectLines}/${completedRunStats.totalUserLines} lines perfect.`;
+                      if (navigator.share) {
+                        try {
+                          await navigator.share({ title: "My Co-star Score", text: shareText });
+                        } catch {}
+                      } else {
+                        try {
+                          await navigator.clipboard.writeText(shareText);
+                          toast({ description: "Score copied to clipboard" });
+                        } catch {
+                          toast({ description: "Could not copy score", variant: "destructive" });
+                        }
+                      }
+                    }}
+                    data-testid="button-share-score"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share Your Score
+                  </Button>
+                </div>
+              )}
+
+              {completedRunStats && completedRunStats.averageAccuracy >= 90 && completedRunStats.totalUserLines > 0 && (!user || user.subscriptionTier === "free") && (
+                <div className={cn(
+                  "mb-3 rounded-lg border border-primary/15 bg-primary/[0.04] px-4 py-3 text-left transition-all duration-700 delay-300",
+                  celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+                )} data-testid="pro-tip-card">
+                  <div className="flex items-start gap-2.5">
+                    <Crown className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-foreground">Pro tip</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                        Pro members can save recordings and track progress over time to see how they improve.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {camera.hasRecording && (
                 <div className="mb-3">
                   <Button
@@ -1964,6 +2106,24 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 </div>
               )}
               
+              {!isAuthenticated && (
+                <div className="mb-3">
+                  <button
+                    onClick={() => onBack?.()}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-primary/20 bg-primary/[0.06] transition-colors hover:bg-primary/[0.10]"
+                    data-testid="button-signup-nudge"
+                  >
+                    <div className="shrink-0 w-8 h-8 rounded-full bg-primary/[0.12] flex items-center justify-center">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-foreground">Save your progress</p>
+                      <p className="text-xs text-muted-foreground">Create a free account to track your improvement</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 ml-auto" />
+                  </button>
+                </div>
+              )}
               {isAuthenticated && session && !scriptSaved && (
                 <div className="mb-3">
                   <Button
@@ -2046,6 +2206,56 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           </div>
         );
       })()}
+
+      {pwaInstall.showInstallCard && (
+        <div className="fixed inset-x-0 bottom-0 z-[55] p-4 animate-in slide-in-from-bottom-4 fade-in duration-300" data-testid="pwa-install-prompt">
+          <div className="bg-card border shadow-2xl rounded-xl p-4 max-w-sm mx-auto">
+            <button
+              onClick={pwaInstall.dismissInstallCard}
+              className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"
+              data-testid="button-dismiss-install"
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <img src="/favicon.png" alt="Co-star" className="w-7 h-7 rounded-md" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h4 className="text-sm font-semibold leading-tight" data-testid="text-install-title">
+                  Add Co-star to your home screen
+                </h4>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-snug" data-testid="text-install-description">
+                  Instant access to rehearsal, anytime
+                </p>
+              </div>
+            </div>
+            {pwaInstall.isIOS ? (
+              <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-lg px-3 py-2.5" data-testid="ios-install-instructions">
+                <Share2 className="h-4 w-4 shrink-0 text-primary" />
+                <span>Tap <strong className="text-foreground">Share</strong> then <strong className="text-foreground">Add to Home Screen</strong></span>
+              </div>
+            ) : (
+              <Button
+                className="w-full mt-3"
+                size="sm"
+                onClick={pwaInstall.handleInstall}
+                data-testid="button-install-app"
+              >
+                Install App
+              </Button>
+            )}
+            <button
+              onClick={pwaInstall.dismissInstallCard}
+              className="w-full mt-2 text-xs text-muted-foreground hover:text-foreground transition-colors text-center"
+              data-testid="button-not-now-install"
+            >
+              Not now
+            </button>
+          </div>
+        </div>
+      )}
 
       {camera.showDiscardPrompt && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
@@ -2225,15 +2435,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
       <main
         className={cn(
-          "flex-1 flex flex-col justify-center px-4 py-6 animate-fade-in relative z-10 transition-opacity duration-300",
+          "flex-1 flex flex-col justify-center content-inset py-6 animate-fade-in relative z-10 transition-opacity duration-300",
           camera.isEnabled && "text-white camera-text-shadow",
           camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
         )}
       >
-        {/* Subtle gradient accent at top - hide when camera is on */}
-        {!camera.isEnabled && (
-          <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
-        )}
         <div className="flex-1 flex flex-col justify-center max-w-2xl lg:max-w-3xl mx-auto w-full relative">
           <ThreeLineReader
             previousLine={previousLine}
@@ -2367,7 +2573,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           : "glass",
         camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
       )}>
-        <div className="px-4 py-2">
+        <div className="content-inset py-2">
           <PracticeToolbar
             memorizationMode={session.memorizationMode || "off"}
             onMemorizationChange={handleMemorizationChange}
@@ -2392,7 +2598,10 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           />
         </div>
         
-        <div className="px-4 py-5 max-w-md lg:max-w-lg mx-auto">
+        <div className={cn(
+          "content-inset pt-3 pb-4 max-w-md lg:max-w-lg mx-auto",
+          camera.isEnabled ? "border-white/5" : "zone-separator-subtle"
+        )}>
           <TransportBar
             isPlaying={session.isPlaying}
             canGoBack={canGoBack}

@@ -121,15 +121,15 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
               <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
                 <BarChart3 className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="text-base font-semibold text-foreground mb-1.5">No performances yet</h3>
+              <h3 className="text-base font-semibold text-foreground mb-1.5">Your stage awaits</h3>
               <p className="text-sm text-muted-foreground max-w-[260px] mb-5 leading-relaxed">
-                Complete your first rehearsal and your performance stats will appear here. Track your progress over time.
+                Once you finish your first rehearsal, your accuracy and progress will show up here. Every run helps you grow.
               </p>
               <Button
                 onClick={onBack}
                 data-testid="button-start-first-rehearsal"
               >
-                Start rehearsing
+                Start Your First Rehearsal
               </Button>
             </div>
           )}

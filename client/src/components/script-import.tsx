@@ -245,7 +245,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     
     if (fileName.endsWith(".pdf")) {
       setIsParsingFile(true);
-      setParseProgress("Reading PDF...");
+      setParseProgress("Opening your script...");
       let progressTimer: ReturnType<typeof setInterval> | null = null;
       try {
         const formData = new FormData();
@@ -254,7 +254,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         progressTimer = setInterval(() => {
           setParseProgress(prev => {
             if (prev.includes("Scanning")) return prev;
-            if (prev.includes("Reading")) return "Analyzing pages...";
+            if (prev.includes("Opening")) return "Finding your characters...";
             return prev;
           });
         }, 5000);
@@ -267,7 +267,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         if (!response.ok) {
           const data = await response.json();
           if (data.needsOcr) {
-            setParseProgress("Scanning pages...");
+            setParseProgress("Scanning your pages...");
             setOcrProgress(null);
 
             const ocrResult = await new Promise<{ parsed: any; rawText: string }>((resolve, reject) => {
@@ -393,12 +393,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     
     if (file.type.startsWith("image/") || /\.(jpg|jpeg|png|heic|heif|webp)$/i.test(fileName)) {
       setIsParsingFile(true);
-      setParseProgress("Reading photo...");
+      setParseProgress("Looking at your photo...");
       try {
         const formData = new FormData();
         formData.append("file", file);
         
-        setParseProgress("Scanning text...");
+        setParseProgress("Reading the lines...");
         const response = await fetch("/api/parse-file-to-session", {
           method: "POST",
           body: formData,
@@ -423,7 +423,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       return;
     }
 
-    setFileError("Please upload a PDF, TXT, image, or Fountain file");
+    setFileError("We support PDF, TXT, image, and Fountain files — try one of those");
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -479,28 +479,28 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     if (!isAuthenticated) {
       const anonKey = "costar-anon-generates";
       const anonCount = parseInt(localStorage.getItem(anonKey) || "0", 10);
-      if (anonCount >= 10) {
+      if (anonCount >= 1) {
+        sessionStorage.setItem("costar-pending-script", script);
+        if (uploadedFileName) sessionStorage.setItem("costar-pending-filename", uploadedFileName);
+        if (onAuthRequired) onAuthRequired();
         return;
       }
       localStorage.setItem(anonKey, String(anonCount + 1));
-
-      sessionStorage.setItem("costar-pending-script", script);
-      if (uploadedFileName) sessionStorage.setItem("costar-pending-filename", uploadedFileName);
-      if (onAuthRequired) onAuthRequired();
-      return;
     }
 
-    try {
-      const usageRes = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
-      if (usageRes.ok) {
-        const usageData = await usageRes.json();
-        if (!usageData.allowed) {
-          if (onUpgradeRequired) onUpgradeRequired(usageData.resetsAt);
-          return;
+    if (isAuthenticated) {
+      try {
+        const usageRes = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
+        if (usageRes.ok) {
+          const usageData = await usageRes.json();
+          if (!usageData.allowed) {
+            if (onUpgradeRequired) onUpgradeRequired(usageData.resetsAt);
+            return;
+          }
         }
+      } catch (e) {
+        console.warn("[Submit] Usage check failed, allowing:", e);
       }
-    } catch (e) {
-      console.warn("[Submit] Usage check failed, allowing:", e);
     }
 
     // Use uploaded filename if available, otherwise detect from content
@@ -622,7 +622,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       >
         {script && !isEditingScript && previewData.roles > 0 ? (
           <div
-            className="min-h-[300px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text cursor-pointer"
+            className="min-h-[280px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text cursor-pointer"
             onClick={() => { setIsEditingScript(true); setTimeout(() => textareaRef.current?.focus(), 0); }}
             data-testid="script-preview"
           >
@@ -675,12 +675,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           <Textarea
             ref={textareaRef}
             id="script-text"
-            placeholder="MICHAEL: I'm gonna make him an offer he can't refuse."
+            placeholder="Paste your script here — we'll find the characters automatically"
             value={script}
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
             onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
             onBlur={() => { if (script.trim() && previewData.roles > 0) setIsEditingScript(false); }}
-            className="min-h-[300px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
+            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
             data-testid="textarea-script"
           />
         )}
@@ -951,10 +951,10 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             <div className="circle-badge w-6 h-6 energy-ring thinking" aria-hidden="true">
               <div className="w-3 h-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
             </div>
-            <span className="text-sm">Fixing formatting</span>
+            <span className="text-sm">Tidying up your script...</span>
           </div>
           {script.length > 10000 && (
-            <span className="text-xs text-muted-foreground">Large script, this may take up to a minute</span>
+            <span className="text-xs text-muted-foreground">This is a big one — hang tight, up to a minute</span>
           )}
         </div>
       )}
@@ -981,7 +981,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             </span>
           ) : (
             <>
-              No dialogue detected
+              We couldn't find any dialogue yet — try a different format
               {script.trim().length > 50 && (
                 <>
                   {" · "}
@@ -1013,14 +1013,11 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           <p className="text-destructive font-medium leading-relaxed">
             {(() => {
               const errText = error || fileError || "";
-              // Parse JSON error if present
               const jsonMatch = errText.match(/\{.*"error"\s*:\s*"([^"]+)".*\}/);
               if (jsonMatch) {
                 return jsonMatch[1];
               }
-              // Remove status code prefix like "400: "
               const cleaned = errText.replace(/^\d+:\s*/, "");
-              // If it's still JSON, try to parse it
               try {
                 const parsed = JSON.parse(cleaned);
                 return parsed.error || cleaned;
@@ -1029,8 +1026,11 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               }
             })()}
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            We couldn't parse that script. Try pasting just the dialogue, or upload the PDF directly.
+          </p>
           <div className="border-t border-destructive/10 pt-3">
-            <p className="text-xs text-muted-foreground mb-2">Expected format:</p>
+            <p className="text-xs text-muted-foreground mb-2">Here's an example of a format that works well:</p>
             <div className="bg-muted/50 rounded px-3 py-2 font-mono text-xs text-foreground/80 space-y-0.5">
               <p>JOHN: Hello, how are you?</p>
               <p>MARY: I'm doing well, thanks.</p>
@@ -1060,15 +1060,16 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         >
           <Clock className="h-4 w-4 mt-0.5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground">You've reached your daily limit</p>
+            <p className="font-medium text-foreground">You've been crushing it today!</p>
             <p className="text-muted-foreground text-xs mt-0.5">
-              Your limit resets {new Date(dailyLimitResetsAt).toLocaleString("en-US", {
+              Free accounts get 3 scripts per day. Go Pro for unlimited rehearsals.
+              Resets {new Date(dailyLimitResetsAt).toLocaleString("en-US", {
                 month: "short",
                 day: "numeric",
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
-              })}. Upgrade anytime for unlimited rehearsals.
+              })}.
             </p>
           </div>
           <Button
@@ -1078,7 +1079,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             onClick={onUpgradeClick}
             data-testid="button-upgrade-inline"
           >
-            Upgrade
+            Go Pro
           </Button>
           <button
             onClick={onDismissLimit}
@@ -1100,12 +1101,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         {isLoading ? (
           <>
             <div className="w-4 h-4 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground animate-spin mr-2" />
-            Processing
+            Setting the stage...
           </>
         ) : canSubmit ? (
-          "Continue"
+          "Start Rehearsing"
         ) : (
-          "Paste a script"
+          "Paste a script to begin"
         )}
       </Button>
       
@@ -1152,7 +1153,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             </div>
           ) : (
             <p className="text-center text-sm text-muted-foreground">
-              No script?{" "}
+              Don't have a script handy?{" "}
               <button
                 onClick={generateRandomScript}
                 disabled={isGenerating}

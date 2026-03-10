@@ -176,8 +176,8 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           </h2>
           <p className="text-sm text-muted-foreground mt-1 relative leading-relaxed">
             {isReturning
-              ? `Pick up where you left off, or choose a different role.`
-              : "Your scene partner reads the other parts."}
+              ? `Pick up where you left off, or try a different role.`
+              : "Choose who you'll play — your AI scene partner handles the rest."}
           </p>
 
           <div className="flex items-center gap-2 flex-wrap mt-3" data-testid="script-preview-summary">
@@ -331,10 +331,10 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           data-testid="button-start-rehearsal"
         >
           {!selectedRoleId
-            ? "Select a role"
+            ? "Choose your role to begin"
             : isReturning && selectedRole?.name === lastRole
               ? `Resume as ${selectedRole.name}`
-              : "Start Solo"}
+              : `Start Rehearsing as ${selectedRole?.name}`}
         </Button>
         
         {onTableRead && (

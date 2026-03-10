@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { MemorizationMode } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Eye, EyeOff, Lightbulb, Brain, Mic, MicOff, Video, VideoOff, Circle, Settings2 } from "lucide-react";
+import { Eye, EyeOff, Lightbulb, Brain, Mic, MicOff, Video, VideoOff, Circle, Settings2, Crown } from "lucide-react";
 
 interface PracticeToolbarProps {
   memorizationMode: MemorizationMode;
@@ -172,7 +172,7 @@ export function PracticeToolbar({
             size="sm"
             onClick={onRecordToggle}
             className={cn(
-              "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px]",
+              "gap-1 text-[11px] px-2 min-h-[44px] min-w-[44px] relative",
               cameraEnabled && "text-white/60"
             )}
             title={cameraEnabled ? "Record video with audio" : "Record audio only"}
@@ -180,6 +180,14 @@ export function PracticeToolbar({
           >
             <Circle className="h-3 w-3" />
             <span className="hidden sm:inline">Record</span>
+            <span className={cn(
+              "absolute -top-1 -right-1 flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-bold animate-shimmer",
+              cameraEnabled
+                ? "bg-yellow-500/90 text-yellow-950"
+                : "bg-yellow-500/80 text-yellow-950 dark:bg-yellow-500/90"
+            )} data-testid="badge-pro-record">
+              <Crown className="h-2.5 w-2.5" />
+            </span>
           </Button>
 
           <Button

@@ -84,6 +84,18 @@ The application handles script import from various formats (`.txt`, `.pdf`, imag
 - **Micro-interaction Polish**: CTA press scale (0.97); glass surface desktop hover glow; hero section staggered entrance animation; smooth mascot mood transitions; theatrical theme toggle rotation
 - **iOS PWA Ding Fix**: `pause()`/`softStart()` methods on SpeechRecognitionEngine; continuous mode on iOS PWA avoids repeated recognition.start() calls that trigger system chimes
 
+### PWA & PLG Refinement (Session 14)
+- **Smart PWA Install Prompt**: Custom `usePwaInstall` hook captures `beforeinstallprompt`; shows polished install card after first rehearsal; iOS Safari manual instructions; one-time display via localStorage
+- **Theme Color Sync**: Dynamic `theme-color` meta tag updates on theme change; camera mode sets status bar to black; manifest aligned to light mode defaults; `display_override: ["standalone", "minimal-ui"]`
+- **Activation-First Onboarding**: First script can be parsed/rehearsed without auth (PLG principle); auth required after first use; "Save your progress" nudge on completion screen for unauthenticated users
+- **Upgrade Nudges at Natural Moments**: "Share Your Score" button on >85% accuracy (Web Share API); "Pro tip" card after 90%+ runs; empathetic daily limit copy; Crown badge shimmer on Pro-only features
+- **Retention Loop**: Per-script run history in localStorage; accuracy trend comparison ("Up X% from last time"); streak badge on home page; throttled streak toast on exit (once per session)
+- **Offline Rehearsal**: TTS engine falls back to browser voices when offline; active session cached in localStorage; subtle "Offline mode" indicator; neutral offline banner tone
+- **Swipe-Back Gesture**: `useSwipeBack` hook with edge detection (50px threshold); visual pull indicator; standalone PWA only (no browser conflict); respects scrollable elements
+- **Settings Progressive Disclosure**: Essentials (pace, volume, tap mode) shown by default; Advanced section collapsible; descriptions on every setting; "Reset to Defaults" button
+- **Contextual Micro-Copy**: Warmer placeholder text, action-oriented CTAs, conversational error messages, rotating loading messages, friendlier empty states
+- **Visual Rhythm**: `content-inset` utility (16px mobile, 24px tablet, 32px desktop); zone separators between content groups; removed redundant decorative elements
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines and scene descriptions are automatically linked to subsequent dialogue.
 - **Scene Transition Cards**: Visual cues for scene changes with animated displays.

@@ -250,6 +250,10 @@ class TTSEngine {
     return this.isReady || this.useElevenLabs;
   }
 
+  get isOffline(): boolean {
+    return typeof navigator !== "undefined" && !navigator.onLine;
+  }
+
   get masterVolume(): number {
     return this._masterVolume;
   }
@@ -370,7 +374,7 @@ class TTSEngine {
   }
 
   prefetch(text: string, options: SpeakOptions): void {
-    if (!this.useElevenLabs || !text) return;
+    if (!this.useElevenLabs || !text || this.isOffline) return;
     
     const key = this.makePrefetchKey(text, options);
     
@@ -714,6 +718,11 @@ class TTSEngine {
     options?: SpeakOptions
   ): boolean {
     this.stop();
+
+    if (this.isOffline) {
+      console.log("[TTS] Offline — using browser TTS");
+      return this.speakWithBrowserTTS(text, prosody, onEnd);
+    }
 
     if (this.useElevenLabs && options) {
       const myGeneration = this.speakGeneration;

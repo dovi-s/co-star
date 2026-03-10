@@ -1,5 +1,29 @@
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
+
+const CONTEXTUAL_MESSAGES = [
+  "Setting the stage...",
+  "Finding your characters...",
+  "Getting everything ready...",
+  "Warming up the spotlight...",
+  "Preparing your scene...",
+];
+
+export function useLoadingMessage(isLoading: boolean, interval = 3000): string {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!isLoading) {
+      setIndex(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setIndex(prev => (prev + 1) % CONTEXTUAL_MESSAGES.length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [isLoading, interval]);
+  return CONTEXTUAL_MESSAGES[index];
+}
 
 interface SkeletonProps {
   className?: string;

@@ -30,6 +30,7 @@ import { usePageTracking } from "@/hooks/use-tracking";
 import "@/hooks/use-analytics";
 import type { SavedScript } from "@shared/models/auth";
 import { AlertTriangle, RotateCcw, WifiOff, Play } from "lucide-react";
+import { useSwipeBack } from "@/hooks/use-swipe-back";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -276,6 +277,10 @@ function AppContent() {
     }
   }, [transitionTo]);
 
+  const viewsWithBack: View[] = ["rehearsal", "multiplayer", "how-it-works", "who-is-it-for", "compare", "roadmap", "signin", "library", "history", "feature-board", "profile", "subscription", "admin", "brand"];
+  const swipeBackHandler = viewsWithBack.includes(view) ? handleBackToHome : undefined;
+  useSwipeBack(swipeBackHandler);
+
   const handleLoadScript = useCallback((script: SavedScript) => {
     if (script.rolesJson && script.scenesJson) {
       const loaded = createSessionFromParsed(
@@ -417,13 +422,13 @@ function OfflineBanner() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-center gap-2 px-4 py-2 bg-amber-600 dark:bg-amber-700 text-white text-sm font-medium"
-      role="alert"
-      aria-live="assertive"
+      className="fixed top-0 left-0 right-0 z-[200] flex items-center justify-center gap-2 px-4 py-2 bg-muted dark:bg-muted text-muted-foreground text-sm font-medium border-b border-border"
+      role="status"
+      aria-live="polite"
       data-testid="banner-offline"
     >
       <WifiOff className="h-4 w-4 shrink-0" />
-      <span>You're offline — some features may not work</span>
+      <span>You're offline — rehearsal still works with device voices</span>
     </div>
   );
 }
