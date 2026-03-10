@@ -1098,7 +1098,10 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       speakTimeoutRef.current = null;
     }
     
-    if (session?.isPlaying && currentLine) {
+    const line = getCurrentLine();
+    const isUser = line ? isUserLine(line) : false;
+
+    if (session?.isPlaying && line) {
       if (speakingLineRef.current === lineKey) {
         return;
       }
@@ -1112,7 +1115,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       setTtsGenerating(false);
       setSpeakingWordIndex(-1);
       
-      if (currentIsUserLine) {
+      if (isUser) {
         speechRecognition.abort();
         if (!waitingForUserRef.current) {
           speakingLineRef.current = lineKey;
@@ -1136,7 +1139,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     } else {
       stopAllPlaybackRef.current();
     }
-  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex]);
+  }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex, getCurrentLine, isUserLine]);
 
   const startPlayback = useCallback(() => {
     speakingLineRef.current = null;

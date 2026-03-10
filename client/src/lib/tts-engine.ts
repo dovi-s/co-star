@@ -30,8 +30,8 @@ export function calculateProsody(
   emotion: EmotionStyle = "neutral",
   preset: VoicePreset = "natural"
 ): ProsodyParams {
-  const emotionParams = emotionToProsody[emotion];
-  const presetMods = presetModifiers[preset];
+  const emotionParams = emotionToProsody[emotion] ?? emotionToProsody.neutral;
+  const presetMods = presetModifiers[preset] ?? presetModifiers.natural;
 
   return {
     rate: (emotionParams.rate ?? 1) * (presetMods.rate ?? 1),
@@ -781,9 +781,12 @@ class TTSEngine {
       utterance.voice = preferredVoice;
     }
 
-    utterance.rate = Math.max(0.5, Math.min(2, prosody.rate));
-    utterance.pitch = Math.max(0, Math.min(2, 1 + prosody.pitch * 0.5));
-    utterance.volume = Math.max(0.1, Math.min(1, prosody.volume)) * this._masterVolume;
+    const safeRate = Number.isFinite(prosody.rate) ? prosody.rate : 1;
+    const safePitch = Number.isFinite(prosody.pitch) ? prosody.pitch : 0;
+    const safeVolume = Number.isFinite(prosody.volume) ? prosody.volume : 1;
+    utterance.rate = Math.max(0.5, Math.min(2, safeRate));
+    utterance.pitch = Math.max(0, Math.min(2, 1 + safePitch * 0.5));
+    utterance.volume = Math.max(0.1, Math.min(1, safeVolume)) * this._masterVolume;
 
     let browserCallbackFired = false;
     const fireBrowserCallback = (result: SpeakResult) => {
