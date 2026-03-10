@@ -20,6 +20,7 @@ import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
 import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Loader2, Trophy, Info, Zap, Clock, Flame, Share2, Crown, User, WifiOff } from "lucide-react";
+import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator";
@@ -1371,7 +1372,13 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     if (!isAuthenticated || isPro) return true;
     setCheckingRunLimit(true);
     try {
-      const res = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
+      const dfp = await getDeviceFingerprint();
+      const res = await fetch("/api/script-usage/increment", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceFingerprint: dfp }),
+      });
       if (!res.ok) {
         setCheckingRunLimit(false);
         return false;

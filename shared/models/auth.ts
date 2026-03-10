@@ -60,6 +60,19 @@ export const passwordResetTokens = pgTable("password_reset_tokens", {
 
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 
+export const deviceUsage = pgTable("device_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  deviceFingerprint: varchar("device_fingerprint").notNull(),
+  usageCount: integer("usage_count").default(0),
+  resetAt: timestamp("reset_at"),
+  lastUserId: varchar("last_user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_device_usage_fingerprint_unique").on(table.deviceFingerprint),
+]);
+
+export type DeviceUsage = typeof deviceUsage.$inferSelect;
+
 // Saved scripts for Pro users
 export const savedScripts = pgTable("saved_scripts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

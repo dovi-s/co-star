@@ -15,7 +15,7 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs } from "@shared/models/auth";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
@@ -391,14 +391,7 @@ export async function registerRoutes(
 
       if (resetAt) {
         const resetDate = new Date(resetAt);
-        if (now >= resetDate) {
-          await db.update(users).set({
-            scriptUsageCount: 0,
-            scriptUsageResetAt: null,
-          }).where(eq(users.id, userId));
-          usageCount = 0;
-          resetAt = null;
-        } else if (resetDate.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
+        if (now >= resetDate || resetDate.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
           await db.update(users).set({
             scriptUsageCount: 0,
             scriptUsageResetAt: null,
@@ -408,13 +401,34 @@ export async function registerRoutes(
         }
       }
 
+      const dfp = req.query.deviceFingerprint as string | undefined;
+      let deviceCount = 0;
+      let deviceResetAt: Date | null = null;
+      if (dfp) {
+        const [device] = await db.select().from(deviceUsage).where(eq(deviceUsage.deviceFingerprint, dfp));
+        if (device) {
+          deviceCount = device.usageCount ?? 0;
+          deviceResetAt = device.resetAt;
+          if (deviceResetAt) {
+            const dr = new Date(deviceResetAt);
+            if (now >= dr || dr.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
+              await db.update(deviceUsage).set({ usageCount: 0, resetAt: null }).where(eq(deviceUsage.id, device.id));
+              deviceCount = 0;
+              deviceResetAt = null;
+            }
+          }
+        }
+      }
+
       const isPro = user.subscriptionTier === "pro";
       const effectiveLimit = FREE_DAILY_LIMIT + bonus;
-      const limitReached = !isPro && usageCount >= effectiveLimit;
+      const effectiveUsed = Math.max(usageCount, deviceCount);
+      const effectiveResetAt = usageCount >= deviceCount ? resetAt : (deviceResetAt || resetAt);
+      const limitReached = !isPro && effectiveUsed >= effectiveLimit;
       res.json({
-        used: usageCount,
+        used: effectiveUsed,
         limit: isPro ? null : effectiveLimit,
-        resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
+        resetsAt: effectiveResetAt ? new Date(effectiveResetAt).toISOString() : null,
         isPro,
         limitReached,
       });
@@ -455,13 +469,38 @@ export async function registerRoutes(
         }
       }
 
+      const rawDfp = req.body?.deviceFingerprint as string | undefined;
+      const dfpValid = rawDfp && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(rawDfp);
+      const dfp = dfpValid ? rawDfp : undefined;
+
+      let deviceCount = 0;
+      let deviceResetAt: Date | null = null;
+
+      if (dfp) {
+        const [existing] = await db.select().from(deviceUsage).where(eq(deviceUsage.deviceFingerprint, dfp));
+        if (existing) {
+          deviceCount = existing.usageCount ?? 0;
+          deviceResetAt = existing.resetAt;
+          if (deviceResetAt) {
+            const dr = new Date(deviceResetAt);
+            if (now >= dr || dr.getTime() - now.getTime() > 13 * 60 * 60 * 1000) {
+              deviceCount = 0;
+              deviceResetAt = null;
+            }
+          }
+        }
+      }
+
       const effectiveLimit = FREE_DAILY_LIMIT + bonus;
-      if (usageCount >= effectiveLimit) {
+      const effectiveUsed = Math.max(usageCount, deviceCount);
+      const dominatingResetAt = usageCount >= deviceCount ? resetAt : deviceResetAt;
+
+      if (effectiveUsed >= effectiveLimit) {
         return res.json({
           allowed: false,
-          used: usageCount,
+          used: effectiveUsed,
           limit: effectiveLimit,
-          resetsAt: resetAt ? new Date(resetAt).toISOString() : null,
+          resetsAt: dominatingResetAt ? new Date(dominatingResetAt).toISOString() : null,
           isPro: false,
         });
       }
@@ -472,9 +511,23 @@ export async function registerRoutes(
         scriptUsageResetAt: nextReset,
       }).where(eq(users.id, userId));
 
+      if (dfp) {
+        const deviceNextReset = deviceResetAt || getDailyReset(now);
+        await db.execute(sql`
+          INSERT INTO device_usage (id, device_fingerprint, usage_count, reset_at, last_user_id, created_at)
+          VALUES (gen_random_uuid(), ${dfp}, 1, ${deviceNextReset}, ${userId}, NOW())
+          ON CONFLICT (device_fingerprint)
+          DO UPDATE SET
+            usage_count = ${deviceCount + 1},
+            reset_at = ${deviceNextReset},
+            last_user_id = ${userId}
+        `);
+      }
+
+      const newEffectiveUsed = Math.max(usageCount + 1, deviceCount + 1);
       res.json({
         allowed: true,
-        used: usageCount + 1,
+        used: newEffectiveUsed,
         limit: effectiveLimit,
         resetsAt: new Date(nextReset).toISOString(),
         isPro: false,

@@ -26,6 +26,14 @@ Key features include:
 - **Context Peek Feature**: Allows viewing stage directions and preceding actions.
 - **Global Script Navigation**: Progress indicator across the entire script with automatic scene advancement.
 
+### Device Fingerprint Anti-Abuse System
+- A `device_usage` table tracks script usage per device fingerprint (UUID stored in localStorage + IndexedDB)
+- Both `POST /api/script-usage/increment` and `GET /api/script-usage` check the higher of user vs device usage count
+- Prevents multi-account abuse: creating a new free account on the same device inherits the device's existing usage count
+- Client utility: `client/src/lib/device-fingerprint.ts` — exports `getDeviceFingerprint(): Promise<string>`
+- Fingerprint is sent as `deviceFingerprint` in POST body or GET query param on all usage-related API calls
+- Same 12-hour reset window applies to device usage as to user usage
+
 ### Stripe Integration Note
 - Stripe Sandbox connection is configured and working in development
 - Stripe production connection was not set up by the user — subscription buttons may be disabled in deployed/production environment until the production Stripe connector is authorized

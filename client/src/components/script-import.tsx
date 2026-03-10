@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { cn } from "@/lib/utils";
 import { parseScript } from "@/lib/script-parser";
 import { CameraScanner } from "@/components/camera-scanner";
@@ -490,7 +491,13 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
     if (isAuthenticated) {
       try {
-        const usageRes = await fetch("/api/script-usage/increment", { method: "POST", credentials: "include" });
+        const dfp = await getDeviceFingerprint();
+        const usageRes = await fetch("/api/script-usage/increment", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceFingerprint: dfp }),
+        });
         if (usageRes.ok) {
           const usageData = await usageRes.json();
           if (!usageData.allowed) {
