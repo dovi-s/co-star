@@ -1,0 +1,1112 @@
+Intro / What are we covering
+0:00
+Something I'm starting to get known for
+0:01
+are these app mascots. A lot of people
+0:03
+comment on them and it really does add
+0:05
+another dimension to the apps that I
+0:06
+make. If you're new here, welcome to the
+0:08
+video. My name is Chris and I build
+0:09
+productivity apps. This is episode two
+0:11
+of a new series where I'm building my
+0:13
+fifth app, Subscription Monster,
+0:14
+completely in public. And today I'm
+0:16
+answering the most common question that
+0:17
+I've gotten so far, which is how do I
+0:19
+create these app mascots? I'm going to
+0:21
+show you guys how I made this mascot
+0:23
+named Oliver for my new app,
+0:24
+Subscription Monster. I'm also going to
+0:26
+share how I come up with branding and
+0:27
+app names in general. So, if you're
+0:29
+building an app, stick around for that.
+The benefits of having an app mascots
+0:30
+First, let me go over why I do this and
+0:32
+what the benefit is. There's a reason
+0:33
+that sports teams do the same thing and
+0:34
+have mascots. It's because it's way
+0:36
+easier to get attached to a character
+0:38
+than it is an abstract logo. When you
+0:40
+add a mascot like I do to my apps, it
+0:42
+becomes more than a piece of software,
+0:44
+and it's something that people can start
+0:45
+getting attached to. Imagine you're
+0:47
+waiting for some data to crunch and then
+0:48
+you see Oliver the subscription monster
+0:50
+sitting on a pile of receipts. When you
+0:52
+start seeing the same character appear
+0:54
+over and over again in an app, you can't
+0:56
+help but start associating it with the
+0:57
+product and building a little bit of a
+How I generate mascots with chatgpt
+0:59
+connection. So, let's hop into how I
+1:00
+actually create these things. So,
+1:01
+everyone probably thinks I just hop into
+1:03
+Chat GPT or Midjourney and then ask her
+1:05
+to generate these images, which is
+1:06
+partially true, but I actually have one
+1:07
+more step that I do beforehand, which
+1:09
+actually surprises a lot of people, and
+1:11
+it's to first start with a handdrawn
+1:13
+illustration. You can commission an
+1:14
+artist to do this, and it's actually not
+1:16
+as expensive as you might think. In my
+1:17
+case, I'm lucky because my fianceé, I
+1:19
+get to say fiance now. We recently got
+1:21
+engaged. But in my case, I'm lucky. She
+1:22
+is an artist. So, she comes up with the
+1:24
+base illustrations for me. So, when I
+1:25
+came up with my mascot, Lily, I actually
+1:27
+use these drawings that she hand drew of
+1:29
+our dog Luna as the base illustrations
+1:32
+to come up with this mascot. And again,
+1:33
+these are completely handdrawn
+1:35
+illustrations. When you use original art
+1:37
+as a foundation, it makes the mascot
+1:39
+that you then generate in chatpt a lot
+1:41
+more unique. Once you have that, you can
+1:43
+use AI to start making iterations. Up to
+1:45
+this point, I have been using Chat GPT
+1:47
+to do the iterations. So, what I do is I
+1:48
+actually feed in the base illustration
+1:50
+into ChachiPT and then I have a bunch of
+1:52
+conversations to start iterating and
+1:54
+riffing and going in different
+1:55
+directions until I get a mascot that I
+1:57
+really like. Let's just walk through how
+Walking through how I made the SubscriptionMonster mascot
+1:59
+I made this mascot Oliver because I do
+2:01
+actually have the chats here. So, what I
+2:02
+actually used as the base illustration
+2:04
+was my mascot Lily. Since the app is
+2:06
+called Subscription Monster, I knew I
+2:08
+wanted a monster as the mascot. So, the
+2:09
+first thing I did was I told it, can you
+2:11
+make a mascot of a monster in this
+2:13
+style? And it went ahead and generated
+2:15
+it. As you can see, it actually did a
+2:16
+good job of following the style closely,
+2:19
+but I wasn't really happy with how this
+2:21
+mascot turned out. This is where I see a
+2:22
+lot of people just kind of stop and give
+2:24
+up, and they're like, "Okay, Chachi PT
+2:25
+sucks. This is not going to work." But
+2:27
+you need to be patient, and you need to
+2:28
+keep exploring and trying different
+2:30
+things until you get to a mascot that
+2:32
+you do like. So, the next thing I did
+2:33
+was I asked it, can you actually create
+2:35
+another variation of the monster? Just
+2:37
+make it look totally different, but I
+2:38
+still want it to be in this original
+2:40
+style. It honestly didn't follow my
+2:41
+instructions that well. It kind of just
+2:42
+added an extra tooth and then changed
+2:44
+the colors a little bit. So, I wasn't
+2:46
+happy with this. So, I decided to take
+2:47
+matters into my own hands and I started
+2:49
+prompting it a little bit more
+2:50
+specifically. Said, "Can you give it two
+2:51
+eyes and make the horn slightly
+2:53
+smaller?" And then this was the next
+2:54
+iteration getting a little closer to
+2:56
+what I wanted, but a little bit still
+2:57
+too cartoonish. Then I said, "Can you
+2:59
+make it smaller and similar to the first
+3:01
+character?" So, Lily the ghost. And I
+3:03
+said, "Can you make the horns smaller?
+3:04
+Can you give it feet to match?" And to
+3:06
+be honest, at this point, I was like,
+3:08
+"Okay, this is just not going well. I
+3:10
+don't really like the direction this is
+3:11
+heading. When it comes to image chats,
+3:13
+my recommendation is to start a new chat
+3:15
+frequently, especially when you notice
+3:17
+it's going in the wrong direction
+3:19
+because for image-based chats, it's
+3:20
+usually pretty hard to correct course.
+3:22
+So then the next thing I did was I
+3:24
+actually started a new chat, fed in the
+3:26
+same Lily illustration, but I gave it
+3:28
+more specific instructions. This time I
+3:30
+told it, make something similar, but can
+3:32
+you make it with very small horns and
+3:34
+look like the abominable snowman? As I
+3:36
+thought about it more, I was like,
+3:37
+"Okay, the character that I'm looking
+3:38
+for is more of an abominable snowman
+3:40
+type creature." I wanted it to be bluish
+3:42
+and white and have a little bit more
+3:43
+fur. So, that was the next thing that I
+3:45
+did. And so, this was the next prompt
+3:46
+that I gave it. And the first iteration
+3:49
+was something that I really liked.
+3:51
+Obviously, when you compare it to the
+3:52
+first attempt, it's just so much better
+3:54
+off the bat already. So, that's the
+3:55
+power of really tweaking that base
+3:57
+prompt. But when I saw this, I was like,
+3:59
+"Great. I can totally work off of this."
+4:01
+So, the next thing I did was I said,
+4:02
+"Can you make a version where it's
+4:04
+typing on a computer?" This is honestly
+4:05
+looking pretty great already. Instead of
+4:07
+just going off of this prompt, I
+4:09
+actually refed in the original image
+4:11
+because I really did like this as a
+4:13
+foundation. Now, this is the new
+4:15
+foundational image that I'm going to be
+4:16
+working and riffing off. So, I don't
+4:17
+need to feed Lily anymore. I can just
+4:19
+work off of this. I refed it into
+4:21
+ChachiPT and said, "Can you make a
+4:22
+version where it doesn't have a mouth?"
+4:24
+So, I removed the mouth. It still has
+4:25
+the laptop, which was kind of
+4:27
+interesting. I didn't expect it to do
+4:28
+that. Then, I gave it some instructions,
+4:29
+which it did not have a good time
+4:31
+following. I said, "Can you do a version
+4:32
+of the first sticker that you made?" to
+4:34
+this one but without a mouth and it just
+4:36
+regurgitated this first sticker that I
+4:38
+actually posted. So once I saw this I
+4:40
+was like, "Okay, we got to start a new
+4:41
+chat. This is not going that well." So I
+4:43
+fed in the monster mascot that I liked
+4:45
+as a base and I said, "Can you do a
+4:46
+version without a mouth?" Perfect. It
+4:48
+actually removed the mouth. I really
+4:49
+liked it. Then I said, "Can you do a
+4:51
+version where it has wired glasses?"
+4:53
+That looked pretty good. Can you do a
+4:54
+version where he's looking at a receipt?
+4:56
+Can you do a version without the
+4:57
+glasses? Once I saw this, I was like,
+4:59
+"Okay, I actually think this is good
+5:01
+enough." I kind of fell in love with
+5:02
+this character. This looked like a
+5:04
+really good mascot for Subscription
+5:05
+Monster. It has this really good balance
+5:07
+of being playful and a cartoon, but also
+5:10
+still being kind of professional where I
+5:12
+could see this in a business
+5:14
+subscription software and it's not
+5:15
+weird. And that's kind of the balance
+5:16
+that I was trying to figure out for an
+5:18
+app like Subscription Monster. Then I
+5:19
+tried out a bunch of different things.
+5:21
+Like I said, can you give it a
+5:22
+magnifying glass so it's looking at a
+5:23
+receipt? Can you do one where it's
+5:25
+looking through a pile of receipts? And
+5:27
+this is actually the process of how I'm
+5:28
+going to come up with empty states. So,
+5:30
+if you're in the app and I'm processing
+5:32
+a bunch of data, I can have one of these
+5:34
+images on the screen instead of some
+5:35
+generic empty state. Once you have a
+5:37
+really good base mascot, it's really
+5:40
+easy with chatbt to come up with
+5:42
+borderline unlimited variations of what
+5:43
+you can think of. Here's another one
+5:45
+where it's holding a calculator. But, as
+5:46
+you can see, the more that you go down
+5:48
+though, the more prone it is to actually
+5:51
+deviating from the original. So, if you
+5:53
+notice here, it did add the receipt, but
+5:55
+it also added some feet to the mascot,
+5:57
+which I didn't really like. and it
+5:59
+didn't do it for this version of the
+6:00
+magnifying glass. And this is the point
+6:01
+where I probably would say, "Okay, it's
+6:04
+starting to kind of deviate a little
+6:05
+bit. I need to go back to the base
+6:06
+mascot, start a new chat, and then I can
+6:09
+start riffing and working off from
+6:11
+there." But this is actually the chats
+6:13
+that I used to generate the mascot for
+6:15
+Subscription Monster. And this is the
+6:17
+process that I do for all my mascots.
+6:18
+It's a lot of trial and error, and you
+6:20
+could get lucky and just get it in one
+6:22
+go, or sometimes it takes a 100 prompts
+6:24
+to get right. One mistake I'm seeing a
+The biggest mistake people make
+6:26
+lot of people make when they attempt
+6:27
+this is they ask Chachi PT a bit too
+6:29
+much in their request. Let me show you
+6:31
+guys exactly what I mean by this. It's
+6:32
+probably easier with an example. I have
+6:34
+this other illustration here and this is
+6:36
+another illustration that my fiance
+6:39
+made. This is of our dog Luna. So again,
+6:41
+this is handdrawn. So, I'm just going to
+6:42
+drag it in here and say, can you modify
+6:44
+it so that it's a gray cat and the
+6:48
+background is actually a coffee shop and
+6:51
+instead of a duck, it's a pizza and
+6:53
+instead of the iced tea, it is a hot cup
+6:56
+of coffee and I want the table to be
+7:00
+blue instead of green.
+7:03
+If you ask it to do all of these things
+7:07
+at once, the problem is it actually can
+7:09
+follow these instructions. But what I've
+7:11
+noticed is it starts completely just not
+7:14
+following the base style of the image
+7:17
+you give it. And so that is the biggest
+7:19
+problem that I've seen people do. And
+7:21
+then when they see this, they obviously
+7:22
+get frustrated and they're like,
+7:23
+"ChachiPT doesn't work." The secret is
+7:25
+to actually chunk this into individual
+7:28
+requests and go very slowly so that
+7:31
+Chachi PT has a good chance of actually
+7:33
+just maintaining the original base
+7:35
+style. So let's see how this performs.
+7:37
+But I already know I think it's not
+7:38
+going to go well. As you can see, it did
+7:41
+follow the instructions very well. The
+7:44
+instructions were followed very
+7:45
+correctly, but the style of the mascot
+7:47
+is a little bit different. To be honest,
+7:49
+this followed it a lot closer than
+7:51
+usual, I will say, because I tried this.
+7:54
+Maybe it's because this is GPT5, but I
+7:56
+did try this with GPT40 in the past. And
+7:58
+let me show you guys what that looked
+7:59
+like. When I fed the same image and I
+8:01
+told it to make a bunch of
+8:03
+modifications, it actually changed it to
+8:05
+this style, which you're probably
+8:07
+familiar with. This looks like all the
+8:08
+other Tachi BT images that are
+8:10
+generated. Maybe they did actually make
+8:11
+some improvements from 40 to 5 where
+8:13
+it's able to follow the designs a little
+8:14
+more closely. But I bet if we tried it
+8:17
+again. So let's try the exact same
+8:18
+thing, but let's actually just go a
+8:20
+little bit slower instead. So I'll just
+8:22
+start a new chat here. I'll feed in the
+8:24
+same image. And then I'm going to say,
+8:26
+can you modify it so instead of a dog,
+8:28
+it's a cat with whitish grayish hair.
+8:36
+and we'll see how close it follows. But
+8:38
+actually, I am a little bit impressed
+8:40
+that
+8:42
+the character
+8:45
+was followed pretty well. It got the
+8:47
+keyboard.
+8:50
+It got the shadows and the outline. It's
+8:53
+actually not that bad. Okay, so maybe
+8:54
+they did actually improve GPT5, which is
+8:57
+pretty cool. Let's see what happens if
+8:58
+we just break this line by line and just
+9:00
+go a little bit slower. So, this is done
+9:02
+generating. As you can see, when I just
+9:04
+gave it one instruction, which was to
+9:05
+swap it out with a cat, this is a lot
+9:08
+closer to the actual illustration style.
+9:12
+And then I can say, can you change the
+9:14
+duck into a pizza? That's done.
+9:18
+[Music]
+9:19
+Yeah, it followed the style pretty
+9:21
+closely. Yeah, I would say it followed
+9:24
+the style pretty closely.
+9:26
+The style of the pizza also does match
+9:28
+this illustration style a little bit
+9:30
+more in my opinion. They did improve
+9:32
+GPT5, so it is able to get a lot closer
+9:34
+than it used to in the past, but I still
+9:38
+think it's better to just go line by
+9:39
+line and just go really slowly on the
+9:41
+iterations because then you can get a
+9:43
+little bit more fine-tuned and then
+9:45
+there's just a higher chance that it
+9:46
+will stick with the original style that
+9:48
+it already had. But this is basically
+9:49
+the process that I use to generate these
+9:51
+mascots. Also, I get a ton of questions
+Wispr Flow (my favorite dictation tool)
+9:53
+where people are asking, "What am I
+9:54
+using for dictation?" Because, as you
+9:56
+just saw, I was dictating everything
+9:57
+into chatbt and I'm always dictating
+10:00
+everything into cloud code. And I'm
+10:01
+using a tool called Whisper Flow. And a
+10:02
+huge shout out to them for being a
+10:04
+channel sponsor. You can use Whisper
+10:05
+Flow in any app, including chatbt on
+10:08
+both desktop and iOS. And the reason
+10:10
+that I dictate everything is I feel like
+10:12
+I can get a lot more detailed prompts
+10:14
+than I would have otherwise if I was
+10:15
+just typing everything out. And the big
+10:17
+reason that I use Whisper Flow over
+10:18
+everything else is it is really geared
+10:20
+towards developers. and really good at
+10:22
+developer specific terminology. So if I
+10:24
+say something like MongoDB Superbase,
+10:29
+it gets it immediately and it actually
+10:31
+understands your code if you're using it
+10:32
+inside of things like cursor and
+10:33
+windsurf because it has integrations
+10:35
+with those IDEs. Last thing I'll
+10:37
+highlight is they have a very helpful
+10:38
+snippet feature that I'm constantly
+10:40
+using. So I can make these custom
+10:42
+snippets. So if I say something like
+10:43
+insert my calendar link, it's going to
+10:44
+swap it with my actual link. If I say
+10:46
+something like run the dev server while
+10:49
+I'm inside of a terminal, it will swap
+10:51
+it with this command that I added as a
+10:53
+snippet. I am a huge fan of Whisper
+10:55
+Flow. I'm using them every 4 minutes. If
+10:57
+you're interested in trying them out,
+10:58
+I'll leave a link in the description.
+10:59
+They even gave me a code for 1 month
+11:00
+free. They did not have to do that. I'm
+11:02
+the one that asked them to do that. Feel
+11:03
+free to use that and check them out if
+11:04
+you're interested. So, just to recap,
+Recap of the steps to make mascots
+11:06
+here are the steps that I used to make
+11:07
+the mascots. I use original art as a
+11:09
+base layer. And again, I would recommend
+11:11
+commissioning an artist. You could get
+11:12
+away without it, but I do think you get
+11:14
+more unique styles if you use something
+11:16
+more original. Then I use AI,
+11:17
+specifically ChatPT, to come up with
+11:19
+some bigger variations that I can start
+11:21
+riffing off of. Then when I'm happy with
+11:22
+the mascot, I start creating more unique
+11:24
+scenarios for empty states and
+11:26
+placeholders, still using chatpt. And in
+11:28
+terms of using the mascots, obviously I
+11:29
+use them for the app icon and the logos,
+11:31
+but I also use them in empty states
+11:33
+throughout the app. So here's some
+11:34
+examples of where I'm doing that. So in
+11:36
+my app, Ellie, I actually have this AI
+11:37
+assistant. And so I generated this
+11:39
+mascot of Ellie, which is my hamster
+11:41
+that the app is named after. It's Ellie
+11:43
+on a laptop. And I really think it makes
+11:45
+this page a lot more personal than if it
+11:47
+was just blank or just had text as the
+11:49
+empty state. For my new app,
+11:50
+Subscription Monster, I'm going to have
+11:51
+a bunch of these different scenarios
+11:53
+that I've come up with. And it's going
+11:54
+to be in places like when we're waiting
+11:55
+for data to load, when there's no data
+11:58
+to display. I'm really excited to just
+11:59
+throw this thing all throughout and I
+12:01
+think it's going to add a really fun
+12:02
+dimension that you don't really see in a
+12:03
+lot of business focused financial apps.
+12:05
+Quick note now that I think about it.
+12:07
+So, Chachi BT5 clearly is a lot better
+12:09
+at following instructions and this image
+12:11
+generations as we saw in my live
+12:13
+example. But another tool that I just
+12:14
+started playing with recently is
+12:16
+Google's Nano Banana, which you can find
+12:17
+in Gemini. I've heard that it's way
+12:19
+better at consistent output compared to
+12:20
+Chad GPT. I personally haven't tried it
+12:22
+yet for mascot generation, but I've
+12:23
+tried it for some other stuff and it's
+12:25
+really, really good. But leave a comment
+12:26
+below if you end up trying it and if you
+12:28
+like the results better than Chad GPT.
+How I come up with my app names
+12:29
+The last thing I wanted to cover briefly
+12:30
+is how do I come up with names for my
+12:32
+apps? I'm probably not the best person
+12:34
+to ask because my typical process is I
+12:36
+just name them after my pets. The daily
+12:37
+planning app was named after my hamster
+12:39
+and Luna the budgeting app was named
+12:40
+after my dog Luna. But I ran out of pets
+12:42
+so I'm having to get more creative. For
+12:44
+my other app, Lily, I created this ghost
+12:46
+character because it was a meeting
+12:47
+assistant app that lives in the
+12:48
+background kind of like a ghost. So that
+12:50
+made a lot of sense and I really just
+12:52
+like the name Lily. I do try to append
+12:53
+some sort of word at the end of it so
+12:55
+that people do know what the app is
+12:57
+about. So Ellie is ellipplanner.com. So
+12:59
+you know that it is a daily planning
+13:01
+app. For Luna, it's Lunabudgeting.com.
+13:03
+Subscription tracking was a little bit
+13:04
+more challenging. I used Claude pretty
+13:06
+heavily to brainstorm and workshop some
+13:08
+names. It actually came up with a Mircat
+13:10
+mascot, which was kind of cool because
+13:11
+Amircat is like searching for things and
+13:14
+this app was actually searching for
+13:16
+subscriptions in all of your financial
+13:17
+data. So, I thought that was a pretty
+13:19
+cool mascot. But unfortunately, I
+13:21
+dropped the Mircat thing because Mircat
+13:23
+has a interesting spelling where Mircat
+13:26
+has a K instead of a C. And I thought
+13:28
+that might be a little confusing for
+13:29
+people. I don't think everyone knows how
+13:30
+to spell Mircat and so I wanted to just
+13:32
+rule that one out even though I really
+13:34
+love the mascot. But when I was
+13:35
+brainstorming with Claude and I saw
+13:36
+things like subscription wolf,
+13:38
+subscription hound, I was kind of
+13:39
+thinking what mascot would embody this
+13:41
+and I realized that subscriptions and
+13:43
+just business finance in general are
+13:45
+kind of this monster that no business
+13:48
+owner really likes to think about or
+13:49
+talk about, but it does live in the back
+13:51
+of our minds. We kind of just push it
+13:52
+off and hope that it never comes back.
+13:54
+So, I thought that a monster is a pretty
+13:55
+interesting mascot because what if in
+13:57
+this case the monster was actually a
+13:58
+helpful monster that was here to help
+14:00
+you with your business financials and
+14:02
+answer questions and figure out what
+14:03
+subscriptions are you not paying for. I
+14:05
+really like that concept. And then it
+14:06
+turns out subscription monster.com was
+14:08
+actually available and I really just
+14:10
+like the feel of it. Then when I came up
+14:11
+with Oliver the subscription monster and
+14:13
+that pairing is just it just really felt
+14:15
+right. Typically my process is I kind of
+14:17
+just pick a name and I didn't really
+14:19
+spend that much time on this. I think I
+14:20
+spent probably like 2 hours thinking
+14:23
+about a name. Kind of just pick a name
+14:25
+knowing full well that if I want in the
+14:27
+future, I could easily change it. Even
+14:29
+subscription monster, I have a suspicion
+14:30
+that I might end up pivoting into
+14:32
+something more than subscriptions. Like
+14:34
+it might just be a more general business
+14:36
+financial tool and I'm completely fine
+14:38
+changing the name, changing the mascot
+14:39
+if needed. I actually did that for some
+14:41
+of my original products. A lot of people
+14:42
+don't know this. Mogul, which is my
+14:44
+personal CRM app that I have, was
+14:46
+actually originally called Karen. And
+14:48
+the reason I did that was it was named
+14:49
+after the computer from Spongebob, which
+14:51
+is the smart computer. And Mogul was
+14:53
+supposed to be this very smart
+14:55
+networking tool to help you manage all
+14:56
+your contacts. Karen ended up not being
+14:59
+a great name for an app. So I actually
+15:00
+changed it to Mogul, which I think is a
+15:03
+lot more fitting, but it was named Karen
+15:05
+for probably about a year straight.
+15:06
+Ellie actually had the name Kronos,
+15:08
+which had to do with time because this
+15:09
+is a time management tool. So it was
+15:11
+named Kronos for probably like a month
+15:14
+until I decided to change it,
+15:16
+thankfully. The point is, I move really
+15:17
+quickly with the names and I try not to
+15:19
+let it get in the way and I'm very, very
+15:21
+comfortable changing it if needed. And
+15:22
+that's my advice to everyone. If you're
+15:23
+thinking about coming up with a name,
+15:25
+definitely try to come up with a good
+15:26
+name at first, but don't spend too long
+15:28
+on it. I think just pick something, know
+15:30
+that it could be a placeholder, and it
+15:31
+can totally be changed in the future.
+15:33
+Ellie and Luna were actually kind of
+15:34
+more just placeholder names until I
+15:36
+found out the real name, but they ended
+15:37
+up sticking. But that's how I made the
+15:38
+mascot for my new app, Subscription
+Conclusion & thanks for watching :)
+15:40
+Monster. That's how I came up with the
+15:41
+name. Again, this is the second video in
+15:43
+my series where I'm building this app
+15:45
+subscription monster from scratch. I'm
+15:47
+going to be covering a lot of things
+15:48
+like the tech stack, how I'm thinking
+15:49
+about pricing, how I'm doing marketing.
+15:51
+So, if you're interested in seeing that
+15:52
+stuff, check the playlist below where
+15:54
+I'll be linking the other videos in this
+15:56
+series. If you like this content, check
+15:57
+out my Instagram and Tik Tok. I post
+15:58
+almost every other day about building
+16:00
+productivity apps. And obviously, if you
+16:01
+like this content, don't forget to
+16:02
+subscribe. But thank you guys so much
+16:03
+for watching and I'll see you guys in
+16:04
+the next video.
+16:08
+[Music]
+
+All
+
+From the series
+
+From Chris Raroque
+
+AI
+
+Visual arts
+

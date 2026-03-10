@@ -1,0 +1,56 @@
+Chapter 1: Top 2025 App Design Trends
+0:00Here are the top five app design trends of 2025. Our first design trend is emotionally intelligent design. And it's
+Chapter 2: 1. Emotional Design
+0:077 secondsnot a UI trend. It's something to do more with UX because it's the use of color characters or other means to produce an emotional response that keeps
+0:1616 secondspeople using the application. Such characters bring familiarity to an app or a website you're using. These kinds of emotions can then resonate with
+0:2424 secondssomeone wanting them to come back and view them again or even share them with their friends because they're so cute and fun. And there's no better example
+0:3030 secondsof this than Duingo. It's an app for learning languages. And they get people to keep coming back to it because of this character called Duo. You see him
+0:3838 secondswhen you start the application as you progress through different levels and even when you perform really well kind of cheering you on. The design of this
+0:4646 secondscharacter in the app keeps you coming back cuz you don't want to let down your digital friend. And the design of the widget is another example of this because if you forget or stop using the
+0:5555 secondsapp, Duo goes through a number of emotions from being distressed to angry to being worried and then finally
+1:021 minute, 2 secondsfreezing into obscurity. And I can see emotionally intelligent design being integrated with characters a lot more in the future, especially with AI being
+1:101 minute, 10 secondssuch a new and upcoming technology where characters can actually become real personas that you might create and form
+Chapter 3: 2. Chatbot Design
+1:181 minute, 18 secondsbonds with. The next trend is chatbot design and it's a design trend that's being brought about due to the fact that there's been a rise in AI models which
+1:271 minute, 27 secondsyou can chat with day-to-day. Everyone's trying to look at unique ways that they can make their app stand out. In these types of designs, we look at different
+1:341 minute, 34 secondsways that we can interact with the text inputs and upload photos. Also, the way that AI messages are displayed as they
+1:421 minute, 42 secondscome and stream through to the user's device. Things like, do they fade in?
+1:461 minute, 46 secondsHow do we attach and amend additional messages and how does a loading bar look like? All of these are design considerations when looking at chatbot
+1:541 minute, 54 secondsdesign and let's take a look at some of the popular apps currently on the marketplace. First up is perplexity.
+2:002 minutesWhile at first glance it looks very similar to chat GPT, it looks different visually when you're searching for different things. Information is laid
+2:082 minutes, 8 secondsout with sources and answer as well as related topics, so it feels more like you're searching on Google rather than chatting with an AI. The use of
+2:152 minutes, 15 secondsskeletons and placeholders, as well as streaming information, always feels like something's happening on the page. I like how new chats open up in their own
+2:232 minutes, 23 secondslittle window, as well as small things like these toggles to show you when you're utilizing pro mode. Quick pause.
+Chapter 4: Webflow Animations with GASP
+2:282 minutes, 28 secondsI just want to take a second to express my excitement for new changes coming to Gap, which falls under the umbrella of web flow interactions after it was acquired. Gap uses JavaScript to help
+2:372 minutes, 37 secondsyou create animations for practically anything you can imagine with features like timelines and easing, making it super simple to use. Now it's integrated
+2:442 minutes, 44 secondsinside of a web flow which makes it even easier to add these sorts of animations to your next website when you do things like scroll, hover, or just add engagement to your homepage. This
+2:532 minutes, 53 secondscreates a beautiful looking motion which is much smoother than basic CSS. And it can also provide you with timelines to expand the motion possibilities without needing complicated JavaScript code.
+3:033 minutes, 3 secondsHere's how you can do it. Simply jump into your Web Flow website and then click to enable the GSAP toggle. Then head to scripts and write what sort of
+3:113 minutes, 11 secondsanimation you wish to have. Here's a nice text dropin effect I added to my own website in just a few seconds. Then I added some stroke animation to my SVG
+3:193 minutes, 19 secondsicons. Of course, the ways you can implement this are endless, but here are some examples from a web flow website.
+3:253 minutes, 25 secondsGap has been paid, but now it's entirely free. So, if you want to try it out, check the link in the description below.
+Chapter 5: 3. Glassmorphism
+3:303 minutes, 30 secondsThe next app design trend that I'm a little bit skeptical about is glass design or glass morphism or if you want
+3:383 minutes, 38 secondsto be cool like Apple, liquid glass. In these designs, elements have this glassy look like you can see a reflection as
+3:453 minutes, 45 secondswell as elements underneath them as well as a little shine on the edges. And these glass reflections have a little bit of blur and shine. And this
+3:543 minutes, 54 secondsreflectivity also gives this perspective like the elements are in 3D space. While liquid glass can look really cool,
+4:014 minutes, 1 secondespecially for tech demos, when it comes to actually using it for an application,
+4:074 minutes, 7 secondstheir results may vary. Take a look at this example here on gray backgrounds.
+4:104 minutes, 10 secondsThese menus and elements look great and they're easy to view and have great accessibility. However, when it comes to real world use, things become a lot more
+4:184 minutes, 18 secondsmessy. Accessibility and usability is reduced as it's harder to read this type of text in the pursuit of making this element look more beautiful, which is
+4:264 minutes, 26 secondswhy so many people on Twitter complain with comparisons like this really showcasing the loss in accessibility by switching over to this new design
+4:344 minutes, 34 secondsaesthetic. So, while glass morphism is cool, it's not a design trend I'll be implementing in any of my app designs in the future. The next app design trend is
+Chapter 6: 4. Illustrations
+4:424 minutes, 42 secondsillustrations, and it's the use of adding things like characters to add a bit more personality to apps. Originally started on websites, I see a lot more
+4:514 minutes, 51 secondsillustrations now on mobile devices. And you can see just how much more vibrant and interesting apps like this can become, especially when you're doing things like education or mental health.
+5:015 minutes, 1 secondAnd it's closely connected to emotional design, which I see more prevalent these days. And it's no surprise why there's a lot more of this happening since it's
+5:085 minutes, 8 secondseasier than ever to create these sorts of vectors through things like Figma and then add them into interactive designs through the use of things like Webflow
+5:175 minutes, 17 secondsinteractions. And my favorite part is usually when these illustrations also have a slight animation to make them seem more alive. All right, so it's time
+Chapter 7: 5. Micro Animations
+5:255 minutes, 25 secondsfor our last design trend. And this one is my favorite. It's micro animations.
+5:305 minutes, 30 secondsMicro animations can come in all sorts of forms. Whether it's just simply clicking on an element and having some animation slide in, or having some
+5:385 minutes, 38 secondssubtle effects when you transition from one page to another, or even the way a button is animated when you click on it.
+5:445 minutes, 44 secondsThe result of good micro animation is an app that feels fluid, making you enjoy each interaction and wanting to continue
+5:515 minutes, 51 secondsto stay on it. And these sorts of micro animations are being shared more and more. Whether you're on Instagram and you're just getting inspiration or
+5:595 minutes, 59 secondswhether you're on dribble or Twitter and you just can't help but appreciate these graphs with these subtle movements that slide in as you view them.

@@ -1,0 +1,548 @@
+0:00
+There's a reason Dolingo, Revolute, and
+0:02
+Phantom all blew up, and it's the same
+0:05
+hidden edge I found designing for
+0:07
+startups and tech giants alike for the
+0:10
+last decade. It's called emotional
+0:12
+design. The art of making products feel
+0:15
+engaging, personal, and alive. And in
+0:18
+this video, I'll show you how to use it
+0:20
+to build apps people love and keep
+0:23
+coming back to. Let's be honest, these
+0:25
+days, anyone can build something fast.
+0:27
+We have APIs, no code tools, AI models.
+0:31
+All the ingredients are out there. It's
+0:33
+easier than ever to build things and
+0:35
+ship features, which means just being
+0:38
+useful isn't enough anymore. The real
+0:41
+edge is in how your product makes people
+0:43
+feel when they open it. Does it feel
+0:46
+smooth, delightful, playful, or even
+0:49
+premium? Or does it just feel like every
+0:52
+other app? Now, of course, winning
+0:54
+products still come from a mix of smart
+0:57
+things, like having a solid business
+0:58
+model, good timing, maybe even a strong
+1:01
+community. The list goes on. But more
+1:04
+and more, the thing that truly separates
+1:07
+good from great is design that connects,
+1:10
+design that feels intentional, design
+1:13
+that turns users into fans. There's this
+1:16
+quote from Reed Hastings, Netflix
+1:19
+co-founder, and it really nails the
+1:21
+point. The product has to be so good
+1:24
+people want to talk about it. And in a
+1:26
+world where every product has the same
+1:29
+access to tech, that's your long-term
+1:31
+edge. Not the code, not the features.
+1:35
+It's how your product leaves people
+1:37
+feeling when they close the tab or swipe
+1:40
+away. Now, before we dig into one of the
+1:43
+best examples of emotional design
+1:45
+translating into serious business
+1:47
+growth, if you're wondering how this
+1:49
+might apply to your product or your
+1:51
+business, we open up a couple of free
+1:54
+design strategy consultations each month
+1:57
+at SIPAP. So, feel free to sign up in
+2:00
+the link down below if that sounds
+2:01
+interesting. Now, with that, let's look
+2:03
+at Dualingo and how they used delight,
+2:06
+feedback, and character motion to pull
+2:08
+users in and keep them coming back.
+2:11
+Because Duolingo didn't just create
+2:13
+another language learning app, they
+2:15
+built a product that responds to you in
+2:18
+real time and in a way that actually
+2:21
+feels human. In 2022, they introduced a
+2:24
+full character animation system. This
+2:26
+included things like facial reactions,
+2:29
+lip syncing with audio, and idle
+2:31
+animations that made their characters
+2:33
+feel alive even when you weren't doing
+2:35
+anything. And this wasn't just for show.
+2:38
+Duolingo's data shows that after these
+2:40
+animations were rolled out, their daily
+2:43
+active users more than doubled from 14.2
+2:47
+million to over 34 million within 2
+2:50
+years. On top of that, their paid
+2:52
+subscribers also more than doubled in
+2:55
+that same time frame. Of course, again,
+2:57
+growth like that comes from a mix of
+3:00
+smart moves like adding new languages,
+3:03
+improving the curriculum, running solid
+3:05
+marketing campaigns, etc. But what's
+3:07
+interesting is that Dualingo's own team
+3:10
+has highlighted character animation as
+3:13
+one of the major reasons people stay
+3:16
+engaged. On several occasions, CEO Luis
+3:19
+Vonan has pointed out that the app's
+3:22
+delightful experience, which includes
+3:24
+these animations, sets it apart in a
+3:27
+space full of dry, functional apps. And
+3:29
+that connection isn't random. These
+3:31
+animations aren't just eye candy.
+3:34
+They're emotional feedback. They create
+3:36
+loops that keep people engaged. When you
+3:39
+answer a question correctly or make a
+3:41
+mistake, you don't just get a green
+3:43
+check mark. You feel encouraged,
+3:46
+corrected, and even cheered on. Those
+3:49
+quick reactions help boost engagement by
+3:51
+triggering emotional feedback loops,
+3:54
+something that the UX legend Don Norman
+3:57
+talks a lot about in his book, Emotional
+4:00
+Design. But how can you use this in your
+4:03
+own product? Well, if your product
+4:05
+relies on repeated user behavior, like
+4:08
+check-ins, journaling, or habit logging,
+4:11
+add micro interactions that give instant
+4:14
+emotional feedback. A subtle bounce, a
+4:17
+glow, a sparkle. These little things can
+4:19
+make confirmation moments feel a little
+4:22
+more rewarding. Also, celebrate the
+4:25
+small wins. This will reinforce
+4:27
+engagement. Once again, you know,
+4:30
+success states don't need to be huge,
+4:32
+but they should feel intentional. Also,
+4:35
+if you're like Dualingo and you have a
+4:36
+mascot of some sort, use the mascot to
+4:39
+show expressions, to encourage users
+4:42
+because emotions are contagious. This
+4:44
+can be small nods, smiles, or animated
+4:48
+reactions that make the experience feel
+4:50
+more human. And lastly, if you want to
+4:52
+give the user a feeling of momentum,
+4:54
+include nice progress animations. This
+4:58
+can be anything like using motion to
+5:01
+show streaks just like Dualingo or
+5:04
+showing different levels, showing
+5:06
+journals completed, whatever gives a
+5:08
+sense of building something over time.
+5:11
+The goal here is to make the feedback
+5:13
+feel human, not just functional, because
+5:15
+that kind of emotional layer can quietly
+5:18
+build a strong connection between the
+5:20
+user and your product. Even something
+5:22
+super simple, when done well, can make
+5:25
+the experience feel more alive and more
+5:28
+worth coming back to. So, Duolingo built
+5:30
+habits by using design to make people
+5:32
+feel good about using the app. And that
+5:35
+feeling is one of the main reasons their
+5:38
+users keep showing up. But what happens
+5:41
+when your users aren't trying to form
+5:43
+habits? When they instead are trying to
+5:45
+get over skepticism? That's one of the
+5:48
+big challenges that crypto apps face and
+5:50
+the problem that Phantom set out to
+5:53
+solve with the help of emotional design
+5:56
+and animation. Let's start by just
+5:58
+dropping the bomb. Crypto UX is
+6:01
+notoriously clunky. And Phantom knew
+6:03
+that. So when they rolled out a full
+6:06
+brand refresh in mid 2023, they didn't
+6:09
+just change their logo. They overhauled
+6:12
+everything and brought in animation to
+6:15
+shift perception. They animated their
+6:17
+ghost mascot. They added playful
+6:20
+animations during wallet creation. And
+6:22
+they put a bunch of effort into making
+6:25
+each interaction feel playful and
+6:28
+approachable. The goal was clear here.
+6:30
+Make crypto feel less scary and more
+6:33
+human. And it's obviously worked. Today,
+6:36
+Phantom is one of crypto's mostused
+6:38
+wallets, recently becoming the second
+6:41
+highest ranked app in the utilities
+6:44
+category in the US app store, beating
+6:47
+apps like WhatsApp and Instagram. Now,
+6:50
+just like Dualingo, Phantom's growth
+6:52
+rode the wave of market momentum and
+6:54
+smart business execution. But what
+6:57
+really made them stand out was how
+6:59
+design-led they were from the jump.
+7:01
+Their CEO, Brandon Milman, has been
+7:04
+super clear about that. This wasn't just
+7:07
+another wallet. From day one, the team
+7:10
+focused on polish, on craft, and on
+7:13
+building something that actually felt
+7:15
+good to use. In his own words, polish
+7:18
+matters. We're a design-led company that
+7:20
+takes time to craft polished products.
+7:23
+And that mindset paid off because while
+7:26
+most wallets were built by developers
+7:29
+for other developers, Phantom focused on
+7:32
+consumers. Their goal was to onboard the
+7:34
+next billion people to web 3. And that
+7:37
+meant investing in crisp, emotional UI
+7:41
+and animations. So when designing in
+7:43
+spaces that feel intimidating, complex,
+7:46
+or where the stakes are really high,
+7:48
+like finance, crypto, health, or
+7:51
+insurance, for example, remember these
+7:54
+principles. Polish builds trust. Treat
+7:57
+visual details, motion, and transitions
+8:00
+as core product features, not fluff.
+8:03
+Every little micro interaction is a
+8:06
+trust signal. Also, try to keep it
+8:08
+approachable. Friendly visuals and warm,
+8:11
+playful details make heavy topics feel a
+8:15
+little lighter, and that goes a long way
+8:18
+in building confidence. Build for
+8:20
+people, not just pros. Don't just assume
+8:24
+that users know the rules. Design flows
+8:27
+that make sense to everyday people,
+8:30
+especially if you're reaching beyond
+8:33
+early adopters. Performance matters, but
+8:36
+what really sticks is how the product
+8:38
+feels when someone taps, swipes, or
+8:41
+waits. Giving the users smooth feedback
+8:44
+is going to increase their confidence
+8:46
+with your product. As an agency that has
+8:49
+experience helping drive big design
+8:51
+results in the crypto industry, we try
+8:54
+to share some of our learnings by
+8:56
+writing case studies about our wins
+8:58
+every now and then. If you're interested
+9:00
+in that, there's a link below for that,
+9:02
+too. Now, we've seen how character and
+9:05
+delight create trust, but trust isn't
+9:08
+the end goal for everyone. So, let's
+9:10
+explore how emotional design and motion
+9:13
+can be used in an even more lucrative
+9:16
+way to sell luxury, which brings us to
+9:20
+Revolute. Revolute's been investing in
+9:23
+design and animation for years. But
+9:26
+what's super interesting is how their
+9:29
+design glow up has tracked right
+9:31
+alongside their push into more of the
+9:34
+premium space. As they've moved up
+9:36
+market, their visual language has gotten
+9:39
+way more polished and it's pretty clear
+9:42
+that they've been intentional about
+9:44
+this, aligning how the product feels
+9:47
+with where they want the business to go.
+9:49
+Take the first time user experience as
+9:52
+an example. They don't just drop you
+9:54
+into a boring signup flow. Instead, you
+9:57
+get rich visuals, super smooth
+10:00
+transitions, and right away, it feels
+10:02
+like you're stepping into something
+10:05
+premium. I mean, even their charts
+10:07
+leveled up. You don't just look at your
+10:09
+spending data, you feel it. You drag
+10:12
+your finger and the graph responds with
+10:15
+this soft glow, turning numbers into
+10:18
+something way more tactile. The same
+10:20
+thing with their cards. You don't just
+10:22
+see a static image. You get a full
+10:25
+little 3D moment there. The card flips,
+10:28
+rotates, catches light. It's clean. It's
+10:32
+intentional. And it's honestly just kind
+10:34
+of satisfying. And these little details
+10:37
+like subtle animations in security flows
+10:39
+or onboarding provide that sense of
+10:42
+trust without trying too hard. None of
+10:45
+these design details shout at you, but
+10:47
+together they create something way more
+10:50
+premium. And in fintech in particular,
+10:52
+where trust literally affects how much
+10:55
+users spend, that kind of polish
+10:58
+translates straight into revenue. So
+11:00
+here's the big takeaway. Nail the first
+11:03
+impression. Spend time to polish your
+11:06
+onboarding. Polish your welcome moments
+11:09
+to immediately communicate quality,
+11:12
+trust, and care. Add subtle moments of
+11:15
+delight like animations, like fades and
+11:18
+hover effects or gestures. Build that
+11:20
+emotion and make touch points feel
+11:23
+intentional. Make interactions feel
+11:25
+dynamic. So, tactile charts, responsive
+11:28
+feedback, or animated cards that just
+11:31
+turn basic features into something that
+11:34
+feels elevated and engaging. Now, if you
+11:37
+found this video helpful at all, you
+11:39
+will probably love the video here
+11:40
+somewhere. Also, if you're building a
+11:42
+product, a website, or a brand, and you
+11:45
+want to find out how to boost your top
+11:48
+business metrics through design, well,
+11:51
+consider our free strategy consultation.
+11:54
+The links still down below. Still down
+11:56
+below, still above law. Until the next
+11:59
+one, have a great

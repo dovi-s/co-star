@@ -1,0 +1,424 @@
+
+Search in video
+Intro
+0:00
+I've spent years making bad designs, so
+0:02
+I can tell you exactly what makes
+0:03
+something look like it was made by a
+0:05
+beginner. By the end of this video,
+0:07
+you'll be able to spot those mistakes
+0:08
+instantly and fix them just as fast.
+0:11
+We'll look at real examples, before and
+0:13
+afters, and easy ways to improve a UI
+0:15
+without starting from scratch. We're
+0:17
+going to redesign this simple recipe app
+0:19
+one mistake at a time until it looks
+0:21
+polished and production ready. Mistake
+User Flow
+0:23
+number one, user flow. Let's start with
+0:26
+something that quietly ruins your UX,
+0:28
+user flow. Here's our allergy screen
+0:30
+with six preset options, but no search
+0:33
+bar if someone's allergic to something
+0:34
+else. We also don't have a skip button
+0:37
+either. What if the user doesn't have
+0:39
+any allergies? These are things you will
+0:41
+miss if you don't plan out your flow,
+0:42
+but users, they'll feel it instantly.
+0:45
+So, even something as simple as
+0:46
+sketching boxes on paper helps you catch
+0:48
+major gaps early on. And it's not just
+0:51
+all about big stuff. Little touches like
+0:53
+a filter icon on the search bar or a
+0:55
+save button up top go a long way. The
+0:58
+most commonly missed elements,
+0:59
+navigation links, hidden states, and
+1:01
+dynamic interactions like button hovers
+1:04
+or micro interactions. Mistake number
+Overusing Effects
+1:06
+two, overusing effects. Early on, I was
+1:09
+addicted to visual effects. Shadows,
+1:12
+glows, gradients, you name it. But the
+1:14
+truth, overusing them can make your
+1:16
+designs feel cluttered and amateur.
+1:18
+Let's start with the gradient here. It's
+1:20
+blue and green, and it's just not
+1:23
+working. If you really need a gradient,
+1:25
+stick to variations of the same color,
+1:27
+like a darker or lighter green. But
+1:29
+honestly, this would look way cleaner
+1:31
+with no gradient at all. And that's
+1:33
+usually the case. Now, let's talk drop
+1:35
+shadows for a second. These Figma
+1:37
+defaults are way too harsh. Instead of
+1:40
+just lowering opacity, I change the
+1:42
+entire shadow color, usually to a light
+1:44
+gray, and increase the blur
+1:46
+significantly. Or once again, remove the
+1:49
+shadow completely. Because most of the
+1:51
+time, less visual noise equals a better
+1:54
+design. Mistake number three, spacing.
+Spacing
+1:57
+Most beginner UIs are packed way too
+1:59
+tight, like my old app design. So, I'll
+2:01
+use two tools here, grids and auto
+2:03
+layout to make it so much better. First,
+2:05
+we'll set up a three column grid for
+2:07
+this screen and two column grid here
+2:09
+with these measurements. Now, just align
+2:11
+elements to the grid as closely as
+2:13
+possible. If something needs to break
+2:15
+the grid slightly, like these elements,
+2:17
+just leave it as is if it still feels
+2:19
+balanced. Next, for stack content like
+2:21
+this, increase the vertical spacing to
+2:23
+let things breathe and group naturally,
+2:25
+especially on mobile screens, you'll
+2:27
+need more space than you think. Now,
+2:29
+check out these cards and chips. The
+2:31
+layouts are pretty wonky. Perfect time
+2:33
+to use auto layout. Turn off vertical
+2:36
+trim for pixel perfect control and
+2:38
+adjust spacing like this. Repeat this
+2:40
+across your UI to keep spacing
+2:42
+consistent and clean, which is a perfect
+2:45
+segue into the next mistake most
+2:47
+designers make. Mistake number four,
+Inconsistent Components
+2:49
+inconsistent components like spacing.
+2:52
+This one kills me since it's just so
+2:54
+easy to fix. You'll notice throughout
+2:55
+our design, we have all sorts of
+2:57
+different corner radiuses and components
+3:00
+like this back and skip button that are
+3:02
+exactly the same but designed
+3:04
+differently, which just makes the design
+3:06
+feel amateur. Instead, let's make a few
+3:08
+changes. First, we'll make the two
+3:10
+search bars identical other than the
+3:12
+prompting text. We'll set the corner
+3:14
+radius of all smaller components to be
+3:16
+10 pixels. This is an important one that
+3:18
+most designers miss. And of course,
+3:21
+we'll update the skip button and back
+3:22
+button to match in size, corner radius,
+3:24
+and style. Being consistent means using
+3:27
+styles for colors, variables for
+3:29
+measurements, and components for UI
+3:31
+elements to really bring your design
+3:32
+together. Mistake number five, icons. I
+Icons
+3:36
+think people underestimate how much good
+3:38
+icons do for a design and how
+3:40
+detrimental bad icons are. First of all,
+3:43
+we have no icons on these cards here,
+3:46
+which forces users to read more and
+3:48
+slows down the browsing process. Let's
+3:50
+add in some good icons and replace the
+3:52
+save text. Then up above, we have icons,
+3:55
+but they're mismatched in fill, line
+3:57
+width, and style. We can fix this by
+3:59
+using the same library of icons like
+4:02
+flat icons. On their website, select
+4:04
+interface icons and then sort by stroke,
+4:06
+width, and corner to get some consistent
+4:08
+results. Make sure when you download to
+4:10
+grab SVG for the best results. If you
+4:13
+want to choose a Figma plugin instead, I
+4:15
+like feather icons and phosphor icons.
+4:18
+Finally, we have a fair amount of icons
+4:20
+down here without labels. If the icons
+4:22
+are wellknown enough, like the house,
+4:24
+bookmark, and user, then you don't need
+4:26
+to have anything, but for these two, a
+4:28
+tool tip pop-up could make the
+4:30
+onboarding process much smoother. Just
+4:32
+try not to have bizarre icons
+4:34
+everywhere. Finally, this is a very pro
+4:36
+tip, but interestingly, it is okay to
+4:39
+have different styles of icons in the
+4:41
+same design, but only if they're
+4:42
+visually separate. For example, these
+4:44
+navbar icons are slightly different than
+4:47
+the food icons, and those are different
+4:48
+than our recipe icons, but it all works
+4:51
+together since they're in separate areas
+4:52
+of our design and used for different
+4:54
+things. Mistake number six, redundant
+Redundant Elements
+4:57
+elements. Having redundant elements is
+4:59
+actually a really common mistake,
+5:01
+especially as the trend of having stuff
+5:03
+everywhere takes over. Looking at this
+5:05
+screen, we can get rid of this arrow
+5:07
+since we'll be able to swipe on mobile.
+5:09
+And same idea down below. We can also
+5:11
+get rid of this arrow since it's really
+5:13
+just visual clutter and dim down the
+5:15
+color of the button. You could probably
+5:16
+argue that these arrows aren't needed
+5:18
+either, but we are going to keep those.
+5:20
+Finally, the stroke on these elements is
+5:22
+really not needed. If you are worried
+5:24
+about contrast ratios, dimming it down
+5:26
+significantly is a good option, too, but
+5:29
+we'll just rip them straight out.
+5:30
+Mistake number seven, interactive
+Interactive Feedback
+5:32
+feedback. We've covered overusing
+5:34
+effects. So, now let's cover the
+5:36
+underuse of different interactive
+5:38
+effects. For example, if we're
+5:39
+navigating through our flow, but it
+5:41
+takes a split second longer for the next
+5:43
+screen to load, it looks like we haven't
+5:45
+even clicked on the button at all. But
+5:47
+if we make it grayed out when we click
+5:48
+on it, we've added some interaction and
+5:50
+it shows the user that the next screen
+5:52
+is coming. Even better, we could add a
+5:55
+loading wheel if it's really taking a
+5:56
+long time. Another good example is
+5:58
+clicking on this save icon. Filling it
+6:01
+in is a great first step, but we could
+6:02
+also add a red dot to our save tab. So,
+6:05
+when we click on the icon, we get it
+6:07
+filled in and it's clear to the user
+6:09
+that there's a new recipe added to the
+6:10
+save tab. We've actually made an entire
+6:13
+video just about interactive feedback
+6:15
+and micro interactions, so check out
+6:17
+that video afterwards to see some really
+6:19
+smooth animations. Bonus mistake number
+Charts
+6:22
+eight, charts. This is a bonus tip since
+6:25
+it has nothing to do with our recipe
+6:26
+app, but charts are so often messed up
+6:29
+by overdesigning the thing that I
+6:31
+thought I should make a point to mention
+6:32
+it. I have two charts here. Which one do
+6:35
+you think I got from Dribble? The one on
+6:36
+the right. Yes. And it's basically
+6:38
+impossible to read without any vertical
+6:40
+axis. And even if we had a vertical
+6:43
+axis, it's hard to tell where the bar
+6:44
+ends with a rounded top. And then there
+6:46
+are 16 bars here, but only 7 days of the
+6:49
+week. Why would you do that? Whereas the
+6:51
+one on the left is simple, definitely
+6:53
+less aesthetic, but conveys so much more
+6:56
+useful information to the user. And that
+Outro
+6:58
+is everything you'll need to start
+7:00
+spotting and correcting beginner
+7:02
+mistakes. The Figma file with the
+7:04
+mistakes and the full app is in the link
+7:06
+in description. Other than that, thank
+7:08
+you so much for watching and I'll see
+7:09
+you in the next one.
+7:11
+[Music]

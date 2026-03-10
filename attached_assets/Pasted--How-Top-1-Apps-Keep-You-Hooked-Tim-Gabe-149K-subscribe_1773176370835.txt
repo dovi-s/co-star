@@ -1,0 +1,293 @@
+
+How Top 1% Apps Keep You Hooked
+
+Tim Gabe
+149K subscribers
+
+Subscribe
+
+1.3K
+
+
+Share
+
+Ask
+
+Save
+
+Download
+
+23,008 views  Jun 25, 2025
+✅ Get help growing your business (with design):
+https://zipzap.design/strategy-consul...
+
+Timecodes:
+0:00 — Ordinary Apps Use the Same Tricks as Social Media
+1:02 — The Hidden Power of Psychological Engines
+2:03 — Designing Emotional Feedback Loops
+3:07 — The Power of Simplicity (Hick’s Law)
+4:05 — Making Action Effortless (Fitts’s Law)
+5:00 — Guiding Emotion Through Design
+6:18 — Real-Time Social Proof in Action
+7:23 — The Zeigarnik Effect
+8:04 — Designing Progress Loops That Feel Achievable
+Uncover the psychological tricks behind top apps' addictive designs. This video analyzes how apps like Headspace and Discord utilize principles like Hick's Law and the Zeigarnik Effect to boost engagement. Learn how subtle design choices influence user behavior and create emotional feedback loops.
+Summary
+
+How this was made
+Auto-dubbed
+Audio tracks for some languages were automatically generated. Learn more
+Ask
+Get answers, explore topics, and more
+
+Ask questions
+Chapters
+
+View all
+Transcript
+Follow along using the transcript.
+
+
+Show transcript
+
+Tim Gabe
+149K subscribers
+Videos
+About
+18 Comments
+Dovi
+Add a comment...
+
+@fn-2187
+8 months ago
+These are common best practices, esp for 1 to 2 projects. Apps keep you hooked because they offer pain killers (solutions), not vitamins (nice to haves). All UX LAWS derived from psychology, so do your user research, synthesize through psychological lens, and let them guide your design solutions on top of best practices.
+
+3
+
+
+Reply
+
+
+@gabrieladasilva3377
+4 months ago
+This video deserves more likes! Great content
+
+4
+
+
+Reply
+
+
+@MySpot11
+6 months ago
+Happy to watch this! Now it’s time to implement this concept. Thanks, Tim! 
+
+3
+
+
+Reply
+
+
+@loweffortdev
+4 months ago
+I like your clear and calm narration. 
+(saw some comments complaining about speed. i wanted to let you know there are people who like your current style) best of luck
+
+
+
+Reply
+
+
+@danvictorlofranco6700
+8 months ago
+Hooked by Nir Eyal, dives deep on this topic
+
+1
+
+
+Reply
+
+
+@ShreyaChheda
+8 months ago
+This is a goldmine! Thanks for making this video. 
+
+Quick question, is your volume output lower than usual? I'm finding it hard to hear the video on full volume in louder environments, and I'm usually in a lot of loud environments
+
+1
+
+
+Reply
+
+
+@tapu_
+8 months ago
+This video is better at 1.3x speed
+
+1
+
+
+Reply
+
+
+@QuantumVaiya
+8 months ago
+Great video man!
+
+1
+
+
+Reply
+
+
+@lukesmoljak8617
+8 months ago
+More like these!
+
+
+
+Reply
+
+
+@Vision06
+8 months ago
+YouTube as well!
+
+
+
+Reply
+
+
+@arasedes3920
+8 months ago
+If i were you i would time my video and speech about 1.5x
+
+21
+
+
+Reply
+
+
+1 reply
+
+@cubiq1
+8 months ago
+As someone who used Headspace for a few months, I found it really confusing. I just wanted to learn to meditate, however, my feed was full of meditation podcasts etc. Why did they add all this noise?
+
+2
+
+
+Reply
+
+
+@UXBreakdown
+8 months ago
+I'm glad that YouTube Algorithm recommended me your video. Subscribed & Turned on All Notifications immediately after noticing your design patterns & storytelling. Waiting for the next video.
+
+2
+
+
+Reply
+
+
+@realpeterr
+8 months ago
+I always want to know the truth about your eyes! How is this even possible
+
+1
+
+
+Reply
+
+
+@needo1546
+5 months ago
+this video is half you advertising/plugging in different things
+
+
+
+Reply
+
+Top is selected, so you'll see featured comments
+In this video
+
+
+Chapters
+
+Transcript
+Chapter 1: Ordinary Apps Use the Same Tricks as Social Media
+0:00It's no secret that social media apps like Tik Tok or Instagram are designed to manipulate us. But what we don't talk
+0:088 secondsenough about is how totally ordinary apps like route planners, meditation tools, and even fitness trackers use the
+0:1717 secondssame psychological principles to keep us coming back. So, in this video, we'll break down how apps like Headspace,
+0:2525 secondsPerplexity, and Discord, among others,
+0:2929 secondskeep you hooked. And I promise you, once you see how this works, you'll start noticing it everywhere. And better yet,
+0:3737 secondsyou'll know how to use these ideas to design apps people actually want to return to. Let's start with a hard
+0:4444 secondstruth. When most people think about great apps, they focus on features, UI design, aesthetics, however, the most
+0:5353 secondssuccessful products, the ones people actually stick with, aren't thriving because of those things. They're
+Chapter 2: The Hidden Power of Psychological Engines
+1:021 minute, 2 secondsthriving because they are psychological engines. They play directly into how the human brain is wired. What grabs
+1:111 minute, 11 secondsattention? What triggers action? what keeps you coming back. And when your product aligns with human behavior like
+1:201 minute, 20 secondsthat down to traits like decision making, reward anticipation, or the need for completion, you don't have to push
+1:291 minute, 29 secondspeople anymore. They pull themselves into your app, which is the layer most people miss. But something that's hard
+1:361 minute, 36 secondsto unsee once you experience it in action. like when you look at perplexity and study their interaction model.
+1:451 minute, 45 secondsBefore we dive into that though, if you're looking for someone to help you think in terms of design psychology for your product or for your website,
+1:541 minute, 54 secondsespecially if you're crafting interactions like Perplexity, consider signing up for the free strategy calls we do at SIPs. Now, let's bring up the
+Chapter 3: Designing Emotional Feedback Loops
+2:032 minutes, 3 secondsPerplexity mobile app. If you ask a question inside this app, you don't just wait. you see it respond. We have
+2:122 minutes, 12 secondsdetails like the loader animation and the voice dots that react in real time.
+2:182 minutes, 18 secondsAnd those aren't just aesthetic UI choices. They're feedback loops built for emotional reassurance. When we take an action, we expect the app to react.
+2:292 minutes, 29 secondsAnd when it does, we feel the loop close. It feels nice. Even waiting becomes a positive vibe when this is
+2:372 minutes, 37 secondsdone right. So here's what you want to do. You want to make responsiveness feel smart. Movement should show that the
+2:442 minutes, 44 secondssystem is active. Then you want to have small rewards like flickers or pulses to validate the input. Overall, you just
+2:522 minutes, 52 secondswant to treat in between moments as intentional, not empty. Now, in many cases, creating responsiveness like this
+3:003 minutesusually comes a little later in your app's evolution. So, what about the beginning of the journey? This is where
+Chapter 4: The Power of Simplicity (Hick’s Law)
+3:073 minutes, 7 secondsApple Fitness sets a great example. It doesn't throw 30 different workouts at you when you open it. Even if you've
+3:153 minutes, 15 secondsnever used it before, you're steered toward one single thing. Press, let's go, and start moving. That's Hicks law at work. The more choices you're given,
+3:263 minutes, 26 secondsthe longer you take to decide. Simple as that. So, instead of overwhelming you, Apple Fitness reduces decision fatigue.
+3:353 minutes, 35 secondsSimplicity becomes the most powerful activation moment. And if you want to apply this right now, start with one
+3:433 minutes, 43 secondsclear focus across your entire app because users commit faster when they aren't choosing between countless paths.
+3:523 minutes, 52 secondsAlso, remember to remove friction from the starting moments. Just those points alone can take you really far. But
+3:593 minutes, 59 secondsallowing users to start fast won't help if acting isn't easy. And ways is a great example here. People using ways
+Chapter 5: Making Action Effortless (Fitts’s Law)
+4:074 minutes, 7 secondsare often on the move like one hand on the wheel, eyes on the road and the team of course knows this and they use Fitz
+4:154 minutes, 15 secondslaw to help them. The bigger and closer a UI element is the easier and faster it
+4:224 minutes, 22 secondsis to interact with. So all of ways core buttons are large and placed for easy onehanded access. But this doesn't just
+4:314 minutes, 31 secondsapply to car apps. Anyone building apps or websites should remember to design
+4:384 minutes, 38 secondsfor distraction and limited attention to convey priority with size and to know that proximity is key like having
+4:464 minutes, 46 secondsbuttons close to a user's thumb. Then once action is simple and accessible,
+4:524 minutes, 52 secondsyou can move on to shaping the emotional side of the experience. This is something I've talked about in another
+4:594 minutes, 59 secondsvideo and something that Headspace has invested millions into perfecting. But before we get into it, everything so far
+Chapter 6: Guiding Emotion Through Design
+5:085 minutes, 8 secondsis what we help our clients think about daily at SIP. So if you want a second pair of eyes, check out the free
+5:165 minutes, 16 secondsstrategy call link down below. Now, back to Headspace. The moment you open this app, it's clear that it's not just a meditation app because your pace slows,
+5:275 minutes, 27 secondsyour mood shifts, and that's because the entire experience is designed to guide your emotional state before the session
+5:355 minutes, 35 secondseven begins. I'm talking from color palette to the animation to the sound,
+5:425 minutes, 42 secondseverything is working together to create emotional anchoring. You're not just opening an app, you're entering a calm
+5:505 minutes, 50 secondsspace. And what you can learn from this and what Headspace does is that emotion starts at on board. The app's tone cues how you should feel about this app.
+6:006 minutesAlso, visuals guide behavior. Color,
+6:046 minutes, 4 secondstype, motion. They're not just decoration, their psychology. By studying apps like Headspace, it's clear
+6:126 minutes, 12 secondsthat emotion sets the tone for a product. However, an arguably more interesting aspect is social energy and
+Chapter 7: Real-Time Social Proof in Action
+6:216 minutes, 21 secondshow it gives a user a reason to plug in and stay. And you'll probably know this feeling if you've ever used Discord. You
+6:286 minutes, 28 secondsdon't need to necessarily know anyone in a server to feel like it's buzzing. You instantly see like lit up avatars,
+6:376 minutes, 37 secondsreactions, and labels saying 2,312 people online. That's social proof.
+6:446 minutes, 44 secondssomething that is often misused or underused in many apps, even though it's one of the most powerful psychological
+6:526 minutes, 52 secondsprinciples. So, here's how to apply it properly. Embrace the show don't tell mentality. Display activity in real
+7:007 minutestime. Use subtle signals like online presence and reaction counters and treat community as a UX feature. Surface it,
+7:097 minutes, 9 secondsdon't bury it. This alone can elevate many apps, but in some cases, it's not the crowd that brings people back to
+7:167 minutes, 16 secondsaction. It's how close the crowd feels to the next win. So, let's talk about stompers. The moment you use this app,
+Chapter 8: The Zeigarnik Effect
+7:257 minutes, 25 secondsit feels like progress is already happening. You've got fun packs,
+7:307 minutes, 30 secondsstreaks, encouragement everywhere nudging you forward. And this is the searic effect. People remember
+7:387 minutes, 38 secondsunfinished tasks better than finished ones and were wired to want to resolve them. Stompers leans into this heavily.
+7:477 minutes, 47 secondsIt builds loops that never fully close,
+7:507 minutes, 50 secondsbut that always feel within reach. And here's how you can apply it to your app.
+7:557 minutes, 55 secondsStack visible progress. Users return when they know they're close to a win.
+8:018 minutes, 1 secondKeep thresholds close and make next levels feel achievable. And then treat completion as a reward loop and
+Chapter 9: Designing Progress Loops That Feel Achievable
+8:108 minutes, 10 secondsrepresent progress visually. Of course though, don't go overboard here. Don't show 20 loops on one screen. Remember
+8:198 minutes, 19 secondsHixaw. Now, if you want to talk strategy with us at SIP app for free, the link is still down below. And if you like this
+8:288 minutes, 28 secondsvideo, check out the one here somewhere where I break down how Dualingo,
+8:348 minutes, 34 secondsRevolute, and Phantom use emotional design to stand out in a sea of sameness. Until the next one though,
+8:428 minutes, 42 secondshave a great

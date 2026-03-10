@@ -1,0 +1,646 @@
+0:00
+In today's video, we are going to be
+0:01
+designing and animating this 404 page
+0:04
+for a website using Figma and AI. This
+0:07
+will be an easy to follow along
+0:08
+tutorial. So, let's get to it. So, first
+0:12
+things first, let's generate our AI
+0:14
+asset, our character for the 404 page.
+0:17
+So, I've already actually generated
+0:19
+this. So, I will just show you how I got
+0:21
+to creating this character. So, within
+0:22
+Figma, let's just create a frame, any
+0:25
+size here, and we'll give it a fill of
+0:27
+black. Now, if we go to our text tool,
+0:29
+let's just type in 404. Now, what I had
+0:32
+in mind for this was I was going to
+0:34
+actually have like a fluffy 404 instead
+0:37
+of a character. Kind of just this big
+0:39
+balloon font. And then we'll just play
+0:41
+with the letter spacing a little bit.
+0:43
+And then let's give each of these a
+0:45
+different color. So, let's just go like
+0:47
+red. Let's just go, I don't know, blue.
+0:51
+And then yellow. This is going to give
+0:53
+the AI an indication of these numbers
+0:55
+overlap each other. And then we'll
+0:57
+export this out just as an image. So
+0:59
+this was actually the original image I
+1:00
+was working from, but if you make your
+1:02
+own, you'll get to the same place with
+1:04
+this, trust me. So we're going to be
+1:05
+using Google Gemini and I think it's the
+1:08
+Nano Banana Pro, which is their new
+1:11
+image generator, which is really good.
+1:13
+So I sent this to Google Gemini with the
+1:15
+prompt, transform simple flat vector
+1:17
+icon of this 404 text into soft 3D
+1:20
+fluffy object. Use exact colors. We get
+1:22
+this back, which is actually really
+1:24
+cool. Now, originally I played around
+1:26
+with using this into the 404 page, which
+1:29
+you can do. If at this point you want to
+1:31
+do that, go ahead and do that. But I
+1:33
+thought, you know what might be cooler?
+1:35
+If we use this same sort of style, but
+1:37
+we turn it into a kind of animated
+1:40
+character mascot. So, I said in the same
+1:43
+fluffy style, I need a big blue monster
+1:45
+similar to the cookie monster, but he
+1:47
+has a tail, full body image. He's
+1:49
+looking confused. Now, I got this back,
+1:52
+which I think is really unique,
+1:54
+actually. It reminds me of something,
+1:56
+but I don't quite know. We'll download
+1:58
+this by clicking up here, download full
+2:00
+size. Now, as an optional step, the
+2:03
+images you get from Gemini, they're not
+2:05
+super high- res. So, this is the image
+2:07
+we've got. Now, I've recently been using
+2:09
+Upscale, which is a free AI image
+2:11
+upscaler. You can download it, and we
+2:14
+can just go upscale, which will make it
+2:16
+four times as big. and we'll just press
+2:18
+that and it'll do it magically. This
+2:21
+will make this into a massive image. But
+2:23
+what it's actually going to do as well
+2:25
+is it's going to make it sharper and it
+2:27
+means that when we cut it out cuz we're
+2:29
+going to have to remove the background
+2:30
+on this, it's just going to be a little
+2:32
+bit sharper. And this is our result
+2:34
+here. You can see the before and after.
+2:37
+Now, the after is just a little bit
+2:39
+sharper, which I think when you have all
+2:41
+this detail with the fur, it does make a
+2:43
+bit of a difference. So, it's an
+2:44
+optional step, but if you want to, you
+2:46
+should get upscaler. Upscale your
+2:48
+images. It'll just come out a little bit
+2:50
+nicer. Now, once you've got the image,
+2:52
+it's time to remove the background for
+2:54
+it. Now, I just use Photoshop for this.
+2:56
+You can use any any tool that'll remove
+2:58
+the background, but the way I'll do it,
+3:00
+I'll go select, and then I'll go
+3:02
+subject,
+3:03
+and hopefully it'll just select our
+3:05
+subject, more or less. Now, if we go up
+3:07
+here to select, we can go select and
+3:10
+mask. Now, we can refine it a little
+3:11
+bit. And now, if we click this button up
+3:13
+here, refine hair, look what it does
+3:16
+around the edges. It's pretty smart. And
+3:18
+then we'll go okay. And then we'll click
+3:21
+down here to mask it. And there is our
+3:24
+image. And then we'll just save this as
+3:26
+a PNG. Now we've got our AI asset. We
+3:28
+can start heading into Figma and putting
+3:30
+it together. Okay. So in Figma, we'll
+3:33
+create a frame and we'll go up here to
+3:35
+desktop and we're going to choose
+3:36
+MacBook Pro 14. Let's drag in our image
+3:40
+and we'll just get it positioned
+3:41
+somewhere in the center for now. Just
+3:43
+kind of scale it down. Now, for the
+3:44
+background, we're going to actually give
+3:46
+it a gradient background.
+3:48
+And these are the colors we're going to
+3:50
+choose. These two colors here. So, it's
+3:52
+going from this sort of darker blue to
+3:54
+this lighter blue. And already that kind
+3:57
+of adds this kind of studio sort of
+3:59
+background for him. You know, with that
+4:01
+being the lighter bit, it kind of gives
+4:02
+him like a base to sort of stand on.
+4:04
+What we can do as well is let's just
+4:06
+make an ellipse here. We'll drag this
+4:08
+out. We'll make this black. And then
+4:11
+we'll go effects. And then let's go
+4:13
+layer blur. Boost this up a little bit.
+4:16
+Like this. Now look what happens when we
+4:18
+kind of put it behind him. And we'll
+4:21
+just drag this behind him in the layers
+4:23
+panel. And now that kind of just puts
+4:27
+him in the scene a little bit more. And
+4:29
+then let's just reduce the opacity down
+4:31
+because you don't want to see it too
+4:32
+much. Little things like this can make a
+4:34
+big difference. So there's it without.
+4:36
+There's it with, without, with,
+4:38
+optional. Now, next up, let's go to our
+4:40
+text tool and let's add in a giant 404
+4:45
+text. So, I'm using this font here,
+4:47
+manroppe, uh, extra bold. And let's put
+4:51
+this behind our character. Something
+4:54
+like that. Now, I really like how the O
+4:56
+kind of frames around him. And the fill
+5:00
+of this, let's actually give it a
+5:01
+gradient. So, this will be subtle, but
+5:03
+we'll do something like this. So, it's
+5:05
+going from white, but it's kind of
+5:07
+running into that, which is our sort of
+5:10
+background thing there. Let's make a
+5:12
+logo for this. So, we'll use our text
+5:13
+tool, and then let's call this sculpt.
+5:17
+Now, let's zoom in. Now, we can do this.
+5:20
+We'll go down here to the star tool, and
+5:23
+let's just make a star. So, we just
+5:25
+click, we can make a star there. But,
+5:26
+let's go to the count and let's do four.
+5:29
+And then, let's add a little bit of
+5:30
+corner radius to this. Now, let's drag
+5:32
+that down. And then we'll position that
+5:34
+beside our text. Now, if we do shift and
+5:36
+A, it's going to make it an auto layout.
+5:39
+And then you can use this to adjust the
+5:41
+gap between them. And then we'll just
+5:43
+make sure that they're both white. And
+5:45
+really, you can just play around with it
+5:47
+however you want. Let's take the text
+5:49
+from this and we'll drag that over. And
+5:51
+then let's go log in. And we'll change
+5:54
+the font size of that to 20. And then
+5:58
+we'll go shift and A on that to make it
+6:00
+an auto layout. And now we're going to
+6:01
+turn this into a button. So we'll go
+6:03
+fill. We're going to give it this
+6:05
+gradient background here, which is just
+6:07
+very subtle. So it's going from this
+6:09
+color to this color. It's just almost
+6:11
+white, but not quite. Corner radius of
+6:13
+like 16. And then, you know, for a bit
+6:17
+of fun, let's actually go here to the
+6:19
+tools and let's add a bit of corner
+6:20
+smoothing to it as well. And then we'll
+6:22
+make the text this here. We'll adjust
+6:25
+the padding. So let's just go 16. And
+6:28
+then we'll go 16 again. Now, with this
+6:30
+button, I'm going to add some effects,
+6:31
+but I'll go through and show you what
+6:32
+each thing is doing. A lot of this is
+6:35
+just using drop shadows. So, I'm using
+6:37
+drop shadow here, which works as a kind
+6:39
+of um outer stroke. Little touches like
+6:43
+that. You guys can copy these settings
+6:46
+if you want, or you can just make your
+6:49
+own button. You can make it simple if
+6:50
+you want as well. We'll take this
+6:52
+button. We'll get this positioned
+6:53
+somewhere up here. And then we'll drag
+6:56
+this down and we'll make a new button.
+6:58
+and we'll say back to home. And to make
+7:00
+this one stand out a little bit more,
+7:02
+we'll go like that and we'll make it
+7:04
+this text color. Let's actually add an
+7:06
+icon into that button. So, we're going
+7:08
+to use this little arrow here. Now, this
+7:11
+is just from cool icons. You can access
+7:13
+this for free. We'll go with this one
+7:15
+here. We'll just copy that. And then
+7:17
+we'll come over here to our button.
+7:19
+Paste that in. And we'll drag that to
+7:21
+the left. And then we'll make sure
+7:22
+that's the same color as our text.
+7:27
+Now, we still have our text to add in.
+7:28
+So, let's add in that now. We'll go
+7:31
+something like this. Oops. I think we're
+7:34
+lost. And we'll make this 64 pixels.
+7:40
+And we will also make sure that that is
+7:42
+the color that we did down here.
+7:46
+We'll get everything positioned just up
+7:48
+a little bit. Give us a bit of space.
+7:50
+And we'll duplicate this down cuz we
+7:51
+want a little subtitle. And then we'll
+7:53
+change this to let's get you back to
+7:57
+somewhere.
+7:58
+And then let's select that gray color
+8:01
+that we had up here.
+8:05
+And then we'll just get everything
+8:06
+spaced out correctly. You can play
+8:08
+around with it. You could tweak it for
+8:09
+ages, but something like this is looking
+8:12
+good. Now, there's one final little
+8:14
+thing I want to add to this. Now, this
+8:15
+is just a little secret thing that I've
+8:17
+been adding to too many of my designs
+8:19
+recently, but I do think it just looks
+8:21
+cool. If you go to Google and you just
+8:23
+search clouds PNG. Now, let's just grab
+8:28
+something here. So, let's say this image
+8:31
+here, it's going to give us a massive
+8:32
+PNG of these clouds. We'll just copy
+8:34
+that and we will paste this into our
+8:37
+design. And you'll see what it'll kind
+8:40
+of do here.
+8:42
+And then we'll put it behind our
+8:44
+character, but in front of the 404. And
+8:47
+then let's reduce the opacity of that a
+8:49
+little bit. What I think that does quite
+8:51
+well is it turns the background from a
+8:53
+kind of gradient into like it kind of
+8:56
+does something with blending this to the
+9:00
+the sky. Now it looks like a sky looks
+9:02
+like this guy's in the clouds or
+9:04
+something. It's a subtle thing that you
+9:06
+can add if you want to, but I think for
+9:08
+this it actually looks quite cool. And
+9:10
+we could also animate it so the clouds
+9:12
+move along like that, which we are going
+9:14
+to do in the next step cuz we're going
+9:16
+to animate this right now. So once
+9:18
+you've got your design looking like
+9:20
+something you're happy with, it's now
+9:21
+time to animate it. And to do that,
+9:23
+we're going to use a tool called Jitter.
+9:25
+And there's a plugin to go from Figma
+9:27
+straight into Jitter. And I'll show you
+9:29
+how we do that. So in Figma, we go down
+9:31
+here to plugins. Now, let's just type in
+9:33
+Jitter. And it'll come up with this
+9:34
+plugin here. So we can click on our
+9:37
+frame. And we can see here we go copy.
+9:40
+It's going to take all of our layers.
+9:42
+And then we can do this open in Jitter.
+9:44
+And it's going to bring everything over
+9:45
+into jitter. Now, it's actually messed
+9:47
+this up slightly, but we'll just drag
+9:49
+this down. Now, what we can do is we can
+9:52
+start animating different parts of this.
+9:54
+So, let's select our header here. We'll
+9:56
+go over here to animate, new animation,
+10:00
+and we could do something like this.
+10:02
+Mask reveal. Uh, the 404, I think. Let's
+10:06
+see.
+10:08
+Maybe we could have it appear like that.
+10:10
+We'll do something. We'll click on our
+10:12
+text here, and we'll do something like
+10:13
+appear like that. You don't want to go
+10:16
+over the top here. I mean, have fun with
+10:18
+it. Make it make it whatever you want,
+10:20
+but you can go over the top with
+10:21
+animations. You don't want it to be too
+10:23
+crazy when you come to the page. You
+10:25
+don't want users to have to wait either.
+10:28
+And it is just a 404 page. So, for our
+10:30
+clouds, so this is our cloud layer here.
+10:32
+We said we were going to animate them.
+10:34
+So, if we click on them here, we can go
+10:36
+new animation. We can go custom and then
+10:39
+move. And let's go initial value. We'll
+10:43
+go zero and zero. And then we will move
+10:46
+them
+10:48
+this way. Like so. Just like that. And
+10:52
+if we make that the duration here.
+10:59
+Now you can see the clouds are moving in
+11:01
+the background. Now there is actual one
+11:03
+final final step which is purely
+11:05
+optional, but I think this really helps
+11:07
+bring it to life. We're going to animate
+11:09
+our character using Google Gemini. So, I
+11:12
+took the image of our character and I
+11:14
+put it into Google Gemini and I said, "I
+11:16
+need this character to scratch his head,
+11:18
+turn his head left to right in
+11:19
+confusion. He should look around as if
+11:21
+he's lost." Now, Google's VEO generated
+11:24
+this video of this character. It even
+11:27
+has sound, which is insane.
+11:32
+The quality of it wasn't quite good
+11:34
+enough. So then I actually used Astra,
+11:36
+which is a paid AI tool to upres it,
+11:39
+which turned it into a higher quality
+11:41
+sharper video like this. And this video
+11:43
+I was able to pull back into jitter and
+11:46
+I was able to go up here, replace media,
+11:48
+change the layer mode of it to darken,
+11:50
+get it positioned well, and this is the
+11:53
+final result. Hopefully this video was
+11:55
+useful for you guys. We covered a lot of
+11:56
+different techniques here. I'd love to
+11:58
+see what you guys create with this if
+12:00
+you followed along at home. If you like
+12:02
+this sort of video, subscribe. And I'll
+12:04
+catch you guys soon with another video.

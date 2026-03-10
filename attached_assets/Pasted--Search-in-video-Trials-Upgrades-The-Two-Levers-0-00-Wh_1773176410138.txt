@@ -1,0 +1,423 @@
+
+Search in video
+Trials & Upgrades: The Two Levers
+0:00
+Whether your SAS business thrives or
+0:02
+flatlines can come down to two moments.
+0:06
+How well you handle your free trials and
+0:08
+pay walls, as well as what happens when
+0:12
+it's time to upgrade. So, in this video,
+0:15
+we'll learn how to supercharge those two
+0:17
+moments by breaking down real AB test
+0:20
+results that have driven serious growth
+0:23
+for apps like Headspace, Uber, and
+0:27
+Blinkist. Now, before we jump to the
+0:29
+impressive gains unlocked by some of
+0:32
+these upgrade and subscription tricks,
+0:35
+let's start with the first and most
+0:37
+pivotal lever. How you handle your free
+Blinkist: Visual 7-Day Itinerary
+0:40
+trial and pay wall flow. Take Blinkist
+0:44
+as an example. They didn't overhaul
+0:46
+their offer. They simply made it easier
+0:49
+to say yes to it by visually explaining
+0:52
+the 7-day free trial using a simple
+0:56
+step-by-step breakdown. They anchored it
+0:59
+in reality. And this taps into the
+1:01
+psychology of progressive disclosure,
+1:05
+which shows us that people don't fear
+1:07
+commitment as much as they fear the
+1:10
+unknown. And in this case, when users
+1:13
+know exactly what happens each day, the
+1:16
+trial feels less like a leap and more
+1:19
+like a guided walk. And the result of
+1:22
+this particular guided walk was a 23%
+1:26
+increase in trial signups. So, don't
+1:29
+just offer the experience, let users
+1:32
+preview it. Let them see it like it's a
+1:35
+7-day itinerary. With that said though,
+1:37
+making something clearer is one thing,
+1:40
+but what if you can add thousands or
+1:43
+even millions of signups yearly by
+Headspace: “Guest Pass” Framing
+1:46
+making it feel special instead? That's
+1:49
+exactly what Headspace did. And before
+1:52
+we break it down, just a quick note
+1:54
+here. If upgrading your trial or payw
+1:58
+wall experience sounds like something
+2:00
+that's valuable but timeconuming, at
+2:02
+SIPAP, we run free design strategy
+2:06
+sessions focused entirely on flows like
+2:09
+this. So, if you're curious, there is a
+2:12
+link down below that you can use to see
+2:15
+if there are any spots left this month.
+2:17
+Now, back to Headspace. They completely
+2:20
+reframed their trial offer. Instead of
+2:23
+using the word trial, which is a word
+2:25
+loaded with obligation, they called it a
+2:28
+30-day guest pass. And that's not just a
+2:31
+word shift. That's pure psychology. And
+2:34
+more specifically, they were using
+2:36
+what's called the framing effect. While
+2:39
+trial feels transactional, guest pass
+2:42
+feels kind of like an invitation. It's
+2:45
+exclusive, feels temporary, and it's
+2:48
+respectful. The result was a 7% increase
+2:51
+in new signups from a tiny word change.
+2:55
+So the actionable advice here is reframe
+2:59
+copy to match the emotion you want users
+3:02
+to feel. Don't just automatically resort
+3:04
+to the word trial or any other word
+3:07
+standard for that matter. Now changing
+3:10
+the words isn't the only thing you can
+3:13
+do in this case. You can also change the
+Moonly: Annual-Only Free Trial Decoy
+3:15
+options. Moonly found that when they
+3:17
+offered a free trial exclusively on the
+3:21
+annual plan, conversions didn't dip.
+3:24
+They flew through the freaking roof. By
+3:26
+removing the trial from the monthly
+3:29
+option entirely, the annual subscription
+3:32
+suddenly felt like the smarter purchase.
+3:36
+This is called the decoy effect. A
+3:38
+classic pricing SCOP. By adding
+3:41
+exclusive value to one plan, you're not
+3:44
+just offering more. You're guiding
+3:47
+decisions through a symmetry. And in
+3:50
+this case, it resulted in a 39%
+3:53
+conversion rate boost and a 47% increase
+3:57
+in revenue per 100 installs. That's a
+4:00
+lot of ROI. So, don't just add new
+4:03
+plans. Try making your best plan harder
+4:07
+to ignore by giving it something no
+4:10
+other option has. Now, of course, none
+4:13
+of this really matters if users never
+4:16
+even activate their trial, which brings
+Slopes: One-Tap Trial Start
+4:19
+us to the case of Slopes. They tackled
+4:22
+the core issue that most trials face,
+4:25
+getting started. Instead of a multi-step
+4:28
+payw wall mess, they introduced a
+4:30
+one-touch free trial, an instant
+4:34
+frictionless start. This speaks to the
+4:36
+idea of reducing cognitive load, which
+4:39
+basically says that the more effort
+4:41
+someone exerts up front, the less likely
+4:44
+they'll commit. And as we know in SAS,
+4:47
+friction at the wrong moment is fatal.
+4:50
+This change gave slopes a 25% boost in
+4:54
+trial start rates. So, if your signups
+4:57
+are low, look at your entry point. Every
+4:59
+extra step you have in there could mean
+5:02
+lots of lost users and revenue. But of
+5:05
+course, trial speed isn't everything
+5:08
+because if you just add a tiny little
+5:10
+bit of psychology to the length of the
+5:13
+trial, things get even more interesting.
+5:16
+Which brings us back to Headspace. They
+Headspace: Longer Trial Anchors Annual
+5:19
+offered a 7-day trial for monthly
+5:21
+subscribers, but 14 days for annual
+5:25
+subscribers. And that small difference
+5:27
+triggered huge results because it
+5:30
+activated the anchoring bias. When users
+5:33
+compare plans, they don't just compare
+5:36
+price, they compare benefits. A longer
+5:40
+trial feels like a better deal, even if
+5:42
+the value isn't really tangible. And the
+5:45
+result was an insane double-digit
+5:48
+increase in conversions. So the lesson
+5:50
+here is try using softer perks like
+5:54
+longer trials to make your high value
+5:56
+plans feel higher value. Now trials are
+5:59
+essential to let your users gain
+6:02
+confidence in your products, but what
+6:05
+actually shows on the bottom line of
+6:08
+your business is usually your upgrades
+6:11
+and your subscription revenue. And to
+6:14
+kick this segment off, we're gonna look
+Mobbin: “Pro” Label Loss-Aversion Push
+6:15
+at how Mobin increased conversions
+6:19
+significantly
+6:20
+by adding a tiny little batch. First
+6:23
+though, it's my obligation to remind you
+6:26
+if you're looking to grow your business
+6:28
+with design tweaks like this, or if you
+6:31
+need to build an entire website,
+6:34
+product, or even a brand from scratch,
+6:37
+feel free to sign up for SIPAP's free
+6:40
+strategy calls in the link down below.
+6:43
+We'd love to chat with you. Now, what
+6:46
+Mobin did is quite interesting because
+6:49
+they didn't launch new paywalt features.
+6:52
+They just increased visibility to the
+6:54
+ones that were already there by adding
+6:58
+pro labels to the log content across the
+7:01
+entire product and suddenly conversions
+7:05
+spiked. Why is that? Well, it's because
+7:08
+of loss aversion, also known as the
+7:11
+human tendency to avoid losing something
+7:14
+more than we desire gaining something
+7:17
+new. So when users saw what they
+7:19
+couldn't really touch that drove that
+7:22
+impulse to upgrade and as a result
+7:26
+mobbing got a 35% increase in freeto
+7:30
+paid conversions. So remember highlight
+7:33
+what's missing not just what your users
+7:36
+will gain. Make value visible through
+7:39
+contrast. However, showing what users
+7:42
+can't have is one path, but stopping
+7:46
+them right at the moment they want more
+7:49
+is another interesting one. The language
+Busuu: Second-Language Paywall
+7:52
+learning app Buzzu made one bold change.
+7:55
+Free users could only learn one
+7:57
+language. If they wanted to start a
+8:00
+second, they had to upgrade. And here's
+8:03
+an important detail. This wasn't
+8:06
+limiting for casual users, but it was
+8:09
+devastating for power users, which makes
+8:13
+it a super clever use of scarcity,
+8:16
+cutting off access right as utility
+8:19
+increases. This seemingly subtle move
+8:22
+resulted in a crazy 83% conversion rate
+8:26
+increase among engaged users. So, the
+8:29
+lesson here is don't punish beginners
+8:32
+with your feature locks. instead soft
+8:35
+lock features where deeper engagement
+8:38
+intersects with higher user intent or do
+8:42
+like Uber double down on certainty. You
+Uber: Single-Price Certainty Effect
+8:45
+see Uber used to only display a pricing
+8:49
+range in their UI and they did this for
+8:52
+a very long time but after testing a
+8:55
+single estimated price usage increased
+8:58
+significantly. Why is that? Well, as
+9:02
+humans, we're wired for the certainty
+9:05
+effect. We'll often choose the
+9:07
+guaranteed result over a potentially
+9:10
+better one with unknowns attached to it.
+9:13
+And in Uber's case, people didn't want
+9:15
+to guess what the ride would cost. They
+9:18
+wanted to know for sure. And this change
+9:20
+resulted in an insane doubledigit
+9:24
+increase in rides per user, which at
+9:27
+Uber scale is huge. But even if you're
+9:31
+not nearly as big as Uber, remember if
+9:35
+transparency builds trust with a user,
+9:38
+get specific because uncertainty can
+9:41
+kill purchase decisions really quickly.
+9:44
+Now, if you found this video helpful,
+9:46
+chances are you could also use some of
+9:49
+my best tips for increasing SAS website
+9:52
+conversions. Check the video somewhere
+9:55
+around here. And again, if you want to
+9:58
+chat more about any of this really,
+10:01
+check out the free design strategy call
+10:04
+below.
+10:05
+Until the next one, have a great
