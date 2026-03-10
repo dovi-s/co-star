@@ -226,7 +226,7 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
 
         <div className="space-y-6">
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Personal</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Personal</h2>
             <div className="space-y-4">
               <div className="flex gap-2">
                 <div className="flex-1">
@@ -260,7 +260,7 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
           </section>
 
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Appearance</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Appearance</h2>
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-2 block">Height</label>
@@ -301,7 +301,7 @@ export function ActorProfilePage({ onBack }: ActorProfilePageProps) {
           </section>
 
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/60 mb-3">Industry</h2>
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Industry</h2>
             <div className="space-y-4">
               <div>
                 <label className="text-xs font-medium text-muted-foreground mb-1.5 block">Location</label>

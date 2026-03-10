@@ -291,7 +291,7 @@ export function Header({
         </Button>
       </div>
 
-      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
+      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} activePage="rehearsal" />
     </header>
   );
 }

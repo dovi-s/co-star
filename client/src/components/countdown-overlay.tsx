@@ -49,7 +49,7 @@ export function CountdownOverlay({ onComplete, onCancel, cameraMode }: Countdown
         </div>
         <p className={cn(
           "text-sm",
-          cameraMode ? "text-white/50" : "text-muted-foreground/70"
+          cameraMode ? "text-white/50" : "text-muted-foreground"
         )}>
           Tap anywhere to cancel
         </p>

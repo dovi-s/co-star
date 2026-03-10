@@ -87,27 +87,27 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
             <div data-testid="skeleton-history">
               <div className="grid grid-cols-3 gap-3 mb-6">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="glass-surface rounded-lg p-3 text-center animate-pulse">
-                    <div className="h-4 w-4 bg-muted/60 rounded mx-auto mb-1" />
-                    <div className="h-6 w-10 bg-muted/60 rounded mx-auto mb-1" />
-                    <div className="h-3 w-12 bg-muted/60 rounded mx-auto" />
+                  <div key={i} className="glass-surface rounded-lg p-3 text-center animate-pulse" style={{ animationDelay: `${i * 80}ms` }}>
+                    <div className="h-4 w-4 bg-muted/30 rounded mx-auto mb-1" />
+                    <div className="h-6 w-10 bg-muted/40 rounded mx-auto mb-1" />
+                    <div className="h-3 w-12 bg-muted/30 rounded mx-auto" />
                   </div>
                 ))}
               </div>
               <div className="space-y-2">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="glass-surface rounded-lg p-3 animate-pulse">
+                  <div key={i} className="glass-surface rounded-lg p-3 animate-pulse" style={{ animationDelay: `${(i + 3) * 80}ms` }}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0 flex-1 space-y-2">
-                        <div className="h-4 w-32 bg-muted/60 rounded" />
+                        <div className="h-4 bg-muted/40 rounded" style={{ width: `${50 + (i % 3) * 15}%` }} />
                         <div className="flex items-center gap-3">
-                          <div className="h-3 w-14 bg-muted/60 rounded" />
-                          <div className="h-3 w-10 bg-muted/60 rounded" />
+                          <div className="h-3 w-14 bg-muted/30 rounded" />
+                          <div className="h-3 w-10 bg-muted/30 rounded" />
                         </div>
                       </div>
                       <div className="text-right shrink-0 space-y-1">
-                        <div className="h-4 w-10 bg-muted/60 rounded ml-auto" />
-                        <div className="h-3 w-12 bg-muted/60 rounded ml-auto" />
+                        <div className="h-4 w-10 bg-muted/40 rounded ml-auto" />
+                        <div className="h-3 w-12 bg-muted/30 rounded ml-auto" />
                       </div>
                     </div>
                   </div>
@@ -117,16 +117,15 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
           )}
 
           {!isLoading && totalRuns === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up" data-testid="empty-history">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <BarChart3 className="h-6 w-6 text-primary" />
+            <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up" data-testid="empty-history">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+                <BarChart3 className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-1">No runs yet</h3>
-              <p className="text-xs text-muted-foreground max-w-[240px] mb-4 leading-relaxed">
-                Complete your first rehearsal and your performance stats will appear here.
+              <h3 className="text-base font-semibold text-foreground mb-1.5">No performances yet</h3>
+              <p className="text-sm text-muted-foreground max-w-[260px] mb-5 leading-relaxed">
+                Complete your first rehearsal and your performance stats will appear here. Track your progress over time.
               </p>
               <Button
-                size="sm"
                 onClick={onBack}
                 data-testid="button-start-first-rehearsal"
               >
@@ -192,7 +191,7 @@ export function HistoryPage({ onBack }: { onBack: () => void }) {
                               </span>
                             )}
                             {run.memorizationMode && run.memorizationMode !== "off" && (
-                              <span className="text-[11px] text-muted-foreground/60 uppercase">
+                              <span className="text-[11px] text-muted-foreground uppercase">
                                 {run.memorizationMode}
                               </span>
                             )}

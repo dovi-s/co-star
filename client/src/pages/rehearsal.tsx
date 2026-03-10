@@ -18,7 +18,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy, Info, Zap, Clock } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, Loader2, Trophy, Info, Zap, Clock, Flame } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AIStateIndicator, type AIState } from "@/components/ai-state-indicator";
@@ -111,6 +111,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const userPauseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasSeenTour = useRef(false);
   const [animatedAccuracy, setAnimatedAccuracy] = useState(0);
+  const [celebrationRevealed, setCelebrationRevealed] = useState(false);
   const [resumePrompt, setResumePrompt] = useState<{ lineIndex: number; sceneIndex: number } | null>(null);
   const scriptFingerprintRef = useRef("");
   const [cameraFocus, setCameraFocus] = useState<'script' | 'face'>('script');
@@ -220,6 +221,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const wordTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const matchGraceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchReachedRef = useRef(false);
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const getCurrentLineRef = useRef(getCurrentLine);
   const advanceAfterUserLineRef = useRef<() => void>(() => {});
   const speakLineRef = useRef<() => void>(() => {});
@@ -465,6 +467,9 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       if (matchGraceTimeoutRef.current) {
         clearTimeout(matchGraceTimeoutRef.current);
       }
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+      }
     };
   }, []);
 
@@ -565,18 +570,49 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     recordRehearsal(0, 1);
     triggerHaptic(avgAccuracy >= 95 ? "achievement" : "success");
 
+    setCelebrationRevealed(false);
     setAnimatedAccuracy(0);
     const targetAcc = Math.round(avgAccuracy);
-    let frame = 0;
-    const totalFrames = 40;
-    const animateUp = () => {
-      frame++;
-      const progress = Math.min(frame / totalFrames, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setAnimatedAccuracy(Math.round(targetAcc * eased));
-      if (frame < totalFrames) requestAnimationFrame(animateUp);
-    };
-    requestAnimationFrame(animateUp);
+
+    const revealDelay = 800;
+    if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
+    celebrationTimerRef.current = setTimeout(() => {
+      celebrationTimerRef.current = null;
+      setCelebrationRevealed(true);
+      let frame = 0;
+      const totalFrames = 50;
+      const animateUp = () => {
+        frame++;
+        const progress = Math.min(frame / totalFrames, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setAnimatedAccuracy(Math.round(targetAcc * eased));
+        if (frame < totalFrames) requestAnimationFrame(animateUp);
+      };
+      requestAnimationFrame(animateUp);
+
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const playTone = (freq: number, start: number, dur: number, vol: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(vol, ctx.currentTime + start);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ctx.currentTime + start);
+          osc.stop(ctx.currentTime + start + dur);
+        };
+        const vol = avgAccuracy >= 95 ? 0.08 : 0.05;
+        playTone(523.25, 0, 0.15, vol);
+        playTone(659.25, 0.1, 0.15, vol);
+        playTone(783.99, 0.2, 0.25, vol * 1.2);
+        if (avgAccuracy >= 95) {
+          playTone(1046.50, 0.35, 0.35, vol);
+        }
+      } catch {}
+    }, revealDelay);
 
     if (handsFreeModeRef.current) {
       setSceneCompleted(true);
@@ -1750,13 +1786,23 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         const feedback = getPerformanceFeedback();
         const isLastScene = session.scenes.length > 1 && session.currentSceneIndex === session.scenes.length - 1;
         const isScriptComplete = isLastScene;
+        const streak = stats.currentStreak;
         
+        const confettiColors = [
+          "bg-yellow-400 dark:bg-yellow-500",
+          "bg-primary/70 dark:bg-primary/60",
+          "bg-green-400 dark:bg-green-500",
+          "bg-orange-400 dark:bg-orange-500",
+          "bg-pink-400 dark:bg-pink-500",
+        ];
         const confettiParticles = (feedback?.type === "perfect" || isScriptComplete)
-          ? Array.from({ length: isScriptComplete ? 20 : 12 }, (_, i) => ({
+          ? Array.from({ length: isScriptComplete ? 28 : 18 }, (_, i) => ({
               id: i,
-              left: 3 + (i * (isScriptComplete ? 5 : 8)) + (i % 3) * 2,
-              delay: i * 0.06,
-              duration: 2.5 + (i % 3) * 0.3,
+              left: 2 + Math.random() * 96,
+              delay: i * 0.04 + Math.random() * 0.2,
+              duration: 2.2 + Math.random() * 1.2,
+              colorClass: confettiColors[i % confettiColors.length],
+              size: 5 + Math.random() * 6,
             }))
           : [];
         
@@ -1770,17 +1816,14 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 {confettiParticles.map(p => (
                   <div
                     key={p.id}
-                    className={cn(
-                      "confetti-particle",
-                      isScriptComplete && feedback?.type !== "perfect"
-                        ? "bg-primary/60 dark:bg-primary/50"
-                        : "bg-yellow-400 dark:bg-yellow-500"
-                    )}
+                    className={cn("confetti-particle", p.colorClass)}
                     style={{
                       left: `${p.left}%`,
                       animationDelay: `${p.delay}s`,
                       animationDuration: `${p.duration}s`,
-                      opacity: 0.7,
+                      width: `${p.size}px`,
+                      height: `${p.size}px`,
+                      opacity: 0.8,
                     }}
                   />
                 ))}
@@ -1788,14 +1831,16 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
             )}
             
             <div 
-              className="bg-card border shadow-2xl rounded-2xl p-6 text-center max-w-xs mx-4 animate-scale-in relative"
+              className="bg-card border shadow-2xl rounded-2xl p-6 text-center max-w-sm mx-4 relative"
               onClick={(e) => e.stopPropagation()}
               data-testid="celebration-modal"
             >
-              {/* Compact icon + title row */}
-              <div className="flex items-center justify-center gap-3 mb-4">
+              <div className={cn(
+                "transition-all duration-500",
+                celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
+              )}>
                 <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                  "w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3 celebrate",
                   isScriptComplete && feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
                   isScriptComplete ? "bg-primary text-primary-foreground" :
                   feedback?.type === "perfect" ? "bg-yellow-500 text-yellow-950" :
@@ -1803,76 +1848,105 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                   "bg-foreground text-background"
                 )}>
                   {isScriptComplete ? (
-                    <Trophy className="h-5 w-5" />
+                    <Trophy className="h-7 w-7" />
                   ) : feedback?.type === "perfect" ? (
-                    <Star className="h-5 w-5 fill-current" />
+                    <Star className="h-7 w-7 fill-current" />
                   ) : (
-                    <Check className="h-5 w-5" />
+                    <Check className="h-7 w-7" />
                   )}
                 </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-semibold leading-tight">
-                    {isScriptComplete ? "Script Complete" : "Scene Complete"}
-                  </h3>
-                  {isScriptComplete && (
-                    <p className="text-xs text-muted-foreground">
-                      All {session.scenes.length} scenes finished
-                    </p>
-                  )}
-                  {feedback && (
-                    <p className={cn(
-                      "text-sm",
-                      feedback.type === "perfect" ? "text-yellow-600 dark:text-yellow-400" :
-                      feedback.type === "great" ? "text-green-600 dark:text-green-400" :
-                      "text-muted-foreground"
-                    )}>
-                      {feedback.message}
-                    </p>
-                  )}
-                </div>
+                
+                <h3 className="text-xl font-bold leading-tight mb-0.5">
+                  {isScriptComplete ? "Script Complete" : "Scene Complete"}
+                </h3>
+                {isScriptComplete && (
+                  <p className="text-xs text-muted-foreground mb-1">
+                    All {session.scenes.length} scenes finished
+                  </p>
+                )}
+                {feedback && (
+                  <p className={cn(
+                    "text-sm font-medium mb-1",
+                    feedback.type === "perfect" ? "text-yellow-600 dark:text-yellow-400" :
+                    feedback.type === "great" ? "text-green-600 dark:text-green-400" :
+                    "text-muted-foreground"
+                  )}>
+                    {feedback.message}
+                  </p>
+                )}
+                {feedback && feedback.detail && (
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {feedback.detail}
+                  </p>
+                )}
               </div>
-              
-              {/* Performance detail */}
-              {feedback && feedback.detail && (
-                <p className="text-xs text-muted-foreground mb-4 px-2">
-                  {feedback.detail}
-                </p>
-              )}
-              
-              {/* Stats row - always show if we have expected lines */}
+
               {completedRunStats && completedRunStats.expectedUserLines > 0 && (
-                <div className="flex items-center justify-center gap-6 py-3 px-4 bg-muted/30 rounded-lg mb-4">
+                <div className={cn(
+                  "transition-all duration-700 delay-100",
+                  celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+                )}>
                   {completedRunStats.totalUserLines > 0 ? (
-                    <>
-                      <div className="text-center">
-                        <span className="text-xl font-bold text-foreground" data-testid="text-accuracy">{animatedAccuracy}%</span>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">accuracy</p>
+                    <div className="py-5 mb-4 bg-muted/30 rounded-xl">
+                      <div className={cn(
+                        "text-5xl font-black tabular-nums tracking-tight mb-1",
+                        feedback?.type === "perfect" ? "text-yellow-500 dark:text-yellow-400" :
+                        feedback?.type === "great" ? "text-green-500 dark:text-green-400" :
+                        "text-foreground"
+                      )} data-testid="text-accuracy">
+                        {animatedAccuracy}%
                       </div>
-                      <div className="w-px h-6 bg-border" />
-                      <div className="text-center">
-                        <span className="text-xl font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
-                        <p className="text-[11px] text-muted-foreground uppercase tracking-wide">perfect</p>
-                      </div>
-                      {completedRunStats.totalUserLines < completedRunStats.expectedUserLines && (
-                        <>
-                          <div className="w-px h-6 bg-border" />
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">accuracy</p>
+                      <div className="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-border/50 mx-6">
+                        <div className="text-center">
+                          <span className="text-sm font-bold text-foreground">{completedRunStats.perfectLines}/{completedRunStats.totalUserLines}</span>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">perfect</p>
+                        </div>
+                        {completedRunStats.hintsUsed > 0 && (
                           <div className="text-center">
-                            <span className="text-xl font-bold text-foreground">{completedRunStats.totalUserLines}/{completedRunStats.expectedUserLines}</span>
-                            <p className="text-[11px] text-muted-foreground uppercase tracking-wide">spoken</p>
+                            <span className="text-sm font-bold text-foreground">{completedRunStats.hintsUsed}</span>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">hints</p>
                           </div>
-                        </>
-                      )}
-                    </>
+                        )}
+                        {completedRunStats.duration > 0 && (
+                          <div className="text-center">
+                            <span className="text-sm font-bold text-foreground">
+                              {completedRunStats.duration < 60
+                                ? `${completedRunStats.duration}s`
+                                : `${Math.floor(completedRunStats.duration / 60)}m ${completedRunStats.duration % 60}s`
+                              }
+                            </span>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">time</p>
+                          </div>
+                        )}
+                        {completedRunStats.totalUserLines < completedRunStats.expectedUserLines && (
+                          <div className="text-center">
+                            <span className="text-sm font-bold text-foreground">{completedRunStats.totalUserLines}/{completedRunStats.expectedUserLines}</span>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">spoken</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   ) : (
-                    <div className="text-center">
-                      <span className="text-xl font-bold text-foreground">0/{completedRunStats.expectedUserLines}</span>
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">lines spoken</p>
+                    <div className="py-4 mb-4 bg-muted/30 rounded-xl">
+                      <span className="text-3xl font-bold text-foreground">0/{completedRunStats.expectedUserLines}</span>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-widest mt-1">lines spoken</p>
                     </div>
                   )}
                 </div>
               )}
+
+              {streak > 0 && (
+                <div className={cn(
+                  "flex items-center justify-center gap-2 mb-4 py-2 px-4 rounded-full bg-orange-500/10 dark:bg-orange-500/15 mx-auto w-fit transition-all duration-700 delay-200",
+                  celebrationRevealed ? "opacity-100 scale-100" : "opacity-0 scale-90"
+                )} data-testid="celebration-streak-badge">
+                  <Flame className={cn("h-4 w-4 text-orange-500", streak >= 3 && "animate-pulse")} />
+                  <span className="text-sm font-bold text-orange-600 dark:text-orange-400">{streak} day streak</span>
+                  {streak >= 7 && <Trophy className="h-3.5 w-3.5 text-orange-500" />}
+                </div>
+              )}
               
-              {/* Download recording if available */}
               {camera.hasRecording && (
                 <div className="mb-3">
                   <Button
@@ -1914,28 +1988,37 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 <p className="text-xs text-green-600 mb-3">Script saved to your library</p>
               )}
 
-              {/* What's next suggestions */}
               {(() => {
                 const suggestions = getNextStepSuggestions();
                 if (suggestions.length === 0) return null;
                 return (
-                  <div className="mb-4" data-testid="next-steps-section">
+                  <div className={cn(
+                    "mb-4 transition-all duration-700 delay-300",
+                    celebrationRevealed ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
+                  )} data-testid="next-steps-section">
                     <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">What's next</p>
-                    <div className="flex flex-col gap-1.5">
-                      {suggestions.map((s) => (
+                    <div className="flex flex-col gap-2">
+                      {suggestions.map((s, idx) => (
                         <button
                           key={s.id}
                           onClick={s.action}
-                          className="flex items-center gap-3 w-full text-left px-3 py-2.5 rounded-lg hover-elevate active-elevate-2 transition-colors"
+                          className={cn(
+                            "flex items-center gap-3 w-full text-left px-3.5 py-3 rounded-xl border bg-card hover-elevate active-elevate-2 transition-all",
+                            idx === 0 && "border-primary/20 bg-primary/[0.03]"
+                          )}
                           data-testid={`button-next-step-${s.id}`}
                         >
-                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                            <s.icon className="h-4 w-4 text-muted-foreground" />
+                          <div className={cn(
+                            "w-9 h-9 rounded-lg flex items-center justify-center shrink-0",
+                            idx === 0 ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                          )}>
+                            <s.icon className="h-4 w-4" />
                           </div>
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
                             <p className="text-sm font-medium leading-tight truncate">{s.label}</p>
                             <p className="text-xs text-muted-foreground leading-tight truncate">{s.detail}</p>
                           </div>
+                          <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                         </button>
                       ))}
                     </div>
@@ -1943,7 +2026,6 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 );
               })()}
 
-              {/* Primary action */}
               <Button
                 className="w-full"
                 onClick={handleTryAgain}
@@ -1953,7 +2035,6 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 Run Again
               </Button>
               
-              {/* Subtle dismiss link */}
               <button
                 onClick={handleDismissCelebration}
                 className="mt-3 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -2035,7 +2116,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                   <Check className="h-8 w-8 text-white/70" />
                 </div>
                 <p className="text-lg text-white/60">Run complete</p>
-                <p className="text-sm text-white/30">Restarting...</p>
+                <p className="text-sm text-white/60">Restarting...</p>
               </div>
             ) : currentLine ? (
               <>
@@ -2084,14 +2165,14 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                       style={{ width: `${totalLines > 0 ? (globalLineNumber / totalLines) * 100 : 0}%` }}
                     />
                   </div>
-                  <p className="text-xs text-white/30 text-center mt-2">
+                  <p className="text-xs text-white/60 text-center mt-2">
                     {globalLineNumber} of {totalLines}
                   </p>
                 </div>
               </>
             ) : (
               <div className="text-center space-y-3">
-                <Headphones className="h-12 w-12 text-white/30 mx-auto" />
+                <Headphones className="h-12 w-12 text-white/60 mx-auto" />
                 <p className="text-white/50">Ready to rehearse</p>
               </div>
             )}
@@ -2137,7 +2218,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 )}
               </button>
             </div>
-            <p className="text-xs text-white/20">Hands-free mode</p>
+            <p className="text-xs text-white/60">Hands-free mode</p>
           </div>
         </div>
       )}
@@ -2198,63 +2279,63 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           />
           
           {aiState === "thinking" && !handsFreeMode && (
-            <div className="flex items-center justify-center mt-4 animate-fade-in" data-testid="tts-generating-indicator">
+            <div className="flex items-center justify-center mt-3 animate-fade-in" data-testid="tts-generating-indicator">
               <div className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-full border",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full",
                 camera.isEnabled
-                  ? "bg-white/5 border-white/10"
-                  : "bg-muted/50 border-border/50"
+                  ? "bg-white/5"
+                  : "bg-muted/30"
               )}>
                 <Loader2 className={cn(
-                  "h-3.5 w-3.5 animate-spin",
-                  camera.isEnabled ? "text-white/60" : "text-muted-foreground"
+                  "h-3 w-3 animate-spin",
+                  camera.isEnabled ? "text-white/40" : "text-muted-foreground/50"
                 )} />
                 <span className={cn(
-                  "text-xs font-medium",
-                  camera.isEnabled ? "text-white/50" : "text-muted-foreground"
+                  "text-[10px]",
+                  camera.isEnabled ? "text-white/35" : "text-muted-foreground/50"
                 )}>
-                  Preparing line...
+                  Preparing...
                 </span>
               </div>
             </div>
           )}
 
           {showUserTurnIndicator && (
-            <div className="flex flex-col items-center mt-6 animate-fade-in" data-testid="user-turn-indicator">
+            <div className="flex flex-col items-center mt-4 animate-fade-in" data-testid="user-turn-indicator">
               {tapMode ? (
                 <button
                   onClick={tapAdvance}
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full border bg-foreground/5 border-foreground/10 animate-breathe active:scale-[0.97] transition-transform"
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-foreground/5 border-foreground/10 active:scale-[0.97] transition-transform"
                   data-testid="button-tap-advance-main"
                 >
-                  <Hand className="h-4 w-4 text-foreground/70" />
-                  <span className="text-sm text-foreground font-medium">Tap when ready</span>
+                  <Hand className="h-3.5 w-3.5 text-foreground/50" />
+                  <span className="text-xs text-foreground/60 font-medium">Tap when ready</span>
                 </button>
               ) : (
                 <>
                   <div className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-full border relative",
+                    "flex items-center gap-2 px-3 py-1.5 rounded-full relative",
                     isListening 
-                      ? "bg-primary/10 border-primary/20 pulse-ring text-primary" 
-                      : "bg-foreground/5 border-foreground/10 animate-breathe"
+                      ? "bg-primary/8 text-primary/70" 
+                      : "bg-foreground/3"
                   )}>
                     {isListening ? (
                       <>
                         <div className="relative">
-                          <Mic className="h-4 w-4 text-primary" />
-                          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                          <Mic className="h-3.5 w-3.5 text-primary/60" />
+                          <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
                         </div>
-                        <span className="text-sm text-primary font-medium">Listening...</span>
+                        <span className="text-xs text-primary/60 font-medium">Listening...</span>
                       </>
                     ) : (
                       <>
-                        <Mic className="h-4 w-4 text-foreground/70" />
-                        <span className="text-sm text-foreground font-medium">Your line</span>
+                        <Mic className="h-3.5 w-3.5 text-foreground/40" />
+                        <span className="text-xs text-foreground/50 font-medium">Your line</span>
                       </>
                     )}
                   </div>
                   {userTranscript && (
-                    <p className="mt-3 text-sm text-muted-foreground/80 max-w-xs text-center transition-opacity duration-300">
+                    <p className="mt-2 text-xs text-muted-foreground/60 max-w-xs text-center transition-opacity duration-300">
                       {userTranscript}
                     </p>
                   )}

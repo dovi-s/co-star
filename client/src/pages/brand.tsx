@@ -324,11 +324,11 @@ function ColorsSection() {
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <code className="text-xs text-muted-foreground font-mono">{color.light}</code>
-                    <span className="text-xs text-muted-foreground/60">/</span>
+                    <span className="text-xs text-muted-foreground">/</span>
                     <code className="text-xs text-muted-foreground font-mono">{color.dark}</code>
                     <CopyButton text={`${color.light} / ${color.dark}`} label={color.name} />
                   </div>
-                  <p className="text-xs text-muted-foreground/70 mt-0.5">{color.usage}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{color.usage}</p>
                 </div>
               </div>
             </div>
@@ -368,7 +368,7 @@ function TypographySection() {
             <div key={t.name} className="rounded-lg border border-border/40 p-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-muted-foreground">{t.name}</span>
-                <code className="text-[10px] text-muted-foreground/60 font-mono">{t.className}</code>
+                <code className="text-[10px] text-muted-foreground font-mono">{t.className}</code>
               </div>
               <p className={t.className}>{t.sample}</p>
             </div>

@@ -317,7 +317,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
 
                   <div className="flex items-center gap-3 my-4">
                     <div className="flex-1 h-px bg-border" />
-                    <span className="text-xs text-muted-foreground/60">or</span>
+                    <span className="text-xs text-muted-foreground">or</span>
                     <div className="flex-1 h-px bg-border" />
                   </div>
                 </div>
@@ -374,7 +374,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                         data-testid="button-toggle-password"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -397,7 +397,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                           data-testid="button-toggle-password"
                         >
                           {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -511,7 +511,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
           {(mode === "signin" || mode === "signup") && (
             <>
               <div className="w-full mt-8 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
-                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60 px-1 mb-3">
+                <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground px-1 mb-3">
                   What you get
                 </p>
                 <div className="space-y-2.5">
@@ -525,7 +525,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
               </div>
 
               <div className="mt-8 animate-fade-in-up" style={{ animationDelay: "300ms" }}>
-                <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
+                <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
                   Save your scripts, keep your history, record without watermarks.
                   <br />
                   $9/mo or $79/yr.

@@ -88,6 +88,21 @@ export default {
         serif: ["var(--font-serif)"],
         mono: ["var(--font-mono)"],
       },
+      letterSpacing: {
+        'heading': '-0.015em',
+        'heading-tight': '-0.02em',
+      },
+      lineHeight: {
+        'body': '1.6',
+        'heading-1': '1.2',
+        'heading-2': '1.25',
+        'heading-3': '1.3',
+      },
+      spacing: {
+        'related': '0.5rem',
+        'group': '1rem',
+        'section': '1.5rem',
+      },
       transitionDuration: {
         '350': '350ms',
         '400': '400ms',

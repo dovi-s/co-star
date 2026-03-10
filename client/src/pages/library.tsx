@@ -97,18 +97,19 @@ export function LibraryPage({
                 <div
                   key={i}
                   className="glass-surface rounded-lg p-4 animate-pulse"
+                  style={{ animationDelay: `${i * 80}ms` }}
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-2">
-                      <div className="h-4 w-36 bg-muted/60 rounded" />
+                      <div className="h-4 bg-muted/40 rounded" style={{ width: `${60 + (i % 3) * 20}%` }} />
                       <div className="flex items-center gap-2">
-                        <div className="h-3 w-3 bg-muted/60 rounded" />
-                        <div className="h-3 w-16 bg-muted/60 rounded" />
+                        <div className="h-3 w-3 bg-muted/30 rounded" />
+                        <div className="h-3 w-16 bg-muted/30 rounded" />
                       </div>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <div className="h-9 w-9 bg-muted/60 rounded" />
-                      <div className="h-9 w-9 bg-muted/60 rounded" />
+                      <div className="h-9 w-9 bg-muted/30 rounded-md" />
+                      <div className="h-9 w-9 bg-muted/30 rounded-md" />
                     </div>
                   </div>
                 </div>
@@ -117,16 +118,15 @@ export function LibraryPage({
           )}
 
           {!isLoading && (!scripts || scripts.length === 0) && (
-            <div className="flex flex-col items-center justify-center py-16 text-center animate-fade-in-up" data-testid="empty-library">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                <FileText className="h-6 w-6 text-primary" />
+            <div className="flex flex-col items-center justify-center py-20 text-center animate-fade-in-up" data-testid="empty-library">
+              <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-5">
+                <FileText className="h-7 w-7 text-primary" />
               </div>
-              <h3 className="text-sm font-semibold text-foreground mb-1">No saved scripts yet</h3>
-              <p className="text-xs text-muted-foreground max-w-[240px] mb-4 leading-relaxed">
-                Import a script and tap save to build your personal library.
+              <h3 className="text-base font-semibold text-foreground mb-1.5">Your library is empty</h3>
+              <p className="text-sm text-muted-foreground max-w-[260px] mb-5 leading-relaxed">
+                Import a script and tap save to build your personal collection. Saved scripts are always just a tap away.
               </p>
               <Button
-                size="sm"
                 onClick={onBack}
                 data-testid="button-import-first-script"
               >
@@ -155,7 +155,7 @@ export function LibraryPage({
                         {script.name}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <Clock className="h-3 w-3 text-muted-foreground/60" />
+                        <Clock className="h-3 w-3 text-muted-foreground" />
                         <span className="text-[11px] text-muted-foreground">
                           {formatDate(script.updatedAt)}
                         </span>

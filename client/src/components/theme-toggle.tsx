@@ -15,22 +15,30 @@ export function ThemeToggle() {
       data-testid="button-theme-toggle"
       className="rounded-xl text-muted-foreground"
     >
-      <div className="relative w-5 h-5">
+      <div className="relative w-5 h-5" style={{ perspective: "60px" }}>
         <Sun 
           className={cn(
-            "h-5 w-5 absolute inset-0 transition-all duration-300",
+            "h-5 w-5 absolute inset-0",
             theme === "light" 
-              ? "opacity-0 rotate-90 scale-0" 
-              : "opacity-100 rotate-0 scale-100"
-          )} 
+              ? "opacity-0 scale-0" 
+              : "opacity-100 scale-100"
+          )}
+          style={{
+            transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.34,1.56,0.64,1)",
+            transform: theme === "light" ? "rotate(180deg) scale(0)" : "rotate(0deg) scale(1)",
+          }}
         />
         <Moon 
           className={cn(
-            "h-5 w-5 absolute inset-0 transition-all duration-300",
+            "h-5 w-5 absolute inset-0",
             theme === "light" 
-              ? "opacity-100 rotate-0 scale-100" 
-              : "opacity-0 -rotate-90 scale-0"
-          )} 
+              ? "opacity-100 scale-100" 
+              : "opacity-0 scale-0"
+          )}
+          style={{
+            transition: "opacity 0.4s cubic-bezier(0.4,0,0.2,1), transform 0.5s cubic-bezier(0.34,1.56,0.64,1)",
+            transform: theme === "light" ? "rotate(0deg) scale(1)" : "rotate(-180deg) scale(0)",
+          }}
         />
       </div>
     </Button>

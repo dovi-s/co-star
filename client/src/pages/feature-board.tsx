@@ -117,7 +117,7 @@ function VoteControls({ item }: { item: FeatureRequestItem }) {
           "p-1 rounded-md transition-colors",
           upActive
             ? "text-primary bg-primary/10"
-            : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         )}
         data-testid={`button-vote-up-${item.id}`}
       >
@@ -140,7 +140,7 @@ function VoteControls({ item }: { item: FeatureRequestItem }) {
           "p-1 rounded-md transition-colors",
           downActive
             ? "text-destructive bg-destructive/10"
-            : "text-muted-foreground/60 hover:text-foreground hover:bg-muted/50"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         )}
         data-testid={`button-vote-down-${item.id}`}
       >
@@ -210,7 +210,7 @@ function RequestCard({ item, isAdmin }: { item: FeatureRequestItem; isAdmin: boo
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="p-1 rounded-md text-muted-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
+                      className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                       data-testid={`button-admin-menu-${item.id}`}
                     >
                       <MoreHorizontal className="h-3.5 w-3.5" />
@@ -266,10 +266,10 @@ function RequestCard({ item, isAdmin }: { item: FeatureRequestItem; isAdmin: boo
             >
               {categoryLabels[category] || category}
             </Badge>
-            <span className="text-[11px] text-muted-foreground/60">
+            <span className="text-[11px] text-muted-foreground">
               {item.authorName}
             </span>
-            <span className="text-[11px] text-muted-foreground/60">
+            <span className="text-[11px] text-muted-foreground">
               {timeAgo(item.createdAt)}
             </span>
           </div>
@@ -319,7 +319,7 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
         placeholder="What would make Co-star Studio better?"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+        className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
         data-testid="input-feature-title"
         autoFocus
       />
@@ -330,7 +330,7 @@ function NewRequestForm({ onClose }: { onClose: () => void }) {
           placeholder="Your name (optional)"
           value={authorName}
           onChange={(e) => setAuthorName(e.target.value)}
-          className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-primary"
+          className="w-full bg-transparent border border-border rounded-md px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
           data-testid="input-feature-author"
         />
       )}
@@ -497,8 +497,8 @@ export function FeatureBoardPage({ onBack }: { onBack: () => void }) {
 
       <footer className="px-5 py-6 text-center border-t border-border/40 safe-bottom">
         <div className="flex items-center justify-center gap-2">
-          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/60" />
-          <p className="text-[11px] text-muted-foreground/60">
+          <MessageSquare className="h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-[11px] text-muted-foreground">
             Requests help shape what we build next
           </p>
         </div>

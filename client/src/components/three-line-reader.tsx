@@ -155,7 +155,8 @@ export function ThreeLineReader({
   const [showContext, setShowContext] = useState(false);
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
   const [lineSlideKey, setLineSlideKey] = useState(0);
-  const fontSizeClass = fontSize === 0 ? "text-base md:text-lg" : fontSize === 1 ? "text-lg md:text-xl" : "text-xl md:text-2xl";
+  const currentFontSizeClass = fontSize === 0 ? "text-lg md:text-xl" : fontSize === 1 ? "text-xl md:text-2xl" : "text-2xl md:text-3xl";
+  const adjacentFontSizeClass = fontSize === 0 ? "text-sm md:text-base" : fontSize === 1 ? "text-base md:text-lg" : "text-lg md:text-xl";
 
   useEffect(() => {
     setShowHint(false);
@@ -178,12 +179,12 @@ export function ThreeLineReader({
       return (
         <div
           className={cn(
-            "min-h-[4rem] flex items-center justify-center rounded-lg transition-all duration-300",
-            type === "previous" && "opacity-20",
-            type === "next" && "opacity-25"
+            "min-h-[2.5rem] flex items-center justify-center rounded-lg transition-all duration-300",
+            type === "previous" && "opacity-10",
+            type === "next" && "opacity-10"
           )}
         >
-          <span className="text-muted-foreground/60 text-xs">
+          <span className="text-muted-foreground text-xs">
             {type === "previous" ? "Start" : type === "next" ? "End" : ""}
           </span>
         </div>
@@ -203,9 +204,10 @@ export function ThreeLineReader({
         onClick={() => onLineClick?.(line)}
         onKeyDown={(e) => { if ((e.key === 'Enter' || e.key === ' ') && e.target === e.currentTarget) { e.preventDefault(); onLineClick?.(line); } }}
         className={cn(
-          "relative py-4 px-4 rounded-xl transition-all duration-300 cursor-pointer group",
-          type === "previous" && "opacity-30 scale-[0.98]",
-          type === "next" && "opacity-35 scale-[0.98]",
+          "relative rounded-xl transition-all duration-300 cursor-pointer group",
+          type === "previous" && "opacity-20 scale-[0.96] py-2.5 px-3",
+          type === "next" && "opacity-20 scale-[0.96] py-2.5 px-3",
+          isCurrent && "py-5 px-5",
           isCurrent && isUser && !cameraMode && "bg-foreground text-background",
           isCurrent && isUser && cameraMode && "bg-black/70 backdrop-blur-xl text-white border border-white/20",
           isCurrent && !isUser && !cameraMode && "bg-card border border-border/60",
@@ -252,7 +254,7 @@ export function ThreeLineReader({
                   isCurrent && isUser && cameraMode && "text-white/80",
                   isCurrent && !isUser && !cameraMode && "text-muted-foreground",
                   isCurrent && !isUser && cameraMode && "text-white/70",
-                  !isCurrent && "text-muted-foreground/60"
+                  !isCurrent && "text-muted-foreground"
                 )}
               >
                 {line.roleName}
@@ -270,10 +272,10 @@ export function ThreeLineReader({
                   "text-[11px] italic",
                   isCurrent && isUser && !cameraMode && "text-background/60",
                   isCurrent && isUser && cameraMode && "text-white/60",
-                  isCurrent && !isUser && !cameraMode && "text-muted-foreground/60",
-                  isCurrent && !isUser && cameraMode && "text-white/50",
-                  !isCurrent && !cameraMode && "text-muted-foreground/60",
-                  !isCurrent && cameraMode && "text-white/30"
+                  isCurrent && !isUser && !cameraMode && "text-muted-foreground",
+                  isCurrent && !isUser && cameraMode && "text-white/70",
+                  !isCurrent && !cameraMode && "text-muted-foreground",
+                  !isCurrent && cameraMode && "text-white/60"
                 )}>
                   {line.direction}
                 </span>
@@ -282,17 +284,18 @@ export function ThreeLineReader({
             
             <p
               className={cn(
-                fontSizeClass,
-                "leading-[1.8] transition-all duration-300",
-                isCurrent && isUser && !cameraMode && "text-background",
-                isCurrent && isUser && cameraMode && "text-white",
+                isCurrent ? currentFontSizeClass : adjacentFontSizeClass,
+                isCurrent ? "leading-[1.85]" : "leading-[1.6]",
+                "transition-all duration-300",
+                isCurrent && isUser && !cameraMode && "text-background font-medium",
+                isCurrent && isUser && cameraMode && "text-white font-medium",
                 isCurrent && !isUser && !cameraMode && "text-foreground",
                 isCurrent && !isUser && cameraMode && "text-white",
                 !isCurrent && !cameraMode && "text-muted-foreground",
-                !isCurrent && cameraMode && "text-white/50",
+                !isCurrent && cameraMode && "text-white/60",
                 shouldMask && !showHint && "italic opacity-70",
                 isCurrent && "max-h-[45vh] overflow-y-auto pr-1",
-                !isCurrent && "line-clamp-2"
+                !isCurrent && "line-clamp-1"
               )}
             >
               {shouldMask && !showHint ? maskedContent?.display : (
@@ -328,7 +331,7 @@ export function ThreeLineReader({
                 onClick={(e) => { e.stopPropagation(); onPlayFromHere(line); }}
                 className={cn(
                   "mt-1.5 gap-1 text-[10px] px-2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity",
-                  cameraMode ? "text-white/50" : "text-muted-foreground/60"
+                  cameraMode ? "text-white/70" : "text-muted-foreground"
                 )}
                 data-testid={`button-play-from-${type}`}
               >
@@ -478,7 +481,7 @@ export function ThreeLineReader({
                   <span />
                   <span />
                 </div>
-                <span className="text-[10px] text-muted-foreground/70">Speaking</span>
+                <span className="text-[10px] text-muted-foreground">Speaking</span>
               </div>
             )}
           </div>
@@ -509,7 +512,7 @@ export function ThreeLineReader({
   };
 
   return (
-    <div className={cn("space-y-3", cameraMode && "camera-text-shadow")} data-testid="three-line-reader">
+    <div className={cn("space-y-2", cameraMode && "camera-text-shadow")} data-testid="three-line-reader">
       {/* Scene transition card - shows when entering a new scene */}
       {isFirstLineOfScene && currentScene && (
         <div 
@@ -534,7 +537,7 @@ export function ThreeLineReader({
             </div>
             <span className={cn(
               "text-[11px] font-medium uppercase tracking-wide",
-              cameraMode ? "text-white/70" : "text-muted-foreground/70"
+              cameraMode ? "text-white/70" : "text-muted-foreground"
             )}>
               Scene
             </span>
@@ -558,7 +561,7 @@ export function ThreeLineReader({
               {descriptionExpanded ? (
                 <p className={cn(
                   "text-xs leading-relaxed italic",
-                  cameraMode ? "text-white/60" : "text-muted-foreground/70"
+                  cameraMode ? "text-white/60" : "text-muted-foreground"
                 )}>
                   {currentScene.description}
                 </p>
@@ -567,7 +570,7 @@ export function ThreeLineReader({
                   <div 
                     className={cn(
                       "whitespace-nowrap text-xs italic",
-                      cameraMode ? "text-white/60" : "text-muted-foreground/70",
+                      cameraMode ? "text-white/60" : "text-muted-foreground",
                       currentScene.description.length > 60 && "animate-marquee"
                     )}
                     style={{
@@ -593,7 +596,7 @@ export function ThreeLineReader({
               {currentScene.description.length > 60 && (
                 <div className={cn(
                   "flex items-center gap-1 mt-1 text-[10px]",
-                  cameraMode ? "text-white/40" : "text-muted-foreground/60"
+                  cameraMode ? "text-white/70" : "text-muted-foreground"
                 )}>
                   {descriptionExpanded ? (
                     <>

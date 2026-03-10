@@ -47,7 +47,7 @@ export function Mascot({
   
   return (
     <div className={cn("relative inline-flex flex-col items-center", className)} data-testid="mascot-container">
-      <div className={cn(sizeClasses[size], animation, "relative")}>
+      <div className={cn(sizeClasses[size], animation, "relative")} style={{ transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)" }}>
         <svg
           viewBox="0 0 100 100"
           fill="none"

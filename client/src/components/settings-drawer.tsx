@@ -135,7 +135,7 @@ export function SettingsDrawer({
                       <label className="text-sm font-medium">
                         Pace
                       </label>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         {playbackSpeed < 0.9 ? "Slower" : playbackSpeed > 1.1 ? "Faster" : "Normal"} ({playbackSpeed.toFixed(1)}x)
                       </p>
                     </div>
@@ -149,7 +149,7 @@ export function SettingsDrawer({
                     className="w-full"
                     data-testid="slider-playback-speed"
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
                     <span>0.5x</span>
                     <span>1.0x</span>
                     <span>1.5x</span>
@@ -165,7 +165,7 @@ export function SettingsDrawer({
                       <label className="text-sm font-medium">
                         Reader Delay
                       </label>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         {readerDelay === 0 ? "No pause" : `${readerDelay.toFixed(1)}s pause`} before reader speaks
                       </p>
                     </div>
@@ -179,7 +179,7 @@ export function SettingsDrawer({
                     className="w-full"
                     data-testid="slider-reader-delay"
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
                     <span>0s</span>
                     <span>1.5s</span>
                     <span>3s</span>
@@ -198,7 +198,7 @@ export function SettingsDrawer({
                       <label htmlFor="tapMode" className="text-sm font-medium cursor-pointer">
                         Tap to Advance
                       </label>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         Tap or press space to advance your lines
                       </p>
                     </div>
@@ -225,7 +225,7 @@ export function SettingsDrawer({
                     </div>
                     <div className="text-left">
                       <span className="text-sm font-medium">Hands-Free Mode</span>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         Audio-only rehearsal, no screen needed
                       </p>
                     </div>
@@ -247,7 +247,7 @@ export function SettingsDrawer({
                       <label className="text-sm font-medium">
                         Reader Volume
                       </label>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         {readerVolume === 0 ? "Muted" : `${Math.round(readerVolume * 100)}%`}
                       </p>
                     </div>
@@ -261,7 +261,7 @@ export function SettingsDrawer({
                     className="w-full"
                     data-testid="slider-reader-volume"
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground/60">
+                  <div className="flex justify-between text-[11px] text-muted-foreground">
                     <span>0%</span>
                     <span>50%</span>
                     <span>100%</span>
@@ -284,7 +284,7 @@ export function SettingsDrawer({
                       <label htmlFor="ambient" className="text-sm font-medium cursor-pointer">
                         Ambient Sound
                       </label>
-                      <p className="text-[11px] text-muted-foreground/60">
+                      <p className="text-[11px] text-muted-foreground">
                         Subtle background hum for focus
                       </p>
                     </div>
@@ -310,7 +310,7 @@ export function SettingsDrawer({
                         <label htmlFor="earbudsOnly" className="text-sm font-medium cursor-pointer">
                           Earbuds Only
                         </label>
-                        <p className="text-[11px] text-muted-foreground/60">
+                        <p className="text-[11px] text-muted-foreground">
                           Reader voice in earbuds, not in recording
                         </p>
                       </div>
@@ -328,7 +328,7 @@ export function SettingsDrawer({
                   <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                     Voice Presets
                   </div>
-                  <p className="text-[11px] text-muted-foreground/60">
+                  <p className="text-[11px] text-muted-foreground">
                     Tap to change voice style
                   </p>
                   <div className="flex flex-wrap gap-1.5">

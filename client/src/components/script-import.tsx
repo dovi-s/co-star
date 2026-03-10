@@ -622,7 +622,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       >
         {script && !isEditingScript && previewData.roles > 0 ? (
           <div
-            className="min-h-[280px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text cursor-pointer"
+            className="min-h-[300px] max-h-[420px] overflow-y-auto rounded-xl px-5 py-5 font-mono text-[13.5px] tracking-[0.01em] select-text cursor-pointer"
             onClick={() => { setIsEditingScript(true); setTimeout(() => textareaRef.current?.focus(), 0); }}
             data-testid="script-preview"
           >
@@ -642,7 +642,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 if (isSceneHeader) {
                   if (elements.length > 0) elements.push(<div key={`sp-${i}`} className="h-4" />);
                   elements.push(
-                    <div key={i} className="leading-[1.85] text-foreground/50 font-semibold text-[12px] uppercase tracking-wider">{trimmed}</div>
+                    <div key={i} className="leading-[1.85] text-foreground/70 font-semibold text-[12px] uppercase tracking-wider">{trimmed}</div>
                   );
                   lastWasDialogue = false;
                 } else if (colonMatch) {
@@ -658,12 +658,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                   lastWasDialogue = true;
                 } else if (isStageDirection) {
                   elements.push(
-                    <div key={i} className="leading-[1.85] text-foreground/40 italic text-[12.5px]">{trimmed}</div>
+                    <div key={i} className="leading-[1.85] text-foreground/70 italic text-[12.5px]">{trimmed}</div>
                   );
                   lastWasDialogue = false;
                 } else {
                   elements.push(
-                    <div key={i} className="leading-[1.85] text-foreground/60">{trimmed}</div>
+                    <div key={i} className="leading-[1.85] text-foreground/80">{trimmed}</div>
                   );
                   lastWasDialogue = false;
                 }
@@ -680,7 +680,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
             onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
             onBlur={() => { if (script.trim() && previewData.roles > 0) setIsEditingScript(false); }}
-            className="min-h-[280px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
+            className="min-h-[300px] border-0 resize-none focus-visible:ring-0 text-[13.5px] rounded-xl bg-transparent leading-[1.85] px-5 py-5 placeholder:text-muted-foreground/50 font-mono tracking-[0.01em]"
             data-testid="textarea-script"
           />
         )}
@@ -700,7 +700,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                         style={{ width: `${Math.max(3, (ocrProgress.current / ocrProgress.total) * 100)}%` }}
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground/60">Scanning pages</p>
+                    <p className="text-[10px] text-muted-foreground">Scanning pages</p>
                   </div>
                 </>
               ) : (
@@ -809,7 +809,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             <Dialog>
               <DialogTrigger asChild>
                 <button
-                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1.5 text-xs text-muted-foreground hover:text-muted-foreground transition-colors"
                   data-testid="button-format-help"
                 >
                   <HelpCircle className="w-3 h-3" />
@@ -844,12 +844,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                   <div className="space-y-1.5">
                     <p className="font-medium text-xs uppercase tracking-wide text-muted-foreground">Scenes</p>
                     <div className="bg-muted/40 rounded-lg p-3 font-mono text-xs leading-relaxed">
-                      <div className="text-muted-foreground/60 mb-1">Scene 1: The Study</div>
+                      <div className="text-muted-foreground mb-1">Scene 1: The Study</div>
                       <div className="text-muted-foreground">MICHAEL: I'm gonna make him an offer he can't refuse.</div>
-                      <div className="text-muted-foreground/60 mt-2 mb-1">Scene 2: The Meeting</div>
+                      <div className="text-muted-foreground mt-2 mb-1">Scene 2: The Meeting</div>
                       <div className="text-muted-foreground">TOM: The family needs to hear this.</div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">
+                    <p className="text-[10px] text-muted-foreground mt-1">
                       Lines starting with "Scene", "ACT", or "INT./EXT." create scene breaks during rehearsal.
                     </p>
                   </div>
@@ -873,7 +873,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                         <span>Use [brackets] or (parentheses)</span>
                       </li>
                     </ul>
-                    <p className="text-[10px] text-muted-foreground/60 mt-2">
+                    <p className="text-[10px] text-muted-foreground mt-2">
                       Copy-paste from PDFs often loses formatting. Upload the file directly for better accuracy.
                     </p>
                   </div>
@@ -954,7 +954,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
             <span className="text-sm">Fixing formatting</span>
           </div>
           {script.length > 10000 && (
-            <span className="text-xs text-muted-foreground/60">Large script, this may take up to a minute</span>
+            <span className="text-xs text-muted-foreground">Large script, this may take up to a minute</span>
           )}
         </div>
       )}
@@ -1039,7 +1039,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         </div>
       )}
 
-      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground/60" data-testid="text-privacy-badge">
+      <div className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground" data-testid="text-privacy-badge">
         {isAuthenticated ? (
           <>
             <Cloud className="h-3 w-3" />
@@ -1151,7 +1151,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
               </button>
             </div>
           ) : (
-            <p className="text-center text-sm text-muted-foreground/70">
+            <p className="text-center text-sm text-muted-foreground">
               No script?{" "}
               <button
                 onClick={generateRandomScript}

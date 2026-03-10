@@ -282,7 +282,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
                   <div className="flex items-center gap-3 my-3">
                     <div className="flex-1 h-px bg-border/60" />
-                    <span className="text-[11px] text-muted-foreground/60 uppercase tracking-wider">or</span>
+                    <span className="text-[11px] text-muted-foreground uppercase tracking-wider">or</span>
                     <div className="flex-1 h-px bg-border/60" />
                   </div>
                 </div>
@@ -336,7 +336,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-muted-foreground"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                       data-testid="button-modal-toggle-password"
                     >
                       {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}

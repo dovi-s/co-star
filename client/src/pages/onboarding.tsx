@@ -376,7 +376,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                 )}
               </button>
 
-              <p className="text-[11px] text-muted-foreground/60 mt-4">
+              <p className="text-[11px] text-muted-foreground mt-4">
                 JPG, PNG, or HEIC
               </p>
             </div>
@@ -501,7 +501,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
                   )}
                   Subscribe to Pro
                 </Button>
-                <p className="text-[11px] text-muted-foreground/60 mt-2 text-center">
+                <p className="text-[11px] text-muted-foreground mt-2 text-center">
                   Cancel anytime from settings.
                 </p>
               </div>

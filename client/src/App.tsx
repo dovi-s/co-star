@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { usePageTracking } from "@/hooks/use-tracking";
 import "@/hooks/use-analytics";
 import type { SavedScript } from "@shared/models/auth";
-import { AlertTriangle, RotateCcw, WifiOff } from "lucide-react";
+import { AlertTriangle, RotateCcw, WifiOff, Play } from "lucide-react";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -368,6 +368,12 @@ function AppContent() {
         <BrandPage onBack={handleBackToHome} />
       )}
       </div>
+      {session && session.userRoleId && view !== "rehearsal" && (
+        <NowRehearsingPill
+          scriptName={session.name}
+          onResume={() => transitionTo("rehearsal")}
+        />
+      )}
     </div>
   );
 }
@@ -419,6 +425,22 @@ function OfflineBanner() {
       <WifiOff className="h-4 w-4 shrink-0" />
       <span>You're offline — some features may not work</span>
     </div>
+  );
+}
+
+function NowRehearsingPill({ scriptName, onResume }: { scriptName: string; onResume: () => void }) {
+  return (
+    <button
+      onClick={onResume}
+      className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-2 px-4 py-2.5 rounded-full bg-primary text-primary-foreground shadow-lg animate-in slide-in-from-bottom-4 fade-in duration-300 cursor-pointer"
+      data-testid="button-now-rehearsing"
+      aria-label={`Resume rehearsal: ${scriptName}`}
+    >
+      <Play className="w-4 h-4 fill-current" />
+      <span className="text-sm font-medium truncate max-w-[200px]" data-testid="text-now-rehearsing-title">
+        {scriptName}
+      </span>
+    </button>
   );
 }
 

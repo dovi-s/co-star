@@ -286,7 +286,7 @@ const workarounds: Workaround[] = [
 function SupportIcon({ value }: { value: Support }) {
   if (value === true) return <Check className="h-3.5 w-3.5 text-green-500" />;
   if (value === "partial") return <Minus className="h-3.5 w-3.5 text-amber-500" />;
-  return <X className="h-3.5 w-3.5 text-muted-foreground/30" />;
+  return <X className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
 const freeTierFeatures = [
@@ -343,7 +343,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                   data-testid={`card-workaround-${i}`}
                 >
                   <p className="text-xs font-medium text-foreground mb-0.5" data-testid={`text-workaround-name-${i}`}>{w.method}</p>
-                  <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{w.reality}</p>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{w.reality}</p>
                 </div>
               ))}
             </div>
@@ -439,7 +439,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                   <span>Partial</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <X className="h-3 w-3 text-muted-foreground/30" />
+                  <X className="h-3 w-3 text-muted-foreground" />
                   <span>Not available</span>
                 </div>
               </div>

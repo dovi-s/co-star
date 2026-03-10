@@ -50,11 +50,11 @@ export function TransportBar({
           aria-label="Start over"
           className={cn(
             "rounded-full icon-btn-press",
-            cameraMode && "text-white/80 hover:text-white hover:bg-white/10"
+            cameraMode ? "text-white/50 hover:text-white/80 hover:bg-white/10" : "text-muted-foreground hover:text-muted-foreground"
           )}
           data-testid="button-start-over"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-3.5 w-3.5" />
         </Button>
 
         <div className="flex items-center gap-2">
@@ -74,8 +74,8 @@ export function TransportBar({
                 ? "hover:bg-white/10 active:bg-white/20" 
                 : "hover-elevate active-elevate-2",
               canGoBack 
-                ? (cameraMode ? "text-white" : "text-foreground") 
-                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/60 pointer-events-none")
+                ? (cameraMode ? "text-white/70" : "text-foreground") 
+                : (cameraMode ? "text-white/60 pointer-events-none" : "text-muted-foreground pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-prev-line"
@@ -140,7 +140,7 @@ export function TransportBar({
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
-                className={cameraMode ? "text-white/20" : "text-border"}
+                className={cameraMode ? "text-white/60" : "text-border"}
               />
               <circle
                 cx="32"
@@ -198,8 +198,8 @@ export function TransportBar({
                 ? "hover:bg-white/10 active:bg-white/20" 
                 : "hover-elevate active-elevate-2",
               canGoNext 
-                ? (cameraMode ? "text-white" : "text-foreground") 
-                : (cameraMode ? "text-white/30 pointer-events-none" : "text-muted-foreground/60 pointer-events-none")
+                ? (cameraMode ? "text-white/70" : "text-foreground") 
+                : (cameraMode ? "text-white/60 pointer-events-none" : "text-muted-foreground pointer-events-none")
             )}
             style={{ minWidth: 48, minHeight: 48, touchAction: 'manipulation' }}
             data-testid="button-next-line"
@@ -211,16 +211,16 @@ export function TransportBar({
         <div className="flex flex-col items-center min-w-[44px]" aria-live="polite" aria-atomic="true">
           <span 
             className={cn(
-              "text-sm font-medium tabular-nums transition-colors",
-              isComplete ? "text-green-500" : (cameraMode ? "text-white" : "text-foreground")
+              "text-xs font-medium tabular-nums transition-colors",
+              isComplete ? "text-green-500" : (cameraMode ? "text-white/60" : "text-muted-foreground")
             )}
             data-testid="text-line-counter"
           >
             {currentLine + 1}
           </span>
           <span className={cn(
-            "text-[11px]",
-            cameraMode ? "text-white/60" : "text-muted-foreground"
+            "text-[10px]",
+            cameraMode ? "text-white/70" : "text-muted-foreground"
           )}>
             of {totalLines}
           </span>
@@ -230,13 +230,13 @@ export function TransportBar({
       <div className="hidden sm:flex items-center justify-center gap-4 mt-3">
         <kbd className={cn(
           "px-2 py-0.5 rounded text-[9px] font-medium",
-          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground/70"
+          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground"
         )}>
           Space
         </kbd>
         <kbd className={cn(
           "px-2 py-0.5 rounded text-[9px] font-medium",
-          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground/70"
+          cameraMode ? "bg-white/10 text-white/60" : "bg-muted text-muted-foreground"
         )}>
           Arrows
         </kbd>

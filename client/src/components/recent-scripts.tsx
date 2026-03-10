@@ -111,7 +111,26 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
     }
   };
 
-  if (scripts.length === 0 && pendingDeleteIds.size === 0) return null;
+  if (scripts.length === 0 && pendingDeleteIds.size === 0) {
+    return (
+      <div data-testid="empty-recent-scripts">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Recent
+          </h2>
+        </div>
+        <div className="flex flex-col items-center justify-center py-10 text-center animate-fade-in-up glass-surface rounded-lg">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <FileText className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="text-sm font-semibold text-foreground mb-1">Your stage is set</h3>
+          <p className="text-xs text-muted-foreground max-w-[240px] leading-relaxed">
+            Paste or import a script above to start rehearsing. Your recent scripts will appear here.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const startEdit = (script: RecentScript) => {
     setEditingId(script.id);
@@ -205,19 +224,19 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
                     <Users2 className="h-2.5 w-2.5 mr-0.5" />
                     {script.roleCount} {script.roleCount === 1 ? "role" : "roles"}
                   </Badge>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70" data-testid={`text-line-count-${script.id}`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" data-testid={`text-line-count-${script.id}`}>
                     <FileText className="h-3 w-3" />
                     {script.lineCount} {script.lineCount === 1 ? "line" : "lines"}
                   </span>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground/70" data-testid={`text-time-ago-${script.id}`}>
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground" data-testid={`text-time-ago-${script.id}`}>
                     <Clock className="h-3 w-3" />
                     {timeAgo(script.lastUsed)}
                   </span>
                 </div>
                 {script.lastRole && (
                   <div className="flex items-center gap-1 mt-1.5" data-testid={`text-last-role-${script.id}`}>
-                    <User className="h-3 w-3 text-muted-foreground/60" />
-                    <span className="text-[11px] text-muted-foreground/70">
+                    <User className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[11px] text-muted-foreground">
                       Last played as <span className="font-medium text-muted-foreground">{script.lastRole}</span>
                     </span>
                   </div>

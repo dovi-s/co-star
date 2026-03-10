@@ -9,7 +9,7 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Repeat, Clock, Volume2, Flame, TrendingUp, BookOpen, X, Crown } from "lucide-react";
+import { Users, Flame, TrendingUp, BookOpen, X, Crown } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
@@ -158,6 +158,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
     setStep("import");
   };
 
+  const currentLastRole = (() => {
+    const currentRaw = lastRawScript || "";
+    const match = recentScripts.find(s => s.rawScript === currentRaw);
+    return match?.lastRole;
+  })();
+
   if (step === "role-select" && session) {
     return (
       <RoleSelector
@@ -167,6 +173,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         onBack={handleBackToImport}
         onTableRead={onTableRead}
         scriptName={session.name}
+        lastRole={currentLastRole}
       />
     );
   }
@@ -219,7 +226,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
                     <span>{used}/{limit}</span>
                     {resetLabel && (
                       <>
-                        <span className="text-destructive/40">·</span>
+                        <span className="text-destructive/70">·</span>
                         <span>{resetLabel}</span>
                       </>
                     )}
@@ -259,7 +266,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
         </div>
       </header>
 
-      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} />
+      <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} activePage="home" />
 
       <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative overflow-x-hidden">
         <div className="absolute top-1/3 left-1/3 w-[40%] h-[40%] rounded-full pointer-events-none z-0 opacity-60"
@@ -268,34 +275,17 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             animation: 'spectrum-drift-1 16s ease-in-out infinite -3s',
           }}
         />
-        <div className="px-5 pt-10 pb-4 relative z-10">
-          <div className="absolute -top-6 left-0 right-0 h-40 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+        <div className="px-4 pt-6 pb-2 relative z-10 hero-enter">
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             {isAuthenticated && user?.firstName
               ? `What are we rehearsing today, ${user.firstName}?`
               : "Your on demand scene partner."}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1.5 relative leading-relaxed">
+          <p className="text-muted-foreground text-sm mt-1 relative leading-relaxed hero-enter-delay-1">
             {isAuthenticated && user?.firstName
               ? "Paste a script, upload a file, or pick up where you left off."
-              : "Paste a script. Pick your role. Start rehearsing."}
+              : "Unlimited takes, always available, zero judgment."}
           </p>
-          {!isAuthenticated && (
-            <div className="flex items-center gap-4 mt-3 relative" data-testid="value-props">
-              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-unlimited-takes">
-                <Repeat className="h-3 w-3" />
-                <span className="text-[11px]">Unlimited takes</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-always-available">
-                <Clock className="h-3 w-3" />
-                <span className="text-[11px]">Always available</span>
-              </div>
-              <div className="flex items-center gap-1.5 text-muted-foreground/60" data-testid="value-prop-zero-judgment">
-                <Volume2 className="h-3 w-3" />
-                <span className="text-[11px]">Zero judgment</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {(() => {
@@ -303,26 +293,24 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           if (!nudge) return null;
           const NudgeIcon = nudgeIcons[nudge.icon];
           return (
-            <div className="px-5 pb-3 relative z-10" data-testid="personalized-nudge">
-              <div className="flex items-center gap-3 px-3.5 py-2.5 rounded-md bg-card border border-border/60">
-                <NudgeIcon className="h-4 w-4 text-foreground/70 shrink-0" data-testid="nudge-icon" />
-                <span className="text-sm text-foreground flex-1" data-testid="nudge-message">{nudge.message}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
+            <div className="px-4 pb-2 relative z-10" data-testid="personalized-nudge">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-card/60 border border-border/40">
+                <NudgeIcon className="h-3.5 w-3.5 text-foreground/70 shrink-0" data-testid="nudge-icon" />
+                <span className="text-[13px] text-foreground/80 flex-1" data-testid="nudge-message">{nudge.message}</span>
+                <button
                   onClick={() => setNudgeDismissed(true)}
                   aria-label="Dismiss"
                   data-testid="button-dismiss-nudge"
-                  className="text-muted-foreground shrink-0"
+                  className="text-muted-foreground shrink-0 p-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
                 >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
+                  <X className="h-3 w-3" />
+                </button>
               </div>
             </div>
           );
         })()}
 
-        <div className="flex-1 px-4 pb-6 relative z-10">
+        <div className="flex-1 px-4 pb-4 relative z-10 hero-enter-delay-2">
           <ScriptImport
             key={prefillKey}
             onImport={handleImport}
@@ -346,20 +334,18 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           />
         </div>
 
-        {recentScripts.length > 0 && (
-          <div className="px-4 pb-6 relative z-10">
-            <RecentScripts
-              scripts={recentScripts}
-              onSelect={handleSelectRecent}
-              onUpdate={recentUpdate}
-              onDelete={recentRemove}
-            />
-          </div>
-        )}
+        <div className="px-4 pb-4 relative z-10">
+          <RecentScripts
+            scripts={recentScripts}
+            onSelect={handleSelectRecent}
+            onUpdate={recentUpdate}
+            onDelete={recentRemove}
+          />
+        </div>
       </main>
 
-      <footer className="px-5 py-6 pb-8 border-t border-border/40 safe-bottom">
-        <p className="text-[11px] text-muted-foreground/60 text-center">
+      <footer className="px-4 py-4 pb-6 border-t border-border/40 safe-bottom">
+        <p className="text-[11px] text-muted-foreground text-center">
           {isAuthenticated ? "Your data can be saved to the cloud." : "All data stays on your device."}
         </p>
       </footer>

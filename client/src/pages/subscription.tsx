@@ -238,7 +238,7 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
               <ul className="space-y-2">
                 {freeFeatures.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-3.5 h-3.5 text-muted-foreground/60" />
+                    <Check className="w-3.5 h-3.5 text-muted-foreground" />
                     {f}
                   </li>
                 ))}

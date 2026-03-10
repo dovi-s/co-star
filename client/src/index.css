@@ -249,6 +249,52 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+    line-height: 1.6;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.015em;
+    line-height: 1.25;
+  }
+
+  h1 { line-height: 1.2; }
+  h2 { line-height: 1.25; }
+  h3, h4, h5, h6 { line-height: 1.3; }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: inherit;
+  }
+
+  .glass-surface :focus-visible,
+  .glass-surface-heavy :focus-visible,
+  .glass-surface-clear :focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.2);
+  }
+
+  @media (hover: none) and (pointer: coarse) {
+    button:not(.inline-link),
+    [role="button"],
+    input[type="checkbox"],
+    input[type="radio"] {
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    input[type="url"],
+    input[type="tel"],
+    input[type="number"],
+    textarea,
+    select {
+      min-height: 44px;
+    }
   }
 }
 
@@ -2078,6 +2124,18 @@ body, #root {
    Meet Cue - your friendly spotlight guide!
    ======================================== */
 
+/* Smooth mood transitions — prevent jumps between states */
+.mascot-float,
+.mascot-bounce,
+.mascot-nod,
+.mascot-dance,
+.mascot-think,
+.mascot-wave,
+.mascot-proud,
+.mascot-cheer {
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Gentle floating idle animation */
 .mascot-float {
   animation: mascot-float 3s ease-in-out infinite;
@@ -2241,6 +2299,84 @@ body, #root {
 /* ========================================
    PREMIUM MICRO-INTERACTIONS
    ======================================== */
+
+/* Primary CTA press/release scale — subtle tactile feedback */
+.cta-press {
+  transition: transform 120ms cubic-bezier(0.2, 0, 0.4, 1);
+  will-change: transform;
+}
+
+.cta-press:active {
+  transform: scale(0.97);
+}
+
+/* Glass surface hover glow on desktop */
+@media (hover: hover) and (pointer: fine) {
+  .glass-surface {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .glass-surface:hover {
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 0 var(--glass-highlight),
+      0 0 0 1px hsl(var(--primary) / 0.08),
+      0 0 20px -6px hsl(var(--primary) / 0.10);
+  }
+
+  .glass-surface-heavy {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .glass-surface-heavy:hover {
+    box-shadow:
+      var(--glass-shadow),
+      inset 0 1px 0 0 var(--glass-highlight),
+      0 0 0 1px hsl(var(--primary) / 0.10),
+      0 0 24px -6px hsl(var(--primary) / 0.12);
+  }
+
+  .glass-surface-clear {
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  }
+
+  .glass-surface-clear:hover {
+    box-shadow:
+      var(--glass-shadow),
+      0 0 16px -6px hsl(var(--primary) / 0.08);
+  }
+}
+
+/* Home page hero section entrance animation */
+@keyframes hero-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-enter {
+  animation: hero-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.hero-enter-delay-1 {
+  opacity: 0;
+  animation: hero-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+
+.hero-enter-delay-2 {
+  opacity: 0;
+  animation: hero-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+}
+
+.hero-enter-delay-3 {
+  opacity: 0;
+  animation: hero-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
 
 /* Bounce in effect */
 .animate-bounce-in {
@@ -2410,6 +2546,9 @@ body, #root {
 .textarea-glow {
   position: relative;
   transition: all 0.3s ease;
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary) / 0.08),
+    0 0 12px -6px hsl(var(--primary) / 0.06);
 }
 
 .textarea-glow::before {
@@ -2420,7 +2559,7 @@ body, #root {
   background: linear-gradient(
     135deg,
     hsl(var(--primary) / 0) 0%,
-    hsl(var(--primary) / 0.1) 50%,
+    hsl(var(--primary) / 0.12) 50%,
     hsl(var(--primary) / 0) 100%
   );
   opacity: 0;
@@ -2435,17 +2574,23 @@ body, #root {
 
 .textarea-glow:focus-within {
   box-shadow: 
-    0 0 0 1px hsl(var(--primary) / 0.2),
-    0 0 20px -5px hsl(var(--primary) / 0.15),
-    0 0 40px -10px hsl(var(--primary) / 0.1);
+    0 0 0 1.5px hsl(var(--primary) / 0.25),
+    0 0 24px -4px hsl(var(--primary) / 0.18),
+    0 0 48px -8px hsl(var(--primary) / 0.1);
 }
 
 /* Enhanced glow for dark mode */
+.dark .textarea-glow {
+  box-shadow: 
+    0 0 0 1px hsl(var(--primary) / 0.12),
+    0 0 16px -6px hsl(var(--primary) / 0.1);
+}
+
 .dark .textarea-glow:focus-within {
   box-shadow: 
-    0 0 0 1px hsl(var(--primary) / 0.35),
-    0 0 24px -4px hsl(var(--primary) / 0.25),
-    0 0 48px -8px hsl(var(--primary) / 0.15);
+    0 0 0 1.5px hsl(var(--primary) / 0.4),
+    0 0 28px -4px hsl(var(--primary) / 0.28),
+    0 0 56px -8px hsl(var(--primary) / 0.18);
 }
 
 /* Clean page transitions */

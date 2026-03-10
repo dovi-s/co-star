@@ -610,7 +610,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                           </button>
                         ) : (
                           <span title="Not yet onboarded">
-                            <XCircle className="w-3.5 h-3.5 text-muted-foreground/60" />
+                            <XCircle className="w-3.5 h-3.5 text-muted-foreground" />
                           </span>
                         )}
                       </td>

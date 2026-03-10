@@ -14,6 +14,7 @@ interface RoleSelectorProps {
   onBack: () => void;
   onTableRead?: () => void;
   scriptName?: string;
+  lastRole?: string;
 }
 
 function getParseWarnings(roles: Role[], scenes: Scene[], totalLines: number): string[] {
@@ -31,7 +32,7 @@ function getParseWarnings(roles: Role[], scenes: Scene[], totalLines: number): s
   return warnings;
 }
 
-export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTableRead, scriptName }: RoleSelectorProps) {
+export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTableRead, scriptName, lastRole }: RoleSelectorProps) {
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [titleOverflows, setTitleOverflows] = useState(false);
 
@@ -52,9 +53,17 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
     return () => clearTimeout(timer);
   }, [scriptName]);
 
-  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(
-    roles.length === 1 ? roles[0].id : null
-  );
+  const resolveInitialRole = (): string | null => {
+    if (roles.length === 1) return roles[0].id;
+    if (lastRole) {
+      const match = roles.find(r => r.name === lastRole);
+      if (match) return match.id;
+    }
+    return null;
+  };
+
+  const [selectedRoleId, setSelectedRoleId] = useState<string | null>(resolveInitialRole());
+  const isReturning = !!lastRole && roles.some(r => r.name === lastRole);
   const [isExiting, setIsExiting] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState<number>(-1);
   const listRef = useRef<HTMLDivElement>(null);
@@ -63,6 +72,10 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
   const totalLines = roles.reduce((sum, r) => sum + r.lineCount, 0);
   const selectedRole = roles.find(r => r.id === selectedRoleId);
   const warnings = getParseWarnings(roles, scenes, totalLines);
+
+  const previewLines = scenes.length > 0
+    ? scenes[0].lines.slice(0, 3).map(l => ({ roleName: l.roleName, text: l.text }))
+    : [];
 
   const handleContinue = () => {
     if (selectedRoleId) {
@@ -156,16 +169,18 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-5 pt-4 pb-5 animate-fade-in-up relative">
+        <div className="px-5 pt-3 pb-3 animate-fade-in-up relative">
           <div className="absolute -top-4 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h2 className="text-xl font-semibold text-foreground relative tracking-tight">
-            Select your role
+            {isReturning ? "Welcome back" : "Select your role"}
           </h2>
-          <p className="text-sm text-muted-foreground mt-1.5 relative leading-relaxed">
-            Your scene partner reads the other parts.
+          <p className="text-sm text-muted-foreground mt-1 relative leading-relaxed">
+            {isReturning
+              ? `Pick up where you left off, or choose a different role.`
+              : "Your scene partner reads the other parts."}
           </p>
 
-          <div className="flex items-center gap-2 flex-wrap mt-4" data-testid="script-preview-summary">
+          <div className="flex items-center gap-2 flex-wrap mt-3" data-testid="script-preview-summary">
             <Badge variant="secondary" className="gap-1.5" data-testid="badge-roles-count">
               <Users className="h-3 w-3" />
               {roles.length} {roles.length === 1 ? "role" : "roles"}
@@ -182,8 +197,19 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
             )}
           </div>
 
+          {previewLines.length > 0 && (
+            <div className="mt-3 rounded-md bg-muted/50 px-3 py-2 space-y-1" data-testid="script-preview-lines">
+              {previewLines.map((line, i) => (
+                <p key={i} className="text-xs leading-relaxed truncate" data-testid={`preview-line-${i}`}>
+                  <span className="font-semibold text-foreground/80">{line.roleName}:</span>{" "}
+                  <span className="text-muted-foreground">{line.text}</span>
+                </p>
+              ))}
+            </div>
+          )}
+
           {warnings.length > 0 && (
-            <div className="space-y-2 mt-3" data-testid="script-warnings">
+            <div className="space-y-2 mt-2" data-testid="script-warnings">
               {warnings.map((warning, i) => (
                 <div
                   key={i}
@@ -198,7 +224,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           )}
 
           {scenes.length > 1 && (
-            <div className="space-y-1.5 mt-3" data-testid="scene-preview">
+            <div className="space-y-1.5 mt-2" data-testid="scene-preview">
               <p className="text-xs font-medium text-muted-foreground">Scenes</p>
               <div className="flex flex-wrap gap-1.5">
                 {scenes.map((scene, i) => (
@@ -229,7 +255,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
               setFocusedIndex(idx >= 0 ? idx : 0);
             }
           }}
-          className="flex-1 px-4 pt-2 pb-4 space-y-2 overflow-y-auto outline-none"
+          className="flex-1 px-4 pt-1 pb-3 space-y-1.5 overflow-y-auto outline-none"
         >
           {sortedRoles.map((role, index) => {
             const isSelected = selectedRoleId === role.id;
@@ -249,13 +275,13 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
                   setFocusedIndex(index);
                 }}
                 className={cn(
-                  "w-full flex items-center gap-3 p-4 text-left cursor-pointer",
+                  "w-full flex items-center gap-3 p-3 text-left cursor-pointer",
                   "transition-all duration-200 hover-elevate press-effect",
                   "animate-fade-in-up rounded-xl outline-none",
                   isSelected && "ring-2 ring-primary shadow-sm bg-primary/[0.03]",
                   isFocused && !isSelected && "ring-1 ring-primary/50",
                 )}
-                style={{ animationDelay: `${index * 40}ms` }}
+                style={{ animationDelay: `${index * 50}ms` }}
                 data-testid={`card-role-${role.name}`}
               >
                 <div
@@ -283,7 +309,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
                     {role.name}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    {role.lineCount} lines {isLead && <span className="text-foreground/50">· lead</span>}
+                    {role.lineCount} lines {isLead && <span className="text-foreground/70">· lead</span>}
                   </span>
                 </div>
 
@@ -304,7 +330,11 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           className="w-full"
           data-testid="button-start-rehearsal"
         >
-          {selectedRoleId ? "Start Solo" : "Select a role"}
+          {!selectedRoleId
+            ? "Select a role"
+            : isReturning && selectedRole?.name === lastRole
+              ? `Resume as ${selectedRole.name}`
+              : "Start Solo"}
         </Button>
         
         {onTableRead && (
@@ -320,8 +350,8 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           </Button>
         )}
         
-        {selectedRole && (
-          <p className="text-center text-xs text-muted-foreground mt-1.5 animate-fade-in">
+        {selectedRole && !isReturning && (
+          <p className="text-center text-xs text-muted-foreground mt-1 animate-fade-in">
             Playing as <span className="font-medium text-foreground">{selectedRole.name}</span>
           </p>
         )}

@@ -71,6 +71,19 @@ The application handles script import from various formats (`.txt`, `.pdf`, imag
 - **Screen Reader Progress**: Visually-hidden span announces "Line X of Y" in transport bar
 - **Smarter Suggestions**: Context-aware "What's Next" on completion: next scene, slow pace, improve accuracy, challenge mode, switch role, retention test
 
+### Comprehensive UX Refinement (Session 13)
+- **Home Page Layout**: Consolidated value props into subtitle text; tightened spacing (heading pt-6, nudge compact); standardized px-4 padding; textarea hero glow enhanced; decorative gradient overlay removed
+- **Role Selector Quick-Start**: Auto-selects last used role for returning users; "Resume as [Character]" button; mini script preview showing first 2-3 lines; tighter vertical spacing
+- **Rehearsal Visual Hierarchy**: Current line font size bumped up, prev/next dimmed more aggressively (opacity 20%); practice toolbar auto-collapses behind gear icon; transport bar inactive controls lighter
+- **Celebration Screen**: 800ms reveal delay for anticipation; accuracy number scaled to text-5xl hero; streak badge with flame icon; "What's next" as bordered cards; subtle Web Audio chime; enhanced multi-color confetti
+- **Contrast & Accessibility**: All muted-foreground/60 bumped to muted-foreground for WCAG AA; visible focus rings with primary glow; 44px touch targets on touch devices only (not inline links)
+- **Loading & Empty States**: Unified pattern (icon circle + heading + subtext + CTA) for Library, History, and Recent Scripts; staggered skeleton animations with varied widths
+- **Side Menu Navigation**: Grouped into sections (Rehearse, Account, About, Support); active page highlighting with primary tint; marketing pages moved to footer
+- **Typography & Spacing**: Body line-height 1.6; heading letter-spacing -0.015em; spacing utilities (gap-related 8px, gap-group 16px, gap-section 24px); not-found page uses semantic colors
+- **Persistent Rehearsal Pill**: "Now Rehearsing" floating pill when navigating away from active session; one-tap return; truncated script name; slide-in animation
+- **Micro-interaction Polish**: CTA press scale (0.97); glass surface desktop hover glow; hero section staggered entrance animation; smooth mascot mood transitions; theatrical theme toggle rotation
+- **iOS PWA Ding Fix**: `pause()`/`softStart()` methods on SpeechRecognitionEngine; continuous mode on iOS PWA avoids repeated recognition.start() calls that trigger system chimes
+
 ### Feature Specifications
 - **Script Context Capture**: Action lines and scene descriptions are automatically linked to subsequent dialogue.
 - **Scene Transition Cards**: Visual cues for scene changes with animated displays.
