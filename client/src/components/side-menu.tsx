@@ -328,8 +328,8 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           <MenuItem
             icon={<Library className="h-4 w-4" />}
             label="Saved Scripts"
-            description={isSignedIn ? "Your script collection" : "Sign in to save scripts"}
-            onClick={() => navigate("library")}
+            description={isSignedIn ? (user?.subscriptionTier === "pro" ? "Your script collection" : "Upgrade to save scripts") : "Sign in to save scripts"}
+            onClick={() => isSignedIn && user?.subscriptionTier !== "pro" ? navigate("subscription") : navigate("library")}
             disabled={!isSignedIn}
             active={activePage === "library"}
             testId="menu-item-library"
@@ -338,8 +338,8 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           <MenuItem
             icon={<BarChart3 className="h-4 w-4" />}
             label="Performance History"
-            description={isSignedIn ? "Track your accuracy over time" : "Sign in to track progress"}
-            onClick={() => navigate("history")}
+            description={isSignedIn ? (user?.subscriptionTier === "pro" ? "Track your accuracy over time" : "Upgrade to track progress") : "Sign in to track progress"}
+            onClick={() => isSignedIn && user?.subscriptionTier !== "pro" ? navigate("subscription") : navigate("history")}
             disabled={!isSignedIn}
             active={activePage === "history"}
             testId="menu-item-history"

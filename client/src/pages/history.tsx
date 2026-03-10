@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   BarChart3,
+  Crown,
   TrendingUp,
   Target,
   Clock,
@@ -37,13 +38,38 @@ function formatDuration(seconds: number | null | undefined) {
   return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
 }
 
-export function HistoryPage({ onBack }: { onBack: () => void }) {
-  const { isAuthenticated } = useAuth();
+export function HistoryPage({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (page: string) => void }) {
+  const { isAuthenticated, user } = useAuth();
+  const isPro = user?.subscriptionTier === "pro";
 
   const { data: runs, isLoading } = useQuery<PerformanceRun[]>({
     queryKey: ["/api/performance"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isPro,
   });
+
+  if (isAuthenticated && !isPro) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="flex items-center gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
+          <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">Performance History</h1>
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
+          <BarChart3 className="h-12 w-12 text-muted-foreground/50" />
+          <div>
+            <h2 className="text-lg font-semibold">Pro Feature</h2>
+            <p className="text-sm text-muted-foreground mt-1">Track your accuracy over time and see how you're improving. Upgrade to unlock.</p>
+          </div>
+          <Button onClick={() => onNavigate?.("subscription")} data-testid="button-upgrade-history">
+            <Crown className="h-4 w-4 mr-2" />
+            Upgrade to Pro
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const avgAccuracy = runs && runs.length > 0
     ? Math.round(runs.reduce((sum, r) => sum + (r.accuracy ?? 0), 0) / runs.length)

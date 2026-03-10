@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { FileText, Volume2, VolumeX, Layers, ChevronUp, ChevronDown, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car, Music, RotateCcw } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { FileText, Volume2, VolumeX, Layers, ChevronUp, ChevronDown, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car, Music, RotateCcw, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
@@ -104,6 +105,7 @@ export function SettingsDrawer({
   error,
   onHandsFreeMode,
 }: SettingsDrawerProps) {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -371,11 +373,16 @@ export function SettingsDrawer({
                       <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-muted/60 text-muted-foreground">
                         <Car className="h-4 w-4" />
                       </div>
-                      <div className="text-left">
-                        <span className="text-sm font-medium">Hands-Free Mode</span>
-                        <p className="text-[11px] text-muted-foreground">
-                          Audio-only rehearsal — no screen needed
-                        </p>
+                      <div className="text-left flex items-center gap-2">
+                        <div>
+                          <span className="text-sm font-medium">Hands-Free Mode</span>
+                          <p className="text-[11px] text-muted-foreground">
+                            Audio-only rehearsal — no screen needed
+                          </p>
+                        </div>
+                        {user?.subscriptionTier !== "pro" && (
+                          <span className="text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded shrink-0">Pro</span>
+                        )}
                       </div>
                     </button>
                   )}

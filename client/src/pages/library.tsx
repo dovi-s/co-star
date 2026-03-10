@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   ChevronLeft,
+  Crown,
   FileText,
   Trash2,
   Play,
@@ -29,17 +30,44 @@ type ScriptSummary = Pick<SavedScript, "id" | "name" | "userRoleId" | "lastPosit
 export function LibraryPage({
   onBack,
   onLoadScript,
+  onNavigate,
 }: {
   onBack: () => void;
   onLoadScript: (script: SavedScript) => void;
+  onNavigate?: (page: string) => void;
 }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [deleteTarget, setDeleteTarget] = useState<ScriptSummary | null>(null);
+  const isPro = user?.subscriptionTier === "pro";
 
   const { data: scripts, isLoading } = useQuery<ScriptSummary[]>({
     queryKey: ["/api/scripts"],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && isPro,
   });
+
+  if (isAuthenticated && !isPro) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col">
+        <header className="flex items-center gap-3 px-4 py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
+          <Button variant="ghost" size="icon" onClick={onBack} data-testid="button-back">
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">Saved Scripts</h1>
+        </header>
+        <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
+          <FileText className="h-12 w-12 text-muted-foreground/50" />
+          <div>
+            <h2 className="text-lg font-semibold">Pro Feature</h2>
+            <p className="text-sm text-muted-foreground mt-1">Save scripts to your cloud library and pick up where you left off. Upgrade to unlock.</p>
+          </div>
+          <Button onClick={() => onNavigate?.("subscription")} data-testid="button-upgrade-library">
+            <Crown className="h-4 w-4 mr-2" />
+            Upgrade to Pro
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {

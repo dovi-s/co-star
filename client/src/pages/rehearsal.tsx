@@ -1356,6 +1356,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const handleSaveScript = async () => {
     if (!session || savingScript) return;
+    if (user?.subscriptionTier !== "pro") {
+      toast({ description: "Saving scripts is a Pro feature. Upgrade to unlock." });
+      onNavigate?.("subscription");
+      return;
+    }
     setSavingScript(true);
     try {
       const res = await fetch("/api/scripts", {
@@ -1387,6 +1392,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const enterHandsFreeMode = async () => {
     if (!session) return;
+    if (user?.subscriptionTier !== "pro") {
+      toast({ description: "Hands-free mode is a Pro feature. Upgrade to unlock it." });
+      onNavigate?.("subscription");
+      return;
+    }
     const currentScene = session.scenes[session.currentSceneIndex];
     if (!currentScene || currentScene.lines.length === 0) {
       toast({ description: "Load a script first to use hands-free mode" });
@@ -1732,7 +1742,9 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         ctx.fillRect(0, 0, w, h);
       }
 
-      drawWatermark(ctx, w, h);
+      if (user?.subscriptionTier !== "pro") {
+        drawWatermark(ctx, w, h);
+      }
 
       screenRecordingFrameRef.current = requestAnimationFrame(drawScreenFrame);
     };
@@ -2243,6 +2255,9 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                       <>
                         <FileText className="h-4 w-4 mr-2" />
                         Save Script
+                        {user?.subscriptionTier !== "pro" && (
+                          <span className="ml-1.5 text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded">Pro</span>
+                        )}
                       </>
                     )}
                   </Button>

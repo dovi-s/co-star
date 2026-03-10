@@ -349,10 +349,10 @@ function AppContent() {
         />
       )}
       {view === "library" && (
-        <LibraryPage onBack={handleBackToHome} onLoadScript={handleLoadScript} />
+        <LibraryPage onBack={handleBackToHome} onLoadScript={handleLoadScript} onNavigate={handleNavigate} />
       )}
       {view === "history" && (
-        <HistoryPage onBack={handleBackToHome} />
+        <HistoryPage onBack={handleBackToHome} onNavigate={handleNavigate} />
       )}
       {view === "feature-board" && (
         <FeatureBoardPage onBack={handleBackToHome} />

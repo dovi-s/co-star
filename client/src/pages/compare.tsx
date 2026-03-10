@@ -323,7 +323,6 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
         </Button>
         <h1 className="font-semibold text-sm text-foreground">Compare & Pricing</h1>
       </header>
-
       <main className="flex-1 px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <section className="mb-12 animate-fade-in-up">
@@ -488,7 +487,7 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
                 </div>
                 <p className="text-xs text-muted-foreground mb-1">
                   <span className="text-foreground font-semibold text-lg">$9</span><span className="text-muted-foreground">/mo</span>
-                  <span className="mx-1.5 text-muted-foreground">or</span>
+                  <span className="mx-1.5 text-muted-foreground"> or </span>
                   <span className="text-foreground font-semibold text-lg">$79</span><span className="text-muted-foreground">/yr</span>
                   <span className="text-green-600 ml-1 text-[11px]">(save 27%)</span>
                 </p>
@@ -588,7 +587,6 @@ export function ComparePage({ onBack }: { onBack: () => void }) {
           </section>
         </div>
       </main>
-
       <footer className="px-5 py-6 pb-8 safe-bottom" />
     </div>
   );
