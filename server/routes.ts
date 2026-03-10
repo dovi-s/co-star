@@ -550,7 +550,21 @@ export async function registerRoutes(
           audioBuffer = Buffer.concat(chunks);
           if (audioBuffer.length > 0) break;
         } catch (modelError: any) {
-          console.log(`[TTS] Model ${modelId} failed, trying next:`, modelError.message);
+          const errMsg = modelError.message || "";
+          const errBody = modelError.body || {};
+          const isQuotaExceeded = errBody?.detail?.status === "quota_exceeded" || errMsg.toLowerCase().includes("quota");
+          const isAuthError = modelError.statusCode === 401 && !isQuotaExceeded;
+
+          if (isQuotaExceeded) {
+            console.log(`[TTS] Quota exceeded, skipping remaining models`);
+            return res.status(429).json({ error: "Voice credit quota exceeded. Please check your ElevenLabs plan.", fallback: true });
+          }
+          if (isAuthError) {
+            console.log(`[TTS] Auth error, skipping remaining models`);
+            return res.status(401).json({ error: "Invalid API key", fallback: true });
+          }
+
+          console.log(`[TTS] Model ${modelId} failed, trying next:`, errMsg);
           continue;
         }
       }
@@ -569,9 +583,6 @@ export async function registerRoutes(
     } catch (error: any) {
       console.error("ElevenLabs TTS error:", error.message || error);
       
-      if (error.statusCode === 401) {
-        return res.status(401).json({ error: "Invalid API key", fallback: true });
-      }
       if (error.statusCode === 429) {
         return res.status(429).json({ error: "Rate limit exceeded", fallback: true });
       }
