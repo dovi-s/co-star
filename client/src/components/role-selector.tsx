@@ -116,8 +116,16 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-4 pt-4 pb-3 animate-fade-in-up space-y-3">
-          <div className="flex items-center gap-2 flex-wrap" data-testid="script-preview-summary">
+        <div className="px-5 pt-8 pb-5 animate-fade-in-up relative">
+          <div className="absolute -top-4 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
+          <h2 className="text-xl font-semibold text-foreground relative tracking-tight">
+            Select your role
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1.5 relative leading-relaxed">
+            Your scene partner reads the other parts.
+          </p>
+
+          <div className="flex items-center gap-2 flex-wrap mt-4" data-testid="script-preview-summary">
             <Badge variant="secondary" className="gap-1.5" data-testid="badge-roles-count">
               <Users className="h-3 w-3" />
               {roles.length} {roles.length === 1 ? "role" : "roles"}
@@ -135,7 +143,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           </div>
 
           {warnings.length > 0 && (
-            <div className="space-y-2" data-testid="script-warnings">
+            <div className="space-y-2 mt-3" data-testid="script-warnings">
               {warnings.map((warning, i) => (
                 <div
                   key={i}
@@ -150,7 +158,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           )}
 
           {scenes.length > 1 && (
-            <div className="space-y-1" data-testid="scene-preview">
+            <div className="space-y-1.5 mt-3" data-testid="scene-preview">
               <p className="text-xs font-medium text-muted-foreground">Scenes</p>
               <div className="flex flex-wrap gap-1.5">
                 {scenes.map((scene, i) => (
@@ -166,16 +174,6 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
               </div>
             </div>
           )}
-        </div>
-
-        <div className="px-5 pb-2 animate-fade-in-up relative">
-          <div className="absolute -top-4 left-0 right-0 h-24 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
-          <h2 className="text-lg font-semibold text-foreground relative">
-            Select your role
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1 relative">
-            Your scene partner reads the other parts.
-          </p>
         </div>
 
         <div className="flex-1 px-4 pt-2 pb-4 space-y-2 overflow-y-auto">
