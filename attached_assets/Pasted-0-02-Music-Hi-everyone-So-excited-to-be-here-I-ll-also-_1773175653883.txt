@@ -1,0 +1,566 @@
+0:02
+[Music] Hi everyone. So excited to be here. I'll  also answer that question of what will I do if  
+0:07
+AI eliminates my job. So hi, my name is Elena  Vera and I'm actively trying to eliminate my job  
+0:13
+uh so I can do farming. I already started with  seven chickens. It's going great. Okay. So today  
+0:18
+I'll talk about collapse of PEI distribution modes  and how to build new ones. Uh a lot of times in  
+0:23
+product we don't really think about distribution.  I think that's a mistake. So let's talk about how  
+0:28
+you should be thinking about this as well. So she  already did an amazing intro on me. I'm going to  
+0:33
+skip it. So growth, I've been running growth teams  for the last 10 years of my career. I started in  
+0:38
+analytics actually. Uh but there's still a lot  of confusion as what does it mean? It's actually  
+0:45
+kind of embarrassing that 10 years later after  this profession really became um like real that  
+0:51
+we're still have so many different opinions of  what it means. Like nobody confuses what product  
+0:54
+management is. Here we are. Let me talk really  quickly about what I think it is for my definition  
+1:00
+and then we'll talk about the distribution shifts  that are happening in growth. So there is product.  
+1:04
+There's all you beautiful product managers working  on the products and then there's distribution.  
+1:09
+Now those two are not the same things because you  can have an amazing product and if you don't bake  
+1:14
+in distribution into it or you don't really think  about distribution you will die of slow death. In  
+1:19
+fact that there's millions of products that have  been developed over the last couple of decades  
+1:23
+that we have never heard of. we have never  seen that were absolutely amazing. However,  
+1:27
+what builds a successful company is having a great  distribution for your product. But product has to  
+1:32
+be just okay because there's also a lot of really  terrible products that are multibillion dollar  
+1:38
+companies. You can kind of imagine of those one of  those products that you log into and like one of  
+1:43
+your brain cells dies every time you have to do an  action in it and you're like thinking how is this  
+1:48
+thing alive yet they have absolute monopoly in the  category and nobody can displace them. And that is  
+1:54
+because distribution at the end of the day wins  of what's going to make a successful company when  
+1:58
+what growth works on is that distribution aspect  of it because great product is not enough. Now  
+2:05
+it helps distribution if you have a great product  it makes everything so much easier but if you're  
+2:10
+not thinking about distribution right from the  beginning if you're not thinking about your go  
+2:14
+to market strategies if you're not thinking  about growth as you're developing product  
+2:18
+you're going to be dead in the water. Now what is  distribution actually entails? is actually very  
+2:23
+straightforward. Four questions. Those are the  four questions that I stress about every single  
+2:27
+day that I lose sleep over which is how do we  acquire customers? How do we activate them? How do  
+2:32
+we monetize them? And then how do we retain them?  Very straightforward. That is the traditional  
+2:38
+funnel that you need to look into. Uh but  ability to answer those questions in predictable,  
+2:43
+sustainable and competitively defensible way  is what separates companies that win versus the  
+2:50
+companies that lose. And this is something that  you should also know about your company. What is  
+2:55
+your acquisition strategy? What is your activation  strategy? And the better you have alignment  
+3:00
+internally against it, the more straightforward  your growth is going to be. And the fastest  
+3:05
+growing companies all have one thing in common  too. They don't grow via funnels. They grow via
+3:16
+loops. Loops is super important. Funnels  is an f-word that sometimes I have to use,  
+3:22
+but I prefer not to because loops are just so  much better. And loops are very straightforward,  
+3:27
+too. It's a compounding flywheel. So, there is  an input, let's say a new user. They perform an  
+3:33
+action or a step in your product that generates an  output that can be reinvested to produce another  
+3:39
+input. So, there's lots of different types of loop  that you have on marketing side, on sales side,  
+3:44
+most definitely on product side. All of them  have different spans of lifetime. All of them  
+3:50
+have different caliber of the heavy hitting  that they can do. But you constantly have to  
+3:54
+think about your product as what loops can I stand  up on acquisition and retention with monetization  
+4:01
+fueling all of that because it pays our salary.  But that is what creates predictable and  
+4:06
+sustainable and competitively defensible growth.  Not f word funnels but loops. Loops is where it's  
+4:14
+all at. Let me give you just two examples of  what loops usually are. I was at Dropbox last  
+4:19
+year. Dropbox uh started actually with the loop  that's not on the slide, but what was the loop?  
+4:25
+Do you remember the viral loop that Dropbox had?  Give credits to get uh sorry, give storage to get  
+4:32
+storage that like took off like a wildfire. That  actually took company to our first billion dollars  
+4:37
+almost with no marketing expenses. And that was  a really strong loop. They like they hooked into  
+4:41
+the user psychology there very well. Right now  60% of acquisition for Dropbox is powered by  
+4:47
+this product loop not marketing not sales this  product loop where they have a new user they  
+4:52
+come in they upload the content they want to share  that content with somebody else and percentage of  
+4:57
+those recipients sign up to become new users 60%  of acquisition basically your users doing your own  
+5:04
+marketing for you the best case scenario but it  doesn't come from marketing teams it doesn't come  
+5:08
+from sales teams it comes from you product people  building into customer experience experiences.  
+5:14
+Now, there's also Lovable. Lovable is um we're  only 10 months old, so uh we're still working  
+5:20
+on our loops. That's something that I definitely  lose a lot of sleep over, but Lovable also has  
+5:25
+a really incredible word of mouth loop. This is  a great place to start for any startup, for any  
+5:30
+new product. Just lean into word of mouth as much  as possible. Now, it's not really sustainable for  
+5:35
+a long time. You can't just like keep the word  of mouth going indefinitely. At some point, it  
+5:40
+fizzles out. Not everybody wants to talk about the  products that they're using, but at the same time,  
+5:45
+it's the really best way to kick off growth.  And this is where most of our growth right now  
+5:49
+is coming from. Now, our what is the word of mouth  loop? You have a new user, the product exceeds the  
+5:54
+expectations. That first generation experience  at lovable is so magical that people go, I need  
+6:01
+to tell the world about it. And they do. They  tell their network and all a sudden some people  
+6:06
+sign up from it. And it's a gift that just keeps  on giving. And it's all done just by providing  
+6:11
+lovable experiences to customers. So make sure  that you put in those love marks and that think  
+6:16
+about that activation and the first two minutes of  the customer experience because that's going to be  
+6:21
+between make it or break it for your word of mouth  loop. Now then about five years ago uh everybody  
+6:28
+started obsessing about productled growth. And  honestly it was somewhat overhyped. I think  
+6:33
+uh like we did uh we did too good of a job like  advertising for it. Uh now I really want to talk  
+6:39
+to you about why productled growth even became a  thing that we all sudden started talking so much  
+6:44
+about and that happened because of the four shifts  in the market. That was like the first shift that  
+6:49
+happened. I'm going talk about the other shifts  that are happening now too. So shift number  
+6:54
+one users in B2B product all of a sudden became  buyers. Now this was kind of like a pent-up demand  
+7:02
+because B2B products used to sell to enterprise  buyers. enterprise buyers will like check their  
+7:07
+checklist. It seems like all of the requirements  are satisfied and then they just push the product  
+7:12
+down in the organization and then the end user  afterwards were like what is this? This is  
+7:17
+terrible. This is not solving any of my problems.  I'm going to go and find my own solution which is  
+7:23
+where PLG was born. Those self-s served proumer  consumerlike B2B products that actually solve  
+7:30
+people's problems and then they started going  up market and also doing enterprise as well. But  
+7:34
+that shift of the user becoming a buyer is very  important and we'll come back to that in a little  
+7:39
+bit. Number two is channel life cycle. If you're  just reply uh relying on marketing and sales to do  
+7:45
+your distribution um that's really tough nowadays  because any campaign that marketing puts out there  
+7:53
+uh on any honestly any channels how off how fast  do you think it becomes irrelevant? marketing  
+8:01
+teams are lucky if they get a week out of it.  Now, imagine needing to produce this creatives,  
+8:08
+these campaigns every single week. We're just  not set up for it. Maybe I will help us enable  
+8:12
+it more. But also, our attention spans are like  this short right now. We like see something once  
+8:16
+and like we never want to see it again. Imagine  like compared to like Coca-Cola that used to put  
+8:21
+out a campaign that would fire in for a year,  but now you cannot do that in the market. It's  
+8:26
+just become way too crowded. Number three is  data availability. you all product managers,  
+8:31
+I hope that you have your data dashboards to  see how your product is performing. That wasn't  
+8:35
+available before. So now we actually know what's  happening in the products. We don't just have to  
+8:40
+hear to salespeople what they're saying. So  we can go and make those experiences better  
+8:44
+and make product work better for us and  for our companies and for our customers.  
+8:49
+And then number four is roles are blurring. So  all of a sudden um I don't know how about you,  
+8:54
+but just being a product manager is starting to  be very quickly not enough. You have to have a  
+9:00
+marketing hat or at least product marketing hat  on. Every single marketer has to have a product  
+9:04
+manager hat on. Everybody is an analyst in the  room or should be an analyst in the room. And  
+9:09
+that really empowers us to be more responsible  than just specialized in this one little area,  
+9:15
+but be more responsible for the overall company  and customer outcomes. And that role blurring is  
+9:19
+honestly the most beautiful thing because it gives  you more agency. It gives you more autonomy. But  
+9:25
+B2B products were definitely feeling the pressure  because it's stressful tool being responsible for  
+9:30
+monetization outcomes and acquisition outcomes.  And this is why I think that there was a lot of  
+9:34
+this hype about productled growth because in B2B  traditional enterprises um product managers are  
+9:40
+not used to operating this way and meanwhile uh  consumer products were like what is this? We've  
+9:47
+been doing this all along. Like we've always been  responsible for company outcomes and we always had  
+9:54
+productled growth. You just rebranded it and put  it as something new. Whereas this concept existed  
+9:59
+all along. So my biggest hint to you is if you  want to do PLG, just copy what consumer products  
+10:04
+are doing. That's honestly the fastest shortcut  that you can do. But then something else started  
+10:09
+to happen. What happened? What has really changed  in the last year and a half? AI. Yes, Chad GPT,  
+10:20
+OpenAI, I'm going to pick on OpenAI here came  along and all of a sudden there is LLM wars  
+10:25
+all over the place and we're like sitting there  going, "What is happening over there?" And all  
+10:30
+of the companies were like, "We need to get onto  this gravy train." So, I saw this tweet. I thought  
+10:35
+it was hilarious. Just change your loading to  states to thinking and you are an agentic AI  
+10:42
+startup now. That's my girls hack to you today.  You're welcome. Thank you. And by the way,  
+10:48
+what did our product roadmap started to look like?  There's companies and then there's AI. And nobody  
+10:54
+asked for it. Definitely not customers. But let's  start creating AI features and call ourselves an  
+10:59
+AI company. But honestly, it's not in our control.  We all know how road maps are made. It's not based  
+11:06
+on customer feedback and it's most definitely not  on innovation and what you're trying to drive.  
+11:11
+Sometimes it's those sales requests and promises,  but we all know who's in charge and who's actually  
+11:18
+making the final call. But wait, AI is actually  doing a lot of changes in product management,  
+11:27
+but it is killing our distribution channels.  This is an example of a company G2. It's a also  
+11:35
+B2B company. They do like reviews kind of like  Trust Pilot for consumer, but they do similar  
+11:39
+for B2B. who is uh most of their growth was  coming from SEO, search engine optimization,  
+11:44
+Google search uh organic most of that although  some paid as well I'm sure this is the snapshot  
+11:50
+just through February this trend continued down  um I just didn't have a chance to update this is  
+11:56
+just our acquisition that has reduced by 80 to 90%  since chat GPT happened now why is that what is  
+12:05
+happening with consumer habits right now they're  changing are you still going to Google search to  
+12:11
+find things. No, you're going to chat GPT or cloud  or whatever you are because conversational AI is  
+12:16
+so much better to answer your questions than doing  search and like spending a bunch of time looking  
+12:20
+at the links. Um, and this is very much felt  in the companies that were really optimizing  
+12:28
+against search being the main growth driver  that are now struggling very very much. The  
+12:32
+list goes on. You can actually find a blog on my  um on my Substack that goes through all of those  
+12:37
+businesses that are crashing and burning. so hard  and social is not helping either. Algorithms are  
+12:43
+changing every single day. Algorithm giveth and  then algorithm taketh away. And most importantly,  
+12:50
+social networks are starting to clamp down too  because they optimize on intensity of use. That  
+12:56
+is their retention tactic. So you put a link  out to try to drive traffic to your company,  
+13:02
+no more traffic for you, no more impressions for  you. Which makes it that search now is not a good  
+13:07
+channel. Used to be big. Social is also really  hard to drive traffic through for your company.  
+13:12
+But wait, there is more. Now, I'm going to do a  shameless plug here, but I see this is starting  
+13:18
+to happen in a really rapid fashion. um at lovable  and I want you to pay attention to this as product  
+13:23
+managers at lovable in lovable in vibe coding in  general it's we're starting to reduce the friction  
+13:31
+and what it actually means to build any product  any software uh whether it's website whether it's  
+13:36
+a B2C app whether it's a B2B app you name it  and what people are starting to do is instead  
+13:42
+of paying for bloated subscriptions or bloated  products they're going and they're building their  
+13:46
+own tooling we call it lovingly uh SAS replacement  use case internally, but people are literally  
+13:52
+going and if the functionality that they're using  in the product is very simple, they're going and  
+13:57
+they're building it out in lovable itself. I  really urge you all to go. You don't have to do  
+14:04
+lovable. I'd love it if you do it in lovable, but  go to one of those VIP coding platforms and try to  
+14:11
+rebuild your product, your main functionality in  your product. See how easy it is. If it's easy,  
+14:18
+I'd freak out. If it's hard and you can't unable  to do it, you're a little bit more in a safer  
+14:23
+zone because otherwise if it's easy, you all of  a sudden overnight are going to start competing  
+14:29
+not against other companies but against your own  customers that are leaving you and building their  
+14:35
+own replacements for you. Don't want to be in that  situation. So a lot of the simple but formally  
+14:42
+defensible functionality such as signatures,  forms, landing page generations, scheduling tools,  
+14:48
+no code tools, dashboards, internal tooling is  all a sudden no longer defensible. In fact, it's  
+14:54
+becoming commoditized. So that commoditization  bar is really rising up. If your company is  
+15:00
+still monetizing on commoditized functionality,  get yourself out of that zone. I kind of think  
+15:05
+about a 2 by 2. I love 2 by twos. And you think  about the simple functionality versus complex,  
+15:11
+high utilization versus low utilization.  If you have a lot of complex functionality  
+15:15
+that is hard to replicate, that is hard  to vibe code, the high high utilization,  
+15:20
+you're in a safe zone. Good for you. Now, if you  have complex functionality but low utilization,  
+15:26
+get that utilization up. However, if you have  simple functionality and that is what gets highly  
+15:32
+um uh utilized, you need to think about your  product strategy. And in fact, we're already  
+15:38
+starting to see a shift where companies are being  disrupted by their own users. This was fascinating  
+15:43
+because Docuine actually has threatened a legal  action against one of our users that replicated  
+15:50
+there's e- signature functionality. So, I mean, if  you have to start going in the legal route as the  
+15:54
+way to defend your product market fit, that's also  not the best way to grow. But that's sometimes the  
+15:59
+only lever that companies can pull. So, what? All  right. So, we went through the platform shift.  
+16:05
+Platform shifts are everywhere. Your product road  mapaps have something in AI, I'm sure. Otherwise,  
+16:11
+you're living on the moon or your CEO is not  paying attention. However, at the same time, there  
+16:16
+is also distribution shifts that are happening.  Our search volume is dying. Our social networks  
+16:22
+are clamping down. So, how is it that you actually  supposed to grow the products? Now, just betting  
+16:28
+on SEO and SEM and saying, "Hey, marketing, you'll  help us with our growth." Is no longer enough.  
+16:34
+You have to take responsibility over growth in  your company and product loops are still very much  
+16:42
+a thing. Product loops is not where distribution  is shifting. You have to look at your product as  
+16:47
+almost like a marketing channel where you can  advertise to your own users and you can deploy  
+16:51
+your users to be your marketing agent. So make  sure that you invest into baking distribution  
+16:57
+and baking those growth product loops into your  product experiences. I think fremiums are going to  
+17:03
+continue raging on just because we're all grasping  for people's attention and it's constantly the  
+17:08
+fight to remove the friction of entry and we're  going to continue doing that and I think AI is  
+17:14
+actually flipping fremium and making it harder  because now it's so costly to do fremium with AI  
+17:20
+and we no longer have margin profiles of those 80  90% that were so flush across all of the tech SAS.  
+17:28
+Now we're like operating at 30% or less. But you  have to start looking at your product as marketing  
+17:34
+cost. For example, at Lovable, over half of our  expense or cost comes from our premium usage.  
+17:42
+But we look at it not as a cost center. We're  looking it as our marketing budget because we  
+17:47
+much rather give our product away to every single  one of you to give it a go as opposed to making  
+17:53
+Google richer. If anybody's from Google here, I'm  so sorry. I think your company is great, but I do  
+17:58
+love our customers and I'd rather give them our  money as much as possible, too. However, there's  
+18:04
+other options. So, let's run through them really  quickly. Option number two is velocity. Now, AI,  
+18:12
+one of the best things that it can do is it can  accelerate your velocity of shipping to a point  
+18:17
+where it can become your moat. At Lovable, we're  literally looking at velocity of shipping as our  
+18:23
+moat. We protect it by all means possible and we  do it because of a couple of things. Number one,  
+18:30
+we heavily invest in what we call like what I call  they don't call it I call AI native employees. I  
+18:35
+don't want to put words in their mouth. Uh an  AI native employee is just somebody who uses AI  
+18:39
+across many aspects of their work. So they're  blurred roles. Remember how I talked about  
+18:44
+like everybody can wear different hats. We have  engineers doing marketing. They put something up,  
+18:49
+they launch it, they're responsible for it.  We don't have ability to staff marketing and  
+18:54
+product managers against every single thing. We're  actually only like 60 to 70 people large. Yet we  
+19:00
+ship updates every single day if not every single  hour with tier. We we tier it. So like there's big  
+19:06
+launches and then there's tier two, tier three.  The tier one big launches usually on the bigger  
+19:12
+companies happen like what once a year maybe twice  a year. We're like every three months we have to  
+19:17
+do something enormous. But tier two happen  almost on the weekly basis. Tier three which  
+19:23
+is like smaller updates but still meaningful  every single day if not every single hour. So  
+19:28
+that in order to enable that velocity you have  to not be so crossf functional because if you  
+19:33
+have dependencies across everything that creates  a gridlock but if you empower your employees with  
+19:39
+agency with trust that's a hard one for us. We  don't really trust inside of our organizations but  
+19:46
+you have to especially if you give them AI tools  so they can take the project all the way from end  
+19:51
+to end and full full autonomy against it. Now the  next one is oldie but goody. This one has always  
+19:56
+been around. Data can definitely be your moat and  your new distribution channel. User data in memory  
+20:02
+is sticky. It can be your defensibility  tactic. It can be your retention tactic.  
+20:06
+Don't overdo it like don't keep your customers  hostage obviously but uh try to see how you can  
+20:12
+leverage it to either make your product better or  make to sure that uh customers see the value. But  
+20:17
+there is also an interesting shift happening.  Salesforce realized how important their Slack  
+20:22
+data is. So they decided to cut off access to it  to other companies. So for example that company  
+20:29
+um you might have heard Glean that is working  on enterprise internal search all of a sudden  
+20:33
+lost access to Slack data. Now, what is internal  search without your Slack information? Nothing.  
+20:40
+And Salesforce knew this, which is exactly why  they did it. They're leveraging this to keep their  
+20:45
+moat because they're trying to go into offense  against it. What is your next option? Well,  
+20:51
+this one's interesting. Brand. All of the product  people like, oh, not for me. Where is my marketing  
+20:56
+counterpart? I challenge that thought because  brand all of a sudden is now a product exercise,  
+21:04
+not a marketing team function. Now marketing  might still come in with a tone of voice and  
+21:10
+colors and maybe some brand span. Maybe they'll  put a billboard up at Lovable. We're having our  
+21:15
+first billboard up going up here in San Francisco.  When it goes up, please take a picture and send  
+21:19
+it to me because I don't live here anymore. But  our brand, if you think about Lovable, how many  
+21:24
+of you, by the way, have heard about Lovable?  Awesome. Amazing. You feel the brand. You know  
+21:30
+what the brand is. We have zero branding spend.  We don't have brand marketing. We barely have any  
+21:36
+marketing honestly to to begin with because it's  felt through the product interactions because we  
+21:42
+actually look internally and say is this lovable?  The fastest way to fix anything at lovable is to  
+21:48
+say this experience is unlovable. Gets hot fixed  immediately. So we are so spec uh very specific  
+21:55
+about making this experience channel our brand. So  and that's actually can become your mult because  
+22:01
+when the democratization of software is happening  of building the software and all of a sudden there  
+22:06
+is 100 options people are no longer going to you  uh use the tools that are just utilitarian in  
+22:11
+nature. They're going to use the tools that speak  to them that make them feel because we as humans  
+22:17
+want connection. So take it on as a product role  to channel the brand as opposed to just saying  
+22:24
+uh brand marketing they're going to do it in  the corner over there. Next one is also oldie  
+22:29
+but goody but ecosystem integrations integrations  integrations and partnerships. This one is very  
+22:35
+important uh because instead of trying to claw  your way out into your own distribution, you say,  
+22:41
+"Hey, you already have distribution. Let me stand  over here and get into your distribution channel  
+22:48
+by doing an integration or a partnership."  Beautiful strategy needs to have first mover  
+22:53
+advantage. So don't wait on it. If somebody gives  you a hand, you have to take it. Um otherwise,  
+22:59
+you just have competition that is going to take  it on. But it's the channels that nobody really  
+23:02
+competes in because there's so much manual things  that need to happen. Make sure to do it. One of  
+23:07
+them that I'll just mention is two days ago. Uh  OpenAI released a new integration opportunity,  
+23:13
+the app store. Uh you should all be looking at  it. I know we are because we're like is this  
+23:19
+it? Is this the next distribution shift? Is  this the first time AI, OpenAI actually going  
+23:25
+to provide distribution advantage to us? Because  otherwise it's just a destination. there's no way  
+23:30
+to like really market through it. So, uh make  sure that you pay attention to this one. Now,  
+23:35
+this one is interesting, very uncomfortable  for larger companies. Uh founder of socials,  
+23:41
+um or just like even employee socials, like  let's we talk about it as a whole. Connecting  
+23:46
+with your customers on the human level and for  your customers to know who's behind the company  
+23:51
+is becoming more important than ever. Now, we  have our CEO Anton that post on LinkedIn. He  
+23:57
+posts on X all the time. I just took a couple  of screenshots of his LinkedIn post. 10 months  
+24:02
+ago when he started, he had like no following, no  reach whatsoever. Now almost all of his posts get  
+24:08
+2,000 plus reactions and hundreds and thousands of  impressions, millions of impressions by the way,  
+24:15
+free organically that is happening across all of  these platforms. It is something that a marketer  
+24:21
+would like just dream in their mind to achieving  yet you can create with just your own team. So I  
+24:27
+would really encourage a you starting to up your  social game, connecting with your customers on  
+24:33
+more personal level and humanizing your company.  We allowed lovable everybody to post. Now we're  
+24:38
+small. So we don't have a legal team yet that says  so we can afford that in the larger companies.  
+24:44
+When I was at Dropbox, the legal team was told to  me to do anything for Dropbox. But uh as much as  
+24:50
+you can possibly build in public, it can be a huge  leverage for your organic growth strategy and it  
+24:56
+starts with you. The more people that you can have  in the company actually do socials, the better it  
+25:02
+is. And then the last one that I'll talk about is  creator economy. So creator economy specifically  
+25:07
+is um all of those influencers. I know this  feels like a dirty word to say, but there's  
+25:15
+so many eyeballs in the socials on those creators  and your ability to market with them is no longer  
+25:21
+just a B2C strategy. It is most definitely a B2B  strategy. We do a lot of influencer marketing on  
+25:26
+YouTube. YouTube is huge right now. If you're not  on YouTube, I don't know what you're doing. Tik  
+25:32
+Tok relevant for B2B, believe it or not. Instagram  relevant for B2B because there's influencers and  
+25:38
+creators that are building their audience that are  have your potential customers there. So, make sure  
+25:42
+that you're playing in there as well. But also  keep an eye on any other new developments. Like I  
+25:48
+said those two days ago, the app store for OpenAI,  it might be the next Google search. It might be  
+25:54
+a big big uh absolutely nothing. Who knows? But  these types of things we need to look at because  
+26:00
+otherwise there's a gap in the market of how is  it that we actually going to grow our products.  
+26:04
+But what I do want you to take away from this  is that put that pressure on the product itself  
+26:08
+because that is the most defensible channel  that you have because remember distribution  
+26:13
+is everything. That's what builds that successful  company. That's what makes that equity that you  
+26:18
+own in that business worth something. Not just  great product. It's not enough. It's great  
+26:24
+product plus distribution. I'm out of time.  Thank you very much and catch me later. Bye.

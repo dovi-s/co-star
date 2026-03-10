@@ -1,0 +1,815 @@
+Intro / What we are covering today
+0:00
+You guys were really curious to hear
+0:01
+about how I design my apps and
+0:02
+specifically how I make them feel 10
+0:04
+times better than the default iOS
+0:06
+experience. I get a ton of compliments
+0:07
+on my app saying that they just feel
+0:09
+different, a little bit more polished,
+0:11
+more fun to use. So today I'm breaking
+0:13
+down some of the advanced techniques I
+0:14
+use to achieve that. If you're new here,
+0:16
+welcome to the channel. My name is Chris
+0:17
+and I build productivity apps. I already
+0:19
+made a video covering the basics of my
+0:21
+design process like mood boarding and
+0:23
+wireframing, but today we're going to be
+0:24
+going a little bit deeper. These are
+0:26
+practical things that I'm doing and
+0:27
+applying to my own apps to really give
+0:29
+them that polished and fun to use feel.
+Interactions & Animations (tip 1)
+0:35
+Another way to add dimension to your app
+0:37
+is to make it more interactive and just
+0:39
+have a little bit more movement. Most
+0:40
+apps are pretty static. When you're
+0:42
+clicking on tabs in any of the default
+0:43
+Apple apps, they kind of just appear
+0:45
+instantly. There's no animation,
+0:46
+probably for a good reason. They're
+0:48
+serving a billion users. Maybe it's a
+0:49
+motion sickness thing or an
+0:50
+accessibility thing, but again, we're
+0:52
+not Apple. So, what I like to do is try
+0:54
+to add animation anywhere I feel is
+0:56
+appropriate. So, for example, in my app
+0:57
+Luna, I could have made it where when
+0:58
+you're switching between the tabs, it
+1:00
+just instantly appears like all of the
+1:02
+default iOS apps, but instead, I decided
+1:04
+to actually animate that page change.
+1:06
+When you're switching between different
+1:07
+pages, they actually slide over from the
+1:10
+previous page. I'll slow it down so you
+1:12
+can see this animation better. Granted,
+1:13
+this did take me like 5 days to build
+1:15
+because I didn't have AI at the time,
+1:16
+but I think now with Claude Code, you
+1:18
+can actually get something done like
+1:19
+this in less than an hour. Here's an
+1:20
+even better example of where I went a
+1:22
+little bit above and beyond on the
+1:24
+interactions. So, I have this feature in
+1:25
+Ellie where you can dictate tasks to the
+1:28
+AI assistant that I built. So, something
+1:29
+I spent a lot of time on was a custom
+1:31
+animation sequence. When I slow it down,
+1:33
+you can see a lot of things are
+1:34
+happening here. The send button rotates
+1:36
+into a check mark. The background
+1:38
+expands from the microphone and the
+1:40
+listening text fades with this kind of
+1:42
+spring animation. And all of this stuff
+1:43
+adds up to a really satisfying animation
+1:46
+that I think adds a little bit more to
+1:48
+the experience. This might seem small,
+1:49
+but if you do this a 100 times
+1:51
+throughout your app, it's going to add
+1:52
+up to this very premium experience,
+1:54
+which again makes your app feel way
+1:56
+better than the default iOS apps.
+1:58
+Something I want to point out, too, is
+1:59
+that a lot of this stuff is actually not
+2:00
+as hard as you might think. The cool
+2:01
+part is I actually just vibe coded this
+2:03
+completely with cloud code. I didn't
+2:04
+write a single line of code for this.
+2:06
+I'll give you a tip. When it comes to
+2:07
+complex interactions like this, don't
+2:09
+try to oneshot this and say, "Hey, can
+2:10
+you go animate this for me?" Because
+2:12
+it's not going to come up with anything
+2:14
+this cool and complex. For this one, I
+2:16
+had to break down all the sub animations
+2:17
+that I wanted to happen. Can you make
+2:19
+the arrow rotate into the check mark?
+2:21
+Can you have that background expand from
+2:22
+the microphone? Can you add some of this
+2:24
+fade in fade out for the text? So, I
+2:26
+broke down all the components I wanted
+2:28
+to happen in the interaction and it just
+2:29
+executed it for me flawlessly. Apple has
+2:32
+a really good built-in API for
+2:34
+animations and Claude Code and a lot of
+2:36
+AI coding tools are very well trained on
+2:37
+it. So, you can actually just tell it to
+2:39
+do this stuff for you in plain English
+2:40
+and it has a really high chance of doing
+2:42
+it. But again, the trick is to not
+2:43
+oneshot it and to instead break it down
+2:45
+into steps.
+Custom illustrations (tip 2)
+2:49
+Tip number two is custom illustrations,
+2:51
+especially for things like empty states.
+2:53
+So, this is when your app has no data in
+2:55
+it and it's just kind of an empty
+2:57
+screen. A lot of apps just have a text
+2:58
+that say there's no task for today or
+3:00
+something like that. I want to go a step
+3:01
+beyond that. Add custom illustrations or
+3:04
+even animations to those empty states.
+3:06
+This is something you can actually do
+3:07
+with the AI tools on the market. So, in
+3:09
+my case, for my app, Lily, which is a
+3:11
+meeting assistant app, I have this ghost
+3:13
+mascot. What's really cool with AI tools
+3:15
+like chat GPT, you can actually take a
+3:17
+base mascot like Lily, feed it into chat
+3:19
+GPT, and with the right prompts, you can
+3:21
+actually generate almost an infinite
+3:23
+amount of variations of this mascot. I
+3:26
+actually used it to generate the empty
+3:28
+state for the search page. Now, instead
+3:29
+of it just saying there's no meetings
+3:31
+here, instead there's this illustration
+3:32
+of Lily the Ghost searching for tasks.
+3:35
+Or if there's an active meeting going
+3:36
+on, I can have a custom illustration of
+3:38
+Lily taking notes or sleeping or
+3:40
+drinking coffee or walking my dog Luna.
+3:42
+AI has really opened the door to make
+3:44
+infinite illustrations and it does add a
+3:46
+ton of personality and really makes your
+3:47
+app stand out. My recommendation is to
+3:49
+try to find some sort of artist or
+3:51
+illustrator to make you a base
+3:53
+illustration if you can. My case, I
+3:54
+actually asked my girlfriend Cecilia to
+3:56
+draw up some illustrations for me and
+3:57
+now I have a base mascot to work off of
+3:59
+and make an infinite amount of
+4:00
+variations on. I really do recommend
+4:02
+starting with custom illustrations
+4:04
+because it does make it feel a lot more
+4:06
+original. If you can't do that, you can
+4:08
+use chatt to make these mascots for you.
+4:10
+My advice is to be really creative when
+4:12
+you do this. You're going to feed in
+4:13
+reference images. Try to feed in a bunch
+4:15
+of different reference images. That way,
+4:17
+it just comes up with something a little
+4:19
+bit more unique or really tweak the
+4:21
+prompt and try to get creative to make
+4:23
+it deviate from whatever references
+4:25
+you're putting in. But again, if
+4:26
+possible, I do recommend commissioning
+4:28
+an artist or a graphic designer to do
+4:30
+this for you. It's actually not as
+4:31
+expensive as you might think. If you
+4:32
+want to take it to another level, which
+4:34
+is something I haven't even gotten to
+4:35
+yet, you could animate these custom
+4:37
+illustrations. So, someone was actually
+4:38
+kind enough to take the illustrations
+4:40
+that I made and animate some of them
+4:42
+using Rive. I was really impressed with
+4:43
+the results, and I do plan on adding
+4:44
+these to the app. I haven't tried it
+4:46
+yet, but I already know it's going to
+4:47
+add a whole another layer to the app.
+4:48
+So, that's something I'm going to be
+4:49
+trying soon, and if you can, you should
+4:51
+try it, too.
+Haptic feedback (tip 3)
+4:54
+Another way to add dimension to your app
+4:56
+is haptic feedback. This is when you
+4:58
+click a button, you touch the app, and
+4:59
+the phone kind of subtly vibrates and
+5:01
+gives this physical feedback back to the
+5:03
+user. This is something that adds a lot
+5:05
+of depth and honestly just makes the app
+5:07
+a lot more fun to tap for the user.
+5:08
+Something I noticed is that Apple's
+5:10
+default apps barely use haptics. To be
+5:12
+fair, there probably is a reason they
+5:13
+don't have haptics. They're designing
+5:14
+for a billion users. Maybe it's a
+5:16
+battery thing or an accessibility thing,
+5:18
+but we're not Apple, so we can probably
+5:19
+make choices that they can. So, in my
+5:20
+budgeting app, Luna, almost every single
+5:22
+button click has some sort of haptic
+5:24
+feedback. Here's the key. Not all haptic
+5:26
+feedback is equal or feels the same. You
+5:29
+can actually control the strength of the
+5:30
+vibration in the code. So for certain
+5:32
+buttons, I add a lighter amount of
+5:34
+haptic feedback. And for other buttons,
+5:36
+I do a heavy amount of haptic feedback.
+5:38
+When you're inputting a transaction
+5:39
+where there's a lot of clicks, I really
+5:41
+go light, but then when you're doing
+5:42
+something like changing the tabs, it's a
+5:43
+little bit heavier. I really wish I
+5:45
+could convey what the haptics feel like
+5:46
+in the video, but if you're curious, I'm
+5:48
+not going to stop you from downloading
+5:49
+the app to try it. Concern that I hear
+5:50
+is that if you add a lot of haptic
+5:52
+feedback, it's going to feel annoying.
+5:53
+But I think when you do it correctly in
+5:55
+the right places, it's actually very
+5:57
+satisfying. I think there's just
+5:58
+something addictive about physical
+5:59
+feedback, kind of like clicking a pen,
+6:01
+you just kind of want to tap around. If
+6:02
+you can get people clicking around your
+6:03
+app for fun, I think that's only a
+6:05
+positive thing.
+Good icons (tip 4)
+6:08
+Icons. It's something a lot of people
+6:10
+overlook, but when you get it right, it
+6:11
+feels really good. And more importantly,
+6:13
+if you get it wrong, your app just does
+6:15
+not feel that good. When you're building
+6:16
+an iOS app, most apps use SF symbols,
+6:18
+which is the default icon set that Apple
+6:20
+gives you, which are completely fine.
+6:22
+There's nothing wrong with them, but
+6:23
+they are pretty generic and almost every
+6:25
+single app uses them. When I was
+6:27
+studying a lot of the best apps out
+6:28
+there and trying to figure out how to
+6:29
+make mine stand out, I realized that
+6:31
+picking really good icons and spending a
+6:33
+lot of time on them made a huge
+6:35
+difference. I spend a lot of time
+6:36
+looking for the right icon pack for my
+6:38
+app. One of my favorites that I use,
+6:40
+which I'm actually using in Luna, my
+6:42
+budgeting app, is called Hero Icons. And
+6:44
+specifically, I'm using the thin version
+6:45
+of the icons. It's minimal, clean, and
+6:48
+free, and you really can't go wrong
+6:49
+using something like this. But there's
+6:51
+tons of icon packs out there that you
+6:53
+can use. The first mistake that I see
+6:54
+people making is picking the wrong icon
+6:56
+style. Even with something like Hero
+6:58
+icons, which all the icons look amazing.
+7:00
+The style of icons really does make a
+7:01
+difference. So, let's take a look at the
+7:03
+tab bar in Luna, which is my budgeting
+7:04
+app. I'm using the thin version of the
+7:07
+icon pack here. You can see it looks
+7:09
+very clean, very minimal. Watch what
+7:11
+happens if I just switch to the thick
+7:13
+versions of this. To some people, this
+7:15
+might not be a big deal, but the
+7:16
+differences in using the thin and the
+7:18
+heavy versions actually really does
+7:20
+change the entire feel of this tab bar,
+7:22
+which then changes the feel of the app.
+7:23
+So, depending on what kind of feeling
+7:25
+you're going for, I think picking the
+7:26
+right icon set makes a big difference.
+7:28
+Usually, it boils down to are you going
+7:30
+to pick icons with simple and minimal
+7:32
+lines? Are you going to pick icons that
+7:34
+are more filled and heavy, or are you
+7:35
+going to pick icons that are very
+7:37
+complicated and have many lines? All
+7:39
+three of these do send a different
+7:40
+message to the user. So, choosing is
+7:41
+very important. But the most important
+7:43
+thing to do when you do pick a style is
+7:45
+to stay consistent with the style. This
+7:47
+is a very common thing I see a lot of
+7:48
+apps do is mixing and matching icon
+7:50
+styles which really make the app feel
+7:51
+less cohesive. So looking back at Luna's
+7:54
+tab bar, it's again very clean minimal
+7:56
+icons. Watch what happens when I swap
+7:58
+two of the icons to a heavier version.
+8:00
+It's not as uniform as the version where
+8:02
+it was all minimal icons. So when you
+8:04
+pick a style, making sure to stay
+8:06
+consistent across really does make a big
+8:08
+difference. But there is actually a time
+8:10
+when you can use style. So here's
+8:11
+another tip. it's to potentially use a
+8:13
+different style to show different
+8:14
+states. So, for example, in the tab bar,
+8:17
+when I click something on Luna, it
+8:18
+starts out as the thin version, but I
+8:20
+actually use the heavier and filled out
+8:22
+version of the icon when it's selected,
+8:24
+which actually does make a big
+8:25
+difference. So, here's what it looks
+8:26
+like in the app now with the heavier
+8:28
+version. And here's what it would have
+8:29
+looked like if I didn't use that version
+8:30
+and just highlighted it. It's really
+8:32
+subtle, but I think it does add some
+8:33
+depth. Apple doesn't even do stuff like
+8:35
+this. Check out the phone app. When you
+8:36
+click on the different tabs, they're
+8:37
+using the exact same icon style, but
+8:40
+just changing the color, which does
+8:41
+work, but again is a little bit basic.
+8:43
+Spending a little bit more details on
+8:44
+what icon style you're going to use for
+8:46
+the active and the non-active state,
+8:48
+which icon pack are you using. All of
+8:49
+this stuff adds up and it will make the
+8:51
+app feel even better than the Apple
+8:53
+default apps.
+Elevate your design taste (tip 5)
+8:56
+So, the last tip I'm going to give you,
+8:58
+which answers one of the most common
+8:59
+questions I get, which is, how do I come
+9:01
+up with these good designs? How do I
+9:03
+just elevate the feeling of my app in
+9:05
+general? and it is to expose yourself to
+9:07
+really good design constantly because
+9:10
+it's not a one-time thing. I really do
+9:11
+think that it is a process to get better
+9:14
+and elevate your taste. And I have two
+9:15
+specific places that I go to do this.
+9:17
+Number one is Twitter. There's a ton of
+9:19
+really good talented designers on
+9:21
+Twitter. So, I recommend just go finding
+9:22
+them, following a bunch of designers,
+9:24
+and then you'll just see a bunch of
+9:25
+their stuff on your feed and bookmark
+9:27
+everything that you like. But constant
+9:29
+exposure like this is really important.
+9:30
+And the second one is a website called
+9:32
+Mobin. So, huge thank you to them for
+9:34
+actually sponsoring this video. If
+9:35
+you've been following along, you know
+9:36
+that they are my favorite design
+9:38
+resource. Even if they weren't
+9:39
+sponsoring, I would recommend them
+9:40
+anyway. I absolutely love them. But if
+9:42
+you're not familiar, it is a huge design
+9:45
+resource that just has thousands of app
+9:47
+screenshots. So, you can see how some of
+9:48
+the best apps are doing their layouts,
+9:50
+how they're doing their tab bars, what
+9:52
+icons they're using. It really helps you
+9:54
+answer these questions. I use Mobin in
+9:56
+two ways. Sometimes I just scroll
+9:57
+through for inspiration. Again, if you
+9:59
+want to elevate your design taste, you
+10:00
+can just go through Mobin, scroll for a
+10:02
+couple minutes a day. Guarantee if you
+10:04
+just do this, you will naturally just
+10:05
+start picking up on certain patterns and
+10:07
+just elevate your taste. You're going to
+10:09
+figure out what you like, what you don't
+10:10
+like, what color palettes make sense,
+10:12
+what icons people are using that you
+10:14
+resonate with. You'll discover this just
+10:16
+by browsing something like Mobin. Even
+10:17
+just doing it once a week will have a
+10:19
+pretty big impact. I think I also use
+10:20
+Mobin to answer very specific questions
+10:22
+like going back to the icons. What icon
+10:24
+set should I use for my app? I like to
+10:26
+go in Mobin, see the different icons
+10:27
+that apps are using and really figure
+10:29
+out, okay, which one matches the
+10:31
+aesthetic that I'm going for. So, you
+10:33
+can use Mobin to answer questions like
+10:34
+that. It's very cataloged. Just search
+10:36
+tab bar on Mobin. It'll show you a ton
+10:39
+of different examples of tab bars. It's
+10:40
+my favorite place to browse, find some
+10:42
+design inspiration, and just elevate my
+10:44
+design sense. A little bit more general
+10:46
+of a tip, but if you do this, it's
+10:48
+almost impossible not to get better at
+10:50
+design.
+Final thoughts and thanks for watching :)
+10:53
+So, these were the top tips I have for
+10:55
+making your app feel a lot better than
+10:57
+the default iOS apps. Again, it's not
+10:59
+one big thing. It's actually a bunch of
+11:01
+small things that when you put them
+11:03
+together really do add up. I probably
+11:05
+have a lot more tips that I can share,
+11:06
+but these are the ones I had off the top
+11:07
+of my head. So, I hope you guys found
+11:09
+them helpful. If I can make something
+11:10
+like a finance app feel fun to use, you
+11:12
+can definitely do it for your own app,
+11:14
+too. But, thank you guys so much for
+11:15
+watching. If you want to see my general
+11:16
+design process, I'll leave a link to
+11:17
+that in the description below so you can
+11:19
+see things like how I do mood boarding,
+11:21
+how I do wireframing. But if you like
+11:22
+this kind of content, check out my
+11:23
+Instagram and Tik Tok. I post almost
+11:25
+every other day about building
+11:26
+productivity apps. And obviously, if you
+11:28
+like this content, don't forget to
+11:29
+subscribe. But thank you guys so much
+11:30
+for watching and I'll see you guys in
+11:32
+the next video.
+11:34
+[Music]

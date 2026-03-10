@@ -1,0 +1,331 @@
+0:00It's easier than ever to design with AI tools, but that doesn't mean you should always accept all changes. [music] So
+0:077 secondstoday, I'll be joined by Raphael Shod to look at the good, the bad, and the ugly of AI assisted design and sort through
+0:1414 secondshow to use these superpowers to stand out. Welcome to another design review.
+0:2727 secondsAll right. Today I am thrilled to be joined by Raphael Shad, one of the newest visiting partners here at YC. And
+0:3333 secondsRaphael was the co-founder of Kron, a modern calendar tool, which you sold to Notion a while back and are also one of
+0:4242 secondsthe top designers that I know and have worked with. So, uh, Rafael, it's an honor to have you here and it's an honor to work together now at YC. Yeah, super
+0:4949 secondsfun to be now back in uh in in YC uh and helping founders, next generation of founders build iconic companies.
+0:5656 secondsWell, um you're the perfect person to have on here because uh the topic that we're going to be talking about today is AI design trends. On the negative end,
+1:041 minute, 4 secondsthere's the AI design slop and on the positive end, there's a lot of AI uh design trends that that now are easier to build for anybody even if they're not
+1:131 minute, 13 secondsa designer. So, what are some of the common things that you've seen recently?
+1:171 minute, 17 secondsa lot of the AI top AI design trends that are standing out that that you'd want to call out for the audience before we jump into some sites.
+1:231 minute, 23 secondsYeah, sure. Um, this all kind of started when I had like a late night thought and tweeted that I see a lot of dumb hover effects on landing pages of startups
+1:321 minute, 32 secondsthese days presumably white coded. And so I was kind of like curious to peel the the the layer back there. It's like how did these like what I thought were
+1:401 minute, 40 secondsdumb effects um how did they make it into LLMs and why are they everywhere?
+1:441 minute, 44 secondsNow, a couple other trends that we then identified was kind of like purple gradients and all of a sudden all startup websites um had purple gradients
+1:511 minute, 51 secondseverywhere or these sections that can like fade as you go in as you scroll and they fade in and fade out.
+1:571 minute, 57 secondsYeah. And it's not so much that those inherently are bad. It's not purple gradients are bad. Nobody should ever use them. It's that now they're just so
+2:052 minutes, 5 secondsubiquitous everywhere that they kind of uh lose all meaning and specialness and originality.
+2:112 minutes, 11 secondsTotally. And one of the key things was when there was a good website kind of establishing a trend, it took a while um in the old world uh for others to kind
+2:192 minutes, 19 secondsof like copy these trends. But now with LLMs, if there's a good website with a purple gradient, it makes it into the LLM because the LLM gets trained on like
+2:272 minutes, 27 secondsthe good examples that get linked to a lot. Um and then all of a sudden, like the next week, all the startup websites look the same.
+2:332 minutes, 33 secondsYes. And so this is both good and bad if this power is used in the right ways.
+2:402 minutes, 40 secondsSo, we've got a bunch of YC companies that have submitted their websites that were all built with AI coding tools. So,
+2:462 minutes, 46 secondsthis should give us good grounds to figure out uh ways that they have been used really, really well and things that we would do differently if we were
+2:542 minutes, 54 secondsdesigning it ourselves. So, let's uh let's dive into some of those. Let's have a look.
+2:572 minutes, 57 secondsAll right. Okay. First up, we've got new.ai. Solve your game testing with AI agents.
+3:043 minutes, 4 secondsSave countless hours of manual game QA by using AI agents performing end-to-end tests at scale. Purple gradients.
+3:113 minutes, 11 secondsThe first thing that jumps out. It's a very purple site. Um, which, you know,
+3:143 minutes, 14 secondswe were just talking about that's one of the most common things that you see. So,
+3:183 minutes, 18 secondsit's interesting like prelooked at this and gone like, "Wow, this looks really nice." And now I look at it and I'm like, "They used AI to design this."
+3:273 minutes, 27 secondsMaybe they didn't, but like that's what it screams to me. Okay. So, one thing that's interesting is we as you start scrolling here, we've got this line
+3:343 minutes, 34 secondsthat's following us up and down. Um, and it's interesting because I actually find this this line to be a little distracting. Um, I'm paying more
+3:423 minutes, 42 secondsattention to the line than I am the the things that I think that it wants me to pay attention to.
+3:473 minutes, 47 secondsIt's it's almost like something that it's kind of like probably hard to implement for a human. And you would have never thought to actually code this
+3:553 minutes, 55 secondsup um before AI. Um, and just because we now can, just because LM are kind of good at these type of like SVG, you
+4:034 minutes, 3 secondsknow, buildups or transforms, doesn't mean that it's actually a good design and helps you convert potential, you know, visitors into into customers, basically.
+4:114 minutes, 11 secondsYeah. Yeah. I don't know anybody that's like, we need a line that goes through here. Let's start coding that from scratch. Like, you would only implement something like this because it was so easy to do.
+4:204 minutes, 20 secondsUm, but I don't think it actually adds value. If anything, I think it distracts from the rest of the page. Um,
+4:264 minutes, 26 secondsI I can't recall anything from these sections based on this. Um, okay. So,
+4:334 minutes, 33 secondsnow we're down to everything in one place. You I find this hard to read.
+4:384 minutes, 38 secondsIt's uh it's it's very light. Um, maybe I'm just old. Um,
+4:424 minutes, 42 secondsyep. Contrast could be improved there a little bit. So, these cards are interesting, right? Where this is cool.
+4:474 minutes, 47 secondsUm, this is actually pretty good. Uh this is uh probably something that would have been maybe too expensive to do or only like the very best or like website designers would have kind of got gotten
+4:564 minutes, 56 secondsto the lengths of of doing something like that these hover animations for the cards. But AI is so simple to do and this is actually like a pretty tasteful
+5:045 minutes, 4 secondsum way of using leveraging so like the powers of LLM uh to to build more compelling websites.
+5:105 minutes, 10 secondsYeah. What's cool about it is it feels like it helps establish the brand and it's unique and it's creative and it's fun. Um, and it it's actually trying to,
+5:225 minutes, 22 secondsyou know, multiplayer like two controllers with lightning connecting them. Um, and it actually helps reinforce the points that I think that
+5:295 minutes, 29 secondsthey're trying to make here. Um, and this is a great example of, you know,
+5:325 minutes, 32 secondswhere the line that was following you down the page didn't add much value.
+5:365 minutes, 36 secondsThis is this would have been really hard to do. And now, um, you kind of get it for free.
+5:425 minutes, 42 secondsUm, you don't have to go from scratch building a lot of this stuff. One of the things I want to try out is,
+5:475 minutes, 47 secondsum, up here. Um, so we here have the main navigation. One of the things that jumps out here is that as you hover, you
+5:555 minutes, 55 secondsgenerally kind of want to make things pop, but here it actually kind of disappears. So instead of inviting to click to talk to them, um, it kind of
+6:036 minutes, 3 secondslike goes into the background. Same here. it kind of fades out as you activate one of these menu points. Um,
+6:096 minutes, 9 secondsthis is something that I think a designer would almost never choose to do. And now uh and the default of browsers also doesn't work that way. And
+6:166 minutes, 16 secondsnow lens just somehow decided that that's a good uh hover kind of like effect. Um, but it makes no sense. Um,
+6:246 minutes, 24 secondsthink about it that way. Like the browser already has like a built-in hover effect for free even without CSS. It turns the cursor into a hand, right?
+6:316 minutes, 31 secondsSo that already indicates like I can click here. So just leaving it white in this case or just kind of like the the bright purple and then having the hand
+6:396 minutes, 39 secondsalready tells me like I can click on this thing. So if you want to add a CSS effect then you know make it maybe like a little pop. Maybe make it like one
+6:476 minutes, 47 secondsshade lighter um or more active or add like a little you know a little uh um glow around it but don't make it go away.
+6:546 minutes, 54 secondsYeah. Do you have any rules of thumb when you know you're designing something and you're trying to come up with hover effects? Like what are your goals when you were trying to come up with the right hover?
+7:037 minutes, 3 secondsYeah, make it sort of like clickable. Um Steve Jobs famously said you know he wanted to make things lickable with the Aqua interface back in the day. I think you know make things you know clickable
+7:117 minutes, 11 secondskind of like inviting to to click stick to sort of like pretty standard again kind of I think the hand indicates that something is clickable and so I wouldn't
+7:197 minutes, 19 secondsgo much beyond that. Another thing that I see hover being used um is a lot to kind of like reveal additional information. So, not just kind of like a
+7:277 minutes, 27 secondshover effect to make the UI more feel alive. Like hover is great to kind of make UIs feel more alive, right? Um, but I see it increasingly used to kind of
+7:367 minutes, 36 secondslike uh disclose additional critical information or functionality. And I don't think that's the best use for hover. This whole trend uh that maybe
+7:437 minutes, 43 secondslike kind of like Mac OS kind of started to over the years get more and more into kind of like very clean interfaces, get the functionality and the tools and the buttons all out of the way so there's
+7:527 minutes, 52 secondsall this space for content. I don't want to have my computer to be just like all content. I actually want it to be, you know, a bicycle for the mind, the tool.
+8:008 minutesUh, and so, um, revealing additional functionality only on hover and you have to go hunt for what the tool can
+8:078 minutes, 7 secondsactually do, I think is kind of like an anti-attern. Yeah. Not to mention that, you know,
+8:118 minutes, 11 secondsthere isn't a concept of hover on mobile as well. So,
+8:148 minutes, 14 secondsand long press, which is kind of the equivalent of of hover, um, uh, never really catch caught on on mobile probably because it's so hard to
+8:228 minutes, 22 secondsdiscover. Yeah. You you don't want to sit there long pressing all the time to try to figure out if there is any additional think of a desktop desktop interface a tool where you have to hover around
+8:318 minutes, 31 secondseverywhere to discover where this stuff actually lives. You know the disclosure arrows or like hiding something or getting to a dot dot dot kind of menu to
+8:398 minutes, 39 secondsget to extra functionality. If that's all hidden behind hover then, you know,
+8:428 minutes, 42 secondsyou're just not as efficiently communicating the functionality of your software.
+8:468 minutes, 46 secondsYeah. Overall, I think this is um a very nicely designed site. I think it's easier than ever using AI design tools
+8:538 minutes, 53 secondsand LMS to get a professional looking site. There's almost no excuse for not having it now. Yeah. And especially as we're reviewing YC applications, if you
+9:029 minutes, 2 secondslook at a demo and that demo uh does not have a base level of quality design, it seems like the person just didn't even
+9:099 minutes, 9 secondstry because it's so easy to do it now. So,
+9:129 minutes, 12 secondsNoo-Noo, um really cool site and uh some some really interesting uh applications of using AI here. So, well done. All
+9:199 minutes, 19 secondsright, next up we got Rosebud AI. Create games with AI. And and once again, like you start to see the trend here. We've got the purple gradient again. We've got
+9:289 minutes, 28 secondsa very similar um kind of pinkish purple accent color up here. Um and that's why like in isolation with one of these,
+9:359 minutes, 35 secondslike it looks cool, it looks modern,
+9:379 minutes, 37 secondseverything, but you know, one after the other, they all start to kind of look the same, and it takes away a lot of the core brand and originality and things
+9:459 minutes, 45 secondslike that that I think most founders want for their site.
+9:479 minutes, 47 secondsSo, let's dig in here. This is the first time we're looking at these live. Yeah. Um, so rose by AI, create games of AI.
+9:559 minutes, 55 secondsAnd there's a prompt to to to prompt to game kind of interaction, I would assume. Um,
+10:0210 minutes, 2 secondsthat's cool. There's something you can instantly play. Yeah, let's try it.
+10:0610 minutes, 6 secondsWhoa. It's like a 3D game in the browser. That's cool. There's person walking around. Can I use the arrows?
+10:1610 minutes, 16 secondsThere we go. Oh, wd. We have a old school game here. [laughter]
+10:2410 minutes, 24 secondsYou can jump. All right, let's uh escape out of this.
+10:2810 minutes, 28 secondsUm, but cool. Definitely kind of like engaging. Um, I wonder whether this is actually their like product code running
+10:3510 minutes, 35 secondson the website here or this is like bitecoded sandbox environment. Um,
+10:4110 minutes, 41 secondsyeah, I would assume that this is the type of thing you can create with their product. But um that's an interesting point is that they don't really tell us,
+10:4710 minutes, 47 secondsyou know, it doesn't say like play a game made with our product right now. Um it's interesting. Is this following us? This top bar.
+10:5410 minutes, 54 secondsYeah. These are just anchors jumping vertically around.
+10:5710 minutes, 57 secondsYeah. So what's interesting is I didn't realize this at the time, but when we went to that one we were just playing that was under modify games. And so what
+11:0511 minutes, 5 secondsI wonder is if this is a game that has already been created that we can modify in real time and that's what they're trying to show off rather than the creation part.
+11:1411 minutes, 14 secondsYeah. So maybe kind of like a thing to take away here is that using this non kind of like non-standard navigation um
+11:2111 minutes, 21 secondsis tripping us off a little bit um on how to use this website. Another thing that kind of jumped out here at the top is like I don't think anyone would think
+11:3011 minutes, 30 secondsof combining a red logo with purple as an accent color necessarily. Um it's not
+11:3711 minutes, 37 secondsnecessarily complimentary. Uh and uh and I guess whenever I see the use of emojis, even though they're not the system emojis, I feel like it's a little
+11:4611 minutes, 46 secondslazy. And so I feel like LLMs kind of take the easy path because they don't have any IP really themselves. They're just like big models kind of cobbling
+11:5411 minutes, 54 secondsthings together. They use like these standard icons everywhere and it's just immediately kind of like a tell.
+11:5911 minutes, 59 secondsYeah, I think we could just use more context up here too. And and you know the the name of the company is is here.
+12:0612 minutes, 6 secondsIt looks like it's almost part of the headline rather than I would expect it to be up here by the logo.
+12:1112 minutes, 11 secondsYeah. And then the value prop kind of being more clear. Um you know uh uh create games with AI something something. So it's kind of like what's
+12:1812 minutes, 18 secondsimportant for the H1 is typically kind of you know what is it? Who is it for?
+12:2412 minutes, 24 secondsand to what end? Why should that person that it's for care? Um, and if those three things plus a call to action um
+12:3212 minutes, 32 secondsare not kind of above the fault, then it's a harder time to convert uh convert visitors.
+12:3712 minutes, 37 secondsYeah. Um okay, we've got some I guess examples of games. Yep. So games created with Rosebud AI. Um okay, this is
+12:4612 minutes, 46 secondsinterest. So there's another effect here. You can see the light following my cursor um around the edges. And yeah,
+12:5212 minutes, 52 secondsthis is the kind of thing where, you know, you're like, "Hey, it costs nothing to do this." Then maybe you're like, "Yeah, sure. Let's throw it in.
+12:5812 minutes, 58 secondsIt's fun and it's playful." Um, but if you had to spend a week coding this and, you know, getting it to work, right? You'd be like, "That's not worth it."
+13:0513 minutes, 5 secondsOkay. So, we've got a lot of a lot of game examples. And it looks like maybe this is just the rest of the site here.
+13:1013 minutes, 10 secondsOkay. And then we hit a footer. There's a like remixing. Oh, yeah. Okay.
+13:1513 minutes, 15 secondsSome some of the some of the um projects you can remix and then it kind of puts up the conversion wall. Okay. Um, that would go beyond like landing page.
+13:2513 minutes, 25 secondsVery cool. Awesome. Well done, Rosebud. Okay. So, next up we've got Get Crux.
+Chapter 2: Getcrux
+13:3113 minutes, 31 secondsAnd one of the first things that I noticed here was kind of the fade in. It was this automatic fade in. Um. Oh, and another thing that I noticed is my scroll is hijacked here.
+13:4113 minutes, 41 secondsYeah, it's maybe a little hard to um to see on screen. Uh, but there's certainly some scroll jacking logic going on. Um,
+13:5013 minutes, 50 secondsand there's also like a state where you see both the detached and the fixed uh header menu all like both at the same time like right right around here. Yeah.
+13:5913 minutes, 59 secondsUm, so typically kind of like they should just smoothly I like the sticky header. Um, but it's just like smoothly transition one to another and here you see sort of like that you know they're
+14:0714 minutes, 7 secondsclearly two distinct menus that just happen to kind of be the same.
+14:1214 minutes, 12 secondsI'm sorry I'm so distracted by the button that's chasing me [laughter] around the screen here. Um,
+14:2014 minutes, 20 secondsyeah. There's I almost feel like it's hard to get the button to click on it because it's constantly moving.
+14:2514 minutes, 25 secondsDoes it make you want to talk to the founders more or less?
+14:2814 minutes, 28 secondsIt makes me distracted. I would say I'm not paying attention to what they do.
+14:3214 minutes, 32 secondsI'm just uh I'm like, why is this button following me around? Um, it definitely got my attention, I would say. Um, one
+14:4014 minutes, 40 secondsof the other things that I noticed first too is is almost these like meteors that are, you know, shooting down from the angles. cuz you can kind of see him over there.
+14:4814 minutes, 48 secondsUm, that's another kind of thing where like it doesn't feel like it actually adds a lot of value to the product. And again, if you had to build that from
+14:5614 minutes, 56 secondsscratch, like it would never be worth your time. Um, but you it's so easy to do it that people are like, "Yeah, let's throw that in. It looks cool." Um, but I actually find it a little distracting.
+15:0515 minutes, 5 secondsUm, I don't think it adds value to the the product here.
+15:0815 minutes, 8 secondsThen the hero screenshot here is um I guess a poster image for a video. Um uh and it goes into what looks like a
+15:1715 minutes, 17 secondscompletely different video. Yeah, that was confusing.
+15:1815 minutes, 18 secondsAnd the poster image is just very blurry here. Um I don't know whether this is like an artifact of like uh using using AI or not. Um uh but just as a general
+15:2715 minutes, 27 secondsdesign principle, I think all all your assets should be, you know, high-res,
+15:3115 minutes, 31 secondshigh quality. Um and this just looks like something very blur blurry. Yeah. And again, back on the button,
+15:3615 minutes, 36 secondstoo, because I still see even when we're down here, it's like still chasing us around. You know, this is another example of the type of thing that you
+15:4315 minutes, 43 secondswould only do because it's easy. But just because something is easy doesn't mean it's worth doing. There's a lot of things that are now at your fingertips
+15:5115 minutes, 51 secondswith AI that, you know, anything imaginable is possible. Just because something is possible doesn't mean you should say yes to it. Here we're kind of like hitting a little bit on on just a
+16:0016 minuteslack of visual uh consistency. Like this looks like an entirely different visual language than anything we've sort of seen seen above. Um,
+16:1016 minutes, 10 secondswhere do you think that comes from?
+16:1216 minutes, 12 secondsYeah, I wonder. Um, maybe different sections of the website being made by like different parts of the tool. Um,
+16:2116 minutes, 21 secondsmaybe it's also just kind of like a function of like this here looking very different um than like the website content. Yeah. Sometimes just like a clear image with a little bit of text,
+16:3216 minutes, 32 secondsmaybe a headline and then some subtext um goes a long way. Yeah.
+16:3716 minutes, 37 secondsAnd I gotta say, we're like halfway down the page right now. And um if you asked me what they did, I would not be able to tell you. Let's go back up to the top
+16:4416 minutes, 44 secondsand re remind ourselves. AI creative strategist to make ads that work. Ads that. Okay. So, it's something to make
+16:5216 minutes, 52 secondsads. It seems like it's interesting. They they do kind of have like a visual um like style to it
+16:5916 minutes, 59 secondswith a lot of these uh it's almost like a a vertical motion blur or something on a color gradient that we see in some of these images. um like these right here
+17:0817 minutes, 8 secondsand we saw the same thing in these here and these here um and these here. Um but it's it's constrained to some of these
+17:1617 minutes, 16 secondselements and it feels like you know it's maybe a little overused here because it's hard to read these and this feels like more like a rainbow rather than calling the attention to it. But up here
+17:2517 minutes, 25 secondsdoes not have that style at all, which was maybe, you know, the point that you were making earlier. And I could see something where the background here is more reflective of this type of style.
+17:3317 minutes, 33 secondsAnd then that might carry it through all the way through the rest of the page.
+17:3617 minutes, 36 secondsYeah, let me quickly reload the page and try something. So, we see all these sections kind of like fading in. Um, and here again, it's just like fading in.
+17:4717 minutes, 47 secondsAnd one of the things that I noticed, I just don't see the advantage of having these things not just right there as I
+17:5417 minutes, 54 secondsscroll because scrolling already like is the motion. Why does it have to like also then can like fade in? Um, and one of the things that you get is these
+18:0218 minutes, 2 secondsweird um, for example here, right? We say we're here to answer all your questions and then there's one question and we we we break here earlier and I
+18:1018 minutes, 10 secondswas like, wow, that's a lame FAQ if there's only like one Q and one A,
+18:1518 minutes, 15 secondsright? Um, but then I was like, "Aha, it just hasn't come in yet." Um, and so not a fan of that pattern.
+18:2318 minutes, 23 secondsYeah. What bothers me with the fadeins a lot of time, and I'm not sure if this does it or not, is when they're on a a timer, sometimes I'm scrolling really
+18:3118 minutes, 31 secondsquickly and I'll get all the way past the section as it's starting to fade in up at the top and I miss the content altogether. So, I'm curious to try that
+18:4018 minutes, 40 secondshere. Um, and see how they did this. So like if I'm just kind of zooming down um so these seem to fade in
+18:4818 minutes, 48 secondsum at least when it's at the bottom of the page um but it still feels like going through molasses because it's all scroll checked like hijacking the sort of like actual
+18:5818 minutes, 58 secondsnative browser scrolling um to do some fancy thing with JavaScript to actually have the hooks to do all these animations. Yeah. All right.
+19:0619 minutes, 6 secondsSuper interesting. Very creative. Uh so well done get crux. Okay. Okay, next we got Sphinx, your last compliance hire.
+Chapter 3: Sphinx
+19:1519 minutes, 15 secondsAll right, we've got some animation thing going on here. Um, I think one of the trends that we've seen so far is just like way more animation these days
+19:2419 minutes, 24 secondsthan there were, you know, three years ago probably because these AI design tools make it so easy to do this.
+19:2919 minutes, 29 secondsYeah, let's quickly talk about hierarchy here. Um, so we start with um a logo type, kind of a stylized version of the name of the company, Sphinx, right?
+19:3819 minutes, 38 secondsThat's cool. Top left, pretty standard.
+19:4019 minutes, 40 secondsBut then we have the H1 is also good and the subtext. But also we have like this kind of like weird in between like
+19:5019 minutes, 50 secondsfourth style, right? Um not something that I typically ever saw designers or engineers kind of come up with their own
+19:5819 minutes, 58 secondslanding pages. is only something kind of like these many many styles mixed is something that I increasingly see kind of LLM do because like somehow the LLM
+20:0620 minutes, 6 secondsthought it's clever to have like an extra label here in an extra style meets thinks but we already have the company name we already have you know three
+20:1520 minutes, 15 secondsdifferent styles basically if you count count this here it's like four styles this just adds a fifth um complicating the hierarchy not really adding it adds
+20:2320 minutes, 23 secondsa bunch of vertical space like we could just like move the H1 a little bit up and then you know that value didn't trust it um logos would already be like a little higher. Um so this is something
+20:3220 minutes, 32 secondsthat I increasingly see kind of like LLM's dream up that just isn't really tight information hierarchy and graphic design.
+20:3920 minutes, 39 secondsYeah, I I think I going through these I I keep coming back to the concept of like it's easy to do anything. You
+20:4620 minutes, 46 secondsreally have to be um opinionated as the human that's in the loop in designing these around what you think is the right thing. Not just kind of saying yes,
+20:5520 minutes, 55 secondsaccept all changes. Yeah. You're now the editor suggestion.
+20:5820 minutes, 58 secondsYes. Yes. And and another thing that I'm noticing happening here is this section on the right, it just keeps swapping
+21:0521 minutes, 5 secondsaround. Um if we watch this animation here for a second, this button over here, the big star kind of button. Uh
+21:1321 minutes, 13 secondsyeah, like moves around and and now it's a circle button. I think that's a button. Yeah, I guess that's clickable.
+21:1921 minutes, 19 secondsUm and then it's going to come back over to the left side and it's going to be a big round rectangle kind of button. And so we have a lot of different button styles. I'm not sure why things are
+21:2821 minutes, 28 secondsmoving like this. Um, and it's very confusing. It's actually not a button. Like, yes,
+21:3221 minutes, 32 secondsit shows the hand, but that's a head fake.
+21:3521 minutes, 35 secondsYeah, I guess if you click it, it doesn't really Well, I guess it's kind of like a next button, but then also on auto advance.
+21:4221 minutes, 42 secondsYeah, this is very confusing to me. I'm not sure what it's showing. And And I can't tell what's happening in this animation either. It seems to be some kind of workflow. Um,
+21:5021 minutes, 50 secondsactually, you can just click anywhere and it it it advances. So, it's not even like this button or the whole thing is a click target. Yeah.
+21:5721 minutes, 57 secondsThis is again one of those things where it's hard for me to imagine a human just being like, "Let's have three different style buttons that every time you click
+22:0422 minutes, 4 secondsit, they all reorient and shift and you know, it's it feels like the type of thing that uh an AI design tool would have suggested and you would have said,
+22:1222 minutes, 12 seconds"Sure, that seems cool."
+22:1322 minutes, 13 secondsYeah, it feels like the visual manifestation of LM hallucinations.
+22:1822 minutes, 18 seconds[laughter]
+22:1922 minutes, 19 secondsUm, let's go a look at the menu here. Um, all right.
+22:2522 minutes, 25 secondsPretty standard stuff. I never like when like the menus can like go go away like in between. Yeah.
+22:3022 minutes, 30 secondsLike there's the gap and then sometimes goes away.
+22:3222 minutes, 32 secondsWhat's happening on the right side of a couple of those? There were two of those and there's there's kind of a grid on the right. Yeah. With an icon.
+22:3922 minutes, 39 secondsIs that interactive or anything or is that Nope. It's just something the LM thought was cute. How about if you hover over on Yeah.
+22:4622 minutes, 46 secondsOkay. So, it's just giving a different icon.
+22:4822 minutes, 48 secondsIcon. Now, the icons are actually kind of cute. Um, this seems somewhat original and on brand here. Um, I would
+22:5722 minutes, 57 secondsjust never thought to to do this little little uh like if if you want to make a point that on board is like four circles
+23:0523 minutes, 5 secondsin the square arranged in that way. Like if that was important, which it doesn't seem like it, like you probably just put the icon here kind of back to the like
+23:1323 minutes, 13 secondswhy reveal stuff as you hover that is essential, but it's probably non-essential. So, I can probably just like leave it out.
+23:2123 minutes, 21 secondsWhat happens when we go further down?
+23:2423 minutes, 24 secondsValued and trusted by. Okay, we got a bunch of lines going everywhere.
+23:3123 minutes, 31 secondsAll right, so we've got that line following you down the page pattern again.
+23:3423 minutes, 34 secondsAnd now we're scroll jacked. We're locked into this uh position here of the website in order to build up this animation.
+23:4223 minutes, 42 secondsMhm.
+23:4223 minutes, 42 secondsUm and I wonder what it wants to tell me. like why is it important to capture me here on this point to like build out this animation
+23:5123 minutes, 51 secondsversus it's just like showing it already built in the in the built out state and I find the animation is getting all of my attention rather than what it says
+23:5923 minutes, 59 secondsall the way over here on the left side so I'm not even noticing any of this and this is not on the right side it's not giving me enough visual information to
+24:0724 minutes, 7 secondscommunicate something valuable about what they do or how the product works so I just kind of miss everything over here on the side the animation is too distracting Yeah.
+24:2024 minutes, 20 secondsOutcomes.
+24:2024 minutes, 20 secondsIt's also with these with these landing pages that kind of like build up and then keep you in a in a section for a little while. It's really hard to know
+24:2724 minutes, 27 secondswhen you're like how far into the book you you have read. Yeah. Right. Like if you have a physical book,
+24:3324 minutes, 33 secondsyou're kind of like, oh, halfway through. here. It's kind of like I don't know, maybe it feels like we're halfway through, but maybe, you know, it's gonna
+24:4024 minutes, 40 secondskeep me for another 15 seconds on some some like really rich buildout um of a of a landing page. So, the scroll
+24:4724 minutes, 47 secondsindicator um uh is is a really important tool, I think, kind of like to get a a grasp on sort of like the you know, the
+24:5624 minutes, 56 secondslanding page. And here it's it's um it's completely failing me kind of like where am I in the website?
+25:0225 minutes, 2 secondsAll right. Overall, like visually, I I think it looks nice. Um, it looks modern. There's a theme that they're,
+25:0825 minutes, 8 secondsyou know, you've got the orange accent color. You've got the black as kind of your primary brand color. Um, you've got the line that's kind of following you down. And, and my hunch is that that is,
+25:1925 minutes, 19 secondsuh, sort of reproducing what the product looks like because we keep seeing all these workflows with orange lines in the product itself. And I think that's what they're trying to communicate here. Um,
+25:2825 minutes, 28 secondsand so, you know, that makes sense to me. their headline up at the top. I think uh does a great job of explaining what it is and who it's for. Um so I think they really nailed that. Awesome.
+25:3825 minutes, 38 secondsSphinx, great work. Next up, we got build zero. Let's take a look here. Uh build custom internal apps with AI. Um
+Chapter 4: Build0
+25:4625 minutes, 46 secondsso right off the bat, we got some purple gradients.
+25:4825 minutes, 48 secondsYeah, there there we go again. Um and uh let's see here. So the menu nicely morphs. Oo, and then my pet peeve um
+25:5725 minutes, 57 secondsdumb hover effects. Um just doesn't add anything. this vertical movement is just distracting and not cool. Uh it pushes
+26:0626 minutes, 6 secondsalso there's another thing where um because of the effect it kind of like horizontally shifts the whole menu which kind of just seems like a bug. Um and
+26:1526 minutes, 15 secondsthen here's another like effect um kind of like the arrow has to move somehow vertically. Why? Um
+26:2326 minutes, 23 secondsthe arrow at least should go to the right also. It feels like when you're hovering it goes like backwards. Um this hover effect here I don't mind. You know, it's like it's a black and white button and
+26:3126 minutes, 31 secondsthen it turns into the primary brand color. In this case, kind of purple. Like that's not a bad hover effect here. This here pretty bad.
+26:3826 minutes, 38 secondsUm then what else have we got? Uh we got a little like interactive element here. Can click through it. Ooh.
+26:4626 minutes, 46 secondsOkay. There seems to be some like bug with the selection here. Yeah.
+26:4926 minutes, 49 secondsUm if this was handcoded, like no way someone would have not noticed it. I almost wonder like if you just oneshot
+26:5626 minutes, 56 secondslanding pages um do you actually go and really like use it with the same attention detail as you feel if you had
+27:0427 minutes, 4 secondslike built it um from scratch and then because you don't um you just ship uh things that are that you wouldn't have
+27:1227 minutes, 12 secondsum because you don't even notice the the little bugs that the LLM made. Um go back to the engineers tab here.
+27:1927 minutes, 19 secondsNow, if this is their product, one of the other things that stands out to me is this kind of dashboard. Um, that's got, you know, it's got like the red,
+27:2827 minutes, 28 secondsgreen, blue, purple kind of callouts up here. That's one of the hallmark classic things that a lot of, uh, AI design tools will will actually create. Um,
+27:3827 minutes, 38 secondsyeah, every fake dashboard looks basically like like something like that.
+27:4227 minutes, 42 secondsThey've got the icons that are a darker version of the lighter background color.
+27:4627 minutes, 46 secondsUm it's it's usually like the Google colors, you know, it's like red, yellow, green, blue prize primary.
+27:5427 minutes, 54 secondsYep. Yep. So that that that we tend to see a lot. Um ideas to working apps in minutes transform.
+28:0128 minutes, 1 secondYeah. And these like kind of like bento bento boxes um is is not a bad pattern.
+28:0728 minutes, 7 secondsUm but it's also very non-original. Um and so this LMS often times kind of come up with these just like icon at the top.
+28:1528 minutes, 15 secondsUh and then a bit of text and you know u in this case kind of like a 3x two um that that's yeah quite common.
+28:2428 minutes, 24 secondsYeah.
+28:2528 minutes, 25 secondsUh we've got some quotes. We got the purple gradient.
+28:3028 minutes, 30 secondsWe've got some frequently asked questions and then more gradients.
+28:3428 minutes, 34 secondsYeah. you know, we're I don't know, a few into reviewing these now and and I think we just keep seeing a lot of these common patterns. Um, which I think just
+28:4328 minutes, 43 secondshighlights how ubiquitous they've become and how um it it almost like takes away from the brand and originality that I
+28:5128 minutes, 51 secondsthink most of these companies want to create.
+28:5328 minutes, 53 secondsUm, when it it has elements that every other site and every other product has too.
+28:5828 minutes, 58 secondsYeah. Look, I think the really cool thing about AI tools is that it kind of frees you from having to kind of like, you know,
+29:0629 minutes, 6 secondsfiddle with like the technical details so it can really work on the hard hard kind of questions of your offering, of your product, of your company such as
+29:1329 minutes, 13 secondslike what are we making for whom, why is this valuable to them, right? And that's the cool aspect. But if you then can like just use it um to create uh what we
+29:2329 minutes, 23 secondssometimes call like AI AI slop, I think this idea of having sort of like you know all this power that you should use responsively um gets a little bit
+29:3229 minutes, 32 secondswasted. And so that's the fine line to walk I feel for for builders in 2026.
+29:3629 minutes, 36 secondsYeah, there's there's nothing inherently bad about this. You know, it's just that we've been through a few and we've seen this before. You know, that that's kind of what it feels like is I've seen this
+29:4429 minutes, 44 secondsbefore. And for any anybody else in the audience, like you lose a little bit of credibility, I think, you know, when your customers are are viewing your product and they're saying like, "H,
+29:5429 minutes, 54 secondsthis looks like a bunch of other things I've seen. They probably just use AI to build this and design it." If that's the case, like how good is the actual
+30:0130 minutes, 1 secondproduct, you know? Um, or are they vibe coding that too?
+30:0430 minutes, 4 secondsUse AI to build this by any means. Um but just kind of like you know really then evaluate the output and uh use AI
+30:1130 minutes, 11 secondsto make it even better and more original and spend the time that you saved oneshotting it or whatever um to then really think about your messaging and um
+30:2030 minutes, 20 secondsand you know designing a wonderful product that you can then showcase etc.
+30:2430 minutes, 24 secondsYep. That's great advice. Awesome. Build zero. Thank you. Thank you.
+30:2730 minutes, 27 secondsAll right. Next up we got Zarna AI associates for private capital markets. Oh we're scrolljacked again.
+Chapter 5: Zarna
+30:3630 minutes, 36 secondsOh yeah, it's 10x everything. All the things.
+30:4030 minutes, 40 secondsUnlocked irr this this site. Yeah, it feels like I'm in molasses. It just feels so clunky to use. Not to mention there just isn't a
+30:4930 minutes, 49 secondslot of like information. Um I feel like I have like even this is deal volume 10x like uh
+30:5730 minutes, 57 secondsthis all everything 10x just feels made up. Um and it feels like there's just so much space. It feels like I have to scroll through this molasses forever to
+31:0531 minutes, 5 secondsget to anything that helps me understand what this is.
+31:0731 minutes, 7 secondsYeah. One of the things I personally like, if we go to the top, um, right now the, uh, sort of background here uses 100% of the vertical space.
+31:1631 minutes, 16 secondsUm, which kind of like almost like vis visually kind of locks me in and then there's like nothing more.
+31:2231 minutes, 22 secondsUm, and I hate when when people can like put like scroll down to see more because like of course we're on a website. Of course I know how to scroll down. So,
+31:3031 minutes, 30 secondsone of the things that I personally kind of like um to interrupt the visual um a little bit is kind of like to start a landing page like maybe like like this.
+31:3831 minutes, 38 secondsYou know, now I have kind of like something here at the top. Um but I know there's like more good stuff down here.
+31:4431 minutes, 44 secondsThe good stuff better be good because close better deals faster doesn't, you know, tell me much, but maybe there's like, you know, like 10 pixels of like
+31:5131 minutes, 51 secondsan awesome hero image kind like peeking up or something like that. That would be cool. And then I immediately without any indicators like know and want to can like scroll down and discover it, right?
+32:0132 minutes, 1 secondYeah. Well, we've stopped at the perfect point here because you cannot see anything in the top navigation bar.
+32:0732 minutes, 7 secondsYep. It's uh you better know what's in the background and if there's a dynamic background such as a video playing which might have all sorts of bright colors.
+32:1432 minutes, 14 secondsUm all of a sudden your bright menu isn't uh readable anymore. Okay, so this is interesting. So here it picked it up. So it's smart,
+32:2132 minutes, 21 secondsbut it's not smart when there's video behind it.
+32:2332 minutes, 23 secondsAh, you're right. That is the the nuance, huh?
+32:3032 minutes, 30 secondsOkay, these I can't click on. I would have expected that I could click on any of these. Maybe the chevron.
+32:3832 minutes, 38 secondsOh, I don't know what just happened. Okay, now I can click on those. Yeah,
+32:4532 minutes, 45 secondssome of it is clickable and some of it is not, it appears. And also, it's like jumping me up and down on the screen.
+32:5232 minutes, 52 secondsUm, it seems to just be moving on its own timer and not letting me do anything, which is confusing. Um, and again, this is one of those things where
+33:0133 minutes, 1 secondit feels like you wouldn't intentionally design it to work this way. Instead, you just it created a component and you went and it does sometimes work.
+33:1033 minutes, 10 secondsOnly on those nested ones. If you try the other ones, it doesn't do anything.
+33:1433 minutes, 14 secondsYeah. And this better label here is um super super hidden. There's sometimes a chevron, sometimes not. Um, yeah, this feels maybe like a little bit sloppy.
+33:2433 minutes, 24 seconds[laughter]
+33:2633 minutes, 26 secondsYeah, one agentic layer generate an investment memo.
+33:3233 minutes, 32 secondsUm, yeah, even the little bits of motion here is the kind of thing that like AI will just give you that for free and you're like, "Yeah, okay. Let's go with
+33:3933 minutes, 39 secondsthat." But you would never create yourself. Um, yeah. I can't even tell what I'm supposed to do with any of this. It hovers and expands a little bit, but like nothing is clickable.
+33:5133 minutes, 51 secondsWe got some fadeins.
+33:5433 minutes, 54 secondsThis just feels like it's lacking a lot of like useful information presented in the right ways. Um
+34:0134 minutes, 1 secondand at least not purple though. Got a lot of blue.
+34:0434 minutes, 4 secondsYeah. Yeah. Yeah. Fit and finish as well as kind of like meaty content. Yeah.
+34:0934 minutes, 9 secondsUm like clear messaging is maybe lacking a little bit. Um the visual style if I didn't have to scroll through it um is
+34:1734 minutes, 17 secondsactually kind of fresh. Yeah. Yeah. Like it it reminds me of uh lovable or or things like that that kind of have that like grainy zoomed in kind of picture in the background.
+34:2634 minutes, 26 secondsNot not sure what these boxes um here represent uh in the background. Yeah. Some weird artifact.
+34:3334 minutes, 33 secondsAll right, Zarna. Thank you. Okay. Well,
+34:3634 minutes, 36 secondsthank you everybody for submitting your sites and uh Rafael, we we've seen a bunch of them now. What are some of your takeaways here?
+34:4134 minutes, 41 secondsYeah, I think definitely lots of purple gradients. Um, and in general kind of like a lot of kind of like the same the same patterns. You know, we see
+34:4834 minutes, 48 secondsanimations kind of like for animation sake just because it's uh it's possible now. I would have killed to have these kind of like AI superpowers when I built
+34:5634 minutes, 56 secondsmy first website. So I think it's wonderful that we have them, but you are still kind of like responsible to not outsource your thinking to LLMs um and
+35:0435 minutes, 4 secondsactually just use them as tools to get your brilliant ideas, designs um novel maybe kind of like interactions
+35:1335 minutes, 13 secondsum out on the web um to dazzle your customers and uh and I think that's what a landing page should do in the end.
+35:1835 minutes, 18 secondsIt's kind of like a customer acquisition channel, right? This is not your product. This is not a web site as in kind of like a cool thing on the web.
+35:2635 minutes, 26 secondsthere's space for that as well, but these are like startup landing pages and they're basically customer acquisition channels. So, and that's how I would really um use these tools.
+35:3635 minutes, 36 secondsI totally agree with all of those.
+35:3835 minutes, 38 secondsCouple others I would add. You know, one I think it's really important that uh you QA everything. It's very easy to create something, but we went through and we found, you know, some quirks or
+35:4635 minutes, 46 secondsbugs or things like that here or there or things that were confusing.
+35:5035 minutes, 50 secondsultimately you know you the founder you the human need to be the one that goes through and make sure that um you know the interactions and and everything else
+35:5735 minutes, 57 secondsum work right. The other one is um you know it it's important that your site and your brand they come through as the
+36:0736 minutes, 7 secondsthing that you want to represent your company and that originality and something that feels different and it's very easy using the same tools that
+36:1536 minutes, 15 secondseverybody else is using to end up in the same place. you have to be intentional about ending up in a different place.
+36:2136 minutes, 21 secondsAnd so, um, rather than start from what does the AI spit out and then let's tweak that, I would start from, you
+36:2936 minutes, 29 secondsknow, what color palette do we want to use and what is our brand and and how can we feed that into the system and use that to make sure we end up at an end
+36:3736 minutes, 37 secondsgoal that represents us rather than just going with, you know, whatever uh the AI spits out there. We've seen a lot of
+36:4436 minutes, 44 secondspeople do that and I think you know like you said one of the most powerful tools ever to create incredible designs and do things that would have been impossible
+36:5236 minutes, 52 secondsor taken forever that you can do just like this. And so um to use that for ways that that actually help you move
+36:5936 minutes, 59 secondsthe lever uh upward and make the sites more engaging and convert better is one of the most powerful things that you can do. Yeah.
+37:0737 minutes, 7 secondsWell, thank you so much for joining uh Raphael. It's been uh amazing to get your perspective on all of these and uh thank you to everybody that submitted
+37:1437 minutes, 14 secondswebsites and we will see you on the next design review.

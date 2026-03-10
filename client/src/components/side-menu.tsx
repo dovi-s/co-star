@@ -149,15 +149,18 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   };
 
   useEffect(() => {
+    const el = drawerRef.current;
     if (open) {
       triggerRef.current = document.activeElement;
       document.body.style.overflow = "hidden";
+      if (el) el.removeAttribute("inert");
       requestAnimationFrame(() => {
-        const closeBtn = drawerRef.current?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
+        const closeBtn = el?.querySelector<HTMLElement>('[data-testid="button-close-menu"]');
         closeBtn?.focus();
       });
     } else {
       document.body.style.overflow = "";
+      if (el) el.setAttribute("inert", "");
       if (triggerRef.current instanceof HTMLElement) {
         triggerRef.current.focus();
         triggerRef.current = null;
@@ -206,7 +209,6 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
         aria-modal={open ? true : undefined}
         aria-label="Menu"
         aria-hidden={!open}
-        {...(!open ? { inert: "" as any } : {})}
         className={cn(
           "fixed inset-y-0 right-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
           "flex flex-col overflow-hidden safe-area-top safe-area-bottom",
