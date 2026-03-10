@@ -1,0 +1,90 @@
+
+1. AI Design Slop — What To Audit In Our App
+
+Raphael (YC) and Rio (Cursor) both hammer the same point: LLMs have default aesthetic preferences that make everything look the same. The checklist of things they flag:
+
+Purple gradients — we should check our color palette isn't drifting toward the generic AI-coded look. Our brand should feel intentionally chosen, not defaulted.
+Fade-on-hover instead of pop-on-hover — Raphael specifically calls this an anti-pattern that "a designer would almost never choose." Hover should make things feel more clickable, not fade them away. Since we're mobile-first this matters less, but anywhere we have hover states on desktop, they should pop, not recede.
+Effects just because they're easy — "just because we now can doesn't mean it's good design." Every animation we have should earn its place by either reinforcing the brand, helping the user understand what's happening, or making a moment feel rewarding.
+Low contrast text — Rio and Raphael both flagged this. We should audit our muted-foreground text to make sure it's readable, especially on the rehearsal screen where actors are reading lines.
+Inconsistent tokens — Rio says the fix is to get your foundational tokens (fonts, spacing, radius, colors) clean and consistent, and then AI composes well on top of them. We should audit our corner radii, font sizes, and spacing for consistency.
+2. Copy & Messaging — Linear's Kari Sarinin Lesson
+
+This is directly relevant. Kari's core point: be specific about what you are, using the language your users use. Linear said "issue tracking" not "work platform" because that's what engineers search for.
+
+For us: "Paste your script. Pick your role. Rehearse with a scene partner." That's actor language. We should resist any drift toward vague marketing copy like "the ultimate rehearsal platform" or "transform your craft." Actors want to rehearse. Say that.
+
+His other key point: don't try to look like a big company too early. A polished website with a rough product sets the wrong expectation. Our product is solid, so we're in good shape here, but the principle is: authenticity over polish-for-polish's-sake.
+
+3. Emotional Design — The Biggest Opportunity
+
+This came up in multiple videos (Duolingo analysis, the iOS app tips, the SIPAP emotional design breakdown) and it's the single biggest unlock I see for Co-star Studio:
+
+Duolingo doubled DAU (14M → 34M) after adding character animations. Their CEO credits the "delightful experience" as a key differentiator in a space full of "dry, functional apps." Rehearsal apps are exactly that space — dry and functional. We have a massive opening here.
+Mascot/character — Chris (productivity apps) and the Duolingo analysis both emphasize this. A mascot that appears in empty states, loading screens, and success moments creates emotional attachment. For a rehearsal app, imagine a small character that reacts to your performance — encouraging after a good take, sympathetic after a rough one. This fits our "scene partner" language perfectly.
+Celebrate small wins — When an actor finishes a scene, nails their accuracy, hits a streak — don't just show a number. Add a micro-animation, a moment of delight. The SIPAP video says: "success states don't need to be huge, but they should feel intentional."
+Phantom wallet lesson — In intimidating/high-stakes domains (crypto for them, performing for us), polish builds trust. Actors putting themselves out there emotionally need the app to feel safe, warm, and supportive. Our design should communicate "this is a safe space to practice."
+4. Animations & Interactions — What's Worth Building
+
+Chris's iOS tips and the "genius designer" video both draw a clear line: animations should add clarity or functionality, not just movement.
+
+Good animations for us:
+
+Page transitions between script selection → role selection → rehearsal (the flow should feel like a journey, not a jump)
+The moment when the scene partner starts speaking (a subtle visual cue that the "partner" is active)
+Accuracy reveal after a rehearsal (progressive disclosure — build anticipation)
+Completion moment (satisfying close to a scene)
+Bad animations to avoid:
+
+Decorative scroll effects that distract from content
+Unnecessary parallax on the home page
+Any animation that makes the user wait longer than they need to
+Chris's pro tip: break complex animations into sub-steps when prompting AI. Don't say "animate the rehearsal completion." Say "fade the script text, scale up the accuracy number, pulse the border green, then slide in the 'rehearse again' button."
+
+5. Growth & Distribution — Elena Vera's Framework
+
+Her core message: loops beat funnels. The fastest-growing companies grow via compounding flywheels, not linear funnels.
+
+Our word-of-mouth loop already exists:
+
+New actor tries Co-star Studio
+First rehearsal experience exceeds expectations ("magical first generation experience")
+Actor tells fellow actors
+Some sign up → repeat
+The critical lever is step 2 — the first rehearsal has to be so good that actors feel compelled to tell someone. This validates our PLG decision (first script rehearsable without auth). But we should audit: is that first experience truly magical? Or is it just functional?
+
+Elena's Dropbox example: 60% of acquisition came from the product loop (share content → recipient signs up). Our equivalent: what if after a rehearsal, actors could share a clip or a score? "I just nailed this scene at 94% accuracy" shared to an acting group chat is our viral loop.
+
+6. Subscription & Paywall Psychology
+
+The trials & upgrades video is a goldmine for our Free → Pro conversion:
+
+"Guest pass" framing — Headspace got +7% signups just by calling their trial a "guest pass" instead of "free trial." For us: instead of "Start free trial," what about "Try Pro free for 7 days" or even "Unlock unlimited rehearsals — on us for a week"?
+Visual trial itinerary — Blinkist got +23% by showing users exactly what happens each day of the trial. We could show: Day 1: Unlimited rehearsals. Day 3: Performance history unlocked. Day 5: All voice presets. Day 7: You decide.
+Pro labels (loss aversion) — Mobbin got +35% free-to-paid by adding "Pro" badges to locked content throughout the product. We should make Pro features visible but gated — let free users see what they're missing (voice presets, detailed analytics, unlimited rehearsals) with subtle Pro badges.
+Soft-lock at engagement inflection — Busuu locked the second language, not the first. Our equivalent: the first 3 rehearsals are free, not the first 0. Let actors fall in love before asking for money. We're already doing this.
+Single price certainty — Uber saw double-digit increases by showing one price instead of a range. Our pricing page should be dead simple. One number. No ambiguity.
+7. Icons, Typography & Visual Details
+
+Multiple videos emphasize:
+
+Consistent icon library — pick one style (we use Lucide, which is good) and stick with it everywhere
+Icons need labels when not universally recognized — audit our bottom nav / menu icons
+Typography matters more than people think — Chris says custom fonts add personality. Our app should feel like a rehearsal space, not a spreadsheet.
+Shadows should be subtle — change shadow color to light gray and increase blur, or remove entirely. The harsh Figma defaults are a telltale sign of AI-generated design.
+8. The "What Is This?" Test
+
+Rio and the YC partners keep coming back to four questions every visitor asks:
+
+What is this? (Paste scripts, rehearse with a scene partner)
+Is it for me? (For actors who want to practice anytime)
+Does it work? (Social proof, testimonials, demo)
+Is it credible? (Clean design, real product screenshots)
+We should audit our home screen and landing pages against these four questions. Can a first-time visitor answer all four within 5 seconds?
+
+Bottom line: the three highest-leverage moves I see from all this content:
+
+Emotional design — a character/mascot and micro-animations that make rehearsal feel alive, not clinical. This is the Duolingo playbook applied to acting.
+First rehearsal magic — the PLG first-run experience needs to exceed expectations so dramatically that actors tell other actors. This is our growth loop.
+Pro visibility with loss aversion — show free users what Pro offers throughout the experience with subtle badges, not just on the pricing page. Let them feel what they're missing.
+Want me to start implementing any of these? I'd suggest we prioritize in order of impact — happy to lay out a plan for whichever direction resonates most.
