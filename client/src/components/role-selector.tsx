@@ -156,7 +156,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
       </header>
 
       <div className="flex-1 flex flex-col">
-        <div className="px-5 pt-8 pb-5 animate-fade-in-up relative">
+        <div className="px-5 pt-4 pb-5 animate-fade-in-up relative">
           <div className="absolute -top-4 left-0 right-0 h-32 bg-gradient-to-b from-primary/[0.06] via-primary/[0.02] to-transparent pointer-events-none" />
           <h2 className="text-xl font-semibold text-foreground relative tracking-tight">
             Select your role
