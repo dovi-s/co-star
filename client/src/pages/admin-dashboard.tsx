@@ -280,6 +280,7 @@ function formatDate(d: string) { return new Date(d).toLocaleDateString("en-US", 
 function formatTime(d: string) { return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
 function formatTimeAgo(d: string) {
   const diff = Date.now() - new Date(d).getTime();
+  if (diff < 0) return "just now";
   const mins = Math.floor(diff / 60000);
   if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
@@ -1510,6 +1511,19 @@ function ErrorsTab() {
       <div className="flex items-center gap-2">
         <Button size="sm" variant={showResolved ? "outline" : "default"} onClick={() => setShowResolved(false)} data-testid="button-show-unresolved">Unresolved</Button>
         <Button size="sm" variant={showResolved ? "default" : "outline"} onClick={() => setShowResolved(true)} data-testid="button-show-resolved">Resolved</Button>
+        {!showResolved && unresolvedCount > 0 && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto text-red-500 border-red-500/30 hover:bg-red-500/10"
+            onClick={() => bulkResolveMutation.mutate({ message: "" })}
+            disabled={bulkResolveMutation.isPending}
+            data-testid="button-resolve-all-errors"
+          >
+            {bulkResolveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-1" />}
+            Resolve All
+          </Button>
+        )}
       </div>
 
       {!showResolved && data?.topErrors?.length > 0 && (

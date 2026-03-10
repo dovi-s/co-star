@@ -2372,8 +2372,11 @@ MARY: You're kidding me.`;
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {
       const { message: errorMessage } = req.body;
-      if (!errorMessage) return res.status(400).json({ error: "message required" });
-      await db.execute(sql`UPDATE error_logs SET resolved = 'true' WHERE message = ${errorMessage}`);
+      if (errorMessage) {
+        await db.execute(sql`UPDATE error_logs SET resolved = 'true' WHERE message = ${errorMessage}`);
+      } else {
+        await db.execute(sql`UPDATE error_logs SET resolved = 'true' WHERE resolved = 'false'`);
+      }
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to bulk resolve errors" });
