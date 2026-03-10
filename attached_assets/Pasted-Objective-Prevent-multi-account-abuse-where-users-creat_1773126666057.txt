@@ -1,0 +1,64 @@
+Objective
+Prevent multi-account abuse where users create new free accounts with different emails to bypass the 3 rehearsals/day free limit. Implement device-level fingerprinting so the daily limit follows the device, not just the account.
+
+Approach
+Use a device fingerprint system:
+
+Generate a stable device ID on the client (stored in both localStorage and IndexedDB for resilience)
+Create a server-side device_usage table that tracks usage per device fingerprint
+When checking free-tier limits, check BOTH the user's account usage AND the device's usage — whichever is higher wins
+New accounts on the same device inherit the device's existing usage count
+This stops the casual "make a new email, get 3 more free runs" abuse loop. It's not bulletproof (factory reset or different browser defeats it), but it covers 95%+ of real abuse without adding friction for legitimate users.
+
+Tasks
+T001: Create device fingerprint client utility
+Blocked By: []
+Details:
+Create client/src/lib/device-fingerprint.ts
+Generate a random UUID on first visit, persist it in both localStorage (costar-device-id) and IndexedDB (as backup)
+On load, try localStorage first, fall back to IndexedDB, generate new only if both empty
+Export getDeviceFingerprint(): Promise<string> function
+Files: client/src/lib/device-fingerprint.ts (new)
+Acceptance: Calling getDeviceFingerprint() returns a stable UUID across page reloads
+T002: Add device_usage database table
+Blocked By: []
+Details:
+Add a deviceUsage table to shared/models/auth.ts with columns:
+id (varchar, primary key, UUID default)
+deviceFingerprint (varchar, indexed, not null)
+usageCount (integer, default 0)
+resetAt (timestamp, nullable)
+lastUserId (varchar, nullable) — tracks last account that used this device
+createdAt (timestamp, default now)
+Run npm run db:push to sync schema
+Files: shared/models/auth.ts
+Acceptance: Table exists in database
+T003: Update usage increment endpoint with device tracking
+Blocked By: [T001, T002]
+Details:
+Modify POST /api/script-usage/increment in server/routes.ts to:
+Accept optional deviceFingerprint in request body
+Look up device usage record; create if not exists
+Check device usage count in addition to user usage count — use the HIGHER of the two
+When incrementing, increment BOTH user count and device count
+Apply same 12-hour reset logic to device usage
+Return the effective usage info
+Files: server/routes.ts
+Acceptance: Same device with new account gets blocked after device limit reached
+T004: Send device fingerprint from client on usage checks
+Blocked By: [T001, T003]
+Details:
+In client/src/components/script-import.tsx, include deviceFingerprint in the POST /api/script-usage/increment call body
+In client/src/pages/rehearsal.tsx, include deviceFingerprint in the checkRunUsageAllowed() fetch call body
+In client/src/pages/home.tsx or wherever GET /api/script-usage is called, include device fingerprint as query param
+Also send device fingerprint during registration (/api/register) and login (/api/login) so the server can associate accounts with devices
+Files: client/src/components/script-import.tsx, client/src/pages/rehearsal.tsx, client/src/pages/home.tsx
+Acceptance: Device fingerprint is sent with all usage-related API calls
+T005: Update GET /api/script-usage to include device check
+Blocked By: [T002, T003]
+Details:
+Modify GET /api/script-usage in server/routes.ts to accept optional deviceFingerprint query param
+Return the effective (higher) usage count between user and device
+So the UI accurately reflects remaining uses even on a fresh account on a used device
+Files: server/routes.ts
+Acceptance: New account on same device sees correct remaining count

@@ -20,7 +20,7 @@ interface RoleSelectorProps {
 function getParseWarnings(roles: Role[], scenes: Scene[], totalLines: number): string[] {
   const warnings: string[] = [];
   if (roles.length === 1) {
-    warnings.push("Only 1 role detected — the AI will have no lines to read. Check that character names parsed correctly.");
+    warnings.push("Only 1 role detected — your scene partner will have no lines to read. Check that character names parsed correctly.");
   }
   if (totalLines < 5) {
     warnings.push("Very few lines detected. The script may not have parsed correctly.");
@@ -177,7 +177,7 @@ export function RoleSelector({ roles, scenes = [], onRoleSelect, onBack, onTable
           <p className="text-sm text-muted-foreground mt-1 relative leading-relaxed">
             {isReturning
               ? `Pick up where you left off, or try a different role.`
-              : "Choose who you'll play — your AI scene partner handles the rest."}
+              : "Choose who you'll play — your scene partner handles the rest."}
           </p>
 
           <div className="flex items-center gap-2 flex-wrap mt-3" data-testid="script-preview-summary">

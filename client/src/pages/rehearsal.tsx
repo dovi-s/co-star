@@ -1876,7 +1876,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 <p className="text-xs opacity-70 mt-0.5">
                   {showTourTip === 1 && "Lines with your character's name are yours to speak."}
                   {showTourTip === 2 && "Click or tap any line in the script to jump directly to it."}
-                  {showTourTip === 3 && "If you forget a line, say \"LINE\" and the AI will give you a hint."}
+                  {showTourTip === 3 && "If you forget a line, say \"LINE\" and your scene partner will give you a hint."}
                   {showTourTip === 4 && "Use the spacebar or the play button to pause and resume."}
                 </p>
               </div>
