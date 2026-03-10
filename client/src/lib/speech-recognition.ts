@@ -74,8 +74,8 @@ class SpeechRecognitionEngine {
       return;
     }
     
-    const useSingleShot = this.isSafari || this.isIOS;
-    this.recognition.continuous = !useSingleShot;
+    const useContinuous = this.isIOS && this.isPWA;
+    this.recognition.continuous = useContinuous || (!this.isSafari && !this.isIOS);
     this.recognition.interimResults = true;
     this.recognition.lang = "en-US";
     this.recognition.maxAlternatives = 1;
@@ -508,6 +508,32 @@ class SpeechRecognitionEngine {
     this.consecutiveErrors = 0;
     this.shouldAutoRestart = true;
     return this.startInternal();
+  }
+
+  private get usesContinuousPWA(): boolean {
+    return this.isIOS && this.isPWA;
+  }
+
+  pause() {
+    if (this.usesContinuousPWA && this.isListening) {
+      this.resetAccumulated();
+      this.clearSilenceTimeout();
+      return;
+    }
+    this.stop();
+  }
+
+  softStart(): boolean {
+    if (this.usesContinuousPWA && this.isListening) {
+      this.resetAccumulated();
+      this.hasReceivedSpeech = false;
+      this.lastTranscript = "";
+      this.lastResultTranscript = "";
+      this.lastActivityTime = Date.now();
+      this.resetSilenceTimeout();
+      return true;
+    }
+    return this.start();
   }
 
   stop() {

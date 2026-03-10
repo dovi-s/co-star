@@ -358,7 +358,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         if (isJustLine || matchWords(line.text, cleanTranscript).percentMatched < 40) {
           hintPlayingRef.current = true;
           hintUsedForLineRef.current = true;
-          speechRecognition.stop();
+          speechRecognition.pause();
           speechRecognition.resetAccumulated();
           setUserTranscript("");
           ttsEngine.speakHint(line.text, () => {
@@ -366,7 +366,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
             if (waitingForUserRef.current && isPlayingRef.current) {
               setTimeout(() => {
                 if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
-                  speechRecognition.start();
+                  speechRecognition.softStart();
                 }
               }, 300);
             }
@@ -393,7 +393,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         }
         
         const doAdvance = () => {
-          speechRecognition.stop();
+          speechRecognition.pause();
           waitingForUserRef.current = false;
           matchReachedRef.current = false;
           if (autoAdvanceTimeoutRef.current) {
@@ -433,7 +433,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         const attemptRestart = (attempt: number) => {
           if (!waitingForUserRef.current || !isPlayingRef.current || speechRecognition.listening) return;
           if (hintPlayingRef.current) return;
-          const started = speechRecognition.start();
+          const started = speechRecognition.softStart();
           if (!started && attempt < 3 && isMobile) {
             setTimeout(() => attemptRestart(attempt + 1), 800);
           }
@@ -750,7 +750,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       const micDelay = speechRecognition.isMobileDevice ? 500 : 0;
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
-          speechRecognition.start();
+          speechRecognition.softStart();
         }
       }, micDelay);
       
@@ -2176,7 +2176,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
             onTapAdvance={tapAdvance}
             onRestartListening={() => {
               if (!speechRecognition.listening && waitingForUserRef.current) {
-                speechRecognition.start();
+                speechRecognition.softStart();
               }
             }}
             onLineClick={(line) => {
