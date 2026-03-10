@@ -2327,6 +2327,16 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.delete("/api/admin/feedback/:id", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      await db.delete(feedbackMessages).where(eq(feedbackMessages.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to delete feedback" });
+    }
+  });
+
   app.get("/api/admin/errors", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     try {

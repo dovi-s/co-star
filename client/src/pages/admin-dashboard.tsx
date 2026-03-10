@@ -1351,6 +1351,17 @@ function FeedbackTab() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiRequest("DELETE", `/api/admin/feedback/${id}`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/feedback"] });
+    },
+  });
+
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
   const statusCounts = data?.statusCounts || [];
   const newCount = Number(statusCounts.find((s: any) => s.status === "new")?.count || 0);
   const reviewingCount = Number(statusCounts.find((s: any) => s.status === "reviewing")?.count || 0);
@@ -1408,6 +1419,33 @@ function FeedbackTab() {
                     <option value="resolved">Resolved</option>
                     <option value="dismissed">Dismissed</option>
                   </select>
+                  {confirmDeleteId === msg.id ? (
+                    <>
+                      <button
+                        onClick={() => { deleteMutation.mutate(msg.id); setConfirmDeleteId(null); }}
+                        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                        data-testid={`button-confirm-delete-feedback-${msg.id}`}
+                      >
+                        {deleteMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Delete"}
+                      </button>
+                      <button
+                        onClick={() => setConfirmDeleteId(null)}
+                        className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground hover:bg-muted/80 transition-colors"
+                        data-testid={`button-cancel-delete-feedback-${msg.id}`}
+                      >
+                        Cancel
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => setConfirmDeleteId(msg.id)}
+                      className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                      title="Delete message"
+                      data-testid={`button-delete-feedback-${msg.id}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
               <p className="text-sm text-foreground/80 whitespace-pre-wrap">{msg.message}</p>
