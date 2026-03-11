@@ -461,10 +461,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
     speechRecognition.onResult((result) => {
       const transcript = result.transcript.trim();
-      setUserTranscript(transcript);
       
       const line = getCurrentLineRef.current();
       if (!line || transcript.length === 0 || !waitingForUserRef.current) return;
+      
+      setUserTranscript(transcript);
       
       if (hintPlayingRef.current) return;
 
@@ -485,6 +486,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           setUserTranscript("");
           ttsEngine.speakHint(line.text, () => {
             hintPlayingRef.current = false;
+            speechRecognition.resetAccumulated();
             if (waitingForUserRef.current && isPlayingRef.current) {
               setTimeout(() => {
                 if (waitingForUserRef.current && isPlayingRef.current && !speechRecognition.listening) {
@@ -1205,13 +1207,13 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       setSpeakingWordIndex(-1);
       
       if (isUser) {
-        speechRecognition.abort();
+        speechRecognition.pause();
         if (!waitingForUserRef.current) {
           speakingLineRef.current = lineKey;
           startListeningForUserRef.current();
         }
       } else {
-        speechRecognition.abort();
+        speechRecognition.pause();
         waitingForUserRef.current = false;
         setIsUserTurn(false);
         const delay = session.readerDelay ?? 0;

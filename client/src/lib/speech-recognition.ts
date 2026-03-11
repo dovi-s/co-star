@@ -158,6 +158,13 @@ class SpeechRecognitionEngine {
     this.recognition.onerror = (event: any) => {
       this.consecutiveErrors++;
       
+      if (event.error === "aborted") {
+        this.isListening = false;
+        this.clearSilenceTimeout();
+        this.stopWatchdog();
+        return;
+      }
+      
       if (event.error === "no-speech") {
         this.isListening = false;
         this.clearSilenceTimeout();
@@ -232,7 +239,7 @@ class SpeechRecognitionEngine {
           return;
         }
         this.onErrorCallback?.(event.error);
-      } else if (event.error !== "aborted") {
+      } else {
         this.onErrorCallback?.(event.error);
       }
       
@@ -550,8 +557,11 @@ class SpeechRecognitionEngine {
   }
 
   pause() {
-    if (this.usesContinuousMode && this.isListening && !this.isPWA) {
+    if (this.usesContinuousMode && this.isListening) {
       this.resetAccumulated();
+      this.hasReceivedSpeech = false;
+      this.lastTranscript = "";
+      this.lastResultTranscript = "";
       this.clearSilenceTimeout();
       return;
     }
@@ -573,12 +583,13 @@ class SpeechRecognitionEngine {
   }
 
   softStart(): boolean {
-    if (this.usesContinuousMode && this.isListening && !this.isPWA) {
+    if (this.usesContinuousMode && this.isListening) {
       this.resetAccumulated();
       this.hasReceivedSpeech = false;
       this.lastTranscript = "";
       this.lastResultTranscript = "";
       this.lastActivityTime = Date.now();
+      this.noSpeechRestartCount = 0;
       this.resetSilenceTimeout();
       return true;
     }
@@ -589,13 +600,22 @@ class SpeechRecognitionEngine {
         clearTimeout(this.restartDelay);
         this.restartDelay = null;
       }
+      this.resetAccumulated();
       if (this.recognition && this.isListening) {
         try { this.recognition.abort(); } catch {}
         this.isListening = false;
       }
       this.recreateAndStart();
       this.shouldAutoRestart = true;
-      return this.isListening;
+      if (this.isPWA && !this.isListening) {
+        const verifyStart = (attempt: number) => {
+          if (this.isListening || !this.shouldAutoRestart || attempt >= 3) return;
+          this.recreateAndStart();
+          setTimeout(() => verifyStart(attempt + 1), 1500);
+        };
+        setTimeout(() => verifyStart(0), 2000);
+      }
+      return true;
     }
 
     return this.start();

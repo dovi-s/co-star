@@ -102,7 +102,7 @@ function areOCRVariants(name1: string, name2: string): boolean {
     ocrConfusions[char2]?.includes(char1) ||
     char1 === char2;
   
-  if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 3) {
+  if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 4 && longer.length <= shorter.length * 1.5) {
     return true;
   }
   
@@ -267,6 +267,8 @@ const SKIP_LINE_PATTERNS = [
   /^-\s*\d{4}\s*$/i, // "- 2000" year alone
   /^-\s*\w+\s*$/i, // "- May" fragment alone
   /^\d{4}\s*$/i, // Just a year "2000"
+  /^\d+[A-Z]?\s+(WE\s+SEE|SERIES\s+OF|VARIOUS\s+SHOTS?|SCENES?\s+\d|ANGLE\s+ON|CLOSE\s+ON|BACK\s+TO|CUT\s+TO|DISSOLVE|FADE|SMASH|MATCH)\b/i,
+  /^\d+[A-Z]?[-\s]+\d+[A-Z]?\s/i,
   // Stage play specific
   /^CONTENTS\s*$/i,
   /^End of Play\s*$/i,
@@ -294,7 +296,7 @@ const NOT_CHARACTER_PATTERNS = [
   /^(YES|NO|YEAH|NAH|OKAY|OK|SURE|FINE|WELL|RIGHT|LOOK|LISTEN|HEY|HI|HELLO|BYE|GOODBYE)$/i,
   // Sound effects / onomatopoeia that are NOT character names (include -ing forms)
   /^(SCREAM(S|ING)?|YELL(S|ING)?|SHOUT(S|ING)?|CRY(ING)?|CRIES|WHISPER(S|ING)?|SIGH(S|ING)?|GASP(S|ING)?|LAUGH(S|ING)?|GROAN(S|ING)?|MOAN(S|ING)?|HOWL(S|ING)?|VROOM|CRASH(ES|ING)?|BANG(S|ING)?|BOOM(S|ING)?|SLAM(S|MING)?|CLICK(S|ING)?|BEEP(S|ING)?|RING(S|ING)?|BUZZ(ES|ING)?|HONK(S|ING)?|THUD(S)?|SPLAT(S)?|WHOOSH(ES|ING)?|SCREECH(ES|ING)?|ROAR(S|ING)?|GROWL(S|ING)?|SNOR(E|ES|ING)|COUGH(S|ING)?|SNEEZ(E|ES|ING)|CLAP(S|PING)?|STOMP(S|ING)?|THUMP(S|ING)?|KNOCK(S|ING)?|DING(S|ING)?|CHIME(S)?|SWISH(ES|ING)?|SWOOSH(ES|ING)?|CRACK(S|ING)?|SNAP(S|PING)?|POP(S|PING)?|CRUNCH(ES|ING)?|SPLASH(ES|ING)?|SIZZL(E|ES|ING)|RUMBL(E|ES|ING)|THUNDER(S|ING)?|LIGHTNING|EXPLOSION(S)?|GUNSHOT(S)?|GUNFIRE|ENGINE(S)?|TIRES|BRAKES|BREATHING|PANTING|SOBBING|WEEPING|WAILING|WHIMPERING|STAMMERING|STUTTERING|MUTTERING|MUMBLING|GROWLING|SNARLING|HISSING|REVVING|SCREECHING|SQUEALING|SQUEAKING|RATTLING|CLANKING|CLATTERING|THUMPING|POUNDING|DRUMMING|TAPPING|RAPPING|SCRATCHING|SCRAPING|DOORBELL|APPLAUSE|SIREN(S)?|ALARM(S)?)$/i,
-  /^(CROWD|PEOPLE|EVERYONE|EVERYBODY|AUDIENCE|BYSTANDER(S)?|PASSERBY|ONLOOKER(S)?|SPECTATOR(S)?)$/i,
+  /^(CROWD|PEOPLE|EVERYONE|EVERYBODY|AUDIENCE|BYSTANDER(S)?|PASSERBY|ONLOOKER(S)?|SPECTATOR(S)?|BAND|CHEF|MAN|WOMAN|OTHERS?)$/i,
   // Camera/editing terms that look like character names but aren't
   /^(ANGLE|SHOT|CLOSE|CLOSEUP|CLOSE[\s\-]?UP|WIDE|MEDIUM|INSERT|FLASHBACK|MONTAGE|INTERCUT|CONTINUOUS|LATER|MEANWHILE|SUDDENLY|SILENCE|PAUSE|BEAT|GEARS|TURBINE|POV|ECU|CU|MCU|MS|LS|WS|EWS|OS|OTS|TWO[\s\-]?SHOT|THREE[\s\-]?SHOT|TRACKING|DOLLY|PAN|PANS|TILT|ZOOM|CRANE|STEADICAM|HANDHELD|AERIAL|UNDERWATER|SLOW[\s\-]?MOTION|FREEZE[\s\-]?FRAME|SPLIT[\s\-]?SCREEN|STOCK|FOOTAGE|TITLE|TITLES|CREDIT|CREDITS|SUPER|SUPERIMPOSE|CHYRON|LOWER[\s\-]?THIRD|V\.?O\.?|O\.?S\.?|O\.?C\.?|FLASH|FLASHES|TIMECUT|TIME\s*CUT|ON[\s\-]?SCREEN|AGAY)$/i,
   // Action verbs / exclamations that get falsely parsed as character names
@@ -347,6 +349,7 @@ const NOT_CHARACTER_PATTERNS = [
   /\w*(MINUTE|HOUR|SECOND|DAY|WEEK|MONTH|YEAR|MOMENT)S?\s*(LATER|EARLIER|AGO|BEFORE|AFTER|PASS|PASSES|PASSED)$/i,
   // Possessive pronouns followed by anything (THEIR HOUSE, HIS CAR, HER ROOM, etc.)
   /^(THEIR|HIS|HER|ITS|OUR|YOUR|MY)\s+\w+/i,
+  /^[A-Z]+['']S\s+(OPERATIONS?|APARTMENT|HOUSE|OFFICE|CAR|ROOM|DESK|PHONE|VOICE|FACE|HEAD|EYES|HAND|BODY|TEAM|CREW|GANG|GROUP|MEN|STAFF)\b/i,
   // Technical/production cues (MUSIC CUE, SOUND CUE, LIGHT CUE, etc.)
   /\b(CUE|CUES|SLATE|SLATES|TAKE|TAKES|ROLL|ROLLING|ACTION|CUT|WRAP|MARKER|MARK|SETUP|BLOCKING|COVERAGE|PICKUP|RE-?TAKE)\b/i,
   // Location descriptions (X AND Y patterns for rooms/places)
@@ -361,7 +364,7 @@ const NOT_CHARACTER_PATTERNS = [
   /\w+(ING|TION|MENT|NESS|ABLE|IBLE|IOUS|EOUS|ICAL|ALLY)$/i,
   // Any word ending in -ED that's more than 4 chars (past tense verbs/adjectives, not names)
   /\w{3,}ED$/i,
-  // Phrases with 4+ words (character names are typically 1-3 words max)
+  /^(?!(?:DR|MR|MRS|MS|ST|SGT|LT|CAPT|COL|GEN|GOV|SEN|REP|HON|REV|PROF|JR|SR)\b)[A-Z]{3,}\.\s+[A-Z]/,
   /^\w+\s+\w+\s+\w+\s+\w+/i,
   // Numeric patterns mixed with text
   /\d+\s*[-:x]\s*\d+/i,
@@ -1510,10 +1513,10 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   // Standalone character names (ALL CAPS, short, on own line - not dialogue)
   // But only if it looks like a proper character name format
-  if (/^[A-Z][A-Z\s\-'\.]+$/.test(trimmed) && trimmed.length < 30) {
-    const wordCount = trimmed.split(/\s+/).length;
-    // Check if it could be a character name (1-3 words, all caps)
-    if (wordCount <= 3 && isValidCharacterName(trimmed)) {
+  const nameWithoutExt = trimmed.replace(EXTENSION_PATTERN, "").replace(/\([^)]*\)\s*$/, "").trim();
+  if (/^[A-Z][A-Z\s\-'\.]+$/.test(nameWithoutExt) && nameWithoutExt.length < 30) {
+    const wordCount = nameWithoutExt.split(/\s+/).length;
+    if (wordCount <= 3 && isValidCharacterName(nameWithoutExt)) {
       return false;
     }
   }
@@ -1692,11 +1695,16 @@ function preprocessScript(rawText: string): string {
   
   // Split consecutive character names (e.g., "CLAUDETTEHave...COUNSELORCLAUDETTE")
   // Look for ALLCAPS name followed by another ALLCAPS name
-  text = text.replace(/([A-Z]{2,}(?:\s+[A-Z]{2,})?)\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?)\s+([a-z])/g, 
+  // Both words must be 3+ characters to avoid splitting common phrases like "WE SEE a" or "HE SAT down"
+  text = text.replace(/([A-Z]{3,}(?:\s+[A-Z]{3,})?)\s+([A-Z]{3,}(?:\s+[A-Z]{3,})?)\s+([a-z])/g, 
     (match, name1, name2, startLower) => {
-      // name2 might be action like "leaves" or another character
       if (/^(enters|exits|walks|runs|looks|turns|appears|leaves|crosses|stands|sits|moves|comes|goes)$/i.test(name2)) {
-        return match; // Keep as is - it's action
+        return match;
+      }
+      const n1core = name1.split(/\s+/)[0];
+      const n2core = name2.split(/\s+/)[0];
+      if (!isValidCharacterName(n1core) || !isValidCharacterName(n2core)) {
+        return match;
       }
       return `${name1}\n${name2}\n${startLower}`;
     });
@@ -2004,6 +2012,9 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Check if line should be skipped entirely (OMITTED, scene numbers only, etc.)
     if (shouldSkipLine(rawTrimmed)) {
+      flushPendingDialogue();
+      pendingCharacter = null;
+      pendingDialogue = [];
       continue;
     }
     
@@ -2475,6 +2486,25 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
     }
   }
   for (const name of mergedToRemove) {
+    rolesByCanonical.delete(name);
+  }
+
+  const fullNameMerges: string[] = [];
+  for (const [name, role] of Array.from(rolesByCanonical.entries())) {
+    const words = name.split(/\s+/);
+    if (words.length >= 2) {
+      const firstName = words[0];
+      if (rolesByCanonical.has(firstName) && firstName !== name) {
+        const firstNameRole = rolesByCanonical.get(firstName)!;
+        if (firstNameRole.lineCount >= role.lineCount * 2 || (role.lineCount <= 2 && firstNameRole.lineCount >= 1)) {
+          firstNameRole.lineCount += role.lineCount;
+          nameMap.set(name, firstName);
+          fullNameMerges.push(name);
+        }
+      }
+    }
+  }
+  for (const name of fullNameMerges) {
     rolesByCanonical.delete(name);
   }
 
