@@ -41,6 +41,10 @@ class SpeechRecognitionEngine {
   private consecutiveErrors = 0;
   private resultOffset = 0;
   private isPaused = false;
+  private startupHeartbeat: ReturnType<typeof setTimeout> | null = null;
+  private micStream: MediaStream | null = null;
+  private startGeneration = 0;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -110,6 +114,22 @@ class SpeechRecognitionEngine {
       }, 90000);
 
       this.startWatchdog();
+
+      this.clearStartupHeartbeat();
+      if (this.isPWA || this.isMobile) {
+        this.startupHeartbeat = setTimeout(() => {
+          this.startupHeartbeat = null;
+          if (this.isListening && !this.hasReceivedSpeech && this.shouldAutoRestart && !this.isPaused) {
+            try { this.recognition?.abort(); } catch {}
+            this.isListening = false;
+            setTimeout(() => {
+              if (this.shouldAutoRestart && !this.isPaused && !this.isListening) {
+                this.recreateAndStart();
+              }
+            }, 300);
+          }
+        }, 4000);
+      }
     };
 
     this.recognition.onend = () => {
@@ -268,6 +288,7 @@ class SpeechRecognitionEngine {
       this.noSpeechRestartCount = 0;
       this.consecutiveErrors = 0;
       this.lastActivityTime = Date.now();
+      this.clearStartupHeartbeat();
 
       let currentTranscript = "";
       let latestIsFinal = false;
@@ -390,6 +411,27 @@ class SpeechRecognitionEngine {
     if (this.maxListenTimeout) {
       clearTimeout(this.maxListenTimeout);
       this.maxListenTimeout = null;
+    }
+  }
+
+  private clearStartupHeartbeat() {
+    if (this.startupHeartbeat) {
+      clearTimeout(this.startupHeartbeat);
+      this.startupHeartbeat = null;
+    }
+  }
+
+  private releaseMicStream() {
+    if (this.micStream) {
+      try { this.micStream.getTracks().forEach(t => t.stop()); } catch {}
+      this.micStream = null;
+    }
+  }
+
+  private clearRetryTimer() {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+      this.retryTimer = null;
     }
   }
 
@@ -539,11 +581,15 @@ class SpeechRecognitionEngine {
   }
 
   pause() {
+    this.startGeneration++;
     this.shouldAutoRestart = false;
     this.isPaused = true;
     this.clearSilenceTimeout();
     this.stopWatchdog();
     this.clearMaxListenTimeout();
+    this.clearStartupHeartbeat();
+    this.clearRetryTimer();
+    this.releaseMicStream();
     if (this.restartDelay) {
       clearTimeout(this.restartDelay);
       this.restartDelay = null;
@@ -561,10 +607,15 @@ class SpeechRecognitionEngine {
   softStart(): boolean {
     if (!this.SpeechRecognitionAPI) return false;
 
+    this.startGeneration++;
+    const gen = this.startGeneration;
+
     this.isPaused = false;
     this.noSpeechRestartCount = 0;
     this.consecutiveErrors = 0;
     this.shouldAutoRestart = true;
+    this.clearStartupHeartbeat();
+    this.clearRetryTimer();
 
     if (this.restartDelay) {
       clearTimeout(this.restartDelay);
@@ -572,33 +623,63 @@ class SpeechRecognitionEngine {
     }
 
     this.resetAccumulated();
+    this.releaseMicStream();
 
     if (this.recognition && this.isListening) {
       try { this.recognition.abort(); } catch {}
       this.isListening = false;
     }
 
-    this.recreateAndStart();
+    if (this.isPWA && navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        if (gen !== this.startGeneration) {
+          stream.getTracks().forEach(t => t.stop());
+          return;
+        }
+        this.micStream = stream;
+        this.recreateAndStart();
+        setTimeout(() => {
+          if (this.micStream === stream) {
+            stream.getTracks().forEach(t => t.stop());
+            this.micStream = null;
+          }
+        }, 2000);
+      }).catch(() => {
+        if (gen !== this.startGeneration) return;
+        this.recreateAndStart();
+      });
+    } else {
+      this.recreateAndStart();
+    }
 
-    if (!this.isListening) {
+    const initialDelay = this.isPWA ? 1500 : 800;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      if (gen !== this.startGeneration) return;
+      if (this.isListening || !this.shouldAutoRestart || this.isPaused) return;
       const maxAttempts = this.isPWA ? 8 : 5;
       const verifyStart = (attempt: number) => {
+        if (gen !== this.startGeneration) return;
         if (this.isListening || !this.shouldAutoRestart || this.isPaused || attempt >= maxAttempts) return;
         this.recreateAndStart();
         const nextDelay = attempt < 3 ? 600 : 1200;
         setTimeout(() => verifyStart(attempt + 1), nextDelay);
       };
-      setTimeout(() => verifyStart(0), 800);
-    }
+      verifyStart(0);
+    }, initialDelay);
 
     return true;
   }
 
   stop() {
+    this.startGeneration++;
     this.intentionalStop = true;
     this.shouldAutoRestart = false;
     this.isPaused = false;
     this.stopWatchdog();
+    this.clearStartupHeartbeat();
+    this.clearRetryTimer();
+    this.releaseMicStream();
     
     if (this.restartDelay) {
       clearTimeout(this.restartDelay);
@@ -626,9 +707,13 @@ class SpeechRecognitionEngine {
   }
 
   abort() {
+    this.startGeneration++;
     this.shouldAutoRestart = false;
     this.isPaused = false;
     this.stopWatchdog();
+    this.clearStartupHeartbeat();
+    this.clearRetryTimer();
+    this.releaseMicStream();
     
     if (this.restartDelay) {
       clearTimeout(this.restartDelay);

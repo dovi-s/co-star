@@ -43,7 +43,7 @@ The system supports `free`, `pro`, `comp` (complimentary Pro), and `internal` (t
 Admin actions such as user deletion or tier changes are synchronized with Stripe to manage subscriptions and customer data. An `admin_settings` table stores configurable constants like `free_daily_limit` and `trial_days`. An `admin_audit_logs` table records all admin actions for accountability and tracking.
 
 ## External Dependencies
-- **Web Speech API**: Text-to-Speech functionalities.
+- **Web Speech API**: Text-to-Speech functionalities. PWA mic re-acquisition uses getUserMedia warmup, generation-guarded retries, startup heartbeat, and explicit audio element release after TTS playback.
 - **ElevenLabs API**: Professional AI voices.
 - **React Query**: Client-side data fetching and caching.
 - **Zod**: TypeScript type validation and schema definition.

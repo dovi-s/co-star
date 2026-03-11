@@ -623,6 +623,7 @@ class TTSEngine {
             URL.revokeObjectURL(audioUrl);
             this.currentBlobUrl = null;
           }
+          try { audio.src = ""; audio.load(); } catch {}
           this.currentAudio = null;
           this.fireCallback("success", onEnd);
           resolve(true);
@@ -635,6 +636,7 @@ class TTSEngine {
             URL.revokeObjectURL(audioUrl);
             this.currentBlobUrl = null;
           }
+          try { audio.src = ""; audio.load(); } catch {}
           this.currentAudio = null;
           this.fireCallback("error", onEnd);
           resolve(false);
@@ -932,6 +934,7 @@ class TTSEngine {
       this.currentAudio.onstalled = null;
       this.currentAudio.onabort = null;
       this.currentAudio.oncanplaythrough = null;
+      try { this.currentAudio.src = ""; this.currentAudio.load(); } catch {}
       this.currentAudio = null;
     }
     

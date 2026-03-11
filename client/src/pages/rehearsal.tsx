@@ -940,7 +940,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     
     if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
       const isPWA = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-      const micDelay = isPWA ? 350 : speechRecognition.isMobileDevice ? 250 : 0;
+      const micDelay = isPWA ? 500 : speechRecognition.isMobileDevice ? 250 : 0;
+
+      if (isPWA) {
+        ttsEngine.stop();
+      }
+
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.softStart();
