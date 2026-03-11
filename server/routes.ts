@@ -33,13 +33,23 @@ function detectTitleFromScript(lines: string[]): string | null {
     const line = head[i];
     const next = head[i + 1] || "";
     const next2 = head[i + 2] || "";
+    const next3 = head[i + 3] || "";
     
     if (/^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next) ||
-        /^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next2)) {
-      const candidate = line.replace(/["""'']/g, '').trim();
+        /^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next2) ||
+        /^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next3)) {
+      let candidate = line.replace(/["""'']/g, '').trim();
       if (candidate.length >= 2 && candidate.length <= 80 && 
           !/^(written|screenplay|based|adapted|by|draft|revised|script|page)/i.test(candidate) &&
           !/^\d+$/.test(candidate)) {
+        if (i > 0) {
+          const prevLine = head[i - 1].replace(/["""'']/g, '').trim();
+          if (prevLine.length >= 2 && prevLine.length <= 40 &&
+              prevLine === prevLine.toUpperCase() && /[A-Z]/.test(prevLine) &&
+              !/^(written|screenplay|based|adapted|by|draft|revised|script|page|the|a|an)/i.test(prevLine)) {
+            candidate = prevLine + ' ' + candidate;
+          }
+        }
         const isAllCaps = candidate === candidate.toUpperCase() && /[A-Z]/.test(candidate);
         return isAllCaps ? titleCase(candidate) : candidate;
       }
@@ -1407,21 +1417,38 @@ MARY: You're kidding me.`;
       let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
       console.log(`[Parse Script] Total dialogue lines: ${totalLines}`);
 
-      // AI Smart Cleanup - validate and filter parsed results
-      console.log(`[Parse Script] Running AI Smart Cleanup...`);
-      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
+      // AI Smart Cleanup + Role Filter — run in parallel for speed
+      console.log(`[Parse Script] Running AI Smart Cleanup + Role Filter in parallel...`);
+      const startAI = Date.now();
+      const [cleanupResult, roleFilteredScript] = await Promise.all([
+        aiCleanupScript(parsed),
+        aiFilterRoles(parsed),
+      ]);
+      console.log(`[Parse Script] AI processing completed in ${Date.now() - startAI}ms`);
       
+      const { cleanedScript, removedCount, removedLines } = cleanupResult;
       if (removedCount > 0) {
         console.log(`[Parse Script] AI removed ${removedCount} non-dialogue lines:`, removedLines.slice(0, 5));
         totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
         console.log(`[Parse Script] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
       }
 
-      // AI Role Filter - remove non-character names like MOTORCYCLES, RIGHT HAND, etc.
-      console.log(`[Parse Script] Running AI Role Filter...`);
-      const finalScript = await aiFilterRoles(cleanedScript);
-      if (finalScript.roles.length < cleanedScript.roles.length) {
-        console.log(`[Parse Script] AI Role Filter removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
+      const roleIdsToRemove = new Set(
+        parsed.roles
+          .filter(r => !roleFilteredScript.roles.some(rf => rf.id === r.id))
+          .map(r => r.id)
+      );
+      let finalScript = cleanedScript;
+      if (roleIdsToRemove.size > 0) {
+        console.log(`[Parse Script] AI Role Filter removed ${roleIdsToRemove.size} non-character entries`);
+        finalScript = {
+          ...cleanedScript,
+          roles: cleanedScript.roles.filter(r => !roleIdsToRemove.has(r.id)),
+          scenes: cleanedScript.scenes.map(s => ({
+            ...s,
+            lines: s.lines.filter(l => !roleIdsToRemove.has(l.roleId)),
+          })).filter(s => s.lines.length > 0),
+        };
       }
 
       if (finalScript.roles.length === 0) {
@@ -1658,21 +1685,38 @@ MARY: You're kidding me.`;
       let totalLines = parsed.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
       console.log(`[PDF->Session] Total dialogue lines: ${totalLines}`);
 
-      // AI Smart Cleanup - validate and filter parsed results
-      console.log(`[PDF->Session] Running AI Smart Cleanup...`);
-      const { cleanedScript, removedCount, removedLines } = await aiCleanupScript(parsed);
+      // AI Smart Cleanup + Role Filter — run in parallel for speed
+      console.log(`[PDF->Session] Running AI Smart Cleanup + Role Filter in parallel...`);
+      const startAI = Date.now();
+      const [cleanupResult2, roleFilteredScript2] = await Promise.all([
+        aiCleanupScript(parsed),
+        aiFilterRoles(parsed),
+      ]);
+      console.log(`[PDF->Session] AI processing completed in ${Date.now() - startAI}ms`);
       
+      const { cleanedScript, removedCount, removedLines } = cleanupResult2;
       if (removedCount > 0) {
         console.log(`[PDF->Session] AI removed ${removedCount} non-dialogue lines:`, removedLines.slice(0, 5));
         totalLines = cleanedScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
         console.log(`[PDF->Session] After cleanup: ${cleanedScript.roles.length} roles, ${totalLines} lines`);
       }
 
-      // AI Role Filter - remove non-character names like MOTORCYCLES, RIGHT HAND, etc.
-      console.log(`[PDF->Session] Running AI Role Filter...`);
-      const finalScript = await aiFilterRoles(cleanedScript);
-      if (finalScript.roles.length < cleanedScript.roles.length) {
-        console.log(`[PDF->Session] AI Role Filter removed ${cleanedScript.roles.length - finalScript.roles.length} non-character entries`);
+      const roleIdsToRemove2 = new Set(
+        parsed.roles
+          .filter(r => !roleFilteredScript2.roles.some(rf => rf.id === r.id))
+          .map(r => r.id)
+      );
+      let finalScript = cleanedScript;
+      if (roleIdsToRemove2.size > 0) {
+        console.log(`[PDF->Session] AI Role Filter removed ${roleIdsToRemove2.size} non-character entries`);
+        finalScript = {
+          ...cleanedScript,
+          roles: cleanedScript.roles.filter(r => !roleIdsToRemove2.has(r.id)),
+          scenes: cleanedScript.scenes.map(s => ({
+            ...s,
+            lines: s.lines.filter(l => !roleIdsToRemove2.has(l.roleId)),
+          })).filter(s => s.lines.length > 0),
+        };
       }
 
       if (finalScript.roles.length === 0) {
@@ -1739,8 +1783,21 @@ MARY: You're kidding me.`;
         const parsed = parseScript(text);
 
         sendProgress({ type: 'progress', stage: 'cleanup', message: 'Cleaning up' });
-        const { cleanedScript, removedCount } = await aiCleanupScript(parsed);
-        const finalScript = await aiFilterRoles(cleanedScript);
+        const [ocrCleanup, ocrRoleFilter] = await Promise.all([
+          aiCleanupScript(parsed),
+          aiFilterRoles(parsed),
+        ]);
+        const ocrRoleIdsToRemove = new Set(
+          parsed.roles.filter(r => !ocrRoleFilter.roles.some(rf => rf.id === r.id)).map(r => r.id)
+        );
+        let finalScript = ocrCleanup.cleanedScript;
+        if (ocrRoleIdsToRemove.size > 0) {
+          finalScript = {
+            ...finalScript,
+            roles: finalScript.roles.filter(r => !ocrRoleIdsToRemove.has(r.id)),
+            scenes: finalScript.scenes.map(s => ({ ...s, lines: s.lines.filter(l => !ocrRoleIdsToRemove.has(l.roleId)) })).filter(s => s.lines.length > 0),
+          };
+        }
 
         if (finalScript.roles.length === 0) {
           sendProgress({ type: 'error', error: "Could not find character names in the scanned text." });
@@ -1765,8 +1822,21 @@ MARY: You're kidding me.`;
         }
 
         const parsed = parseScript(text);
-        const { cleanedScript } = await aiCleanupScript(parsed);
-        const finalScript = await aiFilterRoles(cleanedScript);
+        const [lastCleanup, lastRoleFilter] = await Promise.all([
+          aiCleanupScript(parsed),
+          aiFilterRoles(parsed),
+        ]);
+        const lastRoleIdsToRemove = new Set(
+          parsed.roles.filter(r => !lastRoleFilter.roles.some(rf => rf.id === r.id)).map(r => r.id)
+        );
+        let finalScript = lastCleanup.cleanedScript;
+        if (lastRoleIdsToRemove.size > 0) {
+          finalScript = {
+            ...finalScript,
+            roles: finalScript.roles.filter(r => !lastRoleIdsToRemove.has(r.id)),
+            scenes: finalScript.scenes.map(s => ({ ...s, lines: s.lines.filter(l => !lastRoleIdsToRemove.has(l.roleId)) })).filter(s => s.lines.length > 0),
+          };
+        }
 
         if (finalScript.roles.length === 0) {
           return res.status(400).json({ error: "Could not find character names in the scanned text." });

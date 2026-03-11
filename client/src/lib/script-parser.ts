@@ -71,7 +71,7 @@ function areOCRVariants(name1: string, name2: string): boolean {
   const firstLetterMatches = upper1[0] === upper2[0];
   
   // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
-  if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 3) {
+  if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 4 && longer.length <= shorter.length * 1.3) {
     return true;
   }
   
@@ -199,11 +199,12 @@ const SKIP_LINE_PATTERNS = [
   /^\s*\d+\.\s*$/, // Just page numbers like "2."
   /^\d+\s*$/,  // Just numbers
   // Cast list patterns (actor name after character)
-  // Must be ALL CAPS name (no spaces/lowercase) followed by MANY dots (5+) and actor name
+  // Must be ALL CAPS name (with optional spaces) followed by MANY dots (5+) and actor name
   // This avoids matching dialogue with ellipsis like "CALLIE. Hi George...yeah"
-  /^[A-Z]{2,}\.{5,}\s*[A-Z]/i, // "SARA....... Actor Name" (5+ dots required)
+  /^[A-Z][A-Z\s]{1,}\.{5,}\s*[A-Z]/i, // "DETECTIVE COLE....... Actor Name" (5+ dots, allows spaces)
   /^\.\s*[A-Z]/i, // ". Sandra Oh" (OCR fragment)
-  /^[A-Z]+\.{5,}\s*$/i, // "SARA....." alone (5+ dots required)
+  /^[A-Z][A-Z\s]*\.{5,}\s*$/i, // "SARA....." alone (5+ dots required)
+  /^[A-Z][A-Z\s]+:\s*\.{3,}/i, // "DETECTIVE COLE: ........... Actor" (colon + dots)
   // Photo/design credits
   /^Set design by\b/i,
   /^Photo by\b/i,
@@ -246,6 +247,8 @@ const SKIP_LINE_PATTERNS = [
   /^\d{1,2}(st|nd|rd|th)?\s+(Draft|Revision)/i, // "1st Draft", "2nd Revision"
   /^(First|Second|Third|Final)\s+(Draft|Revision)/i,
   /^(White|Blue|Pink|Yellow|Green|Goldenrod|Buff|Salmon|Cherry)\s+(Revised?|Draft|Pages?)/i, // Production draft colors
+  /\b(Revised Pages?|Shooting Script)\s+\d{1,2}\/\d{1,2}\/\d{2,4}\s+\d+\.?\s*$/i, // Repeating page headers
+  /^The\s+\w+.*\b(Revised Pages?|Shooting Script)\b/i, // "The Wolf of Wall Street Buff Revised Pages 3/5/13 2."
   /^D\.A\.\s/i, // "D.A. First Draft", "D.A. Blue", etc.
   /^(January|February|March|April|May|June|July|August|September|October|November|December)\s*\d{0,2}/i, // Date patterns - "May", "April 20"
   /^\d{1,2}\/\d{1,2}\/\d{2,4}/i, // Date patterns like 04/20/2000
@@ -290,9 +293,12 @@ const NOT_CHARACTER_PATTERNS = [
   /^(WHAT|WHY|HOW|WHEN|WHERE|WHO|WHICH|WHOSE)$/i,
   /^(YES|NO|YEAH|NAH|OKAY|OK|SURE|FINE|WELL|RIGHT|LOOK|LISTEN|HEY|HI|HELLO|BYE|GOODBYE)$/i,
   // Sound effects / onomatopoeia that are NOT character names (include -ing forms)
-  /^(SCREAM(S|ING)?|YELL(S|ING)?|SHOUT(S|ING)?|CRY(ING)?|CRIES|WHISPER(S|ING)?|SIGH(S|ING)?|GASP(S|ING)?|LAUGH(S|ING)?|GROAN(S|ING)?|MOAN(S|ING)?|HOWL(S|ING)?|VROOM|CRASH(ES|ING)?|BANG(S|ING)?|BOOM(S|ING)?|SLAM(S|MING)?|CLICK(S|ING)?|BEEP(S|ING)?|RING(S|ING)?|BUZZ(ES|ING)?|HONK(S|ING)?|THUD(S)?|SPLAT(S)?|WHOOSH(ES|ING)?|SCREECH(ES|ING)?|ROAR(S|ING)?|GROWL(S|ING)?|SNOR(E|ES|ING)|COUGH(S|ING)?|SNEEZ(E|ES|ING)|CLAP(S|PING)?|STOMP(S|ING)?|THUMP(S|ING)?|KNOCK(S|ING)?|DING(S|ING)?|CHIME(S)?|SWISH(ES|ING)?|SWOOSH(ES|ING)?|CRACK(S|ING)?|SNAP(S|PING)?|POP(S|PING)?|CRUNCH(ES|ING)?|SPLASH(ES|ING)?|SIZZL(E|ES|ING)|RUMBL(E|ES|ING)|THUNDER(S|ING)?|LIGHTNING|EXPLOSION(S)?|GUNSHOT(S)?|GUNFIRE|ENGINE(S)?|TIRES|BRAKES|BREATHING|PANTING|SOBBING|WEEPING|WAILING|WHIMPERING|STAMMERING|STUTTERING|MUTTERING|MUMBLING|GROWLING|SNARLING|HISSING|REVVING|SCREECHING|SQUEALING|SQUEAKING|RATTLING|CLANKING|CLATTERING|THUMPING|POUNDING|DRUMMING|TAPPING|RAPPING|SCRATCHING|SCRAPING)$/i,
+  /^(SCREAM(S|ING)?|YELL(S|ING)?|SHOUT(S|ING)?|CRY(ING)?|CRIES|WHISPER(S|ING)?|SIGH(S|ING)?|GASP(S|ING)?|LAUGH(S|ING)?|GROAN(S|ING)?|MOAN(S|ING)?|HOWL(S|ING)?|VROOM|CRASH(ES|ING)?|BANG(S|ING)?|BOOM(S|ING)?|SLAM(S|MING)?|CLICK(S|ING)?|BEEP(S|ING)?|RING(S|ING)?|BUZZ(ES|ING)?|HONK(S|ING)?|THUD(S)?|SPLAT(S)?|WHOOSH(ES|ING)?|SCREECH(ES|ING)?|ROAR(S|ING)?|GROWL(S|ING)?|SNOR(E|ES|ING)|COUGH(S|ING)?|SNEEZ(E|ES|ING)|CLAP(S|PING)?|STOMP(S|ING)?|THUMP(S|ING)?|KNOCK(S|ING)?|DING(S|ING)?|CHIME(S)?|SWISH(ES|ING)?|SWOOSH(ES|ING)?|CRACK(S|ING)?|SNAP(S|PING)?|POP(S|PING)?|CRUNCH(ES|ING)?|SPLASH(ES|ING)?|SIZZL(E|ES|ING)|RUMBL(E|ES|ING)|THUNDER(S|ING)?|LIGHTNING|EXPLOSION(S)?|GUNSHOT(S)?|GUNFIRE|ENGINE(S)?|TIRES|BRAKES|BREATHING|PANTING|SOBBING|WEEPING|WAILING|WHIMPERING|STAMMERING|STUTTERING|MUTTERING|MUMBLING|GROWLING|SNARLING|HISSING|REVVING|SCREECHING|SQUEALING|SQUEAKING|RATTLING|CLANKING|CLATTERING|THUMPING|POUNDING|DRUMMING|TAPPING|RAPPING|SCRATCHING|SCRAPING|DOORBELL|APPLAUSE|SIREN(S)?|ALARM(S)?)$/i,
+  /^(CROWD|PEOPLE|EVERYONE|EVERYBODY|AUDIENCE|BYSTANDER(S)?|PASSERBY|ONLOOKER(S)?|SPECTATOR(S)?)$/i,
   // Camera/editing terms that look like character names but aren't
-  /^(ANGLE|SHOT|CLOSE|CLOSEUP|CLOSE[\s\-]?UP|WIDE|MEDIUM|INSERT|FLASHBACK|MONTAGE|INTERCUT|CONTINUOUS|LATER|MEANWHILE|SUDDENLY|SILENCE|PAUSE|BEAT|GEARS|TURBINE|POV|ECU|CU|MCU|MS|LS|WS|EWS|OS|OTS|TWO[\s\-]?SHOT|THREE[\s\-]?SHOT|TRACKING|DOLLY|PAN|TILT|ZOOM|CRANE|STEADICAM|HANDHELD|AERIAL|UNDERWATER|SLOW[\s\-]?MOTION|FREEZE[\s\-]?FRAME|SPLIT[\s\-]?SCREEN|STOCK|FOOTAGE|TITLE|TITLES|CREDIT|CREDITS|SUPER|SUPERIMPOSE|CHYRON|LOWER[\s\-]?THIRD|V\.?O\.?|O\.?S\.?|O\.?C\.?)$/i,
+  /^(ANGLE|SHOT|CLOSE|CLOSEUP|CLOSE[\s\-]?UP|WIDE|MEDIUM|INSERT|FLASHBACK|MONTAGE|INTERCUT|CONTINUOUS|LATER|MEANWHILE|SUDDENLY|SILENCE|PAUSE|BEAT|GEARS|TURBINE|POV|ECU|CU|MCU|MS|LS|WS|EWS|OS|OTS|TWO[\s\-]?SHOT|THREE[\s\-]?SHOT|TRACKING|DOLLY|PAN|PANS|TILT|ZOOM|CRANE|STEADICAM|HANDHELD|AERIAL|UNDERWATER|SLOW[\s\-]?MOTION|FREEZE[\s\-]?FRAME|SPLIT[\s\-]?SCREEN|STOCK|FOOTAGE|TITLE|TITLES|CREDIT|CREDITS|SUPER|SUPERIMPOSE|CHYRON|LOWER[\s\-]?THIRD|V\.?O\.?|O\.?S\.?|O\.?C\.?|FLASH|FLASHES|TIMECUT|TIME\s*CUT|ON[\s\-]?SCREEN|AGAY)$/i,
+  // Action verbs / exclamations that get falsely parsed as character names
+  /^(PUSHES|PULLS|GRABS|BLASTS|SELLING|BUYING|TRADING|RUNNING|WALKING|TALKING|FIGHTING|SCREAMING|YELLING|APESHIT|BULLSHIT|HORSESHIT|GODDAMN|DEARLY\s+DEPARTED|SMASH|WHAM|KABOOM|THRIVE|PHASE|ORGY|TIMECUT|TIME\s*CUT|BOWS|CURTAIN\s*CALL|ENCORE|FINALE)$/i,
   // INSERT + any object (INSERT PHOTO, INSERT POLAROID, INSERT ID PHOTO, etc.)
   /^INSERT\s+[\w\s]+$/i,
   // POV and camera direction patterns with pronouns/descriptions
@@ -333,6 +339,8 @@ const NOT_CHARACTER_PATTERNS = [
   /^\w+\s+(SO|BUT|AND|OR|IF|AS|IS|TO|IN|ON|AT|BY|FOR|OF)$/i,
   // Common location words that appear as standalone lines in PDFs
   /^(BACKYARD|FRONTYARD|DRIVEWAY|GARAGE|BASEMENT|ATTIC|HALLWAY|STAIRWAY|STAIRCASE|ROOFTOP|BALCONY|PATIO|PORCH|DECK|GARDEN|KITCHEN|BEDROOM|BATHROOM|LIVING\s*ROOM|DINING\s*ROOM|OFFICE|LOBBY|ELEVATOR|CORRIDOR|ALLEY|SIDEWALK|STREET|ROAD|HIGHWAY|PARKING\s*LOT|WAREHOUSE|FACTORY|BUILDING|APARTMENT|HOUSE|MANSION|CABIN|HOTEL|MOTEL|HOSPITAL|SCHOOL|CHURCH|STORE|SHOP|RESTAURANT|BAR|CLUB|STADIUM|ARENA|BEACH|FOREST|WOODS|MOUNTAIN|DESERT|OCEAN|LAKE|RIVER|BRIDGE|TUNNEL|SUBWAY|AIRPORT|STATION|PRISON|JAIL|COURT|COURTROOM|CEMETERY|MORGUE)$/i,
+  /^(PRISON|FRONT|BACK|SIDE|MAIN|IRON|GARDEN|GATE|PRIDE)\s+(GATE|DOOR|ENTRANCE|EXIT|YARD|WALL|FENCE|WINDOW|ROCK|LANDS?)S?$/i,
+  /^(ON|IN|AT|BY|NEAR|BEHIND|UNDER|OVER|ABOVE|BELOW|INSIDE|OUTSIDE|ACROSS|AROUND)\s+THE\s+\w+$/i,
   
   // ============ BROAD SMART FILTERS ============
   // Time patterns with or without spaces (catches OCR artifacts like "TWENTYMINUTES")
@@ -961,7 +969,7 @@ function normalizeCharacterName(name: string): string {
   if (words.length === 2) {
     const [w1, w2] = words;
     // Check if first word is a title prefix (don't combine these!)
-    const titlePrefixes = /^(DR|MR|MRS|MS|MISS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF)\.?$/i;
+    const titlePrefixes = /^(DR|MR|MRS|MS|MISS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF|AUNT|UNCLE|MAMA|PAPA|NANA|GRAN|BABY|OLD|YOUNG|BIG|LITTLE|LADY|LORD|KING|QUEEN)\.?$/i;
     const isTitle = titlePrefixes.test(w1);
     // Both words are short (likely a split name) - but skip if first word is a title
     if (!isTitle && w1.length >= 2 && w1.length <= 4 && w2.length >= 1 && w2.length <= 4) {
@@ -1203,14 +1211,15 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
     // Possessive with descriptor: GEORGE'S VOICE ON MACHINE: dialogue
     /^([A-Z]+['']S\s+[A-Z\s]+)\s*[:：]\s*(.+)$/,
     // STAGE PLAY FORMAT: NAME. dialogue (character name ends with period)
-    // Match: GEORGE. Hey Cal... or CALLIE. Yes! or SARA. I'm Sara...
-    // Allow dialogue to start with: capital letter + lowercase OR single capital like "I" + apostrophe
-    /^([A-Z][A-Z]+)\.\s+([A-Z](?:[a-z']|$).*)$/,
+    // Match: GEORGE. Hey Cal... or CALLIE. —shit! or SARA. PS 32... or CALLIE. "The inbound..."
+    // Allow any non-empty dialogue content after period+space
+    /^([A-Z][A-Z]+)\.\s+(.+)$/,
     // STAGE PLAY with title: MRS. WINSLEY. dialogue or DET. COLE. Was he...
     /^((?:DR|MR|MRS|MS|DET|SGT|LT|CAPT)\.?\s+[A-Z][A-Z]+)\.\s+(.+)$/,
   ];
   
-  for (const pattern of colonPatterns) {
+  for (let i = 0; i < colonPatterns.length; i++) {
+    const pattern = colonPatterns[i];
     const match = trimmed.match(pattern);
     if (match) {
       const potentialName = match[1].trim();
@@ -1218,7 +1227,11 @@ function isLikelyCharacterLine(line: string): { isCharacter: boolean; name: stri
       
       if (potentialName.length <= 40 && dialogue.length > 0) {
         const normalizedName = normalizeCharacterName(potentialName);
-        if (isValidCharacterName(potentialName)) {
+        const isValid = isValidCharacterName(potentialName);
+        if (isValid) {
+          if (i >= 6 && /^[A-Z][A-Z]+$/.test(dialogue) && dialogue.length <= 20 && isValidCharacterName(dialogue)) {
+            continue;
+          }
           return { isCharacter: true, name: normalizedName, dialogue };
         }
       }
@@ -2019,9 +2032,38 @@ export function parseScript(rawText: string): ParsedScript {
       sceneCount++;
       currentSceneName = trimmed.length > 60 ? trimmed.substring(0, 60) + "..." : trimmed;
       currentSceneDescription = "";
-      collectingSceneDescription = true; // Start collecting scene description
-      pendingContext = []; // Reset context for new scene
+      collectingSceneDescription = true;
+      pendingContext = [];
       continue;
+    }
+    
+    // Play-style section headers: ALL CAPS multi-word titles
+    // e.g., "SCAR TRICKS SIMBA", "WATERING HOLE", "HAKUNA MATATA"
+    if (/^[A-Z][A-Z\s\-']+$/.test(trimmed) && trimmed.length >= 8 && trimmed.split(/\s+/).length >= 2) {
+      const prevEmpty = i === 0 || !lines[i - 1]?.trim();
+      const nextEmpty = i >= lines.length - 1 || !lines[i + 1]?.trim();
+      const wordCount = trimmed.split(/\s+/).length;
+      const hasActionWord = /\b(TRICKS|MEETS|FINDS|SAVES|FIGHTS|BETRAYS|ESCAPES|DISCOVERS|CONFRONTS|CHALLENGES|DEFEATS|ATTACKS|RESCUES|TRAPS|TEACHES|WARNS|CHASES|HUNTS|PLOTS|PREPARES|SCENE|GRAVEYARD|WATERING|HOLE|SUNRISE|SUNSET|CIRCLE|PREPARED|MATATA)\b/i.test(trimmed);
+      const looksLikeHeader = (wordCount >= 3 && !isValidCharacterName(trimmed)) || hasActionWord;
+      if (looksLikeHeader && (prevEmpty || nextEmpty || hasActionWord)) {
+        foundFirstScene = true;
+        flushPendingDialogue();
+        if (currentSceneLines.length > 0) {
+          scenes.push({
+            id: generateId(),
+            name: currentSceneName,
+            description: currentSceneDescription || undefined,
+            lines: [...currentSceneLines],
+          });
+          currentSceneLines = [];
+        }
+        sceneCount++;
+        currentSceneName = trimmed.length > 60 ? trimmed.substring(0, 60) + "..." : trimmed;
+        currentSceneDescription = "";
+        collectingSceneDescription = true;
+        pendingContext = [];
+        continue;
+      }
     }
     
     // Handle content before first scene heading or dialogue
@@ -2063,13 +2105,14 @@ export function parseScript(rawText: string): ParsedScript {
       continue;
     }
     
-    // Pure stage direction on its own line - add to context
+    // Pure stage direction on its own line - add to context but preserve pending character
     // These are explicitly marked by the author so always valid
     if (/^\[.*\]$/.test(trimmed) || /^\(.*\)$/.test(trimmed)) {
       const cleaned = trimmed.replace(/^\[|\]$|^\(|\)$/g, '').trim();
       if (cleaned) {
         pendingContext.push(`[${cleaned}]`);
       }
+      // Don't clear pendingCharacter — dialogue may continue after stage directions
       continue;
     }
     
@@ -2359,7 +2402,18 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       }
       
       // Same last name? Likely the same character
+      // But skip if this looks like a PDF column merge (both parts are standalone names)
       if (lastName === existingLastName && lastName.length >= 4) {
+        // Don't merge if this looks like a PDF column merge artifact
+        // e.g., "TERESA" should not merge into "JORDAN TERESA" when JORDAN is a known character
+        const longerWords = existingWords.length > words.length ? existingWords : words;
+        const shorterWords = existingWords.length > words.length ? words : existingWords;
+        if (longerWords.length === 2 && shorterWords.length === 1) {
+          const firstWordOfLonger = longerWords[0];
+          if (rolesByCanonical.has(firstWordOfLonger) || nameMap.has(firstWordOfLonger)) {
+            continue;
+          }
+        }
         // Use the longer name as canonical
         if (name.length > existingCanon.length) {
           // This name is longer, make it canonical
@@ -2401,6 +2455,29 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
     }
   }
   
+  // Detect PDF column merge artifacts: "JORDAN TERESA" = two known names merged
+  const knownNames = new Set(rolesByCanonical.keys());
+  const mergedToRemove: string[] = [];
+  for (const [name, role] of Array.from(rolesByCanonical.entries())) {
+    const words = name.split(/\s+/);
+    if (words.length === 2) {
+      const [w1, w2] = words;
+      if (knownNames.has(w1) && knownNames.has(w2) && w1 !== w2) {
+        console.log(`[PDF Fix] Splitting merged name "${name}" into "${w1}" and "${w2}"`);
+        const half = Math.ceil(role.lineCount / 2);
+        const role1 = rolesByCanonical.get(w1)!;
+        const role2 = rolesByCanonical.get(w2)!;
+        role1.lineCount += half;
+        role2.lineCount += role.lineCount - half;
+        nameMap.set(name, w1);
+        mergedToRemove.push(name);
+      }
+    }
+  }
+  for (const name of mergedToRemove) {
+    rolesByCanonical.delete(name);
+  }
+
   // Update scene lines to use canonical names
   for (const scene of scenes) {
     for (const line of scene.lines) {
