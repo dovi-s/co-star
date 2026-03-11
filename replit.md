@@ -90,8 +90,14 @@ Key features include:
 ### Stripe Subscription Flow
 - **Customer Creation**: Stripe customer created automatically on signup (email/password, Google OAuth) via `ensureStripeCustomer()` in `replitAuth.ts`. Existing users without Stripe customers get backfilled on login.
 - **Free Tier**: Users are Stripe customers with no subscription. `subscriptionTier` defaults to `"free"` in the database.
-- **Guest Pass (7-day trial)**: First-time subscribers get a 7-day free trial via `subscription_data.trial_period_days` in the Stripe Checkout session. Stripe collects payment info but doesn't charge until trial ends. Repeat subscribers (who've had any past subscription) don't get a trial.
+- **Guest Pass (trial)**: First-time subscribers get a configurable free trial (admin setting `trial_days`, default 7) via `subscription_data.trial_period_days` in the Stripe Checkout session. Stripe collects payment info but doesn't charge until trial ends. Repeat subscribers (who've had any past subscription) don't get a trial.
 - **Pro Upgrade**: Stripe Checkout (`POST /api/stripe/checkout`) creates a subscription. Webhook sync via `stripe-replit-sync` updates `stripe.subscriptions` table. The `/api/stripe/subscription` endpoint syncs subscription status to `users.subscriptionTier` on read.
 - **Trial UI**: Subscription page shows "Guest pass active" with progress bar and days remaining when `isTrialing`. Success toast says "Your guest pass is active" instead of generic welcome.
 - **Cancellation**: Users can cancel via Stripe Billing Portal. `cancel_at_period_end` flag preserves access until period ends. Retention sheet shown before portal redirect.
 - **Key Files**: `server/routes.ts` (checkout + subscription sync), `server/replit_integrations/auth/replitAuth.ts` (customer creation), `client/src/pages/subscription.tsx` (pricing UI), `server/webhookHandlers.ts` (webhook processing).
+
+### Admin-Stripe Sync & Audit System
+- **User Deletion → Stripe Cleanup**: When an admin deletes a user, the system first cancels any active Stripe subscription (prorated) and deletes the Stripe customer before removing local data.
+- **Tier Change → Stripe Sync**: When an admin downgrades a Pro user to Free, the system cancels their Stripe subscription (prorated) and clears the subscription ID. This prevents orphaned billing.
+- **Admin Settings Table** (`admin_settings`): Key-value store for configurable constants. Current settings: `free_daily_limit` (default 3), `trial_days` (default 7). Routes: `GET /api/admin/settings`, `POST /api/admin/settings`.
+- **Admin Audit Log** (`admin_audit_logs`): Records all admin actions with admin user ID, action type, target user, details JSON, and timestamp. Covers: `change_tier`, `reset_usage`, `grant_usage`, `block_user`, `unblock_user`, `delete_user`, `update_setting`. Route: `GET /api/admin/audit-log`.

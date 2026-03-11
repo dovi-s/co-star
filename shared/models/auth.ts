@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { boolean, index, integer, jsonb, pgTable, real, text, timestamp, varchar } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgTable, real, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/pg-core";
 
 export const sessions = pgTable(
   "sessions",
@@ -282,3 +282,24 @@ export const pageviews = pgTable("pageviews", {
   index("IDX_pageviews_user").on(table.userId),
   index("IDX_pageviews_path").on(table.path),
 ]);
+
+export const adminAuditLogs = pgTable("admin_audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminUserId: varchar("admin_user_id").notNull(),
+  action: varchar("action").notNull(),
+  targetUserId: varchar("target_user_id"),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_audit_admin").on(table.adminUserId),
+  index("IDX_audit_target").on(table.targetUserId),
+  index("IDX_audit_created").on(table.createdAt),
+  index("IDX_audit_action").on(table.action),
+]);
+
+export const adminSettings = pgTable("admin_settings", {
+  key: varchar("key").primaryKey(),
+  value: varchar("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"),
+});

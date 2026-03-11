@@ -15,7 +15,7 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback } from "@shared/models/auth";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function cleanGeneratedScript(text: string): string {
@@ -364,7 +364,41 @@ export async function registerRoutes(
     res.json({ status: "ok", app: "co-star" });
   });
 
-  const FREE_DAILY_LIMIT = 3;
+  const FREE_DAILY_LIMIT_DEFAULT = 3;
+  const TRIAL_DAYS_DEFAULT = 7;
+
+  async function getAdminSetting(key: string, defaultValue: string): Promise<string> {
+    try {
+      const [row] = await db.select({ value: adminSettings.value }).from(adminSettings).where(eq(adminSettings.key, key));
+      return row?.value ?? defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  }
+
+  async function getFreeDailyLimit(): Promise<number> {
+    const val = await getAdminSetting("free_daily_limit", String(FREE_DAILY_LIMIT_DEFAULT));
+    return Math.max(1, parseInt(val, 10) || FREE_DAILY_LIMIT_DEFAULT);
+  }
+
+  async function getTrialDays(): Promise<number> {
+    const val = await getAdminSetting("trial_days", String(TRIAL_DAYS_DEFAULT));
+    const n = parseInt(val, 10);
+    return Number.isNaN(n) ? TRIAL_DAYS_DEFAULT : Math.max(0, n);
+  }
+
+  async function logAdminAction(adminUserId: string, action: string, targetUserId?: string, details?: Record<string, any>) {
+    try {
+      await db.insert(adminAuditLogs).values({
+        adminUserId,
+        action,
+        targetUserId: targetUserId || null,
+        details: details || null,
+      });
+    } catch (err) {
+      console.error("[Admin Audit] Failed to log action:", err);
+    }
+  }
 
   function getDailyReset(fromDate: Date): Date {
     return new Date(fromDate.getTime() + 12 * 60 * 60 * 1000);
@@ -421,7 +455,8 @@ export async function registerRoutes(
       }
 
       const isPro = user.subscriptionTier === "pro";
-      const effectiveLimit = FREE_DAILY_LIMIT + bonus;
+      const freeDailyLimit = await getFreeDailyLimit();
+      const effectiveLimit = freeDailyLimit + bonus;
       const effectiveUsed = Math.max(usageCount, deviceCount);
       const effectiveResetAt = usageCount >= deviceCount ? resetAt : (deviceResetAt || resetAt);
       const limitReached = !isPro && effectiveUsed >= effectiveLimit;
@@ -491,7 +526,8 @@ export async function registerRoutes(
         }
       }
 
-      const effectiveLimit = FREE_DAILY_LIMIT + bonus;
+      const freeDailyLimit = await getFreeDailyLimit();
+      const effectiveLimit = freeDailyLimit + bonus;
       const effectiveUsed = Math.max(usageCount, deviceCount);
       const dominatingResetAt = usageCount >= deviceCount ? resetAt : deviceResetAt;
 
@@ -1809,7 +1845,7 @@ MARY: You're kidding me.`;
           status: 'all',
         });
         if (pastSubs.data.length === 0) {
-          trialDays = 7;
+          trialDays = await getTrialDays();
         }
       } catch (e: any) {
         console.error("[Stripe] Could not check past subscriptions:", e.message);
@@ -2589,9 +2625,11 @@ MARY: You're kidding me.`;
 
   app.post("/api/admin/users/:userId/reset-onboarding", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
       const { userId } = req.params;
       await db.update(users).set({ onboardingComplete: "false", updatedAt: new Date() }).where(eq(users.id, userId));
+      await logAdminAction(adminId, "reset_onboarding", userId);
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to reset onboarding" });
@@ -2600,6 +2638,7 @@ MARY: You're kidding me.`;
 
   app.post("/api/admin/users/:userId/plan", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
       const { userId } = req.params;
       const { action, tier } = req.body;
@@ -2611,18 +2650,49 @@ MARY: You're kidding me.`;
 
       if (action === "change_tier") {
         if (!["free", "pro"].includes(tier)) return res.status(400).json({ error: "Invalid tier" });
-        updates.subscriptionTier = tier;
-        if (tier === "free") {
+
+        if (tier === "free" && user.subscriptionTier === "pro") {
+          if (user.stripeSubscriptionId) {
+            try {
+              const stripe = await getUncachableStripeClient();
+              await stripe.subscriptions.cancel(user.stripeSubscriptionId, { prorate: true });
+              console.log(`[Admin] Cancelled Stripe subscription ${user.stripeSubscriptionId} (downgrade to free)`);
+              updates.stripeSubscriptionId = null;
+            } catch (stripeErr: any) {
+              if (stripeErr.code === "resource_missing") {
+                updates.stripeSubscriptionId = null;
+              } else {
+                console.error("[Admin] Failed to cancel Stripe sub on downgrade:", stripeErr.message);
+                return res.status(500).json({ error: "Failed to cancel Stripe subscription. User was NOT downgraded." });
+              }
+            }
+          }
           updates.subscriptionExpiresAt = null;
         }
+
+        updates.subscriptionTier = tier;
+
+        await logAdminAction(adminId, "change_tier", userId, {
+          from: user.subscriptionTier,
+          to: tier,
+          stripeSubscriptionCancelled: tier === "free" && !!user.stripeSubscriptionId,
+        });
       } else if (action === "reset_usage") {
         updates.scriptUsageCount = 0;
         updates.scriptUsageLimitBonus = 0;
         updates.scriptUsageResetAt = null;
+        await logAdminAction(adminId, "reset_usage", userId, {
+          previousCount: user.scriptUsageCount,
+          previousBonus: user.scriptUsageLimitBonus,
+        });
       } else if (action === "grant_usage") {
         const { amount } = req.body;
         const extra = Math.max(0, Math.min(100, Number(amount) || 0));
         updates.scriptUsageLimitBonus = (user.scriptUsageLimitBonus || 0) + extra;
+        await logAdminAction(adminId, "grant_usage", userId, {
+          amount: extra,
+          newBonus: updates.scriptUsageLimitBonus,
+        });
       } else {
         return res.status(400).json({ error: "Invalid action" });
       }
@@ -2639,6 +2709,7 @@ MARY: You're kidding me.`;
 
   app.post("/api/admin/users/:userId/block", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
       const { userId } = req.params;
       const { blocked } = req.body;
@@ -2648,6 +2719,7 @@ MARY: You're kidding me.`;
         blockedAt: isBlocked ? new Date() : null,
         updatedAt: new Date(),
       }).where(eq(users.id, userId));
+      await logAdminAction(adminId, isBlocked ? "block_user" : "unblock_user", userId);
       res.json({ ok: true });
     } catch (error: any) {
       res.status(500).json({ error: "Failed to update user block status" });
@@ -2656,9 +2728,39 @@ MARY: You're kidding me.`;
 
   app.delete("/api/admin/users/:userId", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
       const { userId } = req.params;
-      const [targetUser] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId));
+      const [targetUser] = await db.select().from(users).where(eq(users.id, userId));
+      if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+      if (targetUser.stripeSubscriptionId) {
+        try {
+          const stripe = await getUncachableStripeClient();
+          await stripe.subscriptions.cancel(targetUser.stripeSubscriptionId, {
+            prorate: true,
+          });
+          console.log(`[Admin] Cancelled Stripe subscription ${targetUser.stripeSubscriptionId} for user ${userId}`);
+        } catch (stripeErr: any) {
+          if (stripeErr.code !== "resource_missing") {
+            console.error("[Admin] Failed to cancel Stripe subscription:", stripeErr.message);
+            return res.status(500).json({ error: "Failed to cancel Stripe subscription. User was NOT deleted." });
+          }
+        }
+      }
+
+      if (targetUser.stripeCustomerId) {
+        try {
+          const stripe = await getUncachableStripeClient();
+          await stripe.customers.del(targetUser.stripeCustomerId);
+          console.log(`[Admin] Deleted Stripe customer ${targetUser.stripeCustomerId} for user ${userId}`);
+        } catch (stripeErr: any) {
+          if (stripeErr.code !== "resource_missing") {
+            console.error("[Admin] Failed to delete Stripe customer:", stripeErr.message);
+          }
+        }
+      }
+
       await db.execute(sql`DELETE FROM analytics_events WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM error_logs WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM feedback_messages WHERE user_id = ${userId}`);
@@ -2668,11 +2770,19 @@ MARY: You're kidding me.`;
       await db.execute(sql`DELETE FROM recent_scripts WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM saved_scripts WHERE user_id = ${userId}`);
       await db.execute(sql`DELETE FROM pageviews WHERE user_id = ${userId}`);
-      if (targetUser) {
+      if (targetUser.email) {
         await db.execute(sql`DELETE FROM password_reset_tokens WHERE email = ${targetUser.email}`);
       }
       await db.execute(sql`DELETE FROM sessions WHERE sess->>'userId' = ${userId}`);
       await db.delete(users).where(eq(users.id, userId));
+
+      await logAdminAction(adminId, "delete_user", userId, {
+        email: targetUser.email,
+        tier: targetUser.subscriptionTier,
+        stripeCustomerId: targetUser.stripeCustomerId,
+        stripeSubscriptionId: targetUser.stripeSubscriptionId,
+      });
+
       res.json({ ok: true });
     } catch (error: any) {
       console.error("[Admin] Delete user error:", error);
@@ -2682,6 +2792,7 @@ MARY: You're kidding me.`;
 
   app.post("/api/admin/users", async (req: any, res: Response) => {
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
       const { email, firstName, lastName, password } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
@@ -2700,6 +2811,8 @@ MARY: You're kidding me.`;
         authProvider: "email",
         onboardingComplete: "false",
       }).returning({ id: users.id });
+
+      await logAdminAction(adminId, "create_user", newUser.id, { email: email.toLowerCase().trim() });
 
       res.json({ ok: true, userId: newUser.id });
     } catch (error: any) {
@@ -2735,6 +2848,73 @@ MARY: You're kidding me.`;
     } catch (error: any) {
       console.error("[Admin Stripe] Error:", error.message);
       res.status(500).json({ error: "Failed to fetch Stripe data" });
+    }
+  });
+
+  app.get("/api/admin/settings", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const settings = await db.select().from(adminSettings);
+      const settingsMap: Record<string, string> = {};
+      for (const s of settings) {
+        settingsMap[s.key] = s.value;
+      }
+      settingsMap.free_daily_limit = settingsMap.free_daily_limit || String(FREE_DAILY_LIMIT_DEFAULT);
+      settingsMap.trial_days = settingsMap.trial_days || String(TRIAL_DAYS_DEFAULT);
+      res.json({ settings: settingsMap });
+    } catch (error: any) {
+      console.error("[Admin Settings] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch settings" });
+    }
+  });
+
+  app.post("/api/admin/settings", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    try {
+      const { key, value } = req.body;
+      if (!key || value === undefined) return res.status(400).json({ error: "Key and value required" });
+
+      const allowedKeys = ["free_daily_limit", "trial_days"];
+      if (!allowedKeys.includes(key)) return res.status(400).json({ error: "Invalid setting key" });
+
+      const numValue = parseInt(value, 10);
+      if (isNaN(numValue) || numValue < 0) return res.status(400).json({ error: "Value must be a non-negative number" });
+
+      const previous = await getAdminSetting(key, "");
+
+      await db.insert(adminSettings).values({
+        key,
+        value: String(numValue),
+        updatedAt: new Date(),
+        updatedBy: adminId,
+      }).onConflictDoUpdate({
+        target: adminSettings.key,
+        set: { value: String(numValue), updatedAt: new Date(), updatedBy: adminId },
+      });
+
+      await logAdminAction(adminId, "update_setting", undefined, {
+        key,
+        from: previous,
+        to: String(numValue),
+      });
+
+      res.json({ ok: true, key, value: String(numValue) });
+    } catch (error: any) {
+      console.error("[Admin Settings] Update error:", error.message);
+      res.status(500).json({ error: "Failed to update setting" });
+    }
+  });
+
+  app.get("/api/admin/audit-log", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const limit = Math.min(100, parseInt(req.query.limit as string, 10) || 50);
+      const logs = await db.select().from(adminAuditLogs).orderBy(desc(adminAuditLogs.createdAt)).limit(limit);
+      res.json({ logs });
+    } catch (error: any) {
+      console.error("[Admin Audit] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch audit log" });
     }
   });
 
