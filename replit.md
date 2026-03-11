@@ -37,7 +37,7 @@ A device fingerprinting system tracks script usage per device to prevent multi-a
 When Pro users initiate cancellation, a multi-step retention sheet is presented, outlining lost Pro features, collecting feedback with an optional pause feature, and confirming cancellation. The cancellation button remains accessible throughout the process.
 
 ### Subscription Tier System
-The system supports `free`, `pro`, `comp` (complimentary Pro), and `internal` (team) tiers. A `hasProAccess` function determines Pro access for server-side middleware and client-side checks. Stripe synchronization ensures that `comp` and `internal` users maintain their tier regardless of Stripe subscription status.
+The system supports `free`, `pro`, `comp` (complimentary Pro), and `internal` (team) tiers. A `hasProAccess` function determines Pro access for server-side middleware and client-side checks. Stripe synchronization ensures that `comp` and `internal` users maintain their tier regardless of Stripe subscription status. Plan switching (monthly↔annual) is handled via a dedicated `/api/stripe/switch-plan` endpoint that uses Stripe's subscription update API with `proration_behavior: 'create_prorations'`, bypassing the billing portal for plan changes to avoid confusing double-charge proration issues. The subscription page shows the current plan interval and a "Switch to annual/monthly" button with an inline confirmation prompt.
 
 ### Admin-Stripe Sync & Audit System
 Admin actions such as user deletion or tier changes are synchronized with Stripe to manage subscriptions and customer data. An `admin_settings` table stores configurable constants like `free_daily_limit` and `trial_days`. An `admin_audit_logs` table records all admin actions for accountability and tracking.

@@ -2038,6 +2038,75 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.post("/api/stripe/switch-plan", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const { priceId } = req.body;
+      if (!priceId) {
+        return res.status(400).json({ error: "Price ID required" });
+      }
+
+      const [user] = await db
+        .select({ stripeCustomerId: users.stripeCustomerId, stripeSubscriptionId: users.stripeSubscriptionId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No active subscription to switch" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      const price = await stripe.prices.retrieve(priceId);
+      if (!price || !price.active || price.type !== 'recurring') {
+        return res.status(400).json({ error: "Invalid price selected" });
+      }
+      const product = await stripe.products.retrieve(price.product as string);
+      if (!product || !product.active || !(product.metadata?.tier === 'pro' || product.name.toLowerCase().includes('pro'))) {
+        return res.status(400).json({ error: "Invalid product" });
+      }
+
+      let subId = user.stripeSubscriptionId;
+      if (!subId) {
+        const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, status: 'active', limit: 1 });
+        subId = subs.data[0]?.id || null;
+        if (!subId) {
+          const trialSubs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, status: 'trialing', limit: 1 });
+          subId = trialSubs.data[0]?.id || null;
+        }
+      }
+      if (!subId) {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(subId);
+      if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+
+      const currentItemId = subscription.items.data[0]?.id;
+      if (!currentItemId) {
+        return res.status(400).json({ error: "Subscription has no items" });
+      }
+
+      const updatedSub = await stripe.subscriptions.update(subId, {
+        items: [{ id: currentItemId, price: priceId }],
+        proration_behavior: 'create_prorations',
+        payment_behavior: 'pending_if_incomplete',
+      });
+
+      console.log(`[Stripe] Plan switched for user ${userId}: ${updatedSub.id} -> price ${priceId}`);
+      res.json({ success: true, subscription: { id: updatedSub.id, status: updatedSub.status } });
+    } catch (error: any) {
+      console.error("[Stripe] Switch plan error:", error.message);
+      res.status(500).json({ error: "Failed to switch plan" });
+    }
+  });
+
   app.post("/api/stripe/pause", async (req: any, res: Response) => {
     try {
       const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
@@ -2129,11 +2198,12 @@ MARY: You're kidding me.`;
       // Check for active subscription in stripe schema
       const subResult = await db.execute(
         sql`
-          SELECT id, status, current_period_end, cancel_at_period_end, trial_end, trial_start
-          FROM stripe.subscriptions
-          WHERE customer = ${user.stripeCustomerId}
-          AND status IN ('active', 'trialing')
-          ORDER BY created DESC
+          SELECT s.id, s.status, s.current_period_end, s.cancel_at_period_end, s.trial_end, s.trial_start,
+                 (SELECT si.price FROM stripe.subscription_items si WHERE si.subscription = s.id LIMIT 1) as current_price_id
+          FROM stripe.subscriptions s
+          WHERE s.customer = ${user.stripeCustomerId}
+          AND s.status IN ('active', 'trialing')
+          ORDER BY s.created DESC
           LIMIT 1
         `
       );
@@ -2169,6 +2239,7 @@ MARY: You're kidding me.`;
             isTrialing,
             trialEnd,
             trialDaysLeft,
+            currentPriceId: sub.current_price_id || null,
           },
           tier: "pro",
         });

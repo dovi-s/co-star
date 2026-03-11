@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CancelRetentionSheet } from "@/components/cancel-retention-sheet";
 import {
@@ -23,6 +23,7 @@ import {
   Gift,
   Calendar,
   Shield,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ interface SubscriptionData {
     isTrialing?: boolean;
     trialEnd?: string | null;
     trialDaysLeft?: number | null;
+    currentPriceId?: string | null;
   } | null;
   tier: "free" | "pro";
 }
@@ -193,6 +195,10 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
             subscription={subData.subscription}
             onManage={() => portalMutation.mutate()}
             isManaging={portalMutation.isPending}
+            monthlyPrice={monthlyPrice}
+            yearlyPrice={yearlyPrice}
+            monthlyAmount={monthlyAmount}
+            yearlyAmount={yearlyAmount}
           />
         ) : isPro ? (
           <div className="text-center space-y-4 py-8">
@@ -460,13 +466,47 @@ function ActiveSubscription({
   subscription,
   onManage,
   isManaging,
+  monthlyPrice,
+  yearlyPrice,
+  monthlyAmount,
+  yearlyAmount,
 }: {
   subscription: SubscriptionData["subscription"] & {};
   onManage: () => void;
   isManaging: boolean;
+  monthlyPrice?: { id: string; unit_amount: number; currency: string; recurring: { interval: string } };
+  yearlyPrice?: { id: string; unit_amount: number; currency: string; recurring: { interval: string } };
+  monthlyAmount: number;
+  yearlyAmount: number;
 }) {
+  const { toast } = useToast();
   const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
+  const [switchConfirmOpen, setSwitchConfirmOpen] = useState(false);
   const isTrialing = subscription.isTrialing === true;
+
+  const currentPriceId = subscription.currentPriceId;
+  const isMonthly = currentPriceId === monthlyPrice?.id;
+  const isYearly = currentPriceId === yearlyPrice?.id;
+  const canSwitch = (isMonthly && yearlyPrice) || (isYearly && monthlyPrice);
+  const switchTargetLabel = isMonthly ? "annual" : "monthly";
+  const switchTargetPrice = isMonthly ? yearlyPrice : monthlyPrice;
+  const switchTargetAmount = isMonthly ? yearlyAmount : monthlyAmount;
+  const switchTargetInterval = isMonthly ? "year" : "month";
+
+  const switchPlanMutation = useMutation({
+    mutationFn: async (priceId: string) => {
+      const res = await apiRequest("POST", "/api/stripe/switch-plan", { priceId });
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Plan updated", description: `Switched to ${switchTargetLabel} billing.` });
+      setSwitchConfirmOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Could not switch plan", description: error.message, variant: "destructive" });
+    },
+  });
   const trialDaysLeft = subscription.trialDaysLeft ?? 0;
 
   const rawEnd = subscription.currentPeriodEnd;
@@ -507,6 +547,11 @@ function ActiveSubscription({
           <Crown className="w-7 h-7 text-primary" />
         </div>
         <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
+        {(isMonthly || isYearly) && !isTrialing && (
+          <span className="inline-block text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-full" data-testid="text-current-plan-interval">
+            {isMonthly ? `$${monthlyAmount}/month` : `$${yearlyAmount}/year`}
+          </span>
+        )}
         {isTrialing ? (
           <p className="text-sm text-muted-foreground" data-testid="text-trial-info">
             {trialDaysLeft > 1
@@ -566,6 +611,59 @@ function ActiveSubscription({
         </ul>
 
         <div className="space-y-2">
+          {canSwitch && !subscription.cancelAtPeriodEnd && (
+            <>
+              {!switchConfirmOpen ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setSwitchConfirmOpen(true)}
+                  data-testid="button-switch-plan"
+                >
+                  <ArrowUpDown className="w-4 h-4 mr-2" />
+                  Switch to {switchTargetLabel}
+                  {isMonthly && (
+                    <span className="ml-1 text-xs text-primary font-medium">Save {Math.round((1 - (yearlyAmount / 12) / monthlyAmount) * 100)}%</span>
+                  )}
+                </Button>
+              ) : (
+                <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-4 space-y-3">
+                  <p className="text-sm font-medium">Switch to {switchTargetLabel} billing?</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isMonthly
+                      ? `You'll be charged $${yearlyAmount}/${switchTargetInterval} instead of $${monthlyAmount}/month. A prorated credit for your current billing period will be applied.`
+                      : `You'll be charged $${monthlyAmount}/${switchTargetInterval} instead of $${yearlyAmount}/year. A prorated credit for your remaining annual period will be applied.`
+                    }
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => switchTargetPrice && switchPlanMutation.mutate(switchTargetPrice.id)}
+                      disabled={switchPlanMutation.isPending}
+                      data-testid="button-confirm-switch"
+                    >
+                      {switchPlanMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                      ) : null}
+                      Confirm
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="flex-1"
+                      onClick={() => setSwitchConfirmOpen(false)}
+                      disabled={switchPlanMutation.isPending}
+                      data-testid="button-cancel-switch"
+                    >
+                      Never mind
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           <Button
             variant="outline"
             className="w-full"
