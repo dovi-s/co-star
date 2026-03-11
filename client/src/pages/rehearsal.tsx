@@ -551,13 +551,14 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           return;
         }
         const isMobile = speechRecognition.isMobileDevice;
-        const restartDelay = isMobile ? 500 : 150;
+        const isPWAMode = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+        const restartDelay = isPWAMode ? 700 : isMobile ? 500 : 150;
         const attemptRestart = (attempt: number) => {
           if (!waitingForUserRef.current || !isPlayingRef.current || speechRecognition.listening) return;
           if (hintPlayingRef.current) return;
           const started = speechRecognition.softStart();
-          if (!started && attempt < 3 && isMobile) {
-            setTimeout(() => attemptRestart(attempt + 1), 800);
+          if (!started && attempt < (isPWAMode ? 5 : 3) && isMobile) {
+            setTimeout(() => attemptRestart(attempt + 1), isPWAMode ? 1000 : 800);
           }
         };
         
@@ -925,7 +926,8 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     }
     
     if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
-      const micDelay = speechRecognition.isMobileDevice ? 500 : 0;
+      const isPWA = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+      const micDelay = isPWA ? 650 : speechRecognition.isMobileDevice ? 500 : 0;
       setTimeout(() => {
         if (isPlayingRef.current && waitingForUserRef.current) {
           speechRecognition.softStart();

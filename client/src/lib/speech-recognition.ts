@@ -337,7 +337,14 @@ class SpeechRecognitionEngine {
   private recreateAndStart() {
     try {
       if (this.recognition) {
+        try {
+          this.recognition.onstart = null;
+          this.recognition.onend = null;
+          this.recognition.onerror = null;
+          this.recognition.onresult = null;
+        } catch {}
         try { this.recognition.abort(); } catch {}
+        this.recognition = null;
       }
       this.isListening = false;
       this.createRecognition();
@@ -543,16 +550,30 @@ class SpeechRecognitionEngine {
   }
 
   pause() {
-    if (this.usesContinuousMode && this.isListening) {
+    if (this.usesContinuousMode && this.isListening && !this.isPWA) {
       this.resetAccumulated();
       this.clearSilenceTimeout();
       return;
     }
-    this.stop();
+    this.shouldAutoRestart = false;
+    this.clearSilenceTimeout();
+    this.stopWatchdog();
+    if (this.restartDelay) {
+      clearTimeout(this.restartDelay);
+      this.restartDelay = null;
+    }
+    if (this.recognition && this.isListening) {
+      try {
+        this.recognition.abort();
+      } catch {}
+    }
+    this.isListening = false;
+    this.resetAccumulated();
+    this.setState("idle");
   }
 
   softStart(): boolean {
-    if (this.usesContinuousMode && this.isListening) {
+    if (this.usesContinuousMode && this.isListening && !this.isPWA) {
       this.resetAccumulated();
       this.hasReceivedSpeech = false;
       this.lastTranscript = "";
@@ -561,6 +582,22 @@ class SpeechRecognitionEngine {
       this.resetSilenceTimeout();
       return true;
     }
+
+    if (this.isPWA || this.isMobile) {
+      this.shouldAutoRestart = false;
+      if (this.restartDelay) {
+        clearTimeout(this.restartDelay);
+        this.restartDelay = null;
+      }
+      if (this.recognition && this.isListening) {
+        try { this.recognition.abort(); } catch {}
+        this.isListening = false;
+      }
+      this.recreateAndStart();
+      this.shouldAutoRestart = true;
+      return this.isListening;
+    }
+
     return this.start();
   }
 
