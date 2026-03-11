@@ -18,6 +18,48 @@ import { db } from "./db";
 import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
+function detectTitleFromScript(lines: string[]): string | null {
+  const head = lines.slice(0, 30);
+  
+  const titleCase = (s: string) => {
+    const small = new Set(["a","an","the","and","but","or","for","nor","on","at","to","by","in","of","up","as","is","it","vs"]);
+    return s.split(' ').map((w, i) => {
+      if (i > 0 && small.has(w.toLowerCase())) return w.toLowerCase();
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join(' ');
+  };
+
+  for (let i = 0; i < head.length; i++) {
+    const line = head[i];
+    const next = head[i + 1] || "";
+    const next2 = head[i + 2] || "";
+    
+    if (/^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next) ||
+        /^(written\s+by|screenplay\s+by|by\s|by$|based\s+on|adapted\s+by)/i.test(next2)) {
+      const candidate = line.replace(/["""'']/g, '').trim();
+      if (candidate.length >= 2 && candidate.length <= 80 && 
+          !/^(written|screenplay|based|adapted|by|draft|revised|script|page)/i.test(candidate) &&
+          !/^\d+$/.test(candidate)) {
+        const isAllCaps = candidate === candidate.toUpperCase() && /[A-Z]/.test(candidate);
+        return isAllCaps ? titleCase(candidate) : candidate;
+      }
+    }
+  }
+
+  for (const line of head) {
+    const m = line.match(/^(?:title\s*:\s*|#\s+)(.+)$/i);
+    if (m) {
+      const candidate = m[1].replace(/["""'']/g, '').trim();
+      if (candidate.length >= 2 && candidate.length <= 80) {
+        const isAllCaps = candidate === candidate.toUpperCase() && /[A-Z]/.test(candidate);
+        return isAllCaps ? titleCase(candidate) : candidate;
+      }
+    }
+  }
+
+  return null;
+}
+
 function cleanGeneratedScript(text: string): string {
   return text
     .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
@@ -1405,34 +1447,46 @@ MARY: You're kidding me.`;
 
       // Generate a smart name from the script content
       let suggestedName: string | null = null;
-      try {
-        const nameAI = new OpenAI({
-          apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-          baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-        });
-        const snippet = finalScript.scenes
-          .flatMap(s => s.lines.slice(0, 8))
-          .slice(0, 12)
-          .map(l => `${l.roleName}: ${l.text.substring(0, 80)}`)
-          .join('\n');
-        const nameResponse = await nameAI.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [{
-            role: "system",
-            content: "Generate a short, descriptive title (2-5 words) for this script scene. If it's from a known show/movie/play, include the source name. Examples: \"Family Guy: TV Debate\", \"Hamlet: The Confrontation\", \"Coffee Shop Breakup\", \"Job Interview Gone Wrong\". Reply with ONLY the title, nothing else."
-          }, {
-            role: "user",
-            content: snippet
-          }],
-          max_tokens: 20,
-          temperature: 0.3,
-        });
-        const raw = nameResponse.choices[0]?.message?.content?.trim().replace(/^["']|["']$/g, '');
-        if (raw && raw.length > 1 && raw.length <= 50) {
-          suggestedName = raw;
+      
+      // First try to detect title from the raw script text (title pages, headers)
+      const rawLines = script.split('\n').map((l: string) => l.trim()).filter((l: string) => l);
+      const titlePageTitle = detectTitleFromScript(rawLines);
+      if (titlePageTitle) {
+        suggestedName = titlePageTitle;
+        console.log('[Parse Script] Title detected from script text:', suggestedName);
+      }
+      
+      // Fall back to AI naming only if no title was found
+      if (!suggestedName) {
+        try {
+          const nameAI = new OpenAI({
+            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+          });
+          const snippet = finalScript.scenes
+            .flatMap(s => s.lines.slice(0, 8))
+            .slice(0, 12)
+            .map(l => `${l.roleName}: ${l.text.substring(0, 80)}`)
+            .join('\n');
+          const nameResponse = await nameAI.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: [{
+              role: "system",
+              content: "You are naming a script for a rehearsal app. Return ONLY the title.\n\nRules:\n- If you recognize the script as a known movie, TV show, play, or musical, return ONLY the official title. Do NOT add subtitles, episode names, or scene descriptions. Examples: \"The Wolf of Wall Street\", \"Hamlet\", \"Breaking Bad\", \"A Streetcar Named Desire\".\n- If the script is original/unknown, generate a short descriptive title (2-5 words) based on the scene content. Examples: \"Coffee Shop Breakup\", \"Job Interview Gone Wrong\", \"The Apology\".\n- Never invent subtitles for known works.\n- Reply with ONLY the title, nothing else."
+            }, {
+              role: "user",
+              content: snippet
+            }],
+            max_tokens: 25,
+            temperature: 0.2,
+          });
+          const raw = nameResponse.choices[0]?.message?.content?.trim().replace(/^["']|["']$/g, '');
+          if (raw && raw.length > 1 && raw.length <= 60) {
+            suggestedName = raw;
+          }
+        } catch (e) {
+          console.log('[Parse Script] Name generation failed, using fallback');
         }
-      } catch (e) {
-        console.log('[Parse Script] Name generation failed, using fallback');
       }
 
       res.json({ parsed: finalScript, suggestedName });

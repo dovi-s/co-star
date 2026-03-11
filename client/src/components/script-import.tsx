@@ -214,16 +214,21 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
 
   // Extract a clean title from filename
   const extractTitleFromFilename = (filename: string): string => {
-    // Remove extension
     let title = filename.replace(/\.(pdf|txt|fountain|rtf|fdx)$/i, '');
-    // Replace common separators with spaces
-    title = title.replace(/[-_\.]/g, ' ');
-    // Clean up multiple spaces
+    title = title.replace(/[-_]/g, ' ');
     title = title.replace(/\s+/g, ' ').trim();
-    // Title case
-    title = title.split(' ').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-    ).join(' ');
+    title = title.replace(/\s+\d{6,}$/, '');
+    title = title.replace(/\s*\(\d+\)\s*$/, '');
+    title = title.replace(/\s*copy\s*\d*\s*$/i, '');
+    title = title.trim();
+    if (!title) return "Untitled Script";
+    title = title.split(' ').map(word => {
+      if (/^(a|an|the|and|but|or|for|nor|on|at|to|by|in|of|up|as|is|it)$/i.test(word)) {
+        return word.toLowerCase();
+      }
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    }).join(' ');
+    title = title.charAt(0).toUpperCase() + title.slice(1);
     return title;
   };
 
