@@ -1,0 +1,33 @@
+The short answer: there are gaps. The system works for the happy path, but there are real sync holes that could cause problems. Let me break it down.
+
+Where things are today
+Three sources of state:
+
+Your database (the users table) — stores subscriptionTier, stripeCustomerId, stripeSubscriptionId, subscriptionExpiresAt
+Stripe's synced tables — stripe-replit-sync mirrors Stripe customers/subscriptions into local DB tables
+Stripe itself — the actual billing system
+What works well:
+
+Checkout creates Stripe customers and links them to your users
+The /api/auth/subscription endpoint does a real-time reconciliation — it checks the synced Stripe tables and updates your users table if there's a mismatch
+Webhooks flow through stripe-replit-sync to keep the local Stripe mirror up to date
+The admin panel lets you list users, change tiers, reset usage, and grant bonus credits
+The gaps I found
+Deleting a user doesn't touch Stripe. If an admin deletes a user who has an active subscription, the Stripe subscription keeps charging. The customer record stays in Stripe as an orphan.
+
+Admin tier changes don't sync to Stripe. When an admin switches someone from Pro to Free (or vice versa), it only updates the database. The Stripe subscription isn't cancelled or created — so the user could still be billed for Pro while showing as Free, or get Pro access without paying.
+
+No single source of truth. The database is treated as primary for access control, but Stripe is the actual billing authority. When they disagree, the /api/auth/subscription endpoint tries to reconcile — but that only runs when the user checks their subscription status, not proactively.
+
+Trial/plan length changes are hardcoded. The 7-day trial and 3 rehearsals/day limit are constants in the code, not admin-configurable settings.
+
+No audit trail for admin actions. When an admin changes a user's plan or deletes them, there's no record of who did what and when.
+
+What "making complete sense" would look like
+Want me to tighten this up? The key changes would be:
+
+User deletion → cancel Stripe subscription first, then delete local data
+Admin tier changes → sync to Stripe (cancel subscription when downgrading, or create one when upgrading)
+Add an admin settings table for configurable values (trial length, free daily limit, etc.) instead of hardcoded constants
+Log admin actions with timestamps and admin user ID
+This is server-side work — want me to go ahead with some or all of these? I'd suggest starting with the deletion and tier-change sync since those are the ones that could actually cost you money or confuse users.
