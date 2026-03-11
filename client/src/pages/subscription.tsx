@@ -76,13 +76,15 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
   const [billingPeriod, setBillingPeriod] = useState<"month" | "year">("month");
   const [shownSuccess, setShownSuccess] = useState(false);
 
-  const { data: subData, isLoading: subLoading } = useQuery<SubscriptionData>({
+  const { data: subData, isLoading: subLoading, error: subError } = useQuery<SubscriptionData>({
     queryKey: ["/api/stripe/subscription"],
     queryFn: async () => {
       const res = await fetch("/api/stripe/subscription", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load subscription");
       return res.json();
     },
     enabled: isAuthenticated,
+    retry: 1,
   });
 
   useEffect(() => {
@@ -98,12 +100,14 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
     }
   }, [checkoutSuccess, shownSuccess, subData, toast]);
 
-  const { data: productsData, isLoading: productsLoading } = useQuery<{ products: StripeProduct[] }>({
+  const { data: productsData, isLoading: productsLoading, error: productsError } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ["/api/stripe/products"],
     queryFn: async () => {
       const res = await fetch("/api/stripe/products");
+      if (!res.ok) throw new Error("Failed to load products");
       return res.json();
     },
+    retry: 1,
   });
 
   const checkoutMutation = useMutation({
@@ -147,6 +151,7 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
   const savingsPercent = Math.round((1 - yearlyMonthly / monthlyAmount) * 100);
 
   const isLoading = subLoading || productsLoading;
+  const hasError = subError || productsError;
 
   return (
     <div className="min-h-screen bg-background">
@@ -170,12 +175,41 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
           <div className="flex items-center justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
-        ) : isPro ? (
+        ) : hasError ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-destructive" />
+            </div>
+            <div>
+              <h3 className="font-semibold mb-1">Unable to load subscription</h3>
+              <p className="text-sm text-muted-foreground">Please try again in a moment.</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()} data-testid="button-retry-subscription">
+              Try again
+            </Button>
+          </div>
+        ) : isPro && subData?.subscription ? (
           <ActiveSubscription
-            subscription={subData!.subscription!}
+            subscription={subData.subscription}
             onManage={() => portalMutation.mutate()}
             isManaging={portalMutation.isPending}
           />
+        ) : isPro ? (
+          <div className="text-center space-y-4 py-8">
+            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+              <Crown className="w-7 h-7 text-primary" />
+            </div>
+            <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
+            <p className="text-sm text-muted-foreground">Your Pro access is active. Enjoy unlimited rehearsals.</p>
+            <div className="space-y-2 text-left max-w-xs mx-auto">
+              {proFeatures.map((f, i) => (
+                <div key={i} className="flex items-center gap-2.5 text-sm">
+                  <Check className="w-4 h-4 text-primary shrink-0" />
+                  <span>{f.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         ) : (
           <>
             <div className="text-center space-y-2">
