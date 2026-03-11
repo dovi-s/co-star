@@ -218,7 +218,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
         ref={overlayRef}
         className={cn(
           "fixed inset-0 z-50 bg-black/60 transition-opacity duration-150 overscroll-contain",
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
+          open ? "opacity-100" : "opacity-0 pointer-events-none hidden"
         )}
         onClick={() => onOpenChange(false)}
         aria-hidden="true"
@@ -229,11 +229,12 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
         aria-modal={open ? true : undefined}
         aria-label="Menu"
         aria-hidden={!open}
+        style={!open ? { contain: "strict" } : undefined}
         className={cn(
-          "fixed inset-y-0 right-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
+          "fixed inset-y-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
           "flex flex-col overflow-hidden safe-area-top safe-area-bottom",
           "transition-[transform,visibility] duration-150 ease-out will-change-transform",
-          open ? "translate-x-0 visible" : "translate-x-full invisible pointer-events-none"
+          open ? "right-0 translate-x-0 visible" : "right-0 translate-x-full invisible pointer-events-none"
         )}
       >
         <div className="px-5 pt-5 pb-3 text-left">
