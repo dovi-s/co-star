@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,14 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 
+async function digestMessage(message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(message);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").substring(0, 32);
+}
+
 export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentScriptsProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
@@ -44,6 +52,35 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
   const { isAuthenticated, user } = useAuth();
   const isPro = user?.subscriptionTier === "pro";
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (!isAuthenticated || !isPro || scripts.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/scripts", { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const savedScripts: { contentHash: string }[] = await res.json();
+        const savedHashes = new Set(savedScripts.map(s => s.contentHash).filter(Boolean));
+        if (savedHashes.size === 0) return;
+        const matched = new Set<string>();
+        for (const rs of scripts) {
+          const content = rs.rawScript || "";
+          if (!content) continue;
+          const hash = await digestMessage(content);
+          if (savedHashes.has(hash)) {
+            matched.add(rs.id);
+          }
+        }
+        if (!cancelled && matched.size > 0) setSavedIds(prev => {
+          const merged = new Set(prev);
+          matched.forEach(id => merged.add(id));
+          return merged;
+        });
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthenticated, isPro, scripts]);
 
   const handleDelete = useCallback((script: RecentScript) => {
     const scriptId = script.id;

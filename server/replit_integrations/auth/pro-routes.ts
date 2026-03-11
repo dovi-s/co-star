@@ -49,6 +49,7 @@ export function registerProRoutes(app: Express): void {
         .select({
           id: savedScripts.id,
           name: savedScripts.name,
+          rawScript: savedScripts.rawScript,
           userRoleId: savedScripts.userRoleId,
           lastPosition: savedScripts.lastPosition,
           lastScene: savedScripts.lastScene,
@@ -58,7 +59,11 @@ export function registerProRoutes(app: Express): void {
         .from(savedScripts)
         .where(eq(savedScripts.userId, userId))
         .orderBy(desc(savedScripts.updatedAt));
-      res.json(scripts);
+      res.json(scripts.map(s => ({
+        ...s,
+        contentHash: scriptFingerprint(s.rawScript),
+        rawScript: undefined,
+      })));
     } catch (error) {
       console.error("Error fetching scripts:", error);
       res.status(500).json({ message: "Failed to fetch scripts" });
@@ -90,6 +95,16 @@ export function registerProRoutes(app: Express): void {
 
       if (!name) {
         return res.status(400).json({ message: "Name is required" });
+      }
+
+      const existing = await db
+        .select()
+        .from(savedScripts)
+        .where(and(eq(savedScripts.userId, userId), sql`md5(${savedScripts.rawScript}) = md5(${rawScript || ""})`))
+        .limit(1);
+
+      if (existing.length > 0) {
+        return res.json(existing[0]);
       }
 
       const [script] = await db

@@ -1,0 +1,35 @@
+Great question — this deserves some real thought before jumping into implementation. Let me look at how recordings currently work and then give you my honest take.
+
+Here's my honest take on this, having dug into how your recording system works:
+
+What you have now: Recordings are generated entirely in the browser — canvas compositing, mixed audio (mic + scene partner voice), watermark — and downloaded as a one-shot MP4/WebM file. There's no server-side storage for video at all. No object storage is set up.
+
+Should you build a recording library? Yes — but thoughtfully. Here's why and how I'd approach it:
+
+Why it makes sense:
+
+Actors reviewing their own performances is how they improve. Right now, recordings vanish into the Downloads folder and are basically lost
+Tying recordings to scripts creates a natural "rehearsal journal" — "show me all my takes of this monologue over time"
+It's a strong retention hook and a clear Pro differentiator
+It aligns perfectly with your existing Performance History (which already tracks accuracy, duration, etc. per run)
+The right architecture:
+
+Nest recordings under scripts, like you intuited. Each script has a timeline of takes
+Each recording links to the performance run data you already capture (accuracy, lines correct, duration)
+Users can watch, compare, download, or delete from one place
+The library page and history page could merge into one richer "My Rehearsals" view
+The practical reality (important):
+
+Video files are large — 5Mbps bitrate × a 5-minute scene = ~190MB per recording
+You'd need Replit Object Storage (blob storage) for this, which you don't have set up yet
+Storage costs scale fast, so even Pro users would need limits (e.g., 20 recordings or 2GB, oldest auto-archived)
+Upload happens after recording stops, so there's a "saving..." moment to handle gracefully
+What I'd recommend building:
+
+Object storage setup for video files
+A recordings database table linking each recording to its script, performance run, and storage URL
+Upload flow — after recording stops, offer "Save to library" (Pro) alongside the existing download
+Recording library UI — nested under scripts in a unified "My Rehearsals" view, with playback, download, and delete
+Storage limits — cap per user, with clear visibility of usage
+Free users — can still download immediately (current behavior), but cloud storage is Pro-only
+Want me to write this up as a detailed session plan? Or do you want to adjust the approach first — for example, whether you'd prefer a separate "Recordings" page vs. integrating it into the existing History page, or whether you want to tackle storage limits from the start?
