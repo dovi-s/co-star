@@ -943,7 +943,11 @@ function normalizeCharacterName(name: string): string {
   // Remove leading numbers (e.g., "1. MARY")
   normalized = normalized.replace(/^\d+[\.\)\-\s]+/, "");
   // Remove trailing periods, commas, colons, semicolons (OCR/PDF artifacts)
-  normalized = normalized.replace(/[.,;:!?\-]+$/, "");
+  // BUT preserve dotted initials like J.D., T.C., C.J., O.B.
+  const isDottedInitials = /^([A-Z]\.){2,}$/i.test(normalized);
+  if (!isDottedInitials) {
+    normalized = normalized.replace(/[.,;:!?\-]+$/, "");
+  }
   // Remove leading punctuation
   normalized = normalized.replace(/^[.,;:!?\-\s]+/, "");
   // Normalize whitespace
@@ -998,6 +1002,9 @@ function isValidCharacterName(name: string): boolean {
   // Must be reasonable length
   if (normalized.length < 2 || normalized.length > 35) return false;
   
+  // Dotted initials like J.D., T.C., C.J., O.B. are always valid
+  if (/^([A-Z]\.){2,}$/i.test(normalized)) return true;
+  
   // Very short names (2-3 chars) must be in the valid short names list
   if (normalized.length <= 3) {
     if (!VALID_SHORT_NAMES.has(normalized)) return false;
@@ -1010,8 +1017,9 @@ function isValidCharacterName(name: string): boolean {
   if (/^I[A-Z]{3,}$/.test(normalized)) return false;
   
   // Reject "NAME. WORD" patterns (merged dialogue) - BUT allow valid titles like DET., MRS., DR.
+  // Also allow dotted initials like J.D., T.C.
   const validTitles = /^(DR|MR|MRS|MS|MISS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|LADY|LORD|PROF|OFFICER|DETECTIVE|INSPECTOR|NURSE|FATHER|MOTHER|SISTER|BROTHER|AUNT|UNCLE)\.?\s+/i;
-  if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized) && !validTitles.test(normalized)) return false;
+  if (/^[A-Z]+\.\s*[A-Z]+$/i.test(normalized) && !validTitles.test(normalized) && !/^([A-Z]\.){2,}$/i.test(normalized)) return false;
   
   // Reject if contains lowercase words (indicates merged dialogue like "SARA. It's...almost 6")
   // A valid character name should not have lowercase words after the first
@@ -1561,7 +1569,7 @@ function preprocessScript(rawText: string): string {
   // When the text has very few newlines but multiple colon-format dialogue entries,
   // split at each CHARACTER: boundary and separate standalone stage directions
   const lineCount = (text.match(/\n/g) || []).length;
-  const colonDialogueMatches = text.match(/\b[A-Z]{2,}(?:\s+[A-Z]{2,})?:\s*\[?[a-zA-Z]/g) || [];
+  const colonDialogueMatches = text.match(/(?:\b[A-Z]{2,}(?:\s+[A-Z]{2,})?|(?:[A-Z]\.){2,}):\s*\[?[a-zA-Z]/g) || [];
   
   if (colonDialogueMatches.length >= 2 && lineCount < colonDialogueMatches.length) {
     // Split long bracketed stage directions (30+ chars) onto their own lines
@@ -1570,10 +1578,20 @@ function preprocessScript(rawText: string): string {
     
     // Split before each CHARACTER: pattern when preceded by text
     // Handles: "] KAREN:", "? JAMES:", ". KAREN:", etc.
-    text = text.replace(/([\].)!?,;:'"]\s*)([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+    // BUT don't split when preceded by a title prefix (DR., MR., etc.)
+    text = text.replace(/([\].)!?,;:'"]\s*)([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, (match, before, name, offset) => {
+      const preceding = text.substring(Math.max(0, offset - 6), offset);
+      if (/(?:DR|MR|MRS|MS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF)\.?\s*$/i.test(preceding)) return match;
+      return before + '\n' + name + ': ';
+    });
     
     // Also split when CHARACTER: appears after any word boundary (covers remaining cases)
-    text = text.replace(/([a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+    // BUT don't split when preceded by a title prefix
+    text = text.replace(/([a-z])\s+([A-Z]{2,}(?:\s+[A-Z]{2,})?):\s+/g, (match, before, name, offset) => {
+      const preceding = text.substring(Math.max(0, offset - 6), offset + 1);
+      if (/(?:DR|MR|MRS|MS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF)\.?\s*$/i.test(preceding)) return match;
+      return before + '\n' + name + ': ';
+    });
     
     // Clean up any triple+ newlines
     text = text.replace(/\n{3,}/g, '\n\n');
@@ -1641,7 +1659,12 @@ function preprocessScript(rawText: string): string {
   // e.g., "Like, a LUCY: You're disgusting." -> "Like, a\nLUCY: You're disgusting."
   // Only split after sentence-ending punctuation or comma, NOT inside quoted dialogue
   // Pattern: punctuation/bracket + space + ALLCAPS NAME (3+ chars) + colon + space
-  text = text.replace(/([\].!?,;])[ ]+([A-Z]{3,}(?:[ ]+[A-Z]{2,})?):\s+/g, '$1\n$2: ');
+  // BUT don't split when preceded by a title prefix (DR., MR., etc.)
+  text = text.replace(/([\].!?,;])[ ]+([A-Z]{3,}(?:[ ]+[A-Z]{2,})?):\s+/g, (match, punct, name, offset) => {
+    const preceding = text.substring(Math.max(0, offset - 6), offset + 1);
+    if (/(?:DR|MR|MRS|MS|DET|SGT|LT|CAPT|COL|GEN|REV|SIR|PROF)\.?\s*$/i.test(preceding)) return match;
+    return punct + '\n' + name + ': ';
+  });
   
   // Split when lowercase dialogue ends and all-caps name starts directly
   // e.g., "...phone. KEVIN McCALLISTER enters." -> "...phone.\nKEVIN McCALLISTER enters."

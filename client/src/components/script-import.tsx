@@ -643,7 +643,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
                 const trimmed = lines[i].trim();
                 if (!trimmed) continue;
 
-                const colonMatch = trimmed.match(/^([A-Z][A-Z\s'.\-()]{0,30}?)(?:\s*[:.])\s*(.*)/);
+                const colonMatch = trimmed.match(/^((?:[A-Z]\.){2,}|(?:(?:DR|MR|MRS|MS|DET|SGT|LT|CAPT)\.?\s+)?[A-Z][A-Z\s'\-()]{0,30}?)\s*:\s*(.*)/);
                 const isStageDirection = /^[\[(]/.test(trimmed);
                 const isSceneHeader = /^(?:SCENE|ACT|INT\.|EXT\.)/i.test(trimmed);
 
