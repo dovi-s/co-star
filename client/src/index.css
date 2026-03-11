@@ -1865,14 +1865,16 @@
 
 /* Prevent horizontal scroll/bounce on all devices */
 html, body, #root {
-  overflow-x: clip;
+  overflow-x: hidden;
+  overscroll-behavior-x: none;
   max-width: 100%;
   width: 100%;
+  touch-action: pan-y pinch-zoom;
 }
 
 /* Ensure all page-level containers clip horizontal overflow */
 #root > * {
-  overflow-x: clip;
+  overflow-x: hidden;
   max-width: 100%;
 }
 

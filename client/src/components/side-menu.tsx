@@ -232,8 +232,8 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
         className={cn(
           "fixed inset-y-0 right-0 z-50 w-[300px] sm:max-w-[340px] bg-background border-l border-border shadow-xl",
           "flex flex-col overflow-hidden safe-area-top safe-area-bottom",
-          "transition-transform duration-150 ease-out will-change-transform",
-          open ? "translate-x-0" : "translate-x-full pointer-events-none"
+          "transition-[transform,visibility] duration-150 ease-out will-change-transform",
+          open ? "translate-x-0 visible" : "translate-x-full invisible pointer-events-none"
         )}
       >
         <div className="px-5 pt-5 pb-3 text-left">

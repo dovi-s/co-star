@@ -455,9 +455,67 @@ function NowRehearsingPill({ scriptName, onResume }: { scriptName: string; onRes
   );
 }
 
+function usePreventHorizontalScroll() {
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    let isHorizontal: boolean | null = null;
+
+    const onTouchStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      isHorizontal = null;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      const dx = Math.abs(e.touches[0].clientX - startX);
+      const dy = Math.abs(e.touches[0].clientY - startY);
+
+      if (isHorizontal === null && (dx > 5 || dy > 5)) {
+        isHorizontal = dx > dy;
+      }
+
+      if (isHorizontal) {
+        let el = e.target as HTMLElement | null;
+        let hasHorizontalScroll = false;
+        while (el) {
+          if (el.scrollWidth > el.clientWidth + 1) {
+            const style = window.getComputedStyle(el);
+            if (style.overflowX === "auto" || style.overflowX === "scroll") {
+              hasHorizontalScroll = true;
+              break;
+            }
+          }
+          el = el.parentElement;
+        }
+        if (!hasHorizontalScroll) {
+          e.preventDefault();
+        }
+      }
+    };
+
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+
+    const onScroll = () => {
+      if (window.scrollX !== 0) {
+        window.scrollTo(0, window.scrollY);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+}
+
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const handleSplashComplete = useCallback(() => setShowSplash(false), []);
+  usePreventHorizontalScroll();
 
   return (
     <ErrorBoundary>
