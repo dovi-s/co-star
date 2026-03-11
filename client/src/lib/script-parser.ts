@@ -666,7 +666,7 @@ function splitMergedLines(text: string): string[] {
   
   // Also handle action lines embedded in dialogue
   // Pattern: after punctuation, NAME + action verb (passes, walks, looks, etc.)
-  const actionMidText = /([.!?]\s*)([A-Z][A-Z]+)\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves)/gi;
+  const actionMidText = /([.!?]\s*)([A-Z][A-Z]+)\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves)/g;
   fixed = fixed.replace(actionMidText, '$1\n[$2 $3');
   
   // Return as array of lines
@@ -691,7 +691,7 @@ function cleanDialogueText(text: string): string {
   // Remove third-person narrative action descriptions that got merged into dialogue
   // "The doorbell rings." "Callie hides." "George enters." etc.
   cleaned = cleaned.replace(/\.\s+The\s+(?:doorbell|phone|buzzer|alarm|bell|door)\s+(?:rings?|buzzes?|sounds?|opens?|closes?)[^.]*\./gi, '.');
-  cleaned = cleaned.replace(/\.\s+[A-Z][a-z]+\s+(?:hides?|appears?|enters?|exits?|leaves?|walks?|runs?|sits?|stands?|looks?|turns?|moves?|crosses?|nods?|shakes?|smiles?|laughs?|sighs?|gasps?|pauses?|hesitates?|waits?)[^.]*\./gi, '.');
+  cleaned = cleaned.replace(/\.\s+[A-Z][a-z]+\s+(?:hides?|appears?|enters?|exits?|leaves?|walks?|runs?|sits?|stands?|looks?|turns?|moves?|crosses?|nods?|shakes?|smiles?|laughs?|sighs?|gasps?|pauses?|hesitates?|waits?)[^.]*\./g, '.');
   
   // Remove embedded character names with periods mid-dialogue: "SARA. You're Callie. CALLIE. Yes."
   // Pattern: NAME. (where NAME is 2+ caps followed by period and space)
@@ -704,7 +704,7 @@ function cleanDialogueText(text: string): string {
   
   // Remove "NAME action verb phrase" patterns (action lines mixed in)
   // e.g., "JOHN passes his documents out to the Officer."
-  cleaned = cleaned.replace(/\s+[A-Z]{2,}\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves|hands|reaches|pulls|pushes|throws|catches|nods|shakes|smiles|laughs|points)[^.!?]*[.!?]/gi, '. ');
+  cleaned = cleaned.replace(/\s+[A-Z]{2,}\s+(passes|walks|looks|turns|enters|exits|stands|sits|moves|picks|grabs|holds|opens|closes|falls|runs|comes|goes|takes|puts|gets|sees|hears|watches|crosses|leaves|hands|reaches|pulls|pushes|throws|catches|nods|shakes|smiles|laughs|points)[^.!?]*[.!?]/g, '. ');
   
   // Replace bullet characters with proper ellipsis
   cleaned = cleaned.replace(/•{2,}/g, '...'); // Multiple bullets -> ellipsis
