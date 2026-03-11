@@ -50,3 +50,6 @@ NODE_ENV = "development"
 
 [userenv.shared]
 ADMIN_EMAILS = "dovisherman@gmail.com"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-31be38c7-b0e6-46b9-85b5-c6b15237e843"

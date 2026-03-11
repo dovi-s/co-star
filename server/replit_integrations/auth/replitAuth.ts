@@ -8,6 +8,23 @@ import { users, passwordResetTokens } from "@shared/models/auth";
 import { eq, and, gt } from "drizzle-orm";
 import { sendPasswordResetEmail } from "../email/resend";
 import { OAuth2Client } from "google-auth-library";
+import { getUncachableStripeClient } from "../../stripeClient";
+
+async function ensureStripeCustomer(userId: string, email: string | null): Promise<string | null> {
+  try {
+    const stripe = await getUncachableStripeClient();
+    const customer = await stripe.customers.create({
+      email: email || undefined,
+      metadata: { userId },
+    });
+    await db.update(users).set({ stripeCustomerId: customer.id }).where(eq(users.id, userId));
+    console.log(`[Stripe] Created customer ${customer.id} for user ${userId}`);
+    return customer.id;
+  } catch (err: any) {
+    console.error("[Stripe] Failed to create customer on signup:", err.message);
+    return null;
+  }
+}
 
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>();
 
@@ -102,6 +119,8 @@ export async function setupAuth(app: Express) {
         })
         .returning();
 
+      ensureStripeCustomer(user.id, user.email);
+
       req.session.regenerate((err) => {
         if (err) {
           console.error("Session regenerate error:", err);
@@ -137,6 +156,10 @@ export async function setupAuth(app: Express) {
       const valid = await bcrypt.compare(password, user.passwordHash);
       if (!valid) {
         return res.status(401).json({ message: "Invalid email or password" });
+      }
+
+      if (!user.stripeCustomerId) {
+        ensureStripeCustomer(user.id, user.email);
       }
 
       req.session.regenerate((err) => {
@@ -300,10 +323,15 @@ export async function setupAuth(app: Express) {
             profileImageUrl: payload.picture || null,
           })
           .returning();
+        ensureStripeCustomer(user.id, user.email);
       }
 
       if (user.blocked === "true") {
         return res.status(403).json({ message: "This account has been suspended" });
+      }
+
+      if (!user.stripeCustomerId) {
+        ensureStripeCustomer(user.id, user.email);
       }
 
       req.session.regenerate((err) => {
