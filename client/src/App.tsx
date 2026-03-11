@@ -17,6 +17,7 @@ import { RoadmapPage } from "@/pages/roadmap";
 import { AuthPage } from "@/pages/auth";
 import { LibraryPage } from "@/pages/library";
 import { HistoryPage } from "@/pages/history";
+import { MyRehearsalsPage } from "@/pages/my-rehearsals";
 import { FeatureBoardPage } from "@/pages/feature-board";
 import { OnboardingPage } from "@/pages/onboarding";
 import { ActorProfilePage } from "@/pages/actor-profile";
@@ -93,7 +94,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "my-rehearsals" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
 type MultiplayerInitialView = "create" | "join";
 
 const viewToPath: Record<View, string> = {
@@ -107,6 +108,7 @@ const viewToPath: Record<View, string> = {
   signin: "/signin",
   library: "/library",
   history: "/history",
+  "my-rehearsals": "/my-rehearsals",
   "feature-board": "/feature-board",
   onboarding: "/onboarding",
   profile: "/profile",
@@ -227,6 +229,7 @@ function AppContent() {
       signin: "Sign In - Co-star Studio",
       library: "Library - Co-star Studio",
       history: "History - Co-star Studio",
+      "my-rehearsals": "My Rehearsals - Co-star Studio",
       "feature-board": "Feature Board - Co-star Studio",
       onboarding: "Welcome - Co-star Studio",
       profile: "Profile - Co-star Studio",
@@ -272,12 +275,12 @@ function AppContent() {
       transitionTo("home");
       return;
     }
-    if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
+    if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "my-rehearsals" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
       transitionTo(page as View);
     }
   }, [transitionTo]);
 
-  const viewsWithBack: View[] = ["rehearsal", "multiplayer", "how-it-works", "who-is-it-for", "compare", "roadmap", "signin", "library", "history", "feature-board", "profile", "subscription", "admin", "brand"];
+  const viewsWithBack: View[] = ["rehearsal", "multiplayer", "how-it-works", "who-is-it-for", "compare", "roadmap", "signin", "library", "history", "my-rehearsals", "feature-board", "profile", "subscription", "admin", "brand"];
   const swipeBackHandler = viewsWithBack.includes(view) ? handleBackToHome : undefined;
   useSwipeBack(swipeBackHandler);
 
@@ -353,6 +356,9 @@ function AppContent() {
       )}
       {view === "history" && (
         <HistoryPage onBack={handleBackToHome} onNavigate={handleNavigate} />
+      )}
+      {view === "my-rehearsals" && (
+        <MyRehearsalsPage onBack={handleBackToHome} onLoadScript={handleLoadScript} onNavigate={handleNavigate} />
       )}
       {view === "feature-board" && (
         <FeatureBoardPage onBack={handleBackToHome} />

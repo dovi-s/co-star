@@ -125,6 +125,27 @@ export const performanceRuns = pgTable("performance_runs", {
 export type PerformanceRun = typeof performanceRuns.$inferSelect;
 export type InsertPerformanceRun = typeof performanceRuns.$inferInsert;
 
+// Cloud recordings for Pro users
+export const recordings = pgTable("recordings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  scriptName: varchar("script_name").notNull(),
+  recentScriptId: varchar("recent_script_id"),
+  savedScriptId: varchar("saved_script_id"),
+  performanceRunId: varchar("performance_run_id"),
+  storageKey: varchar("storage_key").notNull(),
+  fileSize: integer("file_size").notNull(),
+  durationSeconds: integer("duration_seconds"),
+  accuracy: real("accuracy"),
+  mimeType: varchar("mime_type").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_recordings_user").on(table.userId),
+]);
+
+export type Recording = typeof recordings.$inferSelect;
+export type InsertRecording = typeof recordings.$inferInsert;
+
 // Feature requests board
 export const featureRequests = pgTable("feature_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

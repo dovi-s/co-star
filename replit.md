@@ -73,3 +73,16 @@ Key features include:
 - **socket.io**: Real-time communication for multiplayer table reads.
 - **WebRTC**: Peer-to-peer video and audio streaming.
 - **Google Identity Services**: Google Sign-In.
+- **Replit Object Storage**: Cloud recording storage via signed URLs (sidecar at `http://127.0.0.1:1106`).
+
+### Cloud Recording Library (Pro Only)
+- **Database**: `recordings` table with fields: id, userId, scriptName, storageKey, fileSize, durationSeconds, accuracy, mimeType, createdAt, plus optional FK refs to recent_scripts/saved_scripts/performance_runs.
+- **Storage**: Replit Object Storage via signed URLs (PUT for upload, GET for streaming, DELETE for removal). Private directory path from `PRIVATE_OBJECT_DIR` env var. 2 GB per-user storage limit enforced server-side.
+- **API Routes** (all Pro-gated in `server/replit_integrations/auth/pro-routes.ts`):
+  - `GET /api/recordings` — list user's recordings with storage usage
+  - `POST /api/recordings/upload` — multipart upload via multer, stores to Object Storage
+  - `GET /api/recordings/:id/stream` — redirect to signed download URL
+  - `DELETE /api/recordings/:id` — removes from storage and DB
+- **Frontend**: "Save to Library" button in rehearsal stop dialog (Pro users). "My Rehearsals" unified page (`client/src/pages/my-rehearsals.tsx`) with tabs: Recordings, Scripts, Stats. Storage meter in header. Inline video playback, download, and delete with confirmation.
+- **Recording Specs**: 2 Mbps video + 192 kbps audio (~16 MB/min). File size capped at 500 MB per upload.
+- **Navigation**: Side menu consolidated from "Saved Scripts" + "Performance History" into single "My Rehearsals" item.

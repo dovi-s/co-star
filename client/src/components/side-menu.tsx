@@ -29,6 +29,7 @@ import {
   Handshake,
   Home,
   X,
+  Film,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -326,23 +327,13 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             testId="menu-item-home"
           />
           <MenuItem
-            icon={<Library className="h-4 w-4" />}
-            label="Saved Scripts"
-            description={isSignedIn ? (user?.subscriptionTier === "pro" ? "Your script collection" : "Upgrade to save scripts") : "Sign in to save scripts"}
-            onClick={() => isSignedIn && user?.subscriptionTier !== "pro" ? navigate("subscription") : navigate("library")}
+            icon={<Film className="h-4 w-4" />}
+            label="My Rehearsals"
+            description={isSignedIn ? (user?.subscriptionTier === "pro" ? "Recordings, scripts & stats" : "Upgrade for cloud library") : "Sign in to access"}
+            onClick={() => isSignedIn && user?.subscriptionTier !== "pro" ? navigate("subscription") : navigate("my-rehearsals")}
             disabled={!isSignedIn}
-            active={activePage === "library"}
-            testId="menu-item-library"
-            badge={isSignedIn && user?.subscriptionTier !== "pro" ? "Pro" : undefined}
-          />
-          <MenuItem
-            icon={<BarChart3 className="h-4 w-4" />}
-            label="Performance History"
-            description={isSignedIn ? (user?.subscriptionTier === "pro" ? "Track your accuracy over time" : "Upgrade to track progress") : "Sign in to track progress"}
-            onClick={() => isSignedIn && user?.subscriptionTier !== "pro" ? navigate("subscription") : navigate("history")}
-            disabled={!isSignedIn}
-            active={activePage === "history"}
-            testId="menu-item-history"
+            active={activePage === "my-rehearsals" || activePage === "library" || activePage === "history"}
+            testId="menu-item-my-rehearsals"
             badge={isSignedIn && user?.subscriptionTier !== "pro" ? "Pro" : undefined}
           />
 

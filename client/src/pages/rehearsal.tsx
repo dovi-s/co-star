@@ -19,7 +19,7 @@ import { speechRecognition, type SpeechRecognitionState } from "@/lib/speech-rec
 import { matchWords } from "@/lib/word-matcher";
 import { drawWatermark } from "@/lib/watermark";
 import type { VoicePreset, MemorizationMode } from "@shared/schema";
-import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Loader2, Trophy, Info, Zap, Clock, Flame, Share2, Crown, User, WifiOff } from "lucide-react";
+import { Check, Mic, TrendingUp, Target, RefreshCcw, Star, Download, Hand, FileText, Headphones, X, Volume2, Play, Pause, RotateCcw, Users, ArrowRight, Sparkles, ChevronLeft, ChevronRight, Loader2, Trophy, Info, Zap, Clock, Flame, Share2, Crown, User, WifiOff, CloudUpload } from "lucide-react";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const { setThemeColorOverride } = useTheme();
   const { toast } = useToast();
   const pwaInstall = usePwaInstall();
+  const [pendingCloudUpload, setPendingCloudUpload] = useState(false);
   const [fontSize, setFontSize] = useState(1);
   const [showDirections, setShowDirections] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
@@ -187,6 +188,25 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       };
     }
   }, [handsFreeMode]);
+
+  useEffect(() => {
+    if (!pendingCloudUpload || !camera.recordingBlob || camera.isUploading) return;
+    const doUpload = async () => {
+      const result = await camera.uploadRecording({
+        scriptName: session?.name || "Untitled",
+        durationSeconds: camera.recordingTime,
+        accuracy: completedRunStats ? Math.round(completedRunStats.averageAccuracy) : undefined,
+      });
+      setPendingCloudUpload(false);
+      if (result.success) {
+        toast({ title: "Recording saved to your library" });
+        camera.clearRecording();
+      } else {
+        toast({ title: "Upload failed", description: result.error, variant: "destructive" });
+      }
+    };
+    doUpload();
+  }, [pendingCloudUpload, camera.recordingBlob]);
 
   useEffect(() => {
     const goOffline = () => setIsOffline(true);
@@ -2407,36 +2427,62 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-card border shadow-2xl rounded-xl p-5 text-center max-w-xs mx-4" data-testid="discard-prompt">
             <h3 className="text-base font-semibold mb-1">Stop recording?</h3>
-            <p className="text-sm text-muted-foreground mb-4">Save the recording or discard it.</p>
-            <div className="flex flex-col gap-2">
-              <Button
-                className="w-full"
-                onClick={() => {
-                  camera.confirmStopAndDownload();
-                }}
-                data-testid="button-keep-recording"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Save recording
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  camera.confirmStopAndDiscard();
-                }}
-                data-testid="button-discard-recording"
-              >
-                Discard
-              </Button>
-              <button
-                onClick={() => camera.cancelStopRecording()}
-                className="mt-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                data-testid="button-cancel-stop"
-              >
-                continue recording
-              </button>
-            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              {user?.subscriptionTier === "pro" ? "Save to your cloud library, download, or discard." : "Save the recording or discard it."}
+            </p>
+            {camera.isUploading ? (
+              <div className="flex flex-col items-center gap-3 py-2">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                <p className="text-sm font-medium">Uploading to library...</p>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${camera.uploadProgress}%` }} />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {user?.subscriptionTier === "pro" && (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      setPendingCloudUpload(true);
+                      camera.stopRecording();
+                    }}
+                    data-testid="button-save-cloud"
+                  >
+                    <CloudUpload className="h-4 w-4 mr-2" />
+                    Save to Library
+                  </Button>
+                )}
+                <Button
+                  variant={user?.subscriptionTier === "pro" ? "outline" : "default"}
+                  className="w-full"
+                  onClick={() => {
+                    camera.confirmStopAndDownload();
+                  }}
+                  data-testid="button-keep-recording"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    camera.confirmStopAndDiscard();
+                  }}
+                  data-testid="button-discard-recording"
+                >
+                  Discard
+                </Button>
+                <button
+                  onClick={() => camera.cancelStopRecording()}
+                  className="mt-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  data-testid="button-cancel-stop"
+                >
+                  continue recording
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

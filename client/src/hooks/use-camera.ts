@@ -223,7 +223,7 @@ export function useCamera() {
       const mediaRecorder = new MediaRecorder(recordingStream, {
         mimeType,
         ...(hasVideo 
-          ? { videoBitsPerSecond: 5000000, audioBitsPerSecond: 192000 } 
+          ? { videoBitsPerSecond: 2000000, audioBitsPerSecond: 192000 } 
           : { audioBitsPerSecond: 192000 }),
       });
 
@@ -371,10 +371,63 @@ export function useCamera() {
     URL.revokeObjectURL(url);
   }, [recordingBlob]);
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+
+  const uploadRecording = useCallback(async (metadata: {
+    scriptName: string;
+    durationSeconds?: number;
+    accuracy?: number;
+    performanceRunId?: string;
+    recentScriptId?: string;
+    savedScriptId?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    if (!recordingBlob) return { success: false, error: "No recording available" };
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formData = new FormData();
+      const ext = mimeTypeRef.current.includes("mp4") ? "mp4" : "webm";
+      formData.append("file", recordingBlob, `recording.${ext}`);
+      formData.append("scriptName", metadata.scriptName);
+      if (metadata.durationSeconds != null) formData.append("durationSeconds", String(metadata.durationSeconds));
+      if (metadata.accuracy != null) formData.append("accuracy", String(metadata.accuracy));
+      if (metadata.performanceRunId) formData.append("performanceRunId", metadata.performanceRunId);
+      if (metadata.recentScriptId) formData.append("recentScriptId", metadata.recentScriptId);
+      if (metadata.savedScriptId) formData.append("savedScriptId", metadata.savedScriptId);
+
+      setUploadProgress(10);
+
+      const response = await fetch("/api/recordings/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+
+      setUploadProgress(90);
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        return { success: false, error: data.message || "Upload failed" };
+      }
+
+      setUploadProgress(100);
+      return { success: true };
+    } catch (err) {
+      console.error("[Camera] Upload error:", err);
+      return { success: false, error: "Network error during upload" };
+    } finally {
+      setIsUploading(false);
+    }
+  }, [recordingBlob]);
+
   const clearRecording = useCallback(() => {
     setRecordingBlob(null);
     setHasRecording(false);
     setRecordingTime(0);
+    setShowDiscardPrompt(false);
     recordingChunksRef.current = [];
   }, []);
 
@@ -449,5 +502,8 @@ export function useCamera() {
     cancelStopRecording,
     downloadRecording,
     clearRecording,
+    uploadRecording,
+    isUploading,
+    uploadProgress,
   };
 }
