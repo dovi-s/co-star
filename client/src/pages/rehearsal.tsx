@@ -785,6 +785,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           durationSeconds: duration,
           memorizationMode: session.memorizationMode ?? null,
         }),
+      }).then((res) => {
+        if (res.ok) {
+          import("@/lib/queryClient").then(({ queryClient }) => {
+            queryClient.invalidateQueries({ queryKey: ["/api/performance"] });
+          }).catch(() => {});
+        }
       }).catch((err) => console.warn("[Performance] Failed to save run:", err));
     }
   }, [camera.isRecording, camera.stopRecording, incrementRunsCompleted, recordRehearsal, setPlaying, session?.scenes, session?.currentSceneIndex, session?.userRoleId, isAuthenticated, session?.name, session?.memorizationMode]);
@@ -1402,6 +1408,10 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       if (res.ok) {
         setScriptSaved(true);
         toast({ description: "Script saved to your library" });
+        try {
+          const { queryClient } = await import("@/lib/queryClient");
+          queryClient.invalidateQueries({ queryKey: ["/api/scripts"] });
+        } catch {}
       } else {
         toast({ title: "Could not save script", variant: "destructive" });
       }
@@ -1809,7 +1819,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   return (
     <div className={cn(
-      "min-h-screen flex flex-col",
+      "h-[100dvh] flex flex-col overflow-hidden",
       camera.isEnabled ? "bg-transparent" : "bg-background"
     )} data-testid="rehearsal-page">
       <canvas
@@ -1847,7 +1857,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       )}
       
       <div className={cn(
-        "transition-opacity duration-300",
+        "shrink-0 transition-opacity duration-300",
         camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
       )}>
         <Header
@@ -2621,7 +2631,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
       <main
         className={cn(
-          "flex-1 flex flex-col justify-center content-inset py-6 animate-fade-in relative z-10 transition-opacity duration-300",
+          "flex-1 min-h-0 flex flex-col justify-center content-inset py-6 animate-fade-in relative z-10 transition-opacity duration-300 overflow-y-auto overscroll-contain",
           camera.isEnabled && "text-white camera-text-shadow",
           camera.isEnabled && cameraFocus === 'face' && "opacity-10 pointer-events-none"
         )}
@@ -2753,7 +2763,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       )}
 
       <footer className={cn(
-        "sticky bottom-0 border-t safe-bottom z-40 transition-opacity duration-300",
+        "shrink-0 border-t safe-bottom z-40 transition-opacity duration-300",
         camera.isEnabled 
           ? "bg-black/60 backdrop-blur-xl border-white/10 camera-text-shadow" 
           : "glass",

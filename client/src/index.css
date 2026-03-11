@@ -1799,7 +1799,7 @@
 }
 
 .safe-top {
-  padding-top: max(0.75rem, env(safe-area-inset-top));
+  padding-top: max(0.75rem, env(safe-area-inset-top)) !important;
 }
 
 .safe-area-top {
@@ -1902,6 +1902,18 @@ body {
     overscroll-behavior: none;
     -webkit-touch-callout: none;
     touch-action: pan-y pinch-zoom !important;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: env(safe-area-inset-top, 0px);
+    background: hsl(var(--background));
+    z-index: 9999;
+    pointer-events: none;
   }
 }
 

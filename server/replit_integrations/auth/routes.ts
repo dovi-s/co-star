@@ -66,7 +66,12 @@ export function registerAuthRoutes(app: Express): void {
       if (location !== undefined) updateData.location = location;
       if (unionStatus !== undefined) updateData.unionStatus = unionStatus;
       if (specialSkills !== undefined) updateData.specialSkills = specialSkills;
-      if (profileImageUrl !== undefined) updateData.profileImageUrl = profileImageUrl;
+      if (profileImageUrl !== undefined) {
+        if (profileImageUrl && typeof profileImageUrl === "string" && profileImageUrl.length > 200_000) {
+          return res.status(400).json({ message: "Profile photo is too large. Please use a smaller image." });
+        }
+        updateData.profileImageUrl = profileImageUrl;
+      }
       if (onboardingComplete !== undefined) updateData.onboardingComplete = onboardingComplete;
 
       const [updated] = await db

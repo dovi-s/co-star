@@ -417,6 +417,10 @@ export function useCamera() {
       }
 
       setUploadProgress(100);
+      try {
+        const { queryClient } = await import("@/lib/queryClient");
+        queryClient.invalidateQueries({ queryKey: ["/api/recordings"] });
+      } catch {}
       return { success: true };
     } catch (err) {
       console.error("[Camera] Upload error:", err);

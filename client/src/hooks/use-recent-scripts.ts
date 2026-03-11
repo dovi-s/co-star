@@ -27,6 +27,7 @@ export function useRecentScripts() {
   const [scripts, setScripts] = useState<RecentScript[]>([]);
   const [loading, setLoading] = useState(false);
   const isAuthRef = useRef(isAuthenticated);
+  const hasSyncedLocalRef = useRef(false);
   isAuthRef.current = isAuthenticated;
 
   const fetchRemote = useCallback(async () => {
@@ -35,11 +36,48 @@ export function useRecentScripts() {
       if (res.ok) {
         const data = await res.json();
         setScripts(data.map(toRecentScript));
+        return data.map(toRecentScript) as RecentScript[];
+      } else if (res.status === 401) {
+        setScripts(getLocalRecent());
       } else {
         console.warn("[RecentScripts] Failed to fetch:", res.status);
       }
     } catch (err) {
       console.warn("[RecentScripts] Fetch error:", err);
+    }
+    return null;
+  }, []);
+
+  const syncLocalToServer = useCallback(async () => {
+    if (hasSyncedLocalRef.current) return;
+    hasSyncedLocalRef.current = true;
+
+    const localScripts = getLocalRecent();
+    if (localScripts.length === 0) return;
+
+    let allSynced = true;
+    for (const script of localScripts) {
+      try {
+        const res = await fetch("/api/recent-scripts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: script.name,
+            rawScript: script.rawScript,
+            roleCount: script.roleCount,
+            lineCount: script.lineCount,
+            lastRole: script.lastRole || null,
+          }),
+        });
+        if (!res.ok) allSynced = false;
+      } catch {
+        allSynced = false;
+      }
+    }
+
+    if (allSynced) {
+      try { localStorage.removeItem("costar-recent-scripts"); } catch {}
     }
   }, []);
 
@@ -54,11 +92,18 @@ export function useRecentScripts() {
   useEffect(() => {
     if (isAuthenticated) {
       setLoading(true);
-      fetchRemote().finally(() => setLoading(false));
+      fetchRemote().then(async (remoteScripts) => {
+        if (remoteScripts && remoteScripts.length === 0) {
+          await syncLocalToServer();
+          await fetchRemote();
+        }
+        setLoading(false);
+      });
     } else {
+      hasSyncedLocalRef.current = false;
       setScripts(getLocalRecent());
     }
-  }, [isAuthenticated, fetchRemote]);
+  }, [isAuthenticated, fetchRemote, syncLocalToServer]);
 
   const save = useCallback(async (entry: Omit<RecentScript, "id" | "lastUsed">) => {
     if (isAuthRef.current) {
@@ -75,10 +120,17 @@ export function useRecentScripts() {
             lastRole: entry.lastRole || null,
           }),
         });
-        if (!res.ok) console.warn("[RecentScripts] Save failed:", res.status);
+        if (!res.ok) {
+          console.warn("[RecentScripts] Save failed:", res.status);
+          saveLocalRecent(entry);
+          setScripts(getLocalRecent());
+          return;
+        }
         await fetchRemote();
       } catch (err) {
         console.warn("[RecentScripts] Save error:", err);
+        saveLocalRecent(entry);
+        setScripts(getLocalRecent());
       }
     } else {
       saveLocalRecent(entry);

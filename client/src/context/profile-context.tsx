@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
+import { queryClient } from "@/lib/queryClient";
 
 interface ProfileData {
   name: string;
@@ -16,6 +17,7 @@ interface ProfileContextValue {
 const STORAGE_KEY = "co-star-profile";
 const MAX_PHOTO_DIMENSION = 256;
 const JPEG_QUALITY = 0.7;
+const MAX_PHOTO_BYTES = 100_000;
 
 function loadProfile(): ProfileData {
   try {
@@ -30,48 +32,75 @@ function loadProfile(): ProfileData {
 
 function saveProfile(data: ProfileData) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const toSave = { ...data };
+    if (toSave.photoUrl && toSave.photoUrl.length > MAX_PHOTO_BYTES) {
+      toSave.photoUrl = null;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch (e) {
-    console.warn("[Profile] localStorage save failed, photo may be too large:", e);
+    console.warn("[Profile] localStorage save failed:", e);
   }
 }
 
-function persistPhotoToServer(photoUrl: string | null) {
-  fetch("/api/auth/profile", {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ profileImageUrl: photoUrl }),
-    credentials: "include",
-  }).catch(() => {});
+async function persistPhotoToServer(photoUrl: string | null): Promise<boolean> {
+  try {
+    const res = await fetch("/api/auth/profile", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ profileImageUrl: photoUrl }),
+      credentials: "include",
+    });
+    if (res.ok) {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+      return true;
+    }
+    console.warn("[Profile] Server save failed:", res.status);
+    return false;
+  } catch (err) {
+    console.warn("[Profile] Server save error:", err);
+    return false;
+  }
 }
 
 export function compressPhoto(dataUrl: string): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
-      const canvas = document.createElement("canvas");
-      let w = img.width;
-      let h = img.height;
-      if (w > MAX_PHOTO_DIMENSION || h > MAX_PHOTO_DIMENSION) {
-        if (w > h) {
-          h = Math.round(h * (MAX_PHOTO_DIMENSION / w));
-          w = MAX_PHOTO_DIMENSION;
-        } else {
-          w = Math.round(w * (MAX_PHOTO_DIMENSION / h));
-          h = MAX_PHOTO_DIMENSION;
+      try {
+        const canvas = document.createElement("canvas");
+        let w = img.width;
+        let h = img.height;
+        if (w > MAX_PHOTO_DIMENSION || h > MAX_PHOTO_DIMENSION) {
+          if (w > h) {
+            h = Math.round(h * (MAX_PHOTO_DIMENSION / w));
+            w = MAX_PHOTO_DIMENSION;
+          } else {
+            w = Math.round(w * (MAX_PHOTO_DIMENSION / h));
+            h = MAX_PHOTO_DIMENSION;
+          }
         }
-      }
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, w, h);
-        resolve(canvas.toDataURL("image/jpeg", JPEG_QUALITY));
-      } else {
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, w, h);
+          const compressed = canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+          if (compressed.length < dataUrl.length) {
+            resolve(compressed);
+          } else {
+            resolve(canvas.toDataURL("image/jpeg", 0.5));
+          }
+        } else {
+          resolve(dataUrl);
+        }
+      } catch {
         resolve(dataUrl);
       }
     };
-    img.onerror = () => resolve(dataUrl);
+    img.onerror = () => {
+      console.warn("[Profile] Image load failed during compression, using original");
+      resolve(dataUrl);
+    };
     img.src = dataUrl;
   });
 }
@@ -97,7 +126,11 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
           saveProfile(next);
           return next;
         });
-        persistPhotoToServer(compressed);
+        persistPhotoToServer(compressed).then(ok => {
+          if (!ok) {
+            setTimeout(() => persistPhotoToServer(compressed), 3000);
+          }
+        });
       });
     } else {
       setProfile(prev => {

@@ -96,6 +96,12 @@ Key features include:
 - **Cancellation**: Users can cancel via Stripe Billing Portal. `cancel_at_period_end` flag preserves access until period ends. Retention sheet shown before portal redirect.
 - **Key Files**: `server/routes.ts` (checkout + subscription sync), `server/replit_integrations/auth/replitAuth.ts` (customer creation), `client/src/pages/subscription.tsx` (pricing UI), `server/webhookHandlers.ts` (webhook processing).
 
+### Data Persistence & Profile Sync
+- **Profile Photos**: Compressed to 256px max, JPEG quality 0.7. Saved to DB via PATCH `/api/auth/profile` with retry on failure. Server rejects photos >200KB. localStorage caches photos <100KB only; larger photos load from server on each session. Query cache (`["/api/auth/user"]`) invalidated after successful save.
+- **Recent Scripts**: Authenticated users persist to `recent_scripts` table. On first login, any localStorage scripts are synced to server (only cleared from localStorage if all syncs succeed). Server errors fall back to localStorage save. Unauthenticated users use localStorage only.
+- **Library/Recordings/Performance**: Query cache invalidated after saves — `/api/scripts` after library save, `/api/recordings` after upload, `/api/performance` after run completion. All invalidations gated behind `res.ok`.
+- **Rehearsal Layout**: Outer wrapper uses `h-[100dvh] overflow-hidden` with header/footer as `shrink-0` and main content as `flex-1 min-h-0 overflow-y-auto`. Footer (transport controls) always visible at viewport bottom regardless of line length.
+
 ### Admin-Stripe Sync & Audit System
 - **User Deletion → Stripe Cleanup**: When an admin deletes a user, the system first cancels any active Stripe subscription (prorated) and deletes the Stripe customer before removing local data.
 - **Tier Change → Stripe Sync**: When an admin downgrades a Pro user to Free, the system cancels their Stripe subscription (prorated) and clears the subscription ID. This prevents orphaned billing.
