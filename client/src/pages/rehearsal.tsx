@@ -2018,7 +2018,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
       {showCelebration && (() => {
         const feedback = getPerformanceFeedback();
-        const isLastScene = session.scenes.length > 1 && session.currentSceneIndex === session.scenes.length - 1;
+        const isLastScene = session.currentSceneIndex === session.scenes.length - 1;
         const isScriptComplete = isLastScene;
         const streak = stats.currentStreak;
         
@@ -2029,40 +2029,37 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           "bg-orange-400 dark:bg-orange-500",
           "bg-pink-400 dark:bg-pink-500",
         ];
-        const confettiParticles = (feedback?.type === "perfect" || isScriptComplete)
-          ? Array.from({ length: isScriptComplete ? 28 : 18 }, (_, i) => ({
+        const confettiCount = isScriptComplete ? 28 : feedback?.type === "perfect" ? 22 : feedback?.type === "great" ? 16 : 12;
+        const confettiParticles = Array.from({ length: confettiCount }, (_, i) => ({
               id: i,
               left: 2 + Math.random() * 96,
               delay: i * 0.04 + Math.random() * 0.2,
               duration: 2.2 + Math.random() * 1.2,
               colorClass: confettiColors[i % confettiColors.length],
               size: 5 + Math.random() * 6,
-            }))
-          : [];
+            }));
         
         return (
           <div 
             className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-md animate-fade-in"
             onClick={handleDismissCelebration}
           >
-            {(feedback?.type === "perfect" || isScriptComplete) && (
-              <div className="confetti-container">
-                {confettiParticles.map(p => (
-                  <div
-                    key={p.id}
-                    className={cn("confetti-particle", p.colorClass)}
-                    style={{
-                      left: `${p.left}%`,
-                      animationDelay: `${p.delay}s`,
-                      animationDuration: `${p.duration}s`,
-                      width: `${p.size}px`,
-                      height: `${p.size}px`,
-                      opacity: 0.8,
-                    }}
-                  />
-                ))}
-              </div>
-            )}
+            <div className="confetti-container">
+              {confettiParticles.map(p => (
+                <div
+                  key={p.id}
+                  className={cn("confetti-particle", p.colorClass)}
+                  style={{
+                    left: `${p.left}%`,
+                    animationDelay: `${p.delay}s`,
+                    animationDuration: `${p.duration}s`,
+                    width: `${p.size}px`,
+                    height: `${p.size}px`,
+                    opacity: 0.8,
+                  }}
+                />
+              ))}
+            </div>
             
             <div 
               className="bg-card border shadow-2xl rounded-2xl p-6 text-center max-w-sm mx-4 relative"
