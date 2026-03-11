@@ -60,6 +60,15 @@ class SpeechRecognitionEngine {
       
       if (!this.SpeechRecognitionAPI && this.isIOS && this.isPWA) {
       }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.abort();
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        this.abort();
+      });
     }
   }
 

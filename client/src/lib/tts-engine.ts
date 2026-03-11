@@ -254,6 +254,22 @@ class TTSEngine {
     if (typeof window !== "undefined") {
       this.persistentAudio = new Audio();
       this.persistentAudio.preload = "auto";
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          this.stop();
+          if (this.audioContext && this.audioContext.state !== 'closed') {
+            this.audioContext.close().catch(() => {});
+            this.audioContext = null;
+            this.ttsDestination = null;
+            this.currentMediaSource = null;
+            this.persistentMediaSource = null;
+          }
+        }
+      });
+      window.addEventListener('pagehide', () => {
+        this.stop();
+      });
     }
   }
 

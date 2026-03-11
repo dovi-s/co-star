@@ -38,6 +38,7 @@ export function useCamera() {
   const recordingMicStreamRef = useRef<MediaStream | null>(null);
   const audioCleanupRef = useRef<(() => void) | null>(null);
   const pendingDownloadRef = useRef(false);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -47,6 +48,7 @@ export function useCamera() {
         audio: true,
       });
       setStream(mediaStream);
+      streamRef.current = mediaStream;
       setIsEnabled(true);
 
       if (videoRef.current) {
@@ -72,6 +74,7 @@ export function useCamera() {
     if (stream) {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
+      streamRef.current = null;
     }
     if (videoRef.current) {
       videoRef.current.srcObject = null;
@@ -450,31 +453,61 @@ export function useCamera() {
     }
   }, [recordingBlob]);
 
+  const stopAllMedia = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (recordingAudioContextRef.current) {
+      recordingAudioContextRef.current.close().catch(() => {});
+      recordingAudioContextRef.current = null;
+    }
+    if (recordingMicStreamRef.current) {
+      recordingMicStreamRef.current.getTracks().forEach(t => t.stop());
+      recordingMicStreamRef.current = null;
+    }
+    if (audioCleanupRef.current) {
+      audioCleanupRef.current();
+      audioCleanupRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      if (timerIntervalRef.current) {
-        clearInterval(timerIntervalRef.current);
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
-      if (recordingAudioContextRef.current) {
-        recordingAudioContextRef.current.close().catch(() => {});
-      }
-      if (recordingMicStreamRef.current) {
-        recordingMicStreamRef.current.getTracks().forEach(t => t.stop());
-      }
-      if (audioCleanupRef.current) {
-        audioCleanupRef.current();
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopAllMedia();
+        setStream(null);
+        setIsEnabled(false);
+        setIsRecording(false);
       }
     };
-  }, []);
+
+    const handlePageHide = () => {
+      stopAllMedia();
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('beforeunload', handlePageHide);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('beforeunload', handlePageHide);
+      stopAllMedia();
+    };
+  }, [stopAllMedia]);
 
   return {
     isEnabled,
