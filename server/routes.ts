@@ -1773,6 +1773,15 @@ MARY: You're kidding me.`;
 
       const stripe = await getUncachableStripeClient();
 
+      const price = await stripe.prices.retrieve(priceId);
+      if (!price || !price.active || price.type !== 'recurring') {
+        return res.status(400).json({ error: "Invalid price selected" });
+      }
+      const product = await stripe.products.retrieve(price.product as string);
+      if (!product || !product.active || !(product.metadata?.tier === 'pro' || product.name.toLowerCase().includes('pro'))) {
+        return res.status(400).json({ error: "Invalid product" });
+      }
+
       const [user] = await db
         .select({ id: users.id, email: users.email, stripeCustomerId: users.stripeCustomerId })
         .from(users)
@@ -1792,15 +1801,42 @@ MARY: You're kidding me.`;
         await db.update(users).set({ stripeCustomerId: customerId }).where(eq(users.id, userId));
       }
 
+      let trialDays = 0;
+      try {
+        const pastSubs = await stripe.subscriptions.list({
+          customer: customerId,
+          limit: 1,
+          status: 'all',
+        });
+        if (pastSubs.data.length === 0) {
+          trialDays = 7;
+        }
+      } catch (e: any) {
+        console.error("[Stripe] Could not check past subscriptions:", e.message);
+      }
+
       const baseUrl = `${req.protocol}://${req.get('host')}`;
-      const session = await stripe.checkout.sessions.create({
+      const sessionParams: any = {
         customer: customerId,
         payment_method_types: ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         success_url: `${baseUrl}/?checkout=success`,
         cancel_url: `${baseUrl}/?checkout=cancel`,
-      });
+      };
+
+      if (trialDays > 0) {
+        sessionParams.subscription_data = {
+          trial_period_days: trialDays,
+          metadata: { userId: user.id },
+        };
+      } else {
+        sessionParams.subscription_data = {
+          metadata: { userId: user.id },
+        };
+      }
+
+      const session = await stripe.checkout.sessions.create(sessionParams);
 
       res.json({ url: session.url });
     } catch (error: any) {
@@ -1929,7 +1965,7 @@ MARY: You're kidding me.`;
       // Check for active subscription in stripe schema
       const subResult = await db.execute(
         sql`
-          SELECT id, status, current_period_end, cancel_at_period_end
+          SELECT id, status, current_period_end, cancel_at_period_end, trial_end, trial_start
           FROM stripe.subscriptions
           WHERE customer = ${user.stripeCustomerId}
           AND status IN ('active', 'trialing')
@@ -1940,7 +1976,6 @@ MARY: You're kidding me.`;
 
       const sub = subResult.rows[0] as any;
       if (sub) {
-        // Sync subscription status to user record if needed
         if (user.stripeSubscriptionId !== sub.id || user.subscriptionTier !== 'pro') {
           await db.update(users).set({
             stripeSubscriptionId: sub.id,
@@ -1949,12 +1984,27 @@ MARY: You're kidding me.`;
           }).where(eq(users.id, userId));
         }
 
+        const isTrialing = sub.status === 'trialing';
+        let trialEnd: string | null = null;
+        let trialDaysLeft: number | null = null;
+        if (isTrialing && sub.trial_end) {
+          trialEnd = sub.trial_end;
+          const endDate = typeof sub.trial_end === 'number'
+            ? new Date(sub.trial_end * 1000)
+            : new Date(sub.trial_end);
+          const msLeft = endDate.getTime() - Date.now();
+          trialDaysLeft = Math.min(7, Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24))));
+        }
+
         return res.json({
           subscription: {
             id: sub.id,
             status: sub.status,
             currentPeriodEnd: sub.current_period_end,
             cancelAtPeriodEnd: sub.cancel_at_period_end,
+            isTrialing,
+            trialEnd,
+            trialDaysLeft,
           },
           tier: "pro",
         });

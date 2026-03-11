@@ -32,6 +32,9 @@ interface SubscriptionData {
     status: string;
     currentPeriodEnd: string;
     cancelAtPeriodEnd: boolean;
+    isTrialing?: boolean;
+    trialEnd?: string | null;
+    trialDaysLeft?: number | null;
   } | null;
   tier: "free" | "pro";
 }
@@ -85,7 +88,13 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
   useEffect(() => {
     if (checkoutSuccess && !shownSuccess && subData?.tier === "pro") {
       setShownSuccess(true);
-      toast({ title: "Welcome to Co-star Pro", description: "Your subscription is active. Enjoy unlimited rehearsals." });
+      const isTrialing = subData.subscription?.isTrialing;
+      toast({
+        title: isTrialing ? "Your guest pass is active" : "Welcome to Co-star Pro",
+        description: isTrialing
+          ? "Enjoy 7 days of unlimited rehearsals. You won't be charged until your guest pass ends."
+          : "Your subscription is active. Enjoy unlimited rehearsals.",
+      });
     }
   }, [checkoutSuccess, shownSuccess, subData, toast]);
 
@@ -423,6 +432,8 @@ function ActiveSubscription({
   isManaging: boolean;
 }) {
   const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
+  const isTrialing = subscription.isTrialing === true;
+  const trialDaysLeft = subscription.trialDaysLeft ?? 0;
 
   const rawEnd = subscription.currentPeriodEnd;
   const periodEndDate = rawEnd
@@ -436,33 +447,76 @@ function ActiveSubscription({
       })
     : null;
 
+  const trialEndDate = subscription.trialEnd
+    ? new Date(typeof subscription.trialEnd === "number" && (subscription.trialEnd as any) < 1e12 ? (subscription.trialEnd as any) * 1000 : subscription.trialEnd)
+    : null;
+  const trialEndFormatted = trialEndDate
+    ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : null;
+
+  const statusLabel = subscription.cancelAtPeriodEnd
+    ? "Canceling"
+    : isTrialing
+    ? "Guest pass"
+    : "Active";
+
+  const statusColor = subscription.cancelAtPeriodEnd
+    ? "bg-amber-500/10 text-amber-600"
+    : isTrialing
+    ? "bg-blue-500/10 text-blue-600"
+    : "bg-green-500/10 text-green-600";
+
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
           <Crown className="w-7 h-7 text-primary" />
         </div>
-        <h2 className="text-xl font-semibold">Co-star Pro</h2>
-        <p className="text-sm text-muted-foreground">
-          {subscription.cancelAtPeriodEnd
-            ? `Access until ${periodEnd}`
-            : `Renews ${periodEnd}`}
-        </p>
+        <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
+        {isTrialing ? (
+          <p className="text-sm text-muted-foreground" data-testid="text-trial-info">
+            {trialDaysLeft > 1
+              ? `${trialDaysLeft} days left on your guest pass`
+              : trialDaysLeft === 1
+              ? "Last day of your guest pass"
+              : "Your guest pass ends today"}
+            {trialEndFormatted && ` · Billing starts ${trialEndFormatted}`}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {subscription.cancelAtPeriodEnd
+              ? `Access until ${periodEnd}`
+              : `Renews ${periodEnd}`}
+          </p>
+        )}
       </div>
+
+      {isTrialing && (
+        <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.04] p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Gift className="w-4 h-4 text-blue-500" />
+            <span className="text-sm font-medium">Guest pass active</span>
+          </div>
+          <div className="w-full bg-muted rounded-full h-2">
+            <div
+              className="bg-blue-500 h-2 rounded-full transition-all"
+              style={{ width: `${Math.max(5, ((7 - trialDaysLeft) / 7) * 100)}%` }}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            You won't be charged until your guest pass ends. Cancel anytime before then.
+          </p>
+        </div>
+      )}
 
       <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
         <div className="flex items-center justify-between mb-4">
           <span className="text-sm font-medium">Status</span>
           <span
-            className={cn(
-              "text-xs font-medium px-2 py-0.5 rounded-full",
-              subscription.cancelAtPeriodEnd
-                ? "bg-amber-500/10 text-amber-600"
-                : "bg-green-500/10 text-green-600"
-            )}
+            className={cn("text-xs font-medium px-2 py-0.5 rounded-full", statusColor)}
             data-testid="text-subscription-status"
           >
-            {subscription.cancelAtPeriodEnd ? "Canceling" : "Active"}
+            {statusLabel}
           </span>
         </div>
 

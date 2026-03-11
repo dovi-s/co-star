@@ -86,3 +86,12 @@ Key features include:
 - **Frontend**: "Save to Library" button in rehearsal stop dialog (Pro users). "My Rehearsals" unified page (`client/src/pages/my-rehearsals.tsx`) with tabs: Recordings, Scripts, Stats. Storage meter in header. Inline video playback, download, and delete with confirmation.
 - **Recording Specs**: 2 Mbps video + 192 kbps audio (~16 MB/min). File size capped at 500 MB per upload.
 - **Navigation**: Side menu consolidated from "Saved Scripts" + "Performance History" into single "My Rehearsals" item.
+
+### Stripe Subscription Flow
+- **Customer Creation**: Stripe customer created automatically on signup (email/password, Google OAuth) via `ensureStripeCustomer()` in `replitAuth.ts`. Existing users without Stripe customers get backfilled on login.
+- **Free Tier**: Users are Stripe customers with no subscription. `subscriptionTier` defaults to `"free"` in the database.
+- **Guest Pass (7-day trial)**: First-time subscribers get a 7-day free trial via `subscription_data.trial_period_days` in the Stripe Checkout session. Stripe collects payment info but doesn't charge until trial ends. Repeat subscribers (who've had any past subscription) don't get a trial.
+- **Pro Upgrade**: Stripe Checkout (`POST /api/stripe/checkout`) creates a subscription. Webhook sync via `stripe-replit-sync` updates `stripe.subscriptions` table. The `/api/stripe/subscription` endpoint syncs subscription status to `users.subscriptionTier` on read.
+- **Trial UI**: Subscription page shows "Guest pass active" with progress bar and days remaining when `isTrialing`. Success toast says "Your guest pass is active" instead of generic welcome.
+- **Cancellation**: Users can cancel via Stripe Billing Portal. `cancel_at_period_end` flag preserves access until period ends. Retention sheet shown before portal redirect.
+- **Key Files**: `server/routes.ts` (checkout + subscription sync), `server/replit_integrations/auth/replitAuth.ts` (customer creation), `client/src/pages/subscription.tsx` (pricing UI), `server/webhookHandlers.ts` (webhook processing).

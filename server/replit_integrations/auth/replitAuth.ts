@@ -12,7 +12,24 @@ import { getUncachableStripeClient } from "../../stripeClient";
 
 async function ensureStripeCustomer(userId: string, email: string | null): Promise<string | null> {
   try {
+    const [freshUser] = await db
+      .select({ stripeCustomerId: users.stripeCustomerId })
+      .from(users)
+      .where(eq(users.id, userId));
+    if (freshUser?.stripeCustomerId) return freshUser.stripeCustomerId;
+
     const stripe = await getUncachableStripeClient();
+
+    if (email) {
+      const existing = await stripe.customers.list({ email, limit: 1 });
+      if (existing.data.length > 0) {
+        const cid = existing.data[0].id;
+        await db.update(users).set({ stripeCustomerId: cid }).where(eq(users.id, userId));
+        console.log(`[Stripe] Linked existing customer ${cid} for user ${userId}`);
+        return cid;
+      }
+    }
+
     const customer = await stripe.customers.create({
       email: email || undefined,
       metadata: { userId },
