@@ -68,19 +68,29 @@ export function CameraScanner({ onCapture, onClose }: CameraScannerProps) {
   const takePhoto = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || !canvas) return;
+    if (!video || !canvas) {
+      console.error("[Camera] No video or canvas element");
+      return;
+    }
 
+    console.log(`[Camera] Capturing - video: ${video.videoWidth}x${video.videoHeight}, readyState: ${video.readyState}`);
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    if (!ctx) {
+      console.error("[Camera] Could not get canvas 2d context");
+      return;
+    }
 
     ctx.drawImage(video, 0, 0);
     canvas.toBlob((blob) => {
       if (blob) {
+        console.log(`[Camera] Photo captured: ${blob.size} bytes, type: ${blob.type}`);
         const file = new File([blob], `script-scan-${Date.now()}.jpg`, { type: "image/jpeg" });
         stopStream();
         onCapture(file);
+      } else {
+        console.error("[Camera] canvas.toBlob returned null");
       }
     }, "image/jpeg", 0.92);
   }, [onCapture, stopStream]);

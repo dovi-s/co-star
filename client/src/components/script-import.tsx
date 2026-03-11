@@ -398,17 +398,24 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     }
     
     if (file.type.startsWith("image/") || /\.(jpg|jpeg|png|heic|heif|webp)$/i.test(fileName)) {
+      console.log(`[Photo Import] Starting - name: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
       setIsParsingFile(true);
       setParseProgress("Looking at your photo...");
       try {
         const formData = new FormData();
         formData.append("file", file);
         
-        setParseProgress("Reading the lines...");
+        const progressTimer = setTimeout(() => {
+          setParseProgress("Reading the lines...");
+        }, 1500);
+        
         const response = await fetch("/api/parse-file-to-session", {
           method: "POST",
           body: formData,
         });
+        clearTimeout(progressTimer);
+        
+        console.log(`[Photo Import] Response status: ${response.status}`);
         
         if (!response.ok) {
           const data = await response.json();
@@ -416,11 +423,12 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
         }
         
         const data = await response.json();
+        console.log(`[Photo Import] Success - text: ${(data.rawText || '').length} chars, roles: ${data.parsed?.roles?.length || 0}, scenes: ${data.parsed?.scenes?.length || 0}`);
         setServerParsedData(data.parsed);
         setScript(data.rawText || "");
         setIsEditingScript(false);
       } catch (e: any) {
-        console.error("Photo OCR error:", e);
+        console.error("[Photo Import] Error:", e);
         setFileError(e.message || "Could not read text from photo");
       } finally {
         setIsParsingFile(false);
@@ -1192,8 +1200,9 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
       {showScanner && (
         <CameraScanner
           onCapture={(file) => {
+            console.log(`[Scan] Photo received from camera: ${file.name}, ${file.size} bytes`);
             setShowScanner(false);
-            handleFileSelect(file);
+            setTimeout(() => handleFileSelect(file), 50);
           }}
           onClose={() => setShowScanner(false)}
         />

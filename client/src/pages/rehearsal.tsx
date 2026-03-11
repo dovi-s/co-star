@@ -325,6 +325,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   const matchGraceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchReachedRef = useRef(false);
   const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completeRunInFlightRef = useRef(false);
   const getCurrentLineRef = useRef(getCurrentLine);
   const advanceAfterUserLineRef = useRef<() => void>(() => {});
   const speakLineRef = useRef<() => void>(() => {});
@@ -655,9 +656,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   }, []);
 
   // Centralized run completion handler
-  const completeRun = useCallback(() => {
+  const completeRun = useCallback(async () => {
+    if (completeRunInFlightRef.current) return;
+    completeRunInFlightRef.current = true;
     if (camera.isRecording) {
-      camera.stopRecording();
+      await camera.stopRecording();
     }
     
     // Calculate stats from the ref (always current)
@@ -758,6 +761,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           setHandsFreeMode(false);
           return;
         }
+        completeRunInFlightRef.current = false;
         setSceneCompleted(false);
         setCompletedRunStats(null);
         goToLine(0);
@@ -1509,6 +1513,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const handleTryAgain = async () => {
     if (!(await checkRunUsageAllowed())) return;
+    completeRunInFlightRef.current = false;
     setRunLimitReached(false);
     setShowCelebration(false);
     setSceneCompleted(false);
@@ -1608,6 +1613,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     const suggestions: Array<{ id: string; label: string; detail: string; icon: typeof RefreshCcw; action: () => void; priority: number }> = [];
 
     const dismissAndReset = () => {
+      completeRunInFlightRef.current = false;
       setShowCelebration(false);
       setSceneCompleted(false);
       setCompletedRunStats(null);
@@ -2242,15 +2248,37 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
               {camera.hasRecording && (
                 <div className="mb-3">
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => camera.downloadRecording(`costar-${session.name || 'rehearsal'}`)}
-                    data-testid="button-download-recording"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Recording
-                  </Button>
+                  {camera.isUploading ? (
+                    <div className="flex flex-col items-center gap-3 py-2">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <p className="text-sm font-medium">Saving to library...</p>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${camera.uploadProgress}%` }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {isAuthenticated && user?.subscriptionTier === "pro" && (
+                        <Button
+                          className="w-full mb-2"
+                          onClick={() => setPendingCloudUpload(true)}
+                          data-testid="button-save-recording-library"
+                        >
+                          <CloudUpload className="h-4 w-4 mr-2" />
+                          Save to Library
+                        </Button>
+                      )}
+                      <Button
+                        variant={user?.subscriptionTier === "pro" ? "outline" : "default"}
+                        className="w-full"
+                        onClick={() => camera.downloadRecording(`costar-${session.name || 'rehearsal'}`)}
+                        data-testid="button-download-recording"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download Recording
+                      </Button>
+                    </>
+                  )}
                   <p className="text-xs text-muted-foreground text-center mt-1.5">
                     {camera.isEnabled ? "Video recording with audio" : "Audio-only recording"}
                   </p>

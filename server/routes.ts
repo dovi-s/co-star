@@ -1627,31 +1627,34 @@ MARY: You're kidding me.`;
       ) {
         text = file.buffer.toString("utf-8");
       } else if (mimeType.startsWith("image/")) {
-        console.log(`[Image->Session] Processing image: ${file.originalname}, ${file.buffer.length} bytes`);
+        console.log(`[Image->Session] Processing image: ${file.originalname}, mime: ${mimeType}, size: ${file.buffer.length} bytes`);
         try {
           const openai = new OpenAI({
             apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
             baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
           });
           const base64 = file.buffer.toString("base64");
-          const imgMime = mimeType === "image/jpeg" ? "image/jpeg" : mimeType === "image/png" ? "image/png" : "image/jpeg";
+          const imgMime = mimeType === "image/jpeg" ? "image/jpeg" : mimeType === "image/png" ? "image/png" : mimeType === "image/webp" ? "image/webp" : "image/jpeg";
+          console.log(`[Image->Session] Sending to vision API, base64 length: ${base64.length}, imgMime: ${imgMime}`);
           const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             messages: [{
               role: "user",
               content: [
-                { type: "text", text: "Extract all text from this script/screenplay page exactly as written. Preserve the original formatting including character names, dialogue, stage directions, and any other text. Output only the extracted text, nothing else." },
+                { type: "text", text: "Extract ALL text from this script/screenplay page exactly as written. Preserve character names in UPPERCASE, dialogue, stage directions in parentheses or brackets, and line breaks. Output ONLY the extracted text, nothing else." },
                 { type: "image_url", image_url: { url: `data:${imgMime};base64,${base64}` } }
               ]
             }],
-            max_tokens: 4096,
-            temperature: 0.1,
+            max_completion_tokens: 4096,
           });
           text = response.choices[0]?.message?.content || "";
           console.log(`[Image->Session] Extracted ${text.length} characters from image`);
+          if (text.length < 5) {
+            console.warn(`[Image->Session] Very little text extracted: "${text}"`);
+          }
         } catch (imgErr: any) {
-          console.error(`[Image->Session] OCR failed:`, imgErr.message);
-          return res.status(500).json({ error: "Could not read text from image. Try a clearer photo." });
+          console.error(`[Image->Session] OCR failed:`, imgErr.message, imgErr.status || '', imgErr.code || '');
+          return res.status(500).json({ error: "Could not read text from image. Try a clearer photo or upload a PDF instead." });
         }
       } else {
         return res.status(400).json({ 

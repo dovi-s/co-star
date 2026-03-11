@@ -39,6 +39,7 @@ export function useCamera() {
   const audioCleanupRef = useRef<(() => void) | null>(null);
   const pendingDownloadRef = useRef(false);
   const streamRef = useRef<MediaStream | null>(null);
+  const stopResolveRef = useRef<(() => void) | null>(null);
 
   const startCamera = useCallback(async () => {
     try {
@@ -254,6 +255,10 @@ export function useCamera() {
           audioCleanupRef.current();
           audioCleanupRef.current = null;
         }
+        if (stopResolveRef.current) {
+          stopResolveRef.current();
+          stopResolveRef.current = null;
+        }
       };
 
       mediaRecorder.onerror = (e) => {
@@ -281,7 +286,7 @@ export function useCamera() {
     }
   }, [isEnabled, stream, buildMixedAudioStream]);
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = useCallback((): Promise<void> => {
     if (timerIntervalRef.current) {
       clearInterval(timerIntervalRef.current);
       timerIntervalRef.current = null;
@@ -289,6 +294,14 @@ export function useCamera() {
 
     const recorder = mediaRecorderRef.current;
     if (recorder && recorder.state !== 'inactive') {
+      const blobReady = new Promise<void>((resolve) => {
+        const resolveOnce = () => { if (stopResolveRef.current === resolveOnce) { stopResolveRef.current = null; resolve(); } };
+        stopResolveRef.current = resolveOnce;
+        setTimeout(() => {
+          console.log('[Camera] Stop resolve safety timeout');
+          resolveOnce();
+        }, 2000);
+      });
       try {
         recorder.requestData();
       } catch {}
@@ -300,12 +313,17 @@ export function useCamera() {
         } catch {}
         mediaRecorderRef.current = null;
       }, 100);
+
+      setIsRecording(false);
+      console.log('[Camera] Recording stopped, waiting for blob...');
+      return blobReady;
     } else {
       mediaRecorderRef.current = null;
     }
 
     setIsRecording(false);
     console.log('[Camera] Recording stopped');
+    return Promise.resolve();
   }, []);
 
   const requestStopRecording = useCallback(() => {
