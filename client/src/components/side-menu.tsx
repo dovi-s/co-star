@@ -269,7 +269,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           data-testid="input-profile-photo"
         />
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-2 pb-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-2 pb-4 scrollbar-hidden">
           {!isSignedIn ? (
             <div className="mx-3 mb-2 p-4 rounded-md glass-surface">
               <p className="text-xs text-muted-foreground mb-3 leading-relaxed">
