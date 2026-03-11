@@ -15,7 +15,7 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings } from "@shared/models/auth";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings, hasProAccess, ALL_TIERS } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte } from "drizzle-orm";
 
 function detectTitleFromScript(lines: string[]): string | null {
@@ -506,7 +506,7 @@ export async function registerRoutes(
         }
       }
 
-      const isPro = user.subscriptionTier === "pro";
+      const isPro = hasProAccess(user.subscriptionTier);
       const freeDailyLimit = await getFreeDailyLimit();
       const effectiveLimit = freeDailyLimit + bonus;
       const effectiveUsed = Math.max(usageCount, deviceCount);
@@ -539,7 +539,7 @@ export async function registerRoutes(
       }).from(users).where(eq(users.id, userId));
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      if (user.subscriptionTier === "pro") {
+      if (hasProAccess(user.subscriptionTier)) {
         return res.json({ allowed: true, used: 0, limit: null, isPro: true });
       }
 
@@ -2122,7 +2122,8 @@ MARY: You're kidding me.`;
         .where(eq(users.id, userId));
 
       if (!user?.stripeCustomerId) {
-        return res.json({ subscription: null, tier: user?.subscriptionTier || "free" });
+        const tier = user?.subscriptionTier || "free";
+        return res.json({ subscription: null, tier, isPro: hasProAccess(tier) });
       }
 
       // Check for active subscription in stripe schema
@@ -2173,7 +2174,10 @@ MARY: You're kidding me.`;
         });
       }
 
-      // No active sub - ensure user is marked free
+      if (user.subscriptionTier === "comp" || user.subscriptionTier === "internal") {
+        return res.json({ subscription: null, tier: user.subscriptionTier, isPro: true });
+      }
+
       if (user.subscriptionTier !== 'free') {
         await db.update(users).set({
           subscriptionTier: 'free',
@@ -2776,9 +2780,9 @@ MARY: You're kidding me.`;
       const updates: any = { updatedAt: new Date() };
 
       if (action === "change_tier") {
-        if (!["free", "pro"].includes(tier)) return res.status(400).json({ error: "Invalid tier" });
+        if (!ALL_TIERS.includes(tier)) return res.status(400).json({ error: `Invalid tier. Must be one of: ${ALL_TIERS.join(", ")}` });
 
-        if (tier === "free" && user.subscriptionTier === "pro") {
+        if (tier === "free" && hasProAccess(user.subscriptionTier)) {
           if (user.stripeSubscriptionId) {
             try {
               const stripe = await getUncachableStripeClient();
@@ -2921,8 +2925,9 @@ MARY: You're kidding me.`;
     if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
     const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
     try {
-      const { email, firstName, lastName, password } = req.body;
+      const { email, firstName, lastName, password, tier } = req.body;
       if (!email) return res.status(400).json({ error: "Email is required" });
+      const selectedTier = tier && ALL_TIERS.includes(tier) ? tier : "free";
 
       const existing = await db.select({ id: users.id }).from(users).where(eq(users.email, email.toLowerCase().trim()));
       if (existing.length > 0) return res.status(409).json({ error: "A user with this email already exists" });
@@ -2937,9 +2942,31 @@ MARY: You're kidding me.`;
         passwordHash,
         authProvider: "email",
         onboardingComplete: "false",
+        subscriptionTier: selectedTier,
       }).returning({ id: users.id });
 
-      await logAdminAction(adminId, "create_user", newUser.id, { email: email.toLowerCase().trim() });
+      try {
+        const stripe = await getUncachableStripeClient();
+        const existingCustomers = await stripe.customers.list({ email: email.toLowerCase().trim(), limit: 1 });
+        let stripeCustomerId: string;
+        if (existingCustomers.data.length > 0) {
+          stripeCustomerId = existingCustomers.data[0].id;
+          console.log(`[Admin] Linked existing Stripe customer ${stripeCustomerId} for new user ${newUser.id}`);
+        } else {
+          const customer = await stripe.customers.create({
+            email: email.toLowerCase().trim(),
+            name: [firstName, lastName].filter(Boolean).join(" ") || undefined,
+            metadata: { userId: newUser.id, createdBy: "admin" },
+          });
+          stripeCustomerId = customer.id;
+          console.log(`[Admin] Created Stripe customer ${stripeCustomerId} for new user ${newUser.id}`);
+        }
+        await db.update(users).set({ stripeCustomerId }).where(eq(users.id, newUser.id));
+      } catch (stripeErr: any) {
+        console.error("[Admin] Stripe customer creation failed (user still created):", stripeErr.message);
+      }
+
+      await logAdminAction(adminId, "create_user", newUser.id, { email: email.toLowerCase().trim(), tier: selectedTier });
 
       res.json({ ok: true, userId: newUser.id });
     } catch (error: any) {

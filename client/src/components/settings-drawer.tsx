@@ -380,7 +380,7 @@ export function SettingsDrawer({
                             Audio-only rehearsal — no screen needed
                           </p>
                         </div>
-                        {user?.subscriptionTier !== "pro" && (
+                        {!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)) && (
                           <span className="text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded shrink-0">Pro</span>
                         )}
                       </div>

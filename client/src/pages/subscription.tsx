@@ -132,7 +132,7 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
     },
   });
 
-  const isPro = subData?.tier === "pro";
+  const isPro = subData?.isPro || subData?.tier === "pro" || (!!subData?.tier && ["comp", "internal"].includes(subData.tier));
   const proProduct = productsData?.products?.find(
     (p) => p.metadata?.tier === "pro" || p.name.toLowerCase().includes("pro")
   );

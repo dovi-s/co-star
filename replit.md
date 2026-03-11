@@ -102,6 +102,18 @@ Key features include:
 - **Library/Recordings/Performance**: Query cache invalidated after saves — `/api/scripts` after library save, `/api/recordings` after upload, `/api/performance` after run completion. All invalidations gated behind `res.ok`.
 - **Rehearsal Layout**: Outer wrapper uses `h-[100dvh] overflow-hidden` with header/footer as `shrink-0` and main content as `flex-1 min-h-0 overflow-y-auto`. Footer (transport controls) always visible at viewport bottom regardless of line length.
 
+### Subscription Tier System
+- **Tiers**: `free`, `pro`, `comp` (complimentary Pro), `internal` (team). Defined in `shared/models/auth.ts` as `ALL_TIERS` and `SubscriptionTier` type.
+- **Pro Access Check**: `hasProAccess(tier)` from `shared/models/auth.ts` — returns true for `pro`, `comp`, `internal`. Used server-side in `requirePro` middleware and all pro-gated routes.
+- **Client-Side**: All pro gates use inline `["pro", "comp", "internal"].includes(tier)` check (no shared import to avoid server module pulls). Covers: save script, hands-free mode, recording watermark, Pro badge visibility, settings drawer, multiplayer watermark.
+- **Stripe Sync**: `/api/stripe/subscription` does NOT downgrade comp/internal users even if they have no Stripe subscription.
+- **Admin**: Admin dashboard supports all 4 tiers with color-coded badges. Admin create-user auto-creates Stripe customer and accepts tier param.
+
+### Stripe Webhook Sync
+- **Handler**: `server/webhookHandlers.ts` — processes webhook payloads after `stripe-replit-sync` library verifies them. Parses raw JSON (no separate signature verification needed since sync library already validated).
+- **Events Handled**: `customer.subscription.deleted` / `customer.subscription.updated` (canceled/unpaid/incomplete_expired → downgrade pro to free), `customer.deleted` (clear Stripe IDs, downgrade if pro).
+- **Safety**: Only downgrades `pro` tier users — never touches `comp` or `internal` tiers.
+
 ### Admin-Stripe Sync & Audit System
 - **User Deletion → Stripe Cleanup**: When an admin deletes a user, the system first cancels any active Stripe subscription (prorated) and deletes the Stripe customer before removing local data.
 - **Tier Change → Stripe Sync**: When an admin downgrades a Pro user to Free, the system cancels their Stripe subscription (prorated) and clears the subscription ID. This prevents orphaned billing.

@@ -38,7 +38,7 @@ export function LibraryPage({
 }) {
   const { isAuthenticated, user } = useAuth();
   const [deleteTarget, setDeleteTarget] = useState<ScriptSummary | null>(null);
-  const isPro = user?.subscriptionTier === "pro";
+  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
 
   const { data: scripts, isLoading } = useQuery<ScriptSummary[]>({
     queryKey: ["/api/scripts"],

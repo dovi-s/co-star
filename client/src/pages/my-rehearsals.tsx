@@ -85,7 +85,7 @@ export function MyRehearsalsPage({
 }) {
   const { isAuthenticated, user } = useAuth();
   const { toast } = useToast();
-  const isPro = user?.subscriptionTier === "pro";
+  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
   const [activeTab, setActiveTab] = useState<Tab>("recordings");
   const [deleteTarget, setDeleteTarget] = useState<{ type: "recording" | "script"; id: string; name: string } | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);

@@ -227,7 +227,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             </div>
           )}
           {isAuthenticated && user && (() => {
-            const isPro = liveUsage ? liveUsage.isPro : user.subscriptionTier === "pro";
+            const isPro = liveUsage ? liveUsage.isPro : !!user.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
             const limit = liveUsage?.limit ?? (3 + (user.scriptUsageLimitBonus ?? 0));
             const used = liveUsage?.used ?? (user.scriptUsageCount ?? 0);
             const remaining = Math.max(0, limit - used);

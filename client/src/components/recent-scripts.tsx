@@ -50,7 +50,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
   const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated, user } = useAuth();
-  const isPro = user?.subscriptionTier === "pro";
+  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
   const { toast } = useToast();
 
   useEffect(() => {

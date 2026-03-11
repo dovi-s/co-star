@@ -315,6 +315,24 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   return <div className={cn("rounded-xl border border-border/40 p-4", className)}>{children}</div>;
 }
 
+function tierBadgeClass(tier: string | null | undefined) {
+  switch (tier) {
+    case "pro": return "bg-primary/10 text-primary";
+    case "comp": return "bg-emerald-500/10 text-emerald-600";
+    case "internal": return "bg-blue-500/10 text-blue-600";
+    default: return "bg-muted text-muted-foreground";
+  }
+}
+
+function tierLabel(tier: string | null | undefined) {
+  switch (tier) {
+    case "pro": return "pro";
+    case "comp": return "comp";
+    case "internal": return "internal";
+    default: return "free";
+  }
+}
+
 function EmptyState({ icon: Icon, message }: { icon: any; message: string }) {
   return (
     <div className="text-center py-8 text-muted-foreground">
@@ -374,8 +392,8 @@ function OverviewTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (i
                 <span className="text-[10px] text-muted-foreground ml-2">{u.email}</span>
               </div>
               <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium",
-                u.subscriptionTier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-              )}>{u.subscriptionTier || "free"}</span>
+                tierBadgeClass(u.subscriptionTier)
+              )}>{tierLabel(u.subscriptionTier)}</span>
               <span className="text-[10px] text-muted-foreground">{formatTimeAgo(u.createdAt)}</span>
               <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
             </button>
@@ -396,6 +414,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   const [newFirstName, setNewFirstName] = useState("");
   const [newLastName, setNewLastName] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [newTier, setNewTier] = useState("free");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const invalidateUsers = () => {
@@ -450,7 +469,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
   });
 
   const createUserMutation = useMutation({
-    mutationFn: async (data: { email: string; firstName: string; lastName: string; password: string }) => {
+    mutationFn: async (data: { email: string; firstName: string; lastName: string; password: string; tier: string }) => {
       const res = await apiRequest("POST", "/api/admin/users", data);
       if (!res.ok) {
         const err = await res.json();
@@ -464,7 +483,9 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
       setNewFirstName("");
       setNewLastName("");
       setNewPassword("");
+      setNewTier("free");
       invalidateUsers();
+      toast({ title: "User created and synced with Stripe" });
     },
   });
 
@@ -510,6 +531,8 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
           <option value="">All tiers</option>
           <option value="free">Free</option>
           <option value="pro">Pro</option>
+          <option value="comp">Comp</option>
+          <option value="internal">Internal</option>
         </select>
         <Button size="sm" onClick={() => setShowAddUser(!showAddUser)} data-testid="button-add-user">
           <UserPlus className="w-4 h-4 mr-1" />
@@ -555,6 +578,20 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
               className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
               data-testid="input-new-password"
             />
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Subscription tier</p>
+              <select
+                value={newTier}
+                onChange={(e) => setNewTier(e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-lg border border-border/50 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                data-testid="select-new-tier"
+              >
+                <option value="free">Free</option>
+                <option value="pro">Pro (paid)</option>
+                <option value="comp">Comp (complimentary Pro)</option>
+                <option value="internal">Internal (team)</option>
+              </select>
+            </div>
             {createUserMutation.error && (
               <p className="text-xs text-red-500">{(createUserMutation.error as Error).message}</p>
             )}
@@ -563,7 +600,7 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
               <Button
                 size="sm"
                 disabled={!newEmail.trim() || createUserMutation.isPending}
-                onClick={() => createUserMutation.mutate({ email: newEmail, firstName: newFirstName, lastName: newLastName, password: newPassword })}
+                onClick={() => createUserMutation.mutate({ email: newEmail, firstName: newFirstName, lastName: newLastName, password: newPassword, tier: newTier })}
                 data-testid="button-confirm-add-user"
               >
                 {createUserMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> : null}
@@ -609,8 +646,8 @@ function UsersTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (id: 
                       <td className="px-4 py-2.5 text-muted-foreground text-xs truncate max-w-[160px]">{u.email || "-"}</td>
                       <td className="px-4 py-2.5">
                         <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                          u.subscription_tier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                        )}>{u.subscription_tier || "free"}</span>
+                          tierBadgeClass(u.subscription_tier)
+                        )}>{tierLabel(u.subscription_tier)}</span>
                       </td>
                       <td className="px-4 py-2.5 text-xs">
                         {isBlocked ? (
@@ -775,8 +812,8 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
               {u.stageName && <p className="text-xs text-muted-foreground">Stage name: {u.stageName}</p>}
               <div className="flex flex-wrap gap-2 mt-2">
                 <span className={cn("text-xs font-medium px-2 py-0.5 rounded-full",
-                  u.subscriptionTier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                )}>{u.subscriptionTier || "free"}</span>
+                  tierBadgeClass(u.subscriptionTier)
+                )}>{tierLabel(u.subscriptionTier)}</span>
                 {u.onboardingComplete === "true" && <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600">Onboarded</span>}
                 {u.location && <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{u.location}</span>}
               </div>
@@ -806,13 +843,13 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Current Tier</p>
                 <span className={cn("text-xs font-medium px-2 py-1 rounded-full",
-                  u.subscriptionTier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                )}>{u.subscriptionTier || "free"}</span>
+                  tierBadgeClass(u.subscriptionTier)
+                )}>{tierLabel(u.subscriptionTier)}</span>
               </div>
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Script Usage</p>
                 <span className="text-xs font-medium">
-                  {u.subscriptionTier === "pro"
+                  {["pro", "comp", "internal"].includes(u.subscriptionTier)
                     ? "unlimited"
                     : `${u.scriptUsageCount || 0} / ${3 + (u.scriptUsageLimitBonus || 0)}`}
                 </span>
@@ -838,28 +875,25 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
             </div>
 
             <div className="border-t border-border/30 pt-3 flex flex-wrap gap-2 items-end">
-              {u.subscriptionTier === "pro" ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={planMutation.isPending}
-                  onClick={() => planMutation.mutate({ action: "change_tier", tier: "free" })}
-                  data-testid="button-downgrade-user"
-                >
-                  {planMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
-                  Downgrade to Free
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  disabled={planMutation.isPending}
-                  onClick={() => planMutation.mutate({ action: "change_tier", tier: "pro" })}
-                  data-testid="button-upgrade-user"
-                >
-                  {planMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Crown className="w-3.5 h-3.5 mr-1" />}
-                  Upgrade to Pro
-                </Button>
-              )}
+              <div className="space-y-1">
+                <p className="text-[10px] text-muted-foreground">Change tier</p>
+                <div className="flex gap-1">
+                  {(["free", "pro", "comp", "internal"] as const).map((t) => (
+                    <Button
+                      key={t}
+                      size="sm"
+                      variant={u.subscriptionTier === t ? "default" : "outline"}
+                      disabled={planMutation.isPending || u.subscriptionTier === t}
+                      onClick={() => planMutation.mutate({ action: "change_tier", tier: t })}
+                      data-testid={`button-tier-${t}`}
+                      className="text-xs capitalize"
+                    >
+                      {planMutation.isPending ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                      {t}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
               <Button
                 size="sm"
@@ -1319,7 +1353,7 @@ function RevenueTab({ data }: { data: AnalyticsData }) {
                   <tr key={s.id} className="border-t border-border/20">
                     <td className="px-4 py-2 text-xs font-medium">{[s.first_name, s.last_name].filter(Boolean).join(" ") || "Anonymous"}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground">{s.email || "-"}</td>
-                    <td className="px-4 py-2"><span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", s.subscription_tier === "pro" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{s.subscription_tier || "free"}</span></td>
+                    <td className="px-4 py-2"><span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium", tierBadgeClass(s.subscription_tier))}>{tierLabel(s.subscription_tier)}</span></td>
                     <td className="px-4 py-2 text-[10px] font-mono text-muted-foreground">{s.stripe_customer_id}</td>
                     <td className="px-4 py-2 text-xs text-muted-foreground">{formatTime(s.created_at)}</td>
                   </tr>

@@ -546,7 +546,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                   wmCanvas.width = wmVideo.videoWidth;
                   wmCanvas.height = wmVideo.videoHeight;
                   wmCtx.drawImage(wmVideo, 0, 0);
-                  if (user?.subscriptionTier !== "pro") {
+                  if (!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier))) {
                     drawWatermark(wmCtx, wmCanvas.width, wmCanvas.height);
                   }
                 }

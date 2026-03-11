@@ -40,7 +40,7 @@ function formatDuration(seconds: number | null | undefined) {
 
 export function HistoryPage({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (page: string) => void }) {
   const { isAuthenticated, user } = useAuth();
-  const isPro = user?.subscriptionTier === "pro";
+  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
 
   const { data: runs, isLoading } = useQuery<PerformanceRun[]>({
     queryKey: ["/api/performance"],

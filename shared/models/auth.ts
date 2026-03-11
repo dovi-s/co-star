@@ -46,6 +46,13 @@ export const users = pgTable("users", {
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 
+export const ALL_TIERS = ["free", "pro", "comp", "internal"] as const;
+export type SubscriptionTier = (typeof ALL_TIERS)[number];
+export const PRO_ACCESS_TIERS: SubscriptionTier[] = ["pro", "comp", "internal"];
+export function hasProAccess(tier: string | null | undefined): boolean {
+  return PRO_ACCESS_TIERS.includes((tier || "free") as SubscriptionTier);
+}
+
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").notNull(),
