@@ -42,6 +42,9 @@ function areOCRVariants(name1: string, name2: string): boolean {
   // Very short names need exact match
   if (name1.length <= 2 || name2.length <= 2) return false;
   
+  // If both names are recognized valid short names, they are distinct roles — never merge
+  if (VALID_SHORT_NAMES.has(upper1) && VALID_SHORT_NAMES.has(upper2)) return false;
+  
   // Method 1: Edit distance (for similar-length names)
   const distance = levenshteinDistance(upper1, upper2);
   const minLen = Math.min(name1.length, name2.length);
@@ -1007,6 +1010,9 @@ const VALID_SHORT_NAMES = new Set([
   "SAM", "SID", "SIS", "SKY", "SLY", "STU", "SUE", "TAD", "TED", "TIM", "TOM", "VIC", "ZAC", "ZAK", "ZOE",
   // Common role descriptors that are valid
   "MOM", "DAD", "SIS", "BRO", "DOC", "COP", "REF", "KID", "SON", "BOY", "MAN", "GUY", "GOD", "NUN",
+  // Common professional titles/roles used as character names
+  "CEO", "CFO", "COO", "CTO", "CMO", "CSO", "CIO", "COL", "SGT", "CPL", "PFC", "LCL",
+  "VET", "EMT", "RET", "SIR", "REP", "SPY", "FED", "DET",
 ]);
 
 function isValidCharacterName(name: string): boolean {
