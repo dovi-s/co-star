@@ -2029,14 +2029,16 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           "bg-orange-400 dark:bg-orange-500",
           "bg-pink-400 dark:bg-pink-500",
         ];
-        const confettiCount = isScriptComplete ? 28 : feedback?.type === "perfect" ? 22 : feedback?.type === "great" ? 16 : 12;
+        const confettiCount = isScriptComplete ? 36 : feedback?.type === "perfect" ? 28 : feedback?.type === "great" ? 22 : 16;
         const confettiParticles = Array.from({ length: confettiCount }, (_, i) => ({
               id: i,
               left: 2 + Math.random() * 96,
-              delay: i * 0.04 + Math.random() * 0.2,
-              duration: 2.2 + Math.random() * 1.2,
+              startTop: Math.random() * 80,
+              delay: Math.random() * 0.6,
+              duration: 2.5 + Math.random() * 1.5,
               colorClass: confettiColors[i % confettiColors.length],
-              size: 5 + Math.random() * 6,
+              size: 6 + Math.random() * 7,
+              drift: -30 + Math.random() * 60,
             }));
         
         return (
@@ -2051,11 +2053,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                   className={cn("confetti-particle", p.colorClass)}
                   style={{
                     left: `${p.left}%`,
+                    top: `${p.startTop}%`,
                     animationDelay: `${p.delay}s`,
                     animationDuration: `${p.duration}s`,
                     width: `${p.size}px`,
                     height: `${p.size}px`,
-                    opacity: 0.8,
+                    ["--drift" as string]: `${p.drift}px`,
                   }}
                 />
               ))}

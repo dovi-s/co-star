@@ -2041,27 +2041,36 @@ body {
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: 1;
 }
 
 .confetti-particle {
   position: absolute;
-  top: -5%;
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  animation: confetti-fall 3s ease-out forwards;
+  opacity: 0;
+  animation: confetti-burst 3s ease-out forwards;
 }
 
-@keyframes confetti-fall {
+@keyframes confetti-burst {
   0% {
-    transform: translateY(0) rotate(0deg);
+    transform: scale(0) translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    transform: scale(1.2) translateY(-10px) translateX(var(--drift, 0px)) rotate(90deg);
     opacity: 1;
   }
-  60% {
-    opacity: 0.9;
+  30% {
+    transform: scale(1) translateY(20px) translateX(calc(var(--drift, 0px) * 0.5)) rotate(200deg);
+    opacity: 0.95;
+  }
+  70% {
+    opacity: 0.7;
   }
   100% {
-    transform: translateY(105vh) rotate(720deg);
+    transform: scale(0.8) translateY(120px) translateX(var(--drift, 0px)) rotate(600deg);
     opacity: 0;
   }
 }
