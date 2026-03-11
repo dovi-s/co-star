@@ -39,6 +39,8 @@ class SpeechRecognitionEngine {
   private lastResultTranscript = "";
   private restartDelay: ReturnType<typeof setTimeout> | null = null;
   private consecutiveErrors = 0;
+  private resultOffset = 0;
+  private isPaused = false;
 
   constructor() {
     if (typeof window !== "undefined") {
@@ -83,18 +85,18 @@ class SpeechRecognitionEngine {
       return;
     }
     
-    const useContinuous = this.isIOS && this.isPWA;
-    this.recognition.continuous = useContinuous || (!this.isSafari && !this.isIOS);
+    this.recognition.continuous = true;
     this.recognition.interimResults = true;
     this.recognition.lang = "en-US";
     this.recognition.maxAlternatives = 1;
 
-
     this.recognition.onstart = () => {
       this.isListening = true;
+      this.isPaused = false;
       this.hasReceivedSpeech = false;
       this.lastTranscript = "";
       this.lastResultTranscript = "";
+      this.resultOffset = 0;
       this.startTime = Date.now();
       this.lastActivityTime = Date.now();
       this.consecutiveErrors = 0;
@@ -112,10 +114,18 @@ class SpeechRecognitionEngine {
 
     this.recognition.onend = () => {
       const wasIntentional = this.intentionalStop;
+      const wasPaused = this.isPaused;
       this.isListening = false;
       this.intentionalStop = false;
       this.clearSilenceTimeout();
       this.stopWatchdog();
+
+      if (wasPaused) {
+        this.clearMaxListenTimeout();
+        this.shouldAutoRestart = false;
+        this.setState("idle");
+        return;
+      }
 
       if (wasIntentional) {
         this.clearMaxListenTimeout();
@@ -140,11 +150,11 @@ class SpeechRecognitionEngine {
       }
 
       if (this.shouldAutoRestart) {
-        const delay = this.isSafari || this.isIOS ? 150 : 100;
+        const delay = this.isMobile ? 200 : 100;
         this.restartDelay = setTimeout(() => {
           this.restartDelay = null;
           if (this.shouldAutoRestart && !this.isListening) {
-            this.startInternal();
+            this.recreateAndStart();
           }
         }, delay);
         return;
@@ -170,13 +180,13 @@ class SpeechRecognitionEngine {
         this.clearSilenceTimeout();
         this.stopWatchdog();
         
-        const maxRetries = this.isMobile ? 15 : 5;
+        const maxRetries = this.isMobile ? 20 : 5;
         this.noSpeechRestartCount++;
         if (this.noSpeechRestartCount < maxRetries && this.shouldAutoRestart) {
-          const delay = this.isMobile ? 400 : 150;
+          const delay = this.isMobile ? 300 : 150;
           setTimeout(() => {
             if (!this.isListening && this.shouldAutoRestart) {
-              this.startInternal();
+              this.recreateAndStart();
             }
           }, delay);
         } else {
@@ -193,12 +203,12 @@ class SpeechRecognitionEngine {
         this.isListening = false;
         this.clearSilenceTimeout();
         this.stopWatchdog();
-        if (this.consecutiveErrors < 5 && this.shouldAutoRestart) {
+        if (this.consecutiveErrors < 8 && this.shouldAutoRestart) {
           setTimeout(() => {
             if (!this.isListening && this.shouldAutoRestart) {
               this.recreateAndStart();
             }
-          }, this.isMobile ? 800 : 500);
+          }, this.isMobile ? 600 : 400);
         } else {
           this.shouldAutoRestart = false;
           this.setState("idle");
@@ -211,12 +221,12 @@ class SpeechRecognitionEngine {
         this.isListening = false;
         this.clearSilenceTimeout();
         this.stopWatchdog();
-        if (this.consecutiveErrors < 5 && this.shouldAutoRestart) {
+        if (this.consecutiveErrors < 8 && this.shouldAutoRestart) {
           setTimeout(() => {
             if (!this.isListening && this.shouldAutoRestart) {
               this.recreateAndStart();
             }
-          }, 1000);
+          }, 800);
         } else {
           this.shouldAutoRestart = false;
           this.setState("idle");
@@ -230,7 +240,7 @@ class SpeechRecognitionEngine {
         this.onErrorCallback?.("not-allowed");
       } else if (event.error === "service-not-allowed") {
         this.isListening = false;
-        if (this.consecutiveErrors < 3 && this.shouldAutoRestart) {
+        if (this.consecutiveErrors < 5 && this.shouldAutoRestart) {
           setTimeout(() => {
             if (!this.isListening && this.shouldAutoRestart) {
               this.recreateAndStart();
@@ -252,92 +262,65 @@ class SpeechRecognitionEngine {
     };
 
     this.recognition.onresult = (event: any) => {
+      if (this.isPaused) return;
+
       this.hasReceivedSpeech = true;
       this.noSpeechRestartCount = 0;
       this.consecutiveErrors = 0;
       this.lastActivityTime = Date.now();
-      
-      const useSingleShot = this.isSafari || this.isIOS;
 
-      if (useSingleShot) {
-        let fullTranscript = "";
-        for (let i = 0; i < event.results.length; i++) {
-          fullTranscript += event.results[i][0].transcript;
-        }
-        fullTranscript = fullTranscript.trim();
-        
-        const lastResult = event.results[event.results.length - 1];
-        const isFinal = lastResult.isFinal;
-        const confidence = lastResult[0].confidence || 0.9;
+      let currentTranscript = "";
+      let latestIsFinal = false;
+      let latestConfidence = 0.9;
 
-        if (fullTranscript === this.lastResultTranscript && !isFinal) {
-          return;
-        }
-        this.lastResultTranscript = fullTranscript;
-
-        const accumulated = [
-          ...this.finalizedSegments,
-          ...(fullTranscript.length > 0 ? [fullTranscript] : [])
-        ].join(" ").trim();
-
-        this.accumulatedTranscript = accumulated;
-        
-        if (fullTranscript.length > this.lastTranscript.length) {
-          this.lastTranscript = fullTranscript;
-        }
-
-
-        if (accumulated.length > 0) {
-          this.onResultCallback?.({
-            transcript: accumulated,
-            confidence,
-            isFinal: false,
-          });
-        }
-
-        if (isFinal && fullTranscript.length > 0) {
-          this.finalizedSegments.push(fullTranscript);
-          this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
-        }
-
-        this.resetSilenceTimeout();
-      } else {
-        const result = event.results[event.results.length - 1];
-        const transcript = result[0].transcript.trim();
-        const confidence = result[0].confidence || 0.9;
-        const isFinal = result.isFinal;
-        
-        if (isFinal && transcript.length > 0) {
-          this.finalizedSegments.push(transcript);
-        }
-        
-        const accumulated = [
-          ...this.finalizedSegments,
-          ...(isFinal ? [] : (transcript.length > 0 ? [transcript] : []))
-        ].join(" ").trim();
-        
-        this.accumulatedTranscript = accumulated;
-        
-
-        if (transcript.length > this.lastTranscript.length) {
-          this.lastTranscript = transcript;
-        }
-
-        if (accumulated.length > 0) {
-          this.onResultCallback?.({
-            transcript: accumulated,
-            confidence,
-            isFinal,
-          });
-        }
-
-        if (isFinal) {
-          this.clearSilenceTimeout();
-          this.resetSilenceTimeout();
-        } else {
-          this.resetSilenceTimeout();
+      for (let i = this.resultOffset; i < event.results.length; i++) {
+        const res = event.results[i];
+        currentTranscript += res[0].transcript;
+        if (i === event.results.length - 1) {
+          latestIsFinal = res.isFinal;
+          latestConfidence = res[0].confidence || 0.9;
         }
       }
+      currentTranscript = currentTranscript.trim();
+
+      if (currentTranscript.length === 0) {
+        this.resetSilenceTimeout();
+        return;
+      }
+
+      if (currentTranscript === this.lastResultTranscript && !latestIsFinal) {
+        return;
+      }
+      this.lastResultTranscript = currentTranscript;
+
+      if (currentTranscript.length > this.lastTranscript.length) {
+        this.lastTranscript = currentTranscript;
+      }
+
+      const accumulated = [
+        ...this.finalizedSegments,
+        currentTranscript,
+      ].join(" ").trim();
+
+      this.accumulatedTranscript = accumulated;
+
+      if (latestIsFinal) {
+        this.finalizedSegments.push(currentTranscript);
+        this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
+        this.resultOffset = event.results.length;
+        this.lastTranscript = "";
+        this.lastResultTranscript = "";
+      }
+
+      if (accumulated.length > 0) {
+        this.onResultCallback?.({
+          transcript: latestIsFinal ? this.accumulatedTranscript : accumulated,
+          confidence: latestConfidence,
+          isFinal: latestIsFinal,
+        });
+      }
+
+      this.resetSilenceTimeout();
     };
   }
 
@@ -354,6 +337,7 @@ class SpeechRecognitionEngine {
         this.recognition = null;
       }
       this.isListening = false;
+      this.isPaused = false;
       this.createRecognition();
       if (this.recognition) {
         this.startInternal();
@@ -372,29 +356,25 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    const timeout = this.isMobile ? 3200 : 2200;
+    const timeout = this.isMobile ? 3500 : 2200;
     this.silenceTimeout = setTimeout(() => {
-      if (this.isListening && this.hasReceivedSpeech) {
-        if (this.usesContinuousMode) {
-          if (this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
-            this.finalizedSegments.push(this.lastTranscript);
-            this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
-          }
-          if (this.accumulatedTranscript) {
-            this.onResultCallback?.({
-              transcript: this.accumulatedTranscript,
-              confidence: 0.8,
-              isFinal: true,
-            });
-          }
-          this.hasReceivedSpeech = false;
-          this.lastTranscript = "";
-          this.lastResultTranscript = "";
-          this.setState("listening");
-          this.onEndCallback?.();
-        } else {
-          this.stop();
+      if (this.isListening && this.hasReceivedSpeech && !this.isPaused) {
+        if (this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
+          this.finalizedSegments.push(this.lastTranscript);
+          this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
         }
+        if (this.accumulatedTranscript) {
+          this.onResultCallback?.({
+            transcript: this.accumulatedTranscript,
+            confidence: 0.8,
+            isFinal: true,
+          });
+        }
+        this.hasReceivedSpeech = false;
+        this.lastTranscript = "";
+        this.lastResultTranscript = "";
+        this.setState("listening");
+        this.onEndCallback?.();
       }
     }, timeout);
   }
@@ -418,7 +398,7 @@ class SpeechRecognitionEngine {
     if (!this.isMobile) return;
 
     this.watchdogInterval = setInterval(() => {
-      if (!this.isListening) {
+      if (!this.isListening || this.isPaused) {
         this.stopWatchdog();
         return;
       }
@@ -438,7 +418,7 @@ class SpeechRecognitionEngine {
         this.setState("idle");
         this.stopWatchdog();
         setTimeout(() => {
-          if (!this.isListening && this.shouldAutoRestart) {
+          if (!this.isListening && this.shouldAutoRestart && !this.isPaused) {
             this.recreateAndStart();
           }
         }, 500);
@@ -516,6 +496,7 @@ class SpeechRecognitionEngine {
       this.lastTranscript = "";
       this.lastResultTranscript = "";
       this.lastActivityTime = Date.now();
+      this.isPaused = false;
       this.recognition.start();
       return true;
     } catch (e: any) {
@@ -523,6 +504,7 @@ class SpeechRecognitionEngine {
       
       if (e?.message?.includes("already started") || e?.name === "InvalidStateError") {
         this.isListening = true;
+        this.isPaused = false;
         return true;
       }
       
@@ -557,17 +539,11 @@ class SpeechRecognitionEngine {
   }
 
   pause() {
-    if (this.usesContinuousMode && this.isListening) {
-      this.resetAccumulated();
-      this.hasReceivedSpeech = false;
-      this.lastTranscript = "";
-      this.lastResultTranscript = "";
-      this.clearSilenceTimeout();
-      return;
-    }
     this.shouldAutoRestart = false;
+    this.isPaused = true;
     this.clearSilenceTimeout();
     this.stopWatchdog();
+    this.clearMaxListenTimeout();
     if (this.restartDelay) {
       clearTimeout(this.restartDelay);
       this.restartDelay = null;
@@ -583,47 +559,45 @@ class SpeechRecognitionEngine {
   }
 
   softStart(): boolean {
-    if (this.usesContinuousMode && this.isListening) {
-      this.resetAccumulated();
-      this.hasReceivedSpeech = false;
-      this.lastTranscript = "";
-      this.lastResultTranscript = "";
-      this.lastActivityTime = Date.now();
-      this.noSpeechRestartCount = 0;
-      this.resetSilenceTimeout();
-      return true;
+    if (!this.SpeechRecognitionAPI) return false;
+
+    this.isPaused = false;
+    this.noSpeechRestartCount = 0;
+    this.consecutiveErrors = 0;
+    this.shouldAutoRestart = true;
+
+    if (this.restartDelay) {
+      clearTimeout(this.restartDelay);
+      this.restartDelay = null;
     }
 
-    if (this.isPWA || this.isMobile) {
-      this.shouldAutoRestart = false;
-      if (this.restartDelay) {
-        clearTimeout(this.restartDelay);
-        this.restartDelay = null;
-      }
-      this.resetAccumulated();
-      if (this.recognition && this.isListening) {
-        try { this.recognition.abort(); } catch {}
-        this.isListening = false;
-      }
-      this.recreateAndStart();
-      this.shouldAutoRestart = true;
-      if (this.isPWA && !this.isListening) {
-        const verifyStart = (attempt: number) => {
-          if (this.isListening || !this.shouldAutoRestart || attempt >= 3) return;
-          this.recreateAndStart();
-          setTimeout(() => verifyStart(attempt + 1), 1500);
-        };
-        setTimeout(() => verifyStart(0), 2000);
-      }
-      return true;
+    this.resetAccumulated();
+
+    if (this.recognition && this.isListening) {
+      try { this.recognition.abort(); } catch {}
+      this.isListening = false;
     }
 
-    return this.start();
+    this.recreateAndStart();
+
+    if (!this.isListening) {
+      const maxAttempts = this.isPWA ? 8 : 5;
+      const verifyStart = (attempt: number) => {
+        if (this.isListening || !this.shouldAutoRestart || this.isPaused || attempt >= maxAttempts) return;
+        this.recreateAndStart();
+        const nextDelay = attempt < 3 ? 600 : 1200;
+        setTimeout(() => verifyStart(attempt + 1), nextDelay);
+      };
+      setTimeout(() => verifyStart(0), 800);
+    }
+
+    return true;
   }
 
   stop() {
     this.intentionalStop = true;
     this.shouldAutoRestart = false;
+    this.isPaused = false;
     this.stopWatchdog();
     
     if (this.restartDelay) {
@@ -653,6 +627,7 @@ class SpeechRecognitionEngine {
 
   abort() {
     this.shouldAutoRestart = false;
+    this.isPaused = false;
     this.stopWatchdog();
     
     if (this.restartDelay) {
@@ -671,6 +646,7 @@ class SpeechRecognitionEngine {
     this.lastTranscript = "";
     this.accumulatedTranscript = "";
     this.finalizedSegments = [];
+    this.resultOffset = 0;
     this.setState("idle");
   }
 }
