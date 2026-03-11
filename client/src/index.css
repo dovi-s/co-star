@@ -2045,11 +2045,11 @@ body {
 
 .confetti-particle {
   position: absolute;
-  top: -10px;
+  top: -5%;
   width: 8px;
   height: 8px;
   border-radius: 2px;
-  animation: confetti-fall 2.5s ease-out forwards;
+  animation: confetti-fall 3s ease-out forwards;
 }
 
 @keyframes confetti-fall {
@@ -2057,8 +2057,11 @@ body {
     transform: translateY(0) rotate(0deg);
     opacity: 1;
   }
+  60% {
+    opacity: 0.9;
+  }
   100% {
-    transform: translateY(400px) rotate(720deg);
+    transform: translateY(105vh) rotate(720deg);
     opacity: 0;
   }
 }
@@ -2703,33 +2706,6 @@ body {
   border: 1px solid currentColor;
   opacity: 0.5;
   animation: pulse-ring 2s ease-out infinite;
-}
-
-/* Confetti particles */
-@keyframes confetti-fall {
-  0% {
-    transform: translateY(-100%) rotate(0deg);
-    opacity: 1;
-  }
-  100% {
-    transform: translateY(400%) rotate(720deg);
-    opacity: 0;
-  }
-}
-
-.confetti-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.confetti-particle {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  animation: confetti-fall 3s ease-out forwards;
 }
 
 /* Subtle gradient shimmer */
