@@ -361,7 +361,26 @@ class SpeechRecognitionEngine {
     const timeout = this.isMobile ? 3200 : 2200;
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech) {
-        this.stop();
+        if (this.usesContinuousMode) {
+          if (this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
+            this.finalizedSegments.push(this.lastTranscript);
+            this.accumulatedTranscript = this.finalizedSegments.join(" ").trim();
+          }
+          if (this.accumulatedTranscript) {
+            this.onResultCallback?.({
+              transcript: this.accumulatedTranscript,
+              confidence: 0.8,
+              isFinal: true,
+            });
+          }
+          this.hasReceivedSpeech = false;
+          this.lastTranscript = "";
+          this.lastResultTranscript = "";
+          this.setState("listening");
+          this.onEndCallback?.();
+        } else {
+          this.stop();
+        }
       }
     }, timeout);
   }
@@ -519,12 +538,12 @@ class SpeechRecognitionEngine {
     return this.startInternal();
   }
 
-  private get usesContinuousPWA(): boolean {
-    return this.isIOS && this.isPWA;
+  private get usesContinuousMode(): boolean {
+    return !!this.recognition?.continuous;
   }
 
   pause() {
-    if (this.usesContinuousPWA && this.isListening) {
+    if (this.usesContinuousMode && this.isListening) {
       this.resetAccumulated();
       this.clearSilenceTimeout();
       return;
@@ -533,7 +552,7 @@ class SpeechRecognitionEngine {
   }
 
   softStart(): boolean {
-    if (this.usesContinuousPWA && this.isListening) {
+    if (this.usesContinuousMode && this.isListening) {
       this.resetAccumulated();
       this.hasReceivedSpeech = false;
       this.lastTranscript = "";
