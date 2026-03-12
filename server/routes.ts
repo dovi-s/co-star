@@ -2479,12 +2479,63 @@ MARY: You're kidding me.`;
         return res.json({ subscription: null, tier: user.subscriptionTier, isPro: true });
       }
 
-      if (user.subscriptionTier !== 'free') {
-        await db.update(users).set({
-          subscriptionTier: 'free',
-          stripeSubscriptionId: null,
-          updatedAt: new Date(),
-        }).where(eq(users.id, userId));
+      if (user.stripeSubscriptionId) {
+        try {
+          const stripe = await getUncachableStripeClient();
+          const liveSub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+          if (['active', 'trialing'].includes(liveSub.status)) {
+            console.log(`[Stripe] Sync table miss but live sub is active for user ${userId}, preserving pro tier`);
+
+            const toISOFromUnix2 = (val: any): string | null => {
+              if (!val) return null;
+              const num = typeof val === 'number' ? val : Number(val);
+              if (!isNaN(num)) return new Date(num < 1e12 ? num * 1000 : num).toISOString();
+              return String(val);
+            };
+
+            const isTrialing = liveSub.status === 'trialing';
+            let trialEnd: string | null = null;
+            let trialDaysLeft: number | null = null;
+            if (isTrialing && liveSub.trial_end) {
+              trialEnd = toISOFromUnix2(liveSub.trial_end);
+              const endDate = trialEnd ? new Date(trialEnd) : null;
+              if (endDate) {
+                const msLeft = endDate.getTime() - Date.now();
+                trialDaysLeft = Math.min(7, Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24))));
+              }
+            }
+
+            const pauseCollection = liveSub.pause_collection || null;
+            let pausedUntil: string | null = null;
+            if (pauseCollection?.resumes_at) {
+              pausedUntil = new Date(pauseCollection.resumes_at * 1000).toISOString();
+            }
+
+            const priceId = liveSub.items?.data?.[0]?.price?.id || null;
+
+            return res.json({
+              subscription: {
+                id: liveSub.id,
+                status: liveSub.status,
+                currentPeriodEnd: toISOFromUnix2(liveSub.current_period_end),
+                cancelAtPeriodEnd: liveSub.cancel_at_period_end,
+                isTrialing,
+                trialEnd,
+                trialDaysLeft,
+                currentPriceId: priceId,
+                isPaused: !!pauseCollection,
+                pausedUntil,
+              },
+              tier: "pro",
+            });
+          }
+        } catch (e: any) {
+          console.warn(`[Stripe] Live sub check failed for ${user.stripeSubscriptionId}:`, e.message);
+        }
+      }
+
+      if (hasProAccess(user.subscriptionTier || "free")) {
+        return res.json({ subscription: null, tier: user.subscriptionTier, isPro: true });
       }
 
       return res.json({ subscription: null, tier: "free" });
