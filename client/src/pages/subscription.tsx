@@ -28,6 +28,7 @@ import {
   ArrowRight,
   Undo2,
   AlertCircle,
+  Pause,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -41,6 +42,8 @@ interface SubscriptionData {
     trialEnd?: string | null;
     trialDaysLeft?: number | null;
     currentPriceId?: string | null;
+    isPaused?: boolean;
+    pausedUntil?: string | null;
   } | null;
   tier: string;
   isPro?: boolean;
@@ -668,46 +671,30 @@ function ActiveSubscription({
   });
   const trialDaysLeft = subscription.trialDaysLeft ?? 0;
 
-  const rawEnd = subscription.currentPeriodEnd;
-  const periodEndDate = rawEnd
-    ? (() => {
-        const num = typeof rawEnd === "number" ? rawEnd : Number(rawEnd);
-        if (!isNaN(num)) {
-          return new Date(num < 1e12 ? num * 1000 : num);
-        }
-        return new Date(rawEnd);
-      })()
-    : null;
-  const periodEnd = periodEndDate
-    ? periodEndDate.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      })
-    : null;
+  const formatDate = (val: string | number | null | undefined): string | null => {
+    if (!val) return null;
+    const d = new Date(typeof val === "number" && val < 1e12 ? val * 1000 : val);
+    return isNaN(d.getTime()) ? null : d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  };
 
-  const trialEndDate = subscription.trialEnd
-    ? (() => {
-        const raw = subscription.trialEnd!;
-        const num = typeof raw === "number" ? raw : Number(raw);
-        if (!isNaN(num)) {
-          return new Date(num < 1e12 ? num * 1000 : num);
-        }
-        return new Date(raw);
-      })()
-    : null;
-  const trialEndFormatted = trialEndDate
-    ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
-    : null;
+  const periodEndDate = subscription.currentPeriodEnd ? new Date(subscription.currentPeriodEnd) : null;
+  const periodEnd = formatDate(subscription.currentPeriodEnd);
+  const trialEndFormatted = formatDate(subscription.trialEnd);
+  const pausedUntilFormatted = formatDate(subscription.pausedUntil);
+  const isPaused = subscription.isPaused === true;
 
   const statusLabel = subscription.cancelAtPeriodEnd
     ? "Canceling"
+    : isPaused
+    ? "Paused"
     : isTrialing
     ? "Guest pass"
     : "Active";
 
   const statusColor = subscription.cancelAtPeriodEnd
     ? "bg-amber-500/10 text-amber-600"
+    : isPaused
+    ? "bg-orange-500/10 text-orange-600"
     : isTrialing
     ? "bg-blue-500/10 text-blue-600"
     : "bg-green-500/10 text-green-600";
@@ -721,7 +708,9 @@ function ActiveSubscription({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground">Cancellation scheduled</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Your Pro plan will end on {periodEnd}. You'll keep full access until then.
+                {periodEnd
+                  ? `Your Pro plan will end on ${periodEnd}. You'll keep full access until then.`
+                  : "Your Pro plan will end at the end of your billing period. You'll keep full access until then."}
               </p>
             </div>
           </div>
@@ -739,6 +728,23 @@ function ActiveSubscription({
             )}
             Keep my plan
           </Button>
+        </div>
+      )}
+
+      {isPaused && !subscription.cancelAtPeriodEnd && (
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/[0.06] p-4" data-testid="banner-paused">
+          <div className="flex items-start gap-3">
+            <Pause className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Plan paused</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {pausedUntilFormatted
+                  ? `Your billing is paused. It will automatically resume on ${pausedUntilFormatted}.`
+                  : "Your billing is paused. It will automatically resume soon."}
+                {" "}You still have full Pro access.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
@@ -762,10 +768,14 @@ function ActiveSubscription({
             {trialEndFormatted && ` · Billing starts ${trialEndFormatted}`}
           </p>
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground" data-testid="text-billing-info">
             {subscription.cancelAtPeriodEnd
-              ? `Access until ${periodEnd}`
-              : `Renews ${periodEnd}`}
+              ? `Active until ${periodEnd || "end of billing period"}`
+              : isPaused
+              ? `Paused · Resumes ${pausedUntilFormatted || "soon"}`
+              : periodEnd
+              ? `Renews ${periodEnd}`
+              : "Active subscription"}
           </p>
         )}
       </div>

@@ -2337,6 +2337,7 @@ MARY: You're kidding me.`;
       const subResult = await db.execute(
         sql`
           SELECT s.id, s.status, s.current_period_end, s.cancel_at_period_end, s.trial_end, s.trial_start,
+                 s.pause_collection,
                  (SELECT si.price FROM stripe.subscription_items si WHERE si.subscription = s.id LIMIT 1) as current_price_id
           FROM stripe.subscriptions s
           WHERE s.customer = ${user.stripeCustomerId}
@@ -2356,28 +2357,47 @@ MARY: You're kidding me.`;
           }).where(eq(users.id, userId));
         }
 
+        const toISOFromUnix = (val: any): string | null => {
+          if (!val) return null;
+          const num = typeof val === 'number' ? val : Number(val);
+          if (!isNaN(num)) {
+            return new Date(num < 1e12 ? num * 1000 : num).toISOString();
+          }
+          return String(val);
+        };
+
         const isTrialing = sub.status === 'trialing';
         let trialEnd: string | null = null;
         let trialDaysLeft: number | null = null;
         if (isTrialing && sub.trial_end) {
-          trialEnd = sub.trial_end;
-          const endDate = typeof sub.trial_end === 'number'
-            ? new Date(sub.trial_end * 1000)
-            : new Date(sub.trial_end);
-          const msLeft = endDate.getTime() - Date.now();
-          trialDaysLeft = Math.min(7, Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24))));
+          trialEnd = toISOFromUnix(sub.trial_end);
+          const endDate = trialEnd ? new Date(trialEnd) : null;
+          if (endDate) {
+            const msLeft = endDate.getTime() - Date.now();
+            trialDaysLeft = Math.min(7, Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24))));
+          }
+        }
+
+        const pauseCollection = sub.pause_collection
+          ? (typeof sub.pause_collection === 'string' ? JSON.parse(sub.pause_collection) : sub.pause_collection)
+          : null;
+        let pausedUntil: string | null = null;
+        if (pauseCollection?.resumes_at) {
+          pausedUntil = new Date(pauseCollection.resumes_at * 1000).toISOString();
         }
 
         return res.json({
           subscription: {
             id: sub.id,
             status: sub.status,
-            currentPeriodEnd: sub.current_period_end,
+            currentPeriodEnd: toISOFromUnix(sub.current_period_end),
             cancelAtPeriodEnd: sub.cancel_at_period_end,
             isTrialing,
             trialEnd,
             trialDaysLeft,
             currentPriceId: sub.current_price_id || null,
+            isPaused: !!pauseCollection,
+            pausedUntil,
           },
           tier: "pro",
         });
