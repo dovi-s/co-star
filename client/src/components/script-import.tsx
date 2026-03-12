@@ -491,10 +491,15 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
     if (!script.trim()) return;
 
     if (!isAuthenticated) {
-      sessionStorage.setItem("costar-pending-script", script);
-      if (uploadedFileName) sessionStorage.setItem("costar-pending-filename", uploadedFileName);
-      if (onAuthRequired) onAuthRequired();
-      return;
+      const anonKey = "costar-anon-generates";
+      const anonCount = parseInt(localStorage.getItem(anonKey) || "0", 10);
+      if (anonCount >= 1) {
+        sessionStorage.setItem("costar-pending-script", script);
+        if (uploadedFileName) sessionStorage.setItem("costar-pending-filename", uploadedFileName);
+        if (onAuthRequired) onAuthRequired();
+        return;
+      }
+      localStorage.setItem(anonKey, String(anonCount + 1));
     }
 
     if (isAuthenticated) {
