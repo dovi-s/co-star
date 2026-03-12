@@ -2512,6 +2512,251 @@ MARY: You're kidding me.`;
     return { ua, userId, sessionId, device, browser };
   }
 
+  // ── Recent Scripts CRUD ──────────────────────────────────────────────
+  app.get("/api/recent-scripts", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const rows = await db
+        .select()
+        .from(recentScripts)
+        .where(eq(recentScripts.userId, userId))
+        .orderBy(desc(recentScripts.lastUsed))
+        .limit(20);
+      res.json(rows);
+    } catch (err: any) {
+      console.error("[RecentScripts] GET error:", err.message);
+      res.status(500).json({ error: "Failed to load scripts" });
+    }
+  });
+
+  app.post("/api/recent-scripts", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const { name, rawScript, roleCount, lineCount, lastRole } = req.body;
+      if (!name || !rawScript) return res.status(400).json({ error: "name and rawScript required" });
+
+      const crypto = await import("crypto");
+      const fingerprint = crypto.createHash("sha256").update(rawScript).digest("hex").substring(0, 64);
+
+      const existing = await db
+        .select()
+        .from(recentScripts)
+        .where(and(eq(recentScripts.userId, userId), eq(recentScripts.scriptFingerprint, fingerprint)))
+        .limit(1);
+
+      if (existing.length > 0) {
+        const [updated] = await db
+          .update(recentScripts)
+          .set({ name, rawScript, roleCount: roleCount ?? 0, lineCount: lineCount ?? 0, lastRole: lastRole || null, lastUsed: new Date() })
+          .where(eq(recentScripts.id, existing[0].id))
+          .returning();
+        return res.json(updated);
+      }
+
+      const [row] = await db
+        .insert(recentScripts)
+        .values({ userId, name, rawScript, scriptFingerprint: fingerprint, roleCount: roleCount ?? 0, lineCount: lineCount ?? 0, lastRole: lastRole || null })
+        .returning();
+
+      const allScripts = await db
+        .select({ id: recentScripts.id })
+        .from(recentScripts)
+        .where(eq(recentScripts.userId, userId))
+        .orderBy(desc(recentScripts.lastUsed));
+      if (allScripts.length > 20) {
+        const idsToDelete = allScripts.slice(20).map(s => s.id);
+        for (const id of idsToDelete) {
+          await db.delete(recentScripts).where(eq(recentScripts.id, id));
+        }
+      }
+
+      res.json(row);
+    } catch (err: any) {
+      console.error("[RecentScripts] POST error:", err.message);
+      res.status(500).json({ error: "Failed to save script" });
+    }
+  });
+
+  app.patch("/api/recent-scripts/:id", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const { id } = req.params;
+      const { name, lastRole } = req.body;
+
+      const [existing] = await db.select().from(recentScripts).where(and(eq(recentScripts.id, id), eq(recentScripts.userId, userId)));
+      if (!existing) return res.status(404).json({ error: "Script not found" });
+
+      const updates: Record<string, any> = {};
+      if (name !== undefined) updates.name = name;
+      if (lastRole !== undefined) updates.lastRole = lastRole;
+      if (Object.keys(updates).length === 0) return res.json(existing);
+
+      await db.update(recentScripts).set(updates).where(eq(recentScripts.id, id));
+      res.json({ ...existing, ...updates });
+    } catch (err: any) {
+      console.error("[RecentScripts] PATCH error:", err.message);
+      res.status(500).json({ error: "Failed to update script" });
+    }
+  });
+
+  app.delete("/api/recent-scripts/:id", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const { id } = req.params;
+      const [existing] = await db.select().from(recentScripts).where(and(eq(recentScripts.id, id), eq(recentScripts.userId, userId)));
+      if (!existing) return res.status(404).json({ error: "Script not found" });
+      await db.delete(recentScripts).where(eq(recentScripts.id, id));
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[RecentScripts] DELETE error:", err.message);
+      res.status(500).json({ error: "Failed to delete script" });
+    }
+  });
+
+  // ── Performance Runs ────────────────────────────────────────────────
+  app.post("/api/performance", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const { scriptName, accuracy, linesTotal, linesCorrect, linesSkipped, durationSeconds, memorizationMode } = req.body;
+      if (!scriptName || typeof scriptName !== "string") return res.status(400).json({ error: "scriptName required" });
+      const accNum = parseFloat(accuracy);
+      const totalNum = parseInt(linesTotal, 10);
+      const correctNum = parseInt(linesCorrect ?? "0", 10);
+      const skippedNum = parseInt(linesSkipped ?? "0", 10);
+      const durationNum = durationSeconds != null ? parseInt(durationSeconds, 10) : null;
+      if (isNaN(accNum) || isNaN(totalNum) || totalNum < 0 || isNaN(correctNum) || isNaN(skippedNum)) {
+        return res.status(400).json({ error: "Invalid numeric fields" });
+      }
+      const [row] = await db
+        .insert(performanceRuns)
+        .values({
+          userId,
+          scriptName: scriptName.substring(0, 200),
+          accuracy: Math.max(0, Math.min(100, accNum)),
+          linesTotal: totalNum,
+          linesCorrect: correctNum,
+          linesSkipped: skippedNum,
+          durationSeconds: durationNum != null && !isNaN(durationNum) ? durationNum : null,
+          memorizationMode: memorizationMode || "off",
+        })
+        .returning();
+      res.json(row);
+    } catch (err: any) {
+      console.error("[Performance] POST error:", err.message);
+      res.status(500).json({ error: "Failed to save performance run" });
+    }
+  });
+
+  app.get("/api/performance", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+      const rows = await db
+        .select()
+        .from(performanceRuns)
+        .where(eq(performanceRuns.userId, userId))
+        .orderBy(desc(performanceRuns.createdAt))
+        .limit(50);
+      res.json(rows);
+    } catch (err: any) {
+      console.error("[Performance] GET error:", err.message);
+      res.status(500).json({ error: "Failed to load performance data" });
+    }
+  });
+
+  // ── User Stats (server-aggregated, syncs across devices) ───────────
+  app.get("/api/user-stats", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) return res.status(401).json({ error: "Sign in required" });
+
+      const nowUtc = new Date();
+      const todayStr = nowUtc.toISOString().split("T")[0];
+      const yesterdayDate = new Date(nowUtc);
+      yesterdayDate.setUTCDate(yesterdayDate.getUTCDate() - 1);
+      const yesterdayStr = yesterdayDate.toISOString().split("T")[0];
+
+      const [totalRuns] = await db.select({ count: count() }).from(performanceRuns).where(eq(performanceRuns.userId, userId));
+
+      const aggregates = await db.execute(
+        sql`SELECT 
+          COALESCE(SUM(lines_total), 0) as total_lines,
+          COALESCE(SUM(CASE WHEN DATE(created_at AT TIME ZONE 'UTC') = ${todayStr}::date THEN lines_total ELSE 0 END), 0) as today_lines,
+          COUNT(CASE WHEN DATE(created_at AT TIME ZONE 'UTC') = ${todayStr}::date THEN 1 END) as today_runs
+        FROM performance_runs WHERE user_id = ${userId}`
+      );
+      const totalLines = Number(aggregates.rows[0]?.total_lines ?? 0);
+      const todayLines = Number(aggregates.rows[0]?.today_lines ?? 0);
+      const todayRunsCount = Number(aggregates.rows[0]?.today_runs ?? 0);
+
+      const distinctDaysResult = await db.execute(
+        sql`SELECT DISTINCT DATE(created_at AT TIME ZONE 'UTC') as d FROM performance_runs WHERE user_id = ${userId} ORDER BY d DESC`
+      );
+      const distinctDays = (distinctDaysResult.rows as { d: string }[]).map(r => {
+        const val = r.d;
+        if (val instanceof Date) return val.toISOString().split("T")[0];
+        return String(val).split("T")[0];
+      });
+
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let streak = 0;
+
+      if (distinctDays.length > 0) {
+        let checkDate = distinctDays[0] === todayStr ? todayStr : (distinctDays[0] === yesterdayStr ? yesterdayStr : null);
+        if (checkDate) {
+          for (let i = 0; i < distinctDays.length; i++) {
+            const expected = new Date(checkDate);
+            expected.setDate(expected.getDate() - i);
+            const expectedStr = expected.toISOString().split("T")[0];
+            if (distinctDays[i] === expectedStr) {
+              streak++;
+            } else {
+              break;
+            }
+          }
+          currentStreak = streak;
+        }
+
+        streak = 0;
+        for (let i = 0; i < distinctDays.length; i++) {
+          if (i === 0) { streak = 1; longestStreak = 1; continue; }
+          const prev = new Date(distinctDays[i - 1]);
+          const curr = new Date(distinctDays[i]);
+          prev.setDate(prev.getDate() - 1);
+          if (curr.toISOString().split("T")[0] === prev.toISOString().split("T")[0]) {
+            streak++;
+            longestStreak = Math.max(longestStreak, streak);
+          } else {
+            streak = 1;
+          }
+        }
+      }
+
+      const totalSessions = distinctDays.length;
+      const lastRehearsalDate = distinctDays.length > 0 ? distinctDays[0] : null;
+
+      res.json({
+        currentStreak,
+        longestStreak,
+        totalSessions,
+        totalLinesRehearsed: totalLines,
+        totalRunsCompleted: totalRuns.count ?? 0,
+        lastRehearsalDate,
+        todayLines,
+        todayRuns: todayRunsCount,
+      });
+    } catch (err: any) {
+      console.error("[UserStats] GET error:", err.message);
+      res.status(500).json({ error: "Failed to load stats" });
+    }
+  });
+
   app.post("/api/track", async (req: any, res: Response) => {
     try {
       const { path: pagePath, referrer } = req.body;

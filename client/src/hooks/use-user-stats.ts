@@ -67,39 +67,74 @@ function isToday(dateStr: string | null): boolean {
   return dateStr === getToday();
 }
 
+function loadLocalStats(key: string, uid?: string | number | null): UserStats {
+  try {
+    let saved = localStorage.getItem(key);
+    if (!saved && uid) {
+      saved = localStorage.getItem(LEGACY_STATS_KEY);
+    }
+    if (saved) {
+      const parsed = JSON.parse(saved) as UserStats;
+      const wasToday = isToday(parsed.lastRehearsalDate);
+      const wasYesterday = isYesterday(parsed.lastRehearsalDate);
+      if (!wasToday && !wasYesterday) {
+        return { ...parsed, currentStreak: 0, todayLines: 0 };
+      }
+      if (!wasToday) {
+        return { ...parsed, todayLines: 0 };
+      }
+      return parsed;
+    }
+  } catch {}
+  return defaultStats;
+}
+
 export function useUserStats(userId?: string | number | null) {
   const statsKey = getStatsKey(userId);
   const runHistoryKey = getRunHistoryKey(userId);
   const hydratedKeyRef = useRef(statsKey);
+  const hasFetchedRef = useRef(false);
 
-  function loadStats(key: string, uid?: string | number | null): UserStats {
-    try {
-      let saved = localStorage.getItem(key);
-      if (!saved && uid) {
-        saved = localStorage.getItem(LEGACY_STATS_KEY);
-      }
-      if (saved) {
-        const parsed = JSON.parse(saved) as UserStats;
-        const wasToday = isToday(parsed.lastRehearsalDate);
-        const wasYesterday = isYesterday(parsed.lastRehearsalDate);
-        if (!wasToday && !wasYesterday) {
-          return { ...parsed, currentStreak: 0, todayLines: 0 };
-        }
-        if (!wasToday) {
-          return { ...parsed, todayLines: 0 };
-        }
-        return parsed;
-      }
-    } catch {}
-    return defaultStats;
-  }
-
-  const [stats, setStats] = useState<UserStats>(() => loadStats(statsKey, userId));
+  const [stats, setStats] = useState<UserStats>(() => loadLocalStats(statsKey, userId));
 
   useEffect(() => {
     hydratedKeyRef.current = statsKey;
-    setStats(loadStats(statsKey, userId));
+    hasFetchedRef.current = false;
+    setStats(loadLocalStats(statsKey, userId));
   }, [statsKey, userId]);
+
+  useEffect(() => {
+    if (!userId || hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    fetch("/api/user-stats", { credentials: "include" })
+      .then(res => {
+        if (!res.ok) throw new Error("Failed");
+        return res.json();
+      })
+      .then(serverStats => {
+        setStats(prev => {
+          const localGoal = prev.dailyGoal || 50;
+          const localAchievements = prev.achievements || [];
+          const serverDate = serverStats.lastRehearsalDate ? new Date(serverStats.lastRehearsalDate).getTime() : 0;
+          const localDate = prev.lastRehearsalDate ? new Date(prev.lastRehearsalDate).getTime() : 0;
+          const newestDate = serverDate >= localDate ? serverStats.lastRehearsalDate : prev.lastRehearsalDate;
+          const merged: UserStats = {
+            currentStreak: Math.max(serverStats.currentStreak ?? 0, prev.currentStreak ?? 0),
+            longestStreak: Math.max(serverStats.longestStreak ?? 0, prev.longestStreak ?? 0),
+            totalSessions: Math.max(serverStats.totalSessions ?? 0, prev.totalSessions ?? 0),
+            totalLinesRehearsed: Math.max(serverStats.totalLinesRehearsed ?? 0, prev.totalLinesRehearsed ?? 0),
+            totalRunsCompleted: Math.max(Number(serverStats.totalRunsCompleted ?? 0), prev.totalRunsCompleted ?? 0),
+            lastRehearsalDate: newestDate,
+            dailyGoal: localGoal,
+            todayLines: Math.max(serverStats.todayLines ?? 0, prev.todayLines ?? 0),
+            achievements: localAchievements,
+          };
+          return merged;
+        });
+      })
+      .catch(() => {});
+  }, [userId]);
 
   useEffect(() => {
     if (hydratedKeyRef.current === statsKey) {
