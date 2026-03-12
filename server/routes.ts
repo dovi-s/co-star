@@ -2167,6 +2167,59 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.post("/api/stripe/unpause", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const [user] = await db
+        .select({ stripeCustomerId: users.stripeCustomerId, stripeSubscriptionId: users.stripeSubscriptionId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No subscription found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let subId = user.stripeSubscriptionId;
+      let subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
+
+      if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
+        const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
+        const activeSub = subs.data.find(s => ['active', 'trialing'].includes(s.status));
+        if (activeSub) {
+          subscription = activeSub;
+          subId = activeSub.id;
+        } else {
+          return res.status(400).json({ error: "No active subscription found" });
+        }
+      }
+
+      const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+      if (customerId !== user.stripeCustomerId) {
+        return res.status(403).json({ error: "Subscription does not belong to this account" });
+      }
+
+      if (!subscription.pause_collection) {
+        return res.json({ success: true, alreadyActive: true });
+      }
+
+      await stripe.subscriptions.update(subId!, {
+        pause_collection: '',
+      } as any);
+
+      console.log(`[Stripe] Subscription unpaused for user ${userId}: ${subId}`);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[Stripe] Unpause error:", error.message);
+      res.status(500).json({ error: "Failed to unpause subscription" });
+    }
+  });
+
   app.post("/api/stripe/cancel", async (req: any, res: Response) => {
     try {
       const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;

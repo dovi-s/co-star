@@ -29,6 +29,7 @@ import {
   Undo2,
   AlertCircle,
   Pause,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -646,6 +647,34 @@ function ActiveSubscription({
     },
   });
 
+  const unpauseMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/stripe/unpause", {});
+      return res.json();
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["/api/stripe/subscription"] });
+      const previous = queryClient.getQueryData<SubscriptionData>(["/api/stripe/subscription"]);
+      if (previous?.subscription) {
+        queryClient.setQueryData<SubscriptionData>(["/api/stripe/subscription"], {
+          ...previous,
+          subscription: { ...previous.subscription, isPaused: false, pausedUntil: null },
+        });
+      }
+      return { previous };
+    },
+    onSuccess: () => {
+      toast({ title: "Billing resumed", description: "Your plan is fully active again." });
+      queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
+    },
+    onError: (error: Error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["/api/stripe/subscription"], context.previous);
+      }
+      toast({ title: "Could not resume", description: error.message, variant: "destructive" });
+    },
+  });
+
   const currentPriceId = subscription.currentPriceId;
   const isMonthly = currentPriceId === monthlyPrice?.id;
   const isYearly = currentPriceId === yearlyPrice?.id;
@@ -732,7 +761,7 @@ function ActiveSubscription({
       )}
 
       {isPaused && !subscription.cancelAtPeriodEnd && (
-        <div className="rounded-xl border border-orange-500/30 bg-orange-500/[0.06] p-4" data-testid="banner-paused">
+        <div className="rounded-xl border border-orange-500/30 bg-orange-500/[0.06] p-4 space-y-3" data-testid="banner-paused">
           <div className="flex items-start gap-3">
             <Pause className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
@@ -745,6 +774,20 @@ function ActiveSubscription({
               </p>
             </div>
           </div>
+          <Button
+            className="w-full"
+            size="sm"
+            onClick={() => unpauseMutation.mutate()}
+            disabled={unpauseMutation.isPending}
+            data-testid="button-unpause-plan"
+          >
+            {unpauseMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Play className="w-4 h-4 mr-2" />
+            )}
+            Resume billing
+          </Button>
         </div>
       )}
 
