@@ -2142,6 +2142,57 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.post("/api/stripe/reactivate", async (req: any, res: Response) => {
+    try {
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+      if (!userId) {
+        return res.status(401).json({ error: "Sign in required" });
+      }
+
+      const [user] = await db
+        .select({ stripeCustomerId: users.stripeCustomerId, stripeSubscriptionId: users.stripeSubscriptionId })
+        .from(users)
+        .where(eq(users.id, userId));
+
+      if (!user?.stripeCustomerId) {
+        return res.status(400).json({ error: "No subscription found" });
+      }
+
+      const stripe = await getUncachableStripeClient();
+
+      let subId = user.stripeSubscriptionId;
+      if (!subId) {
+        const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
+        const activeSub = subs.data.find(s => ['active', 'trialing'].includes(s.status));
+        subId = activeSub?.id || null;
+      }
+      if (!subId) {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+
+      const subscription = await stripe.subscriptions.retrieve(subId);
+
+      const customerId = typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id;
+      if (customerId !== user.stripeCustomerId) {
+        return res.status(403).json({ error: "Subscription does not belong to this account" });
+      }
+
+      if (!subscription.cancel_at_period_end) {
+        return res.json({ success: true, cancelAtPeriodEnd: false });
+      }
+
+      await stripe.subscriptions.update(subId, {
+        cancel_at_period_end: false,
+      });
+
+      console.log(`[Stripe] Subscription reactivated for user ${userId}: ${subId}`);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("[Stripe] Reactivate error:", error.message);
+      res.status(500).json({ error: "Failed to reactivate subscription" });
+    }
+  });
+
   app.post("/api/stripe/cancel-feedback", async (req: any, res: Response) => {
     try {
       const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;

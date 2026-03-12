@@ -26,6 +26,8 @@ import {
   ArrowUpDown,
   PartyPopper,
   ArrowRight,
+  Undo2,
+  AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -613,6 +615,34 @@ function ActiveSubscription({
   const [switchConfirmOpen, setSwitchConfirmOpen] = useState(false);
   const isTrialing = subscription.isTrialing === true;
 
+  const reactivateMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/stripe/reactivate", {});
+      return res.json();
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["/api/stripe/subscription"] });
+      const previous = queryClient.getQueryData<SubscriptionData>(["/api/stripe/subscription"]);
+      if (previous?.subscription) {
+        queryClient.setQueryData<SubscriptionData>(["/api/stripe/subscription"], {
+          ...previous,
+          subscription: { ...previous.subscription, cancelAtPeriodEnd: false },
+        });
+      }
+      return { previous };
+    },
+    onSuccess: () => {
+      toast({ title: "Welcome back!", description: "Your plan is active again. No interruption to your access." });
+      queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
+    },
+    onError: (error: Error, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["/api/stripe/subscription"], context.previous);
+      }
+      toast({ title: "Could not reactivate", description: error.message, variant: "destructive" });
+    },
+  });
+
   const currentPriceId = subscription.currentPriceId;
   const isMonthly = currentPriceId === monthlyPrice?.id;
   const isYearly = currentPriceId === yearlyPrice?.id;
@@ -671,6 +701,34 @@ function ActiveSubscription({
 
   return (
     <div className="space-y-6">
+      {subscription.cancelAtPeriodEnd && (
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4 space-y-3" data-testid="banner-cancellation-pending">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-foreground">Cancellation scheduled</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Your Pro plan will end on {periodEnd}. You'll keep full access until then.
+              </p>
+            </div>
+          </div>
+          <Button
+            className="w-full"
+            size="sm"
+            onClick={() => reactivateMutation.mutate()}
+            disabled={reactivateMutation.isPending}
+            data-testid="button-reactivate-plan"
+          >
+            {reactivateMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <Undo2 className="w-4 h-4 mr-2" />
+            )}
+            Keep my plan
+          </Button>
+        </div>
+      )}
+
       <div className="text-center space-y-2">
         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
           <Crown className="w-7 h-7 text-primary" />
