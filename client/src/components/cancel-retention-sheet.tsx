@@ -102,6 +102,7 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd }: CancelRe
       const res = await apiRequest("POST", "/api/stripe/pause", {});
       if (abortRef.current) return;
       const data = await res.json();
+      setIsPausing(false);
       setResumeDate(data.resumesAt);
       setOutcome("paused");
       setStep("done");
@@ -122,6 +123,7 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd }: CancelRe
       }
       await apiRequest("POST", "/api/stripe/cancel", {});
       if (abortRef.current) return;
+      setIsCanceling(false);
       setOutcome("canceled");
       setStep("done");
       queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
