@@ -670,7 +670,13 @@ function ActiveSubscription({
 
   const rawEnd = subscription.currentPeriodEnd;
   const periodEndDate = rawEnd
-    ? new Date(typeof rawEnd === "number" && rawEnd < 1e12 ? rawEnd * 1000 : rawEnd)
+    ? (() => {
+        const num = typeof rawEnd === "number" ? rawEnd : Number(rawEnd);
+        if (!isNaN(num)) {
+          return new Date(num < 1e12 ? num * 1000 : num);
+        }
+        return new Date(rawEnd);
+      })()
     : null;
   const periodEnd = periodEndDate
     ? periodEndDate.toLocaleDateString("en-US", {
@@ -681,7 +687,14 @@ function ActiveSubscription({
     : null;
 
   const trialEndDate = subscription.trialEnd
-    ? new Date(typeof subscription.trialEnd === "number" && (subscription.trialEnd as any) < 1e12 ? (subscription.trialEnd as any) * 1000 : subscription.trialEnd)
+    ? (() => {
+        const raw = subscription.trialEnd!;
+        const num = typeof raw === "number" ? raw : Number(raw);
+        if (!isNaN(num)) {
+          return new Date(num < 1e12 ? num * 1000 : num);
+        }
+        return new Date(raw);
+      })()
     : null;
   const trialEndFormatted = trialEndDate
     ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })

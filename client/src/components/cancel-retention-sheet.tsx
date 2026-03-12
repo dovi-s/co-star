@@ -126,6 +126,13 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd }: CancelRe
       setIsCanceling(false);
       setOutcome("canceled");
       setStep("done");
+      const prev = queryClient.getQueryData<any>(["/api/stripe/subscription"]);
+      if (prev?.subscription) {
+        queryClient.setQueryData(["/api/stripe/subscription"], {
+          ...prev,
+          subscription: { ...prev.subscription, cancelAtPeriodEnd: true },
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
     } catch {
       if (abortRef.current) return;
