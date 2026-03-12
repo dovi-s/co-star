@@ -696,7 +696,7 @@ export function ScriptImport({ onImport, onImportParsed, isLoading, error, onCle
           <Textarea
             ref={textareaRef}
             id="script-text"
-            placeholder="Paste your script here — we'll find the characters automatically"
+            placeholder="Add your script here, we'll find the characters automatically"
             value={script}
             onChange={(e) => { setScript(e.target.value); setUploadedFileName(null); }}
             onPaste={() => { setTimeout(() => setIsEditingScript(false), 100); }}
