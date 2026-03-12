@@ -107,10 +107,13 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd }: CancelRe
       setOutcome("paused");
       setStep("done");
       queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
-    } catch {
+    } catch (err: any) {
       if (abortRef.current) return;
       setIsPausing(false);
-      toast({ title: "Something went wrong", description: "Could not pause your plan. Please try again.", variant: "destructive" });
+      const message = err?.message?.includes("already used your pause")
+        ? "You've already paused once in the last 6 months. This option isn't available right now."
+        : "Could not pause your plan. Please try again.";
+      toast({ title: "Pause unavailable", description: message, variant: "destructive" });
     }
   };
 

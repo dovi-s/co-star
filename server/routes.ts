@@ -2148,6 +2148,25 @@ MARY: You're kidding me.`;
         return res.json({ success: true, alreadyPaused: true, resumesAt: subscription.pause_collection.resumes_at ? new Date(subscription.pause_collection.resumes_at * 1000).toISOString() : null });
       }
 
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      const recentPauses = await db
+        .select({ count: count() })
+        .from(cancelFeedback)
+        .where(
+          and(
+            eq(cancelFeedback.userId, userId),
+            eq(cancelFeedback.outcome, "paused"),
+            gte(cancelFeedback.createdAt, sixMonthsAgo),
+          )
+        );
+      const pauseCount = recentPauses[0]?.count ?? 0;
+      const MAX_PAUSES_PER_PERIOD = 1;
+      if (pauseCount >= MAX_PAUSES_PER_PERIOD) {
+        console.log(`[Stripe] Pause denied for user ${userId}: ${pauseCount} pauses in last 6 months`);
+        return res.status(429).json({ error: "You've already used your pause this period. You can pause again after 6 months from your last pause." });
+      }
+
       const resumeDate = new Date();
       resumeDate.setMonth(resumeDate.getMonth() + 1);
       const resumeTimestamp = Math.floor(resumeDate.getTime() / 1000);
