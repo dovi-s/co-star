@@ -237,36 +237,27 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
             yearlyAmount={yearlyAmount}
           />
         ) : isPro ? (
-          <div className="space-y-6">
-            <div className="text-center space-y-2">
-              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-                <Crown className="w-7 h-7 text-primary" />
-              </div>
-              <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
-              <p className="text-sm text-muted-foreground">
-                {subData?.tier === "comp" ? "Complimentary access" : subData?.tier === "internal" ? "Team access" : "Active subscription"}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium">Status</span>
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-600" data-testid="text-subscription-status">
-                  Active
-                </span>
-              </div>
-              <ul className="space-y-3">
-                {proFeatures.map(({ icon: Icon, label }) => (
-                  <li key={label} className="flex items-center gap-3 text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    {label}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+          <ActiveSubscription
+            subscription={{
+              id: "",
+              status: "active",
+              currentPeriodEnd: "",
+              cancelAtPeriodEnd: false,
+              isTrialing: false,
+              trialEnd: null,
+              trialDaysLeft: null,
+              currentPriceId: null,
+              isPaused: false,
+              pausedUntil: null,
+            }}
+            onManage={() => portalMutation.mutate()}
+            isManaging={portalMutation.isPending}
+            monthlyPrice={monthlyPrice}
+            yearlyPrice={yearlyPrice}
+            monthlyAmount={monthlyAmount}
+            yearlyAmount={yearlyAmount}
+            tierLabel={subData?.tier === "comp" ? "Complimentary access" : subData?.tier === "internal" ? "Team access" : undefined}
+          />
         ) : (
           <FreeUserUpgrade
             isAuthenticated={isAuthenticated}
@@ -620,6 +611,7 @@ function ActiveSubscription({
   yearlyPrice,
   monthlyAmount,
   yearlyAmount,
+  tierLabel,
 }: {
   subscription: SubscriptionData["subscription"] & {};
   onManage: () => void;
@@ -628,6 +620,7 @@ function ActiveSubscription({
   yearlyPrice?: { id: string; unit_amount: number; currency: string; recurring: { interval: string } };
   monthlyAmount: number;
   yearlyAmount: number;
+  tierLabel?: string;
 }) {
   const { toast } = useToast();
   const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
@@ -827,7 +820,9 @@ function ActiveSubscription({
           </p>
         ) : (
           <p className="text-sm text-muted-foreground" data-testid="text-billing-info">
-            {subscription.cancelAtPeriodEnd
+            {tierLabel
+              ? tierLabel
+              : subscription.cancelAtPeriodEnd
               ? `Active until ${periodEnd || "end of billing period"}`
               : isPaused
               ? `Paused · Resumes ${pausedUntilFormatted || "soon"}`
@@ -879,7 +874,7 @@ function ActiveSubscription({
         </ul>
 
         <div className="space-y-2">
-          {canSwitch && !subscription.cancelAtPeriodEnd && (
+          {canSwitch && !subscription.cancelAtPeriodEnd && !tierLabel && (
             <>
               {!switchConfirmOpen ? (
                 <Button
@@ -932,22 +927,24 @@ function ActiveSubscription({
             </>
           )}
 
-          <Button
-            variant="outline"
-            className="w-full"
-            onClick={onManage}
-            disabled={isManaging}
-            data-testid="button-manage-subscription"
-          >
-            {isManaging ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <ExternalLink className="w-4 h-4 mr-2" />
-            )}
-            Manage billing
-          </Button>
+          {!tierLabel && (
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={onManage}
+              disabled={isManaging}
+              data-testid="button-manage-subscription"
+            >
+              {isManaging ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : (
+                <ExternalLink className="w-4 h-4 mr-2" />
+              )}
+              Manage billing
+            </Button>
+          )}
 
-          {!subscription.cancelAtPeriodEnd && (
+          {!subscription.cancelAtPeriodEnd && !tierLabel && (
             <button
               className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors py-2"
               onClick={() => setCancelSheetOpen(true)}
