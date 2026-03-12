@@ -237,19 +237,34 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
             yearlyAmount={yearlyAmount}
           />
         ) : isPro ? (
-          <div className="text-center space-y-4 py-8">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
-              <Crown className="w-7 h-7 text-primary" />
+          <div className="space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+                <Crown className="w-7 h-7 text-primary" />
+              </div>
+              <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
+              <p className="text-sm text-muted-foreground">
+                {subData?.tier === "comp" ? "Complimentary access" : subData?.tier === "internal" ? "Team access" : "Active subscription"}
+              </p>
             </div>
-            <h2 className="text-xl font-semibold" data-testid="text-plan-title">Co-star Pro</h2>
-            <p className="text-sm text-muted-foreground">Your Pro access is active. Enjoy unlimited rehearsals.</p>
-            <div className="space-y-2 text-left max-w-xs mx-auto">
-              {proFeatures.map((f, i) => (
-                <div key={i} className="flex items-center gap-2.5 text-sm">
-                  <Check className="w-4 h-4 text-primary shrink-0" />
-                  <span>{f.label}</span>
-                </div>
-              ))}
+
+            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-medium">Status</span>
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-green-500/10 text-green-600" data-testid="text-subscription-status">
+                  Active
+                </span>
+              </div>
+              <ul className="space-y-3">
+                {proFeatures.map(({ icon: Icon, label }) => (
+                  <li key={label} className="flex items-center gap-3 text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-4 h-4 text-primary" />
+                    </div>
+                    {label}
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         ) : (
