@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   Sparkles,
   BookOpen,
@@ -17,11 +18,10 @@ import {
   BarChart3,
   Headphones,
   Users,
-  X,
   Pause,
   Loader2,
-  Check,
   Heart,
+  CheckCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,6 @@ interface CancelRetentionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   periodEnd: string | null;
-  onGoToPortal: () => void;
 }
 
 const cancelReasons = [
@@ -51,30 +50,36 @@ const lostFeatures = [
   { icon: Users, label: "Priority support", fallback: "Standard support" },
 ];
 
-type Step = "features" | "feedback" | "done";
+type Step = "features" | "feedback" | "confirming" | "done";
 
-export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPortal }: CancelRetentionSheetProps) {
+export function CancelRetentionSheet({ open, onOpenChange, periodEnd }: CancelRetentionSheetProps) {
+  const { toast } = useToast();
   const [step, setStep] = useState<Step>("features");
   const [reason, setReason] = useState<CancelReason | "">("");
   const [comment, setComment] = useState("");
   const [isPausing, setIsPausing] = useState(false);
-  const [isSavingFeedback, setIsSavingFeedback] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
   const [outcome, setOutcome] = useState<"paused" | "canceled" | "stayed" | null>(null);
   const [resumeDate, setResumeDate] = useState<string | null>(null);
+  const abortRef = useRef(false);
+
+  const isProcessing = isPausing || isCanceling;
 
   const resetState = () => {
+    abortRef.current = true;
     setStep("features");
     setReason("");
     setComment("");
     setIsPausing(false);
-    setIsSavingFeedback(false);
+    setIsCanceling(false);
     setOutcome(null);
     setResumeDate(null);
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (!open) resetState();
-    onOpenChange(open);
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen && isProcessing) return;
+    if (!nextOpen) resetState();
+    onOpenChange(nextOpen);
   };
 
   const handleKeepPlan = async () => {
@@ -89,37 +94,42 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPort
 
   const handlePause = async () => {
     setIsPausing(true);
+    abortRef.current = false;
     try {
       if (reason) {
         await apiRequest("POST", "/api/stripe/cancel-feedback", { reason, comment: comment || null, outcome: "paused" });
       }
       const res = await apiRequest("POST", "/api/stripe/pause", {});
+      if (abortRef.current) return;
       const data = await res.json();
       setResumeDate(data.resumesAt);
       setOutcome("paused");
       setStep("done");
       queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
     } catch {
+      if (abortRef.current) return;
       setIsPausing(false);
+      toast({ title: "Something went wrong", description: "Could not pause your plan. Please try again.", variant: "destructive" });
     }
   };
 
   const handleCancel = async () => {
-    setIsSavingFeedback(true);
+    setIsCanceling(true);
+    abortRef.current = false;
     try {
       if (reason) {
         await apiRequest("POST", "/api/stripe/cancel-feedback", { reason, comment: comment || null, outcome: "canceled" });
       }
+      await apiRequest("POST", "/api/stripe/cancel", {});
+      if (abortRef.current) return;
       setOutcome("canceled");
       setStep("done");
+      queryClient.invalidateQueries({ queryKey: ["/api/stripe/subscription"] });
     } catch {
-      setIsSavingFeedback(false);
+      if (abortRef.current) return;
+      setIsCanceling(false);
+      toast({ title: "Something went wrong", description: "Could not cancel your plan. Please try again.", variant: "destructive" });
     }
-  };
-
-  const handleConfirmCancel = () => {
-    handleOpenChange(false);
-    onGoToPortal();
   };
 
   const formattedPeriodEnd = periodEnd
@@ -219,7 +229,7 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPort
                 className="w-full gap-2"
                 size="lg"
                 onClick={handlePause}
-                disabled={isPausing}
+                disabled={isPausing || isCanceling}
                 data-testid="button-pause-subscription"
               >
                 {isPausing ? (
@@ -233,13 +243,10 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPort
               <Button
                 variant="ghost"
                 className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
-                onClick={handleCancel}
-                disabled={isSavingFeedback}
-                data-testid="button-confirm-cancel"
+                onClick={() => setStep("confirming")}
+                disabled={isPausing || isCanceling}
+                data-testid="button-continue-to-confirm-cancel"
               >
-                {isSavingFeedback ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : null}
                 Cancel subscription
               </Button>
             </div>
@@ -250,6 +257,48 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPort
             >
               Go back
             </button>
+          </div>
+        )}
+
+        {step === "confirming" && (
+          <div className="space-y-5 pb-4 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto">
+              <Heart className="w-7 h-7 text-destructive/60" />
+            </div>
+            <SheetHeader className="text-center">
+              <SheetTitle className="text-lg">Are you sure?</SheetTitle>
+              <SheetDescription className="text-sm">
+                {formattedPeriodEnd ? (
+                  <>You'll keep full Pro access until <span className="font-medium text-foreground">{formattedPeriodEnd}</span>. After that, you'll switch to the free plan. You can reactivate anytime before then.</>
+                ) : (
+                  <>Your plan will be canceled at the end of your current billing period. You can reactivate anytime before then.</>
+                )}
+              </SheetDescription>
+            </SheetHeader>
+            <div className="space-y-2">
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={handleCancel}
+                disabled={isCanceling}
+                data-testid="button-confirm-cancel"
+              >
+                {isCanceling ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : null}
+                Yes, cancel my plan
+              </Button>
+              <button
+                className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-2 disabled:opacity-40 disabled:pointer-events-none"
+                onClick={() => {
+                  handleKeepPlan();
+                }}
+                disabled={isCanceling}
+                data-testid="button-changed-mind"
+              >
+                I changed my mind
+              </button>
+            </div>
           </div>
         )}
 
@@ -279,36 +328,25 @@ export function CancelRetentionSheet({ open, onOpenChange, periodEnd, onGoToPort
         {step === "done" && outcome === "canceled" && (
           <div className="space-y-5 pb-4 text-center">
             <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mx-auto">
-              <Heart className="w-7 h-7 text-muted-foreground" />
+              <CheckCircle className="w-7 h-7 text-muted-foreground" />
             </div>
             <SheetHeader className="text-center">
-              <SheetTitle className="text-lg">We'll miss you</SheetTitle>
+              <SheetTitle className="text-lg">Plan canceled</SheetTitle>
               <SheetDescription className="text-sm">
                 {formattedPeriodEnd ? (
-                  <>You'll have full Pro access until <span className="font-medium text-foreground">{formattedPeriodEnd}</span>. You can resubscribe anytime.</>
+                  <>You'll have full Pro access until <span className="font-medium text-foreground">{formattedPeriodEnd}</span>. You can reactivate anytime from your subscription page.</>
                 ) : (
-                  <>Your cancellation will take effect at the end of your billing period. You can resubscribe anytime.</>
+                  <>Your cancellation will take effect at the end of your billing period. You can reactivate anytime.</>
                 )}
               </SheetDescription>
             </SheetHeader>
             <Button
-              variant="destructive"
               className="w-full"
-              onClick={handleConfirmCancel}
-              data-testid="button-finalize-cancel"
+              onClick={() => handleOpenChange(false)}
+              data-testid="button-done-cancel"
             >
-              Confirm cancellation in Stripe
+              Got it
             </Button>
-            <button
-              className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors py-1"
-              onClick={() => {
-                resetState();
-                handleOpenChange(false);
-              }}
-              data-testid="button-changed-mind"
-            >
-              I changed my mind
-            </button>
           </div>
         )}
       </SheetContent>

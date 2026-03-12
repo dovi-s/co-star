@@ -882,7 +882,6 @@ function ActiveSubscription({
         open={cancelSheetOpen}
         onOpenChange={setCancelSheetOpen}
         periodEnd={periodEndDate ? periodEndDate.toISOString() : null}
-        onGoToPortal={onManage}
       />
     </div>
   );
