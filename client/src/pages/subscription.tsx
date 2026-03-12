@@ -24,6 +24,8 @@ import {
   Calendar,
   Shield,
   ArrowUpDown,
+  PartyPopper,
+  ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +40,8 @@ interface SubscriptionData {
     trialDaysLeft?: number | null;
     currentPriceId?: string | null;
   } | null;
-  tier: "free" | "pro";
+  tier: string;
+  isPro?: boolean;
 }
 
 interface StripeProduct {
@@ -77,6 +80,8 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
   const { toast } = useToast();
   const [billingPeriod, setBillingPeriod] = useState<"month" | "year">("month");
   const [shownSuccess, setShownSuccess] = useState(false);
+  const [pollCount, setPollCount] = useState(0);
+  const maxPolls = 10;
 
   const { data: subData, isLoading: subLoading, error: subError } = useQuery<SubscriptionData>({
     queryKey: ["/api/stripe/subscription"],
@@ -87,20 +92,34 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
     },
     enabled: isAuthenticated,
     retry: 1,
+    refetchInterval: checkoutSuccess && !shownSuccess && pollCount < maxPolls ? 2000 : false,
   });
 
   useEffect(() => {
-    if (checkoutSuccess && !shownSuccess && subData?.tier === "pro") {
-      setShownSuccess(true);
-      const isTrialing = subData.subscription?.isTrialing;
-      toast({
-        title: isTrialing ? "Your guest pass is active" : "Welcome to Co-star Pro",
-        description: isTrialing
-          ? "Enjoy 7 days of unlimited rehearsals. You won't be charged until your guest pass ends."
-          : "Your subscription is active. Enjoy unlimited rehearsals.",
-      });
+    if (checkoutSuccess && !shownSuccess && subData) {
+      if (subData.tier === "pro" || (subData as any).isPro) {
+        setShownSuccess(true);
+        const isTrialing = subData.subscription?.isTrialing;
+        toast({
+          title: isTrialing ? "Your guest pass is active" : "Welcome to Co-star Pro",
+          description: isTrialing
+            ? "Enjoy 7 days of unlimited rehearsals. You won't be charged until your guest pass ends."
+            : "Your subscription is active. Enjoy unlimited rehearsals.",
+        });
+      } else {
+        setPollCount((c) => c + 1);
+        if (pollCount >= maxPolls) {
+          setShownSuccess(true);
+          toast({
+            title: "Payment received",
+            description: "Your subscription is being activated. It may take a moment to reflect.",
+          });
+        }
+      }
     }
-  }, [checkoutSuccess, shownSuccess, subData, toast]);
+  }, [checkoutSuccess, shownSuccess, subData, toast, pollCount]);
+
+  const isAwaitingActivation = checkoutSuccess && !shownSuccess && pollCount < maxPolls;
 
   const { data: productsData, isLoading: productsLoading, error: productsError } = useQuery<{ products: StripeProduct[] }>({
     queryKey: ["/api/stripe/products"],
@@ -173,9 +192,15 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
       </header>
 
       <main className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
+        {isLoading || isAwaitingActivation ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            {isAwaitingActivation && (
+              <div className="text-center space-y-1">
+                <p className="text-sm font-medium">Activating your subscription...</p>
+                <p className="text-xs text-muted-foreground">This usually takes just a moment.</p>
+              </div>
+            )}
           </div>
         ) : hasError ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
@@ -190,6 +215,11 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
               Try again
             </Button>
           </div>
+        ) : checkoutSuccess && shownSuccess && isPro ? (
+          <CheckoutConfirmation
+            subscription={subData?.subscription ?? null}
+            onContinue={onBack}
+          />
         ) : isPro && subData?.subscription ? (
           <ActiveSubscription
             subscription={subData.subscription}
@@ -217,93 +247,17 @@ export function SubscriptionPage({ onBack, checkoutSuccess }: { onBack: () => vo
             </div>
           </div>
         ) : (
-          <>
-            <div className="text-center space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-                <Gift className="w-3.5 h-3.5" />
-                7-day guest pass
-              </div>
-              <h2 className="text-xl font-semibold" data-testid="text-subscription-headline">Unlock unlimited rehearsals — on us for a week</h2>
-              <p className="text-sm text-muted-foreground">
-                Try every Pro feature free. Cancel anytime, no questions asked.
-              </p>
-            </div>
-
-            <BillingToggle
-              period={billingPeriod}
-              onChange={setBillingPeriod}
-              savingsPercent={savingsPercent}
-            />
-
-            <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5 space-y-5">
-              <div className="text-center">
-                <div className="flex items-baseline justify-center gap-1">
-                  <span className="text-4xl font-bold" data-testid="text-price">
-                    ${billingPeriod === "month" ? monthlyAmount : yearlyMonthly}
-                  </span>
-                  <span className="text-sm text-muted-foreground">/mo</span>
-                </div>
-                {billingPeriod === "year" && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Billed as ${yearlyAmount}/year
-                  </p>
-                )}
-              </div>
-
-              <ul className="space-y-3">
-                {proFeatures.map(({ icon: Icon, label }) => (
-                  <li key={label} className="flex items-center gap-3 text-sm">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                    {label}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className="w-full"
-                size="lg"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    window.location.href = "/api/login";
-                    return;
-                  }
-                  if (selectedPrice) {
-                    checkoutMutation.mutate(selectedPrice.id);
-                  }
-                }}
-                disabled={checkoutMutation.isPending || !selectedPrice}
-                data-testid="button-subscribe"
-              >
-                {checkoutMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : null}
-                {isAuthenticated ? "Start your guest pass" : "Sign in to get your guest pass"}
-              </Button>
-              <p className="text-[11px] text-muted-foreground text-center">
-                No charge until your trial ends. Cancel anytime.
-              </p>
-            </div>
-
-            <TrialItinerary />
-
-            <div className="rounded-xl border border-border/40 p-5 space-y-4">
-              <div className="flex items-baseline justify-between">
-                <h3 className="text-sm font-semibold">Free plan</h3>
-                <span className="text-xs text-muted-foreground">Current</span>
-              </div>
-              <ul className="space-y-2">
-                {freeFeatures.map((f) => (
-                  <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Check className="w-3.5 h-3.5 text-muted-foreground" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-          </>
+          <FreeUserUpgrade
+            isAuthenticated={isAuthenticated}
+            billingPeriod={billingPeriod}
+            setBillingPeriod={setBillingPeriod}
+            monthlyAmount={monthlyAmount}
+            yearlyAmount={yearlyAmount}
+            yearlyMonthly={yearlyMonthly}
+            savingsPercent={savingsPercent}
+            selectedPrice={selectedPrice}
+            checkoutMutation={checkoutMutation}
+          />
         )}
 
         <div className="pt-4 space-y-4">
@@ -459,6 +413,181 @@ function BillingToggle({
         )}
       </button>
     </div>
+  );
+}
+
+function CheckoutConfirmation({
+  subscription,
+  onContinue,
+}: {
+  subscription: SubscriptionData["subscription"];
+  onContinue: () => void;
+}) {
+  const isTrialing = subscription?.isTrialing === true;
+  const trialDaysLeft = subscription?.trialDaysLeft ?? 7;
+
+  const trialEndDate = subscription?.trialEnd
+    ? new Date(typeof subscription.trialEnd === "number" && (subscription.trialEnd as any) < 1e12 ? (subscription.trialEnd as any) * 1000 : subscription.trialEnd)
+    : null;
+  const trialEndFormatted = trialEndDate
+    ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+    : null;
+
+  return (
+    <div className="text-center space-y-6 py-8" data-testid="checkout-confirmation">
+      <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+        <PartyPopper className="w-8 h-8 text-primary" />
+      </div>
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold" data-testid="text-confirmation-title">
+          {isTrialing ? "Your guest pass is active!" : "Welcome to Co-star Pro!"}
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+          {isTrialing
+            ? `You have ${trialDaysLeft} days to explore every Pro feature — completely free.${trialEndFormatted ? ` You won't be charged until ${trialEndFormatted}.` : " You won't be charged until your guest pass ends."}`
+            : "Your subscription is active. You now have full access to unlimited rehearsals and every Pro feature."}
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5 space-y-3 text-left max-w-sm mx-auto">
+        <p className="text-xs font-semibold text-primary uppercase tracking-wider">What's unlocked</p>
+        <ul className="space-y-2.5">
+          {proFeatures.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-3 text-sm">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-3.5 h-3.5 text-primary" />
+              </div>
+              {label}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <Button
+        size="lg"
+        className="w-full max-w-sm"
+        onClick={onContinue}
+        data-testid="button-start-rehearsing"
+      >
+        Start rehearsing
+        <ArrowRight className="w-4 h-4 ml-2" />
+      </Button>
+    </div>
+  );
+}
+
+function FreeUserUpgrade({
+  isAuthenticated,
+  billingPeriod,
+  setBillingPeriod,
+  monthlyAmount,
+  yearlyAmount,
+  yearlyMonthly,
+  savingsPercent,
+  selectedPrice,
+  checkoutMutation,
+}: {
+  isAuthenticated: boolean;
+  billingPeriod: "month" | "year";
+  setBillingPeriod: (p: "month" | "year") => void;
+  monthlyAmount: number;
+  yearlyAmount: number;
+  yearlyMonthly: number;
+  savingsPercent: number;
+  selectedPrice?: { id: string };
+  checkoutMutation: { mutate: (id: string) => void; isPending: boolean };
+}) {
+  const hasTrialHistory = false;
+
+  return (
+    <>
+      <div className="text-center space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
+          <Gift className="w-3.5 h-3.5" />
+          7-day guest pass
+        </div>
+        <h2 className="text-xl font-semibold" data-testid="text-subscription-headline">Unlock unlimited rehearsals — on us for a week</h2>
+        <p className="text-sm text-muted-foreground">
+          Try every Pro feature free. Cancel anytime, no questions asked.
+        </p>
+      </div>
+
+      <BillingToggle
+        period={billingPeriod}
+        onChange={setBillingPeriod}
+        savingsPercent={savingsPercent}
+      />
+
+      <div className="rounded-xl border border-primary/20 bg-primary/[0.03] p-5 space-y-5">
+        <div className="text-center">
+          <div className="flex items-baseline justify-center gap-1">
+            <span className="text-4xl font-bold" data-testid="text-price">
+              ${billingPeriod === "month" ? monthlyAmount : yearlyMonthly}
+            </span>
+            <span className="text-sm text-muted-foreground">/mo</span>
+          </div>
+          {billingPeriod === "year" && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Billed as ${yearlyAmount}/year
+            </p>
+          )}
+        </div>
+
+        <ul className="space-y-3">
+          {proFeatures.map(({ icon: Icon, label }) => (
+            <li key={label} className="flex items-center gap-3 text-sm">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Icon className="w-4 h-4 text-primary" />
+              </div>
+              {label}
+            </li>
+          ))}
+        </ul>
+
+        <Button
+          className="w-full"
+          size="lg"
+          onClick={() => {
+            if (!isAuthenticated) {
+              window.location.href = "/api/login";
+              return;
+            }
+            if (selectedPrice) {
+              checkoutMutation.mutate(selectedPrice.id);
+            }
+          }}
+          disabled={checkoutMutation.isPending || !selectedPrice}
+          data-testid="button-subscribe"
+        >
+          {checkoutMutation.isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+          ) : null}
+          {!isAuthenticated
+            ? "Sign in to get started"
+            : "Start your guest pass"}
+        </Button>
+        <p className="text-[11px] text-muted-foreground text-center">
+          No charge until your guest pass ends. Cancel anytime.
+        </p>
+      </div>
+
+      <TrialItinerary />
+
+      <div className="rounded-xl border border-border/40 p-5 space-y-4">
+        <div className="flex items-baseline justify-between">
+          <h3 className="text-sm font-semibold">Free plan</h3>
+          <span className="text-xs text-muted-foreground">Current</span>
+        </div>
+        <ul className="space-y-2">
+          {freeFeatures.map((f) => (
+            <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Check className="w-3.5 h-3.5 text-muted-foreground" />
+              {f}
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 }
 

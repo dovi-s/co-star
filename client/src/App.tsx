@@ -131,6 +131,10 @@ function resolveInitialView(): { view: View; checkoutSuccess: boolean } {
     window.history.replaceState({ view: "subscription" }, "", "/subscription");
     return { view: "subscription", checkoutSuccess: true };
   }
+  if (params.get("checkout") === "cancel") {
+    window.history.replaceState({ view: "subscription" }, "", "/subscription");
+    return { view: "subscription", checkoutSuccess: false };
+  }
 
   const viewParam = params.get("view");
   if (viewParam && viewParam in viewToPath) {
