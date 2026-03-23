@@ -241,15 +241,18 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
               const mins = Math.floor((diffMs % 3600000) / 60000);
               return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
             })() : null;
+            const tierLabel = user.subscriptionTier === "internal" ? "Internal"
+              : user.subscriptionTier === "comp" ? "Comp"
+              : "Pro";
             return isPro ? (
               <button
                 onClick={() => onNavigate?.("subscription")}
                 className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[11px] font-medium text-primary/80 bg-primary/[0.08] transition-colors hover:bg-primary/[0.12]"
                 data-testid="badge-plan-pro"
-                aria-label="Pro plan"
+                aria-label={`${tierLabel} plan`}
               >
                 <Crown className="h-3 w-3" />
-                Pro
+                {tierLabel}
               </button>
             ) : (
               <button
