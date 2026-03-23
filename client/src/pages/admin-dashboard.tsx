@@ -358,7 +358,7 @@ function OverviewTab({ data, onViewUser }: { data: AnalyticsData; onViewUser: (i
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard icon={Crown} label="Pro Users" value={proCount} sub={`${conversionRate}% conversion`} color="amber" />
         <StatCard icon={BookOpen} label="Scripts" value={data.usage.totalScripts} sub={`${data.usage.scripts30d} this month`} color="blue" />
-        <StatCard icon={Target} label="Avg Accuracy" value={data.usage.avgAccuracy > 0 ? `${(data.usage.avgAccuracy * 100).toFixed(0)}%` : "-"} color="green" />
+        <StatCard icon={Target} label="Avg Accuracy" value={data.usage.avgAccuracy > 0 ? `${Number(data.usage.avgAccuracy).toFixed(0)}%` : "-"} color="green" />
         <StatCard icon={Lightbulb} label="Feature Requests" value={data.featureRequests.total} color="amber" />
       </div>
 
@@ -977,7 +977,7 @@ function UserDetailView({ userId, onBack }: { userId: string; onBack: () => void
                       <p className="text-xs font-medium truncate">{r.script_name}</p>
                       <p className="text-[10px] text-muted-foreground">{formatTimeAgo(r.created_at)}</p>
                     </div>
-                    <span className="text-xs font-medium">{(Number(r.accuracy) * 100).toFixed(0)}%</span>
+                    <span className="text-xs font-medium">{Number(r.accuracy).toFixed(0)}%</span>
                     <span className="text-[10px] text-muted-foreground">{r.lines_correct}/{r.lines_total} lines</span>
                   </div>
                 ))}
@@ -1132,7 +1132,7 @@ function UsageTab({ data }: { data: AnalyticsData }) {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard icon={BookOpen} label="Total Scripts" value={data.usage.totalScripts} sub={`${data.usage.scripts30d} this month`} testId="stat-scripts" />
         <StatCard icon={Activity} label="Total Runs" value={data.usage.totalRuns} sub={`${data.usage.runs30d} this month`} color="blue" />
-        <StatCard icon={BarChart3} label="Avg Accuracy" value={data.usage.avgAccuracy > 0 ? `${(data.usage.avgAccuracy * 100).toFixed(0)}%` : "-"} color="green" />
+        <StatCard icon={BarChart3} label="Avg Accuracy" value={data.usage.avgAccuracy > 0 ? `${Number(data.usage.avgAccuracy).toFixed(0)}%` : "-"} color="green" />
         <StatCard icon={Clock} label="Avg Duration" value={data.usage.avgDuration > 0 ? `${Math.round(data.usage.avgDuration / 60)}m` : "-"} color="purple" />
       </div>
 
