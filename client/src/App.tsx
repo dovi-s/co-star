@@ -25,7 +25,7 @@ import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
 import { WhoIsItForPage } from "@/pages/who-is-it-for";
-import { Logo } from "@/components/logo";
+import { Logo, CoStarSplashAnimation } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { usePageTracking } from "@/hooks/use-tracking";
 import "@/hooks/use-analytics";
@@ -394,22 +394,24 @@ function AppContent() {
 }
 
 function SplashScreen({ onComplete }: { onComplete: () => void }) {
-  const [phase, setPhase] = useState<"enter" | "exit">("enter");
+  const [fading, setFading] = useState(false);
+  const reducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  useEffect(() => {
-    const showTimer = setTimeout(() => setPhase("exit"), 300);
-    const doneTimer = setTimeout(onComplete, 500);
-    return () => { clearTimeout(showTimer); clearTimeout(doneTimer); };
-  }, [onComplete]);
+  const handleAnimComplete = useCallback(() => {
+    if (reducedMotion) {
+      onComplete();
+      return;
+    }
+    setFading(true);
+    setTimeout(onComplete, 400);
+  }, [onComplete, reducedMotion]);
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-background transition-opacity duration-300 ${phase === "exit" ? "opacity-0" : "opacity-100"}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-background ${reducedMotion ? "" : "transition-opacity duration-400"} ${fading ? "opacity-0" : "opacity-100"}`}
       data-testid="splash-screen"
     >
-      <div className={`transition-transform duration-500 ease-out ${phase === "enter" ? "scale-100 opacity-100" : "scale-110 opacity-0"}`}>
-        <Logo size="xl" showWordmark animated={false} className="pointer-events-none" />
-      </div>
+      <CoStarSplashAnimation iconSize={100} onComplete={handleAnimComplete} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { CoStarSplashAnimation } from "@/components/logo";
 import {
   ChevronLeft,
   Copy,
@@ -242,6 +243,14 @@ function SectionDescription({ children }: { children: React.ReactNode }) {
 function LogosSection() {
   return (
     <div className="space-y-8">
+      <div>
+        <SectionTitle>Brand animation</SectionTitle>
+        <SectionDescription>The animated logo sequence used for splash screens and brand moments.</SectionDescription>
+        <div className="rounded-xl border border-border/40 bg-background flex items-center justify-center py-10">
+          <CoStarSplashAnimation iconSize={100} showReplay autoPlay />
+        </div>
+      </div>
+
       <div>
         <SectionTitle>Icon mark</SectionTitle>
         <SectionDescription>The star mark works as an app icon and favicon. Download in SVG for print or PNG for digital.</SectionDescription>
