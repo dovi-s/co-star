@@ -338,3 +338,63 @@ export function CoStarSplashAnimation({ iconSize = 120, onComplete, showReplay =
     </div>
   );
 }
+
+interface AuthAnimationProps {
+  iconSize?: number;
+}
+
+export function CoStarAuthAnimation({ iconSize = 72 }: AuthAnimationProps) {
+  const [phase, setPhase] = useState(0);
+  const isDark = useIsDark();
+  const reducedMotion = usePrefersReducedMotion();
+  const mainUid = useId();
+  const compUid = useId();
+
+  const blue = isDark ? "#5BA3FF" : "#1A73E8";
+  const bronze = isDark ? "#C4956D" : "#B08763";
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setPhase(2);
+      return;
+    }
+    const t1 = setTimeout(() => setPhase(1), 100);
+    const t2 = setTimeout(() => setPhase(2), 600);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [reducedMotion]);
+
+  const companionSize = iconSize * 0.33;
+  const noMotion = reducedMotion;
+
+  return (
+    <div className="relative inline-flex items-center justify-center" data-testid="auth-animation" style={{ width: iconSize * 1.3, height: iconSize * 1.3 }}>
+      <div
+        style={{
+          position: "absolute",
+          opacity: noMotion || phase >= 1 ? 1 : 0,
+          transform: noMotion || phase >= 1 ? "scale(1)" : "scale(0.5)",
+          filter: noMotion || phase >= 1 ? "blur(0)" : "blur(6px)",
+          transition: noMotion ? "none" : "all 600ms cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      >
+        <PremiumStar size={iconSize} color={blue} uid={`auth-main-${mainUid}`} />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: "50%",
+          top: "50%",
+          marginLeft: -companionSize / 2,
+          opacity: noMotion || phase >= 2 ? 1 : 0,
+          transform: noMotion || phase >= 2
+            ? `translateY(${-iconSize * 0.55}px) scale(1)`
+            : `translateY(0px) scale(0.3)`,
+          filter: noMotion || phase >= 2 ? "blur(0)" : "blur(4px)",
+          transition: noMotion ? "none" : "all 600ms cubic-bezier(0.34, 1.56, 0.64, 1)",
+        }}
+      >
+        <PremiumStar size={companionSize} color={bronze} uid={`auth-comp-${compUid}`} />
+      </div>
+    </div>
+  );
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Logo, CoStarSplashAnimation } from "@/components/logo";
+import { Logo, CoStarAuthAnimation } from "@/components/logo";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
@@ -244,7 +244,7 @@ export function AuthPage({ onBack, onSignUp, initialMode }: { onBack: () => void
         <div className="w-full max-w-sm flex flex-col items-center">
           <div className="mb-8 flex flex-col items-center">
             <div className="animate-scale-in">
-              <CoStarSplashAnimation iconSize={72} showReplay={false} />
+              <CoStarAuthAnimation iconSize={72} />
             </div>
             <h1 className="text-2xl font-semibold text-foreground mt-4 animate-fade-in-up" style={{ animationDelay: "100ms" }} data-testid="text-auth-title">
               {title}

@@ -208,7 +208,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
   return (
     <div className="min-h-screen flex flex-col bg-background" data-testid="home-page">
       <header className="flex items-center justify-between content-inset py-3 sticky top-0 z-50 glass-surface safe-top rounded-none">
-        <Logo size="xs" animated showWordmark onClick={() => { setStep("import"); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
+        <Logo size="xs" animated={false} showWordmark onClick={() => { setStep("import"); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />
         <div className="flex items-center gap-2">
           {stats.currentStreak > 0 && (
             <div

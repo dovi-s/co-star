@@ -195,7 +195,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               <ChevronLeft className="h-5 w-5" />
             </Button>
           )}
-          <Logo size="sm" />
+          <Logo size="sm" animated={false} />
         </div>
         <button
           onClick={skipAll}

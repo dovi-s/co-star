@@ -239,7 +239,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
       >
         <div className="px-5 pt-5 pb-3 text-left">
           <div className="flex items-center gap-3">
-            <Logo size="xs" onClick={() => navigate("home")} />
+            <Logo size="xs" animated={false} onClick={() => navigate("home")} />
             <div className="flex-1">
               <h2 className="text-base font-normal">
                 <span>Co-star</span>{" "}

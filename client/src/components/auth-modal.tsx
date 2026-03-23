@@ -229,7 +229,7 @@ export function AuthModal({ open, onOpenChange, onSuccess }: AuthModalProps) {
 
         <div className="px-6 pb-6 pt-2">
           <div className="flex flex-col items-center mb-5">
-            <Logo size="sm" />
+            <Logo size="sm" animated={false} />
             <h2 className="text-lg font-semibold text-foreground mt-3" data-testid="text-modal-title">
               {title}
             </h2>
