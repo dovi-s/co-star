@@ -408,7 +408,8 @@ function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center bg-background ${reducedMotion ? "" : "transition-opacity duration-400"} ${fading ? "opacity-0" : "opacity-100"}`}
+      className={`fixed inset-0 z-50 flex items-center justify-center bg-background ${fading ? "opacity-0" : "opacity-100"}`}
+      style={{ transition: reducedMotion ? "none" : "opacity 400ms ease" }}
       data-testid="splash-screen"
     >
       <CoStarSplashAnimation iconSize={100} onComplete={handleAnimComplete} />
