@@ -377,7 +377,7 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    const timeout = this.isMobile ? 3500 : 2200;
+    const timeout = this.isMobile ? 5000 : 3000;
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech && !this.isPaused) {
         if (this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {
@@ -395,7 +395,6 @@ class SpeechRecognitionEngine {
         this.lastTranscript = "";
         this.lastResultTranscript = "";
         this.setState("listening");
-        this.onEndCallback?.();
       }
     }, timeout);
   }
@@ -604,7 +603,7 @@ class SpeechRecognitionEngine {
     this.setState("idle");
   }
 
-  softStart(): boolean {
+  softStart(preserveTranscript = false): boolean {
     if (!this.SpeechRecognitionAPI) return false;
 
     this.startGeneration++;
@@ -622,7 +621,9 @@ class SpeechRecognitionEngine {
       this.restartDelay = null;
     }
 
-    this.resetAccumulated();
+    if (!preserveTranscript) {
+      this.resetAccumulated();
+    }
     this.releaseMicStream();
 
     if (this.recognition && this.isListening) {

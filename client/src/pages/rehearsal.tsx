@@ -532,12 +532,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         
         if (result.isFinal) {
           matchReachedRef.current = true;
-          const graceMs = match.percentMatched >= 95 ? 80 : 200;
+          const graceMs = match.percentMatched >= 95 ? 150 : 400;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current) doAdvance();
           }, graceMs);
         } else {
-          const interimGraceMs = match.percentMatched >= 95 ? 350 : 600;
+          const interimGraceMs = match.percentMatched >= 95 ? 500 : 1000;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;
@@ -559,7 +559,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           if (!waitingForUserRef.current || !isPlayingRef.current) return;
           if (speechRecognition.listening) return;
           if (hintPlayingRef.current) return;
-          speechRecognition.softStart();
+          speechRecognition.softStart(true);
           if (!speechRecognition.listening && attempt < (isPWAMode ? 8 : 5)) {
             const nextDelay = attempt < 3 ? 500 : 1000;
             setTimeout(() => attemptRestart(attempt + 1), nextDelay);
@@ -940,9 +940,10 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     
     if (speechRecognition.available && !micBlocked && micEnabledRef.current) {
       const isPWA = window.matchMedia?.('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
-      const micDelay = isPWA ? 500 : speechRecognition.isMobileDevice ? 250 : 0;
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const micDelay = isPWA ? (isIOS ? 700 : 500) : speechRecognition.isMobileDevice ? 350 : 0;
 
-      if (isPWA) {
+      if (isPWA || isIOS) {
         ttsEngine.stop();
       }
 
@@ -2695,7 +2696,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
             onTapAdvance={tapAdvance}
             onRestartListening={() => {
               if (!speechRecognition.listening && waitingForUserRef.current) {
-                speechRecognition.softStart();
+                speechRecognition.softStart(true);
               }
             }}
             onLineClick={(line) => {

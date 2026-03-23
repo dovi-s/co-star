@@ -518,7 +518,7 @@ function FreeUserUpgrade({
           <Gift className="w-3.5 h-3.5" />
           7-day guest pass
         </div>
-        <h2 className="text-xl font-semibold" data-testid="text-subscription-headline">Unlock unlimited rehearsals — on us for a week</h2>
+        <h2 className="text-xl font-semibold" data-testid="text-subscription-headline">Unlock unlimited rehearsals, on us for a week</h2>
         <p className="text-sm text-muted-foreground">
           Try every Pro feature free. Cancel anytime, no questions asked.
         </p>

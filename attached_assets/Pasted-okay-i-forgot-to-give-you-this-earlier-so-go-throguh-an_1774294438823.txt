@@ -1,0 +1,1388 @@
+okay i forgot to give you this earlier so go throguh and update the plan accoridngly and proceed with all : oh also i ahve tons of stuff here i need you to consdier and mess aroundw ith if need be but naybe can utilize these: import React, { ueEffect, useMemo, useState } from 'react'; 
+
+export default function CoStarIconAnimation({ size = 290, autoPlay = true, showReplay = true }) {
+  const [phase, setPhase] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
+
+  const colors = useMemo(
+    () => ({
+      line: 'rgba(243,247,252,0.10)',
+      blue: '#5BA3FF',
+      bronze: '#C4956D',
+      blueGlow: 'rgba(91,163,255,0.22)',
+      bronzeGlow: 'rgba(196,149,109,0.22)',
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (!autoPlay) return;
+
+    const timers = [
+      setTimeout(() => setPhase(1), 450),
+      setTimeout(() => setPhase(2), 1200),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [replayKey, autoPlay]);
+
+  const replay = () => {
+    setPhase(0);
+    setReplayKey((k) => k + 1);
+  };
+
+  return (
+    <div
+      className="relative inline-flex items-center justify-center"
+      style={{
+        background: 'transparent',
+        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        .cs-chip {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        @keyframes cs-main-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.2) rotate(-90deg);
+            filter: blur(16px);
+          }
+          58% {
+            opacity: 1;
+            transform: scale(1.05) rotate(6deg);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-partner-path {
+          0% {
+            opacity: 0;
+            transform: translate(0px, 0px) scale(0.18) rotate(24deg);
+            filter: blur(10px);
+          }
+          30% {
+            opacity: 1;
+            transform: translate(-62px, -54px) scale(0.72) rotate(16deg);
+            filter: blur(0);
+          }
+          68% {
+            opacity: 1;
+            transform: translate(-18px, -126px) scale(1.07) rotate(8deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0px, -112px) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes cs-arc-draw {
+          from {
+            opacity: 0;
+            stroke-dashoffset: 320;
+          }
+          to {
+            opacity: 1;
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cs-animate-main,
+          .cs-animate-partner,
+          .cs-animate-arc {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="relative flex flex-col items-center justify-center"
+        style={{ width: size, height: size }}
+      >
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+          style={{
+            width: size * 0.96,
+            height: size * 0.96,
+            background: colors.blueGlow,
+            opacity: phase >= 1 ? 1 : 0,
+            transform: 'translate(-50%, -50%)',
+            transition: 'opacity 500ms ease',
+          }}
+        />
+
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+          style={{
+            width: size * 0.55,
+            height: size * 0.55,
+            background: colors.bronzeGlow,
+            opacity: phase >= 2 ? 1 : 0,
+            transform: `translate(-50%, calc(-50% - ${size * 0.386}px))`,
+            transition: 'opacity 500ms ease',
+          }}
+        />
+
+        <svg viewBox="0 0 290 290" className="absolute inset-0" aria-hidden="true">
+          <path
+            d="M145 145 C 110 100, 110 58, 145 33"
+            fill="none"
+            stroke={colors.line}
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeDasharray="320"
+            strokeDashoffset="320"
+            className={phase >= 2 ? 'cs-animate-arc' : ''}
+            style={{
+              opacity: phase >= 2 ? 1 : 0,
+              animation: phase >= 2
+                ? 'cs-arc-draw 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                : 'none',
+            }}
+          />
+        </svg>
+
+        <div
+          className={phase >= 1 ? 'cs-animate-main' : ''}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: phase >= 1 ? 1 : 0,
+            animation: phase >= 1
+              ? 'cs-main-in 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+              : 'none',
+          }}
+        >
+          <Star size={170} color={colors.blue} />
+        </div>
+
+        <div
+          className={phase >= 2 ? 'cs-animate-partner' : ''}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            opacity: phase >= 2 ? 1 : 0,
+            animation: phase >= 2
+              ? 'cs-partner-path 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+              : 'none',
+          }}
+        >
+          <Star size={58} color={colors.bronze} />
+        </div>
+
+        {showReplay && (
+          <button
+            onClick={replay}
+            className="cs-chip absolute -bottom-16 rounded-2xl px-5 py-3 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.985]"
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: 'rgba(243,247,252,0.82)',
+              fontWeight: 700,
+            }}
+          >
+            Replay icon
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Star({ size = 100, color }) {
+  const id = color.replace('#', '');
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      aria-hidden="true"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id={`fill-${id}`} x1="10" y1="10" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="72%" stopColor={color} />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.28" />
+        </linearGradient>
+        <radialGradient
+          id={`shine-${id}`}
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(35 24) rotate(45) scale(34 22)"
+        >
+          <stop stopColor="rgba(255,255,255,0.2)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <filter id={`shadow-${id}`} x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.26 0"
+          />
+        </filter>
+      </defs>
+
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+        filter={`url(#shadow-${id})`}
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#shine-${id})`}
+        opacity="0.92"
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        stroke="rgba(255,255,255,0.13)"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+} and import React, { useEffect, useMemo, useState } from 'react';
+
+function Star({ size = 100, color }) {
+  const id = color.replace('#', '');
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      aria-hidden="true"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id={`fill-${id}`} x1="10" y1="10" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="72%" stopColor={color} />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.28" />
+        </linearGradient>
+        <radialGradient
+          id={`shine-${id}`}
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(35 24) rotate(45) scale(34 22)"
+        >
+          <stop stopColor="rgba(255,255,255,0.2)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <filter id={`shadow-${id}`} x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.26 0"
+          />
+        </filter>
+      </defs>
+
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+        filter={`url(#shadow-${id})`}
+      />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" fill={`url(#fill-${id})`} />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" fill={`url(#shine-${id})`} opacity="0.92" />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" stroke="rgba(255,255,255,0.13)" strokeWidth="1" />
+    </svg>
+  );
+}
+
+function CoStarHorizontalLockupAnimation({ autoPlay = true, showReplay = false, iconSize = 132 }) {
+  const [phase, setPhase] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
+
+  const colors = useMemo(
+    () => ({
+      bg: '#0A0D12',
+      text: '#F3F7FC',
+      muted: 'rgba(243,247,252,0.60)',
+      line: 'rgba(243,247,252,0.10)',
+      blue: '#5BA3FF',
+      bronze: '#C4956D',
+      blueGlow: 'rgba(91,163,255,0.22)',
+      bronzeGlow: 'rgba(196,149,109,0.22)',
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (!autoPlay) return;
+
+    const timers = [
+      setTimeout(() => setPhase(1), 450),
+      setTimeout(() => setPhase(2), 1200),
+      setTimeout(() => setPhase(3), 1950),
+      setTimeout(() => setPhase(4), 2400),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [replayKey, autoPlay]);
+
+  const replay = () => {
+    setPhase(0);
+    setReplayKey((k) => k + 1);
+  };
+
+  const iconBox = iconSize * 1.7;
+
+  return (
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
+      style={{
+        background: colors.bg,
+        color: colors.text,
+        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        .cs-noise {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          opacity: 0.024;
+          mix-blend-mode: soft-light;
+          pointer-events: none;
+        }
+
+        .cs-word-shimmer {
+          background: linear-gradient(90deg, #F3F7FC 0%, #DDEBFF 25%, #5BA3FF 50%, #EAF1FA 75%, #F3F7FC 100%);
+          background-size: 220% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: cs-shimmer 7s linear infinite;
+        }
+
+        .cs-chip {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        @keyframes cs-main-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.2) rotate(-90deg);
+            filter: blur(16px);
+          }
+          58% {
+            opacity: 1;
+            transform: scale(1.05) rotate(6deg);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-partner-path {
+          0% {
+            opacity: 0;
+            transform: translate(0px, 0px) scale(0.18) rotate(24deg);
+            filter: blur(10px);
+          }
+          30% {
+            opacity: 1;
+            transform: translate(-62px, -54px) scale(0.72) rotate(16deg);
+            filter: blur(0);
+          }
+          68% {
+            opacity: 1;
+            transform: translate(-18px, -126px) scale(1.07) rotate(8deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0px, -112px) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes cs-arc-draw {
+          from {
+            opacity: 0;
+            stroke-dashoffset: 320;
+          }
+          to {
+            opacity: 1;
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes cs-lockup-in {
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.985);
+            filter: blur(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-word-left-in {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+            filter: blur(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-word-right-in {
+          from {
+            opacity: 0;
+            transform: translateY(12px);
+            filter: blur(10px);
+            letter-spacing: -0.02em;
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+            letter-spacing: 0;
+          }
+        }
+
+        @keyframes cs-tag-in {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+            filter: blur(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-shimmer {
+          to { background-position: 220% center; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cs-word-shimmer {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, #121A28 0%, #0A0D12 62%)',
+        }}
+      />
+      <div className="cs-noise absolute inset-0" />
+
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="flex flex-row items-center gap-7 sm:gap-9">
+          <div className="relative shrink-0" style={{ width: iconBox, height: iconBox }}>
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+              style={{
+                width: iconBox * 0.96,
+                height: iconBox * 0.96,
+                background: colors.blueGlow,
+                opacity: phase >= 1 ? 1 : 0,
+                transform: 'translate(-50%, -50%)',
+                transition: 'opacity 500ms ease',
+              }}
+            />
+
+            <div
+              className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+              style={{
+                width: iconBox * 0.55,
+                height: iconBox * 0.55,
+                background: colors.bronzeGlow,
+                opacity: phase >= 2 ? 1 : 0,
+                transform: `translate(-50%, calc(-50% - ${iconBox * 0.386}px))`,
+                transition: 'opacity 500ms ease',
+              }}
+            />
+
+            <svg viewBox="0 0 290 290" className="absolute inset-0" aria-hidden="true">
+              <path
+                d="M145 145 C 110 100, 110 58, 145 33"
+                fill="none"
+                stroke={colors.line}
+                strokeWidth="1.25"
+                strokeLinecap="round"
+                strokeDasharray="320"
+                strokeDashoffset="320"
+                style={{
+                  opacity: phase >= 2 ? 1 : 0,
+                  animation: phase >= 2
+                    ? 'cs-arc-draw 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                    : 'none',
+                }}
+              />
+            </svg>
+
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: phase >= 1 ? 1 : 0,
+                animation: phase >= 1
+                  ? 'cs-main-in 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                  : 'none',
+              }}
+            >
+              <Star size={iconSize} color={colors.blue} />
+            </div>
+
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                opacity: phase >= 2 ? 1 : 0,
+                animation: phase >= 2
+                  ? 'cs-partner-path 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+                  : 'none',
+              }}
+            >
+              <Star size={iconSize * 0.34} color={colors.bronze} />
+            </div>
+          </div>
+
+          <div className="min-w-0">
+            <div
+              style={{
+                textAlign: 'left',
+                opacity: phase >= 3 ? 1 : 0,
+                animation: phase >= 3
+                  ? 'cs-lockup-in 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                  : 'none',
+              }}
+            >
+              <h1 className="text-[42px] sm:text-[58px] leading-none tracking-[-0.06em] whitespace-nowrap">
+                <span
+                  style={{
+                    fontWeight: 300,
+                    display: 'inline-block',
+                    opacity: phase >= 3 ? 1 : 0,
+                    animation: phase >= 3
+                      ? 'cs-word-left-in 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                      : 'none',
+                  }}
+                >
+                  Co-star{' '}
+                </span>
+                <span
+                  className="cs-word-shimmer"
+                  style={{
+                    fontWeight: 650,
+                    display: 'inline-block',
+                    opacity: phase >= 3 ? 1 : 0,
+                    animation: phase >= 3
+                      ? 'cs-word-right-in 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                      : 'none',
+                  }}
+                >
+                   Studio
+                </span>
+              </h1>
+
+              <div
+                className="mt-4 flex items-center justify-start"
+                style={{
+                  opacity: phase >= 4 ? 1 : 0,
+                  animation: phase >= 4
+                    ? 'cs-tag-in 650ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                    : 'none',
+                }}
+              >
+                <div className="cs-chip rounded-full px-4 py-2 inline-flex items-center gap-3">
+                  <span className="h-[6px] w-[6px] rounded-full" style={{ background: colors.blue }} />
+                  <span
+                    style={{
+                      fontSize: 11,
+                      letterSpacing: '0.22em',
+                      textTransform: 'uppercase',
+                      color: colors.muted,
+                      fontWeight: 600,
+                    }}
+                  >
+                    On-demand scene partner
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {showReplay && (
+          <button
+            onClick={replay}
+            className="cs-chip mt-10 rounded-2xl px-5 py-3 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.985]"
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: 'rgba(243,247,252,0.82)',
+              fontWeight: 700,
+            }}
+          >
+            Replay lockup
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default CoStarHorizontalLockupAnimation; and import React, { useEffect, useMemo, useState } from 'react';
+
+export default function CoStarIconAnimation({ size = 290, autoPlay = true, showReplay = true }) {
+  const [phase, setPhase] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
+
+  const colors = useMemo(
+    () => ({
+      bg: '#0A0D12',
+      line: 'rgba(243,247,252,0.10)',
+      blue: '#5BA3FF',
+      bronze: '#C4956D',
+      blueGlow: 'rgba(91,163,255,0.22)',
+      bronzeGlow: 'rgba(196,149,109,0.22)',
+    }),
+    []
+  );
+
+  useEffect(() => {
+    if (!autoPlay) return;
+
+    const timers = [
+      setTimeout(() => setPhase(1), 450),
+      setTimeout(() => setPhase(2), 1200),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [replayKey, autoPlay]);
+
+  const replay = () => {
+    setPhase(0);
+    setReplayKey((k) => k + 1);
+  };
+
+  return (
+    <div
+      className="relative flex min-h-screen items-center justify-center overflow-hidden px-6"
+      style={{
+        background: colors.bg,
+        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        .cs-noise {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          opacity: 0.024;
+          mix-blend-mode: soft-light;
+          pointer-events: none;
+        }
+
+        .cs-chip {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        @keyframes cs-main-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.2) rotate(-90deg);
+            filter: blur(16px);
+          }
+          58% {
+            opacity: 1;
+            transform: scale(1.05) rotate(6deg);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-partner-path {
+          0% {
+            opacity: 0;
+            transform: translate(0px, 0px) scale(0.18) rotate(24deg);
+            filter: blur(10px);
+          }
+          30% {
+            opacity: 1;
+            transform: translate(-62px, -54px) scale(0.72) rotate(16deg);
+            filter: blur(0);
+          }
+          68% {
+            opacity: 1;
+            transform: translate(-18px, -126px) scale(1.07) rotate(8deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0px, -112px) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes cs-arc-draw {
+          from {
+            opacity: 0;
+            stroke-dashoffset: 320;
+          }
+          to {
+            opacity: 1;
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cs-animate-main,
+          .cs-animate-partner,
+          .cs-animate-arc {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, #121A28 0%, #0A0D12 62%)',
+        }}
+      />
+      <div className="cs-noise absolute inset-0" />
+
+      <div
+        className="relative flex flex-col items-center justify-center"
+        style={{ width: size, height: size }}
+      >
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+          style={{
+            width: size * 0.96,
+            height: size * 0.96,
+            background: colors.blueGlow,
+            opacity: phase >= 1 ? 1 : 0,
+            transform: 'translate(-50%, -50%)',
+            transition: 'opacity 500ms ease',
+          }}
+        />
+
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 rounded-full blur-3xl"
+          style={{
+            width: size * 0.55,
+            height: size * 0.55,
+            background: colors.bronzeGlow,
+            opacity: phase >= 2 ? 1 : 0,
+            transform: `translate(-50%, calc(-50% - ${size * 0.386}px))`,
+            transition: 'opacity 500ms ease',
+          }}
+        />
+
+        <svg viewBox="0 0 290 290" className="absolute inset-0" aria-hidden="true">
+          <path
+            d="M145 145 C 110 100, 110 58, 145 33"
+            fill="none"
+            stroke={colors.line}
+            strokeWidth="1.25"
+            strokeLinecap="round"
+            strokeDasharray="320"
+            strokeDashoffset="320"
+            className={phase >= 2 ? 'cs-animate-arc' : ''}
+            style={{
+              opacity: phase >= 2 ? 1 : 0,
+              animation: phase >= 2
+                ? 'cs-arc-draw 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+                : 'none',
+            }}
+          />
+        </svg>
+
+        <div
+          className={phase >= 1 ? 'cs-animate-main' : ''}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            opacity: phase >= 1 ? 1 : 0,
+            animation: phase >= 1
+              ? 'cs-main-in 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards'
+              : 'none',
+          }}
+        >
+          <Star size={170} color={colors.blue} />
+        </div>
+
+        <div
+          className={phase >= 2 ? 'cs-animate-partner' : ''}
+          style={{
+            position: 'absolute',
+            left: '50%',
+            top: '50%',
+            opacity: phase >= 2 ? 1 : 0,
+            animation: phase >= 2
+              ? 'cs-partner-path 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards'
+              : 'none',
+          }}
+        >
+          <Star size={58} color={colors.bronze} />
+        </div>
+
+        {showReplay && (
+          <button
+            onClick={replay}
+            className="cs-chip absolute -bottom-16 rounded-2xl px-5 py-3 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.985]"
+            style={{
+              fontSize: 11,
+              letterSpacing: '0.22em',
+              textTransform: 'uppercase',
+              color: 'rgba(243,247,252,0.82)',
+              fontWeight: 700,
+            }}
+          >
+            Replay icon
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Star({ size = 100, color }) {
+  const id = color.replace('#', '');
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 100 100"
+      fill="none"
+      aria-hidden="true"
+      style={{ overflow: 'visible' }}
+    >
+      <defs>
+        <linearGradient id={`fill-${id}`} x1="10" y1="10" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="72%" stopColor={color} />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.28" />
+        </linearGradient>
+        <radialGradient
+          id={`shine-${id}`}
+          cx="0"
+          cy="0"
+          r="1"
+          gradientUnits="userSpaceOnUse"
+          gradientTransform="translate(35 24) rotate(45) scale(34 22)"
+        >
+          <stop stopColor="rgba(255,255,255,0.2)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <filter id={`shadow-${id}`} x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feColorMatrix
+            in="blur"
+            type="matrix"
+            values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.26 0"
+          />
+        </filter>
+      </defs>
+
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+        filter={`url(#shadow-${id})`}
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#shine-${id})`}
+        opacity="0.92"
+      />
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        stroke="rgba(255,255,255,0.13)"
+        strokeWidth="1"
+      />
+    </svg>
+  );
+} and import React, { useEffect, useMemo, useState } from 'react';
+
+export default function CoStarLogoSignature() {
+  const [phase, setPhase] = useState(0);
+  const [replayKey, setReplayKey] = useState(0);
+
+  const colors = useMemo(
+    () => ({
+      bg: '#0A0D12',
+      text: '#F3F7FC',
+      muted: 'rgba(243,247,252,0.60)',
+      line: 'rgba(243,247,252,0.10)',
+      blue: '#5BA3FF',
+      bronze: '#C4956D',
+      blueGlow: 'rgba(91,163,255,0.22)',
+      bronzeGlow: 'rgba(196,149,109,0.22)',
+    }),
+    []
+  );
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setPhase(1), 450),
+      setTimeout(() => setPhase(2), 1200),
+      setTimeout(() => setPhase(3), 2100),
+    ];
+
+    return () => timers.forEach(clearTimeout);
+  }, [replayKey]);
+
+  const replay = () => {
+    setPhase(0);
+    setReplayKey((k) => k + 1);
+  };
+
+  return (
+    <div
+      className="relative min-h-screen overflow-hidden flex items-center justify-center px-6"
+      style={{
+        background: colors.bg,
+        color: colors.text,
+        fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif',
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        .cs-noise {
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+          opacity: 0.024;
+          mix-blend-mode: soft-light;
+          pointer-events: none;
+        }
+
+        .cs-word-shimmer {
+          background: linear-gradient(90deg, #F3F7FC 0%, #DDEBFF 25%, #5BA3FF 50%, #EAF1FA 75%, #F3F7FC 100%);
+          background-size: 220% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: cs-shimmer 7s linear infinite;
+        }
+
+        .cs-chip {
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(14px);
+          -webkit-backdrop-filter: blur(14px);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+
+        @keyframes cs-main-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.2) rotate(-90deg);
+            filter: blur(16px);
+          }
+          58% {
+            opacity: 1;
+            transform: scale(1.05) rotate(6deg);
+            filter: blur(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-partner-path {
+          0% {
+            opacity: 0;
+            transform: translate(0px, 0px) scale(0.18) rotate(24deg);
+            filter: blur(10px);
+          }
+          30% {
+            opacity: 1;
+            transform: translate(-62px, -54px) scale(0.72) rotate(16deg);
+            filter: blur(0);
+          }
+          68% {
+            opacity: 1;
+            transform: translate(-18px, -126px) scale(1.07) rotate(8deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0px, -112px) scale(1) rotate(0deg);
+          }
+        }
+
+        @keyframes cs-arc-draw {
+          from {
+            opacity: 0;
+            stroke-dashoffset: 320;
+          }
+          to {
+            opacity: 1;
+            stroke-dashoffset: 0;
+          }
+        }
+
+        @keyframes cs-lockup-in {
+          from {
+            opacity: 0;
+            transform: translateY(14px) scale(0.985);
+            filter: blur(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
+        }
+
+        @keyframes cs-shimmer {
+          to { background-position: 220% center; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .cs-animate-main,
+          .cs-animate-partner,
+          .cs-animate-arc,
+          .cs-animate-lockup,
+          .cs-word-shimmer {
+            animation: none !important;
+          }
+        }
+      `}</style>
+
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, #121A28 0%, #0A0D12 62%)',
+        }}
+      />
+      <div className="cs-noise absolute inset-0" />
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[28rem] w-[28rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl"
+        style={{ background: colors.blueGlow, opacity: phase >= 1 ? 1 : 0, transition: 'opacity 500ms ease' }}
+      />
+      <div
+        className="pointer-events-none absolute left-1/2 top-1/2 h-[16rem] w-[16rem] rounded-full blur-3xl"
+        style={{
+          background: colors.bronzeGlow,
+          opacity: phase >= 2 ? 1 : 0,
+          transform: 'translate(-50%, calc(-50% - 112px))',
+          transition: 'opacity 500ms ease',
+        }}
+      />
+
+      <div className="relative z-10 flex flex-col items-center justify-center">
+        <div className="relative h-[290px] w-[290px]">
+          <svg
+            viewBox="0 0 290 290"
+            className="absolute inset-0"
+            aria-hidden="true"
+          >
+            <path
+              d="M145 145 C 110 100, 110 58, 145 33"
+              fill="none"
+              stroke={colors.line}
+              strokeWidth="1.25"
+              strokeLinecap="round"
+              strokeDasharray="320"
+              strokeDashoffset="320"
+              className={phase >= 2 ? 'cs-animate-arc' : ''}
+              style={{
+                opacity: phase >= 2 ? 1 : 0,
+                animation: phase >= 2 ? 'cs-arc-draw 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards' : 'none',
+              }}
+            />
+          </svg>
+
+          <div
+            className={phase >= 1 ? 'cs-animate-main' : ''}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              opacity: phase >= 1 ? 1 : 0,
+              animation: phase >= 1 ? 'cs-main-in 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards' : 'none',
+            }}
+          >
+            <Star size={170} color={colors.blue} />
+          </div>
+
+          <div
+            className={phase >= 2 ? 'cs-animate-partner' : ''}
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              opacity: phase >= 2 ? 1 : 0,
+              animation: phase >= 2 ? 'cs-partner-path 1000ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards' : 'none',
+            }}
+          >
+            <Star size={58} color={colors.bronze} />
+          </div>
+        </div>
+
+        <div
+          className={phase >= 3 ? 'cs-animate-lockup' : ''}
+          style={{
+            marginTop: 18,
+            textAlign: 'center',
+            opacity: phase >= 3 ? 1 : 0,
+            animation: phase >= 3 ? 'cs-lockup-in 800ms cubic-bezier(0.22, 1, 0.36, 1) forwards' : 'none',
+          }}
+        >
+          <h1 className="text-[56px] sm:text-[72px] leading-none tracking-[-0.06em]">
+            <span style={{ fontWeight: 300 }}>Co-star </span>
+            <span className="cs-word-shimmer" style={{ fontWeight: 650 }}>Studio</span>
+          </h1>
+
+          <div className="mt-6 flex items-center justify-center">
+            <div className="cs-chip rounded-full px-4 py-2 inline-flex items-center gap-3">
+              <span className="h-[6px] w-[6px] rounded-full" style={{ background: colors.blue }} />
+              <span style={{ fontSize: 11, letterSpacing: '0.22em', textTransform: 'uppercase', color: colors.muted, fontWeight: 600 }}>
+                Your On-demand scene partner
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={replay}
+          className="mt-10 cs-chip rounded-2xl px-6 py-4 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.985]"
+          style={{
+            fontSize: 11,
+            letterSpacing: '0.22em',
+            textTransform: 'uppercase',
+            color: 'rgba(243,247,252,0.82)',
+            fontWeight: 700,
+          }}
+        >
+          Rehearse again
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Star({ size = 100, color }) {
+  const id = color.replace('#', '');
+
+  return (
+    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" aria-hidden="true" style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={`fill-${id}`} x1="10" y1="10" x2="88" y2="92" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="72%" stopColor={color} />
+          <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.28" />
+        </linearGradient>
+        <radialGradient id={`shine-${id}`} cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(35 24) rotate(45) scale(34 22)">
+          <stop stopColor="rgba(255,255,255,0.2)" />
+          <stop offset="1" stopColor="rgba(255,255,255,0)" />
+        </radialGradient>
+        <filter id={`shadow-${id}`} x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="4.5" result="blur" />
+          <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0.26 0" />
+        </filter>
+      </defs>
+
+      <path
+        d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z"
+        fill={`url(#fill-${id})`}
+        filter={`url(#shadow-${id})`}
+      />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" fill={`url(#fill-${id})`} />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" fill={`url(#shine-${id})`} opacity="0.92" />
+      <path d="M50 3 L59 41 L97 50 L59 59 L50 97 L41 59 L3 50 L41 41 Z" stroke="rgba(255,255,255,0.13)" strokeWidth="1" />
+    </svg>
+  );
+}  and import React, { useState, useEffect, useRef } from 'react';
+
+const CoStarLogo = () => {
+  const [stage, setStage] = useState(0); 
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const containerRef = useRef(null);
+
+  const colors = {
+    primaryBlue: "#5BA3FF",
+    bronzeAccent: "#C4956D",
+    deepSlate: "#0A0D12",
+    glassWhite: "#F0F6FC",
+    mutedZinc: "#3F3F46",
+  };
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setStage(1), 800), 
+      setTimeout(() => setStage(2), 1600),
+      setTimeout(() => setStage(3), 2600) 
+    ];
+    
+    const handleMouseMove = (e) => {
+      const { clientX, clientY } = e;
+      const x = (clientX / window.innerWidth - 0.5) * 20;
+      const y = (clientY / window.innerHeight - 0.5) * 20;
+      setMousePos({ x, y });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      timers.forEach(clearTimeout);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
+
+  const StarMark = ({ size, color, glowColor, isMain, currentStage }) => {
+    const scale = isMain ? (currentStage >= 1 ? 1 : 0) : (currentStage >= 2 ? 1 : 0);
+    return (
+      <div 
+        className="relative flex items-center justify-center transition-all duration-[1000ms] cubic-bezier(0.34, 1.56, 0.64, 1)"
+        style={{ transform: `scale(${scale})` }}
+      >
+        <div className="absolute inset-0 blur-[30px] opacity-30 mix-blend-screen animate-pulse"
+             style={{ backgroundColor: glowColor, transform: `scale(${isMain ? 1.5 : 1.2})` }} />
+        <svg viewBox="0 0 100 100" style={{ width: size, height: size }} className="relative z-10">
+          <defs>
+            <linearGradient id={`grad-${color}`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{ stopColor: color, stopOpacity: 1 }} />
+              <stop offset="100%" style={{ stopColor: '#FFF', stopOpacity: 0.4 }} />
+            </linearGradient>
+          </defs>
+          <path fill={`url(#grad-${color})`} d="M50 0 L58 42 L100 50 L58 58 L50 100 L42 58 L0 50 L42 42 Z" />
+        </svg>
+      </div>
+    );
+  };
+
+  return (
+    <div ref={containerRef} className="relative flex items-center justify-center min-h-screen overflow-hidden select-none"
+         style={{ backgroundColor: colors.deepSlate, color: colors.glassWhite, fontFamily: "'Inter', sans-serif" }}>
+      
+      <style>
+        {`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;600&family=JetBrains+Mono&display=swap');
+          .text-shimmer {
+            background: linear-gradient(110deg, #F0F6FC 30%, #5BA3FF 50%, #F0F6FC 70%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: shine 8s linear infinite;
+          }
+          @keyframes shine { to { background-position: 200% center; } }
+          .glass-panel { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        `}
+      </style>
+
+      {/* Background Ambience */}
+      <div className="absolute inset-0 opacity-20" 
+           style={{ background: `radial-gradient(circle at ${50 + mousePos.x}% ${50 + mousePos.y}%, #1a2333 0%, transparent 70%)` }} />
+
+      {/* Main Lockup Container */}
+      <div className="relative z-10 flex items-center space-x-12"
+           style={{ transform: `translate3d(${mousePos.x}px, ${mousePos.y}px, 0)` }}>
+        
+        {/* WORDMARK (LEFT) */}
+        <div className={`transition-all duration-[1200ms] ${stage === 3 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-12'}`}>
+          <h1 className="text-6xl font-light tracking-tighter flex flex-col items-end">
+            <span className="opacity-80">Co-star</span>
+            <span className="font-semibold text-shimmer">Studio</span>
+          </h1>
+          <p className="text-[10px] uppercase tracking-[0.5em] text-zinc-500 mt-4 text-right">
+            Your Scene Partner
+          </p>
+        </div>
+
+        {/* LOGO MARK (RIGHT) */}
+        <div className="relative flex items-center justify-center w-48 h-48">
+          <div className={`transition-all duration-[1000ms] ${stage === 0 ? 'scale-0 rotate-[-90deg]' : 'scale-100 rotate-0'}`}>
+            <StarMark size={140} color={colors.primaryBlue} glowColor={colors.primaryBlue} isMain={true} currentStage={stage} />
+          </div>
+          
+          <div className={`absolute transition-all duration-[800ms] cubic-bezier(0.175, 0.885, 0.32, 1.275) ${
+            stage < 2 ? 'scale-0 opacity-0 translate-x-0' : 'scale-100 opacity-100 translate-x-16 -translate-y-12 rotate-[15deg]'
+          }`}>
+            <StarMark size={50} color={colors.bronzeAccent} glowColor={colors.bronzeAccent} isMain={false} currentStage={stage} />
+          </div>
+        </div>
+      </div>
+
+      {/* Replay Button */}
+      <div className={`fixed bottom-12 transition-all duration-1000 ${stage === 3 ? 'opacity-100' : 'opacity-0'}`}>
+        <button 
+          onClick={() => { setStage(0); setTimeout(() => setStage(1), 100); }}
+          className="px-8 py-3 glass-panel rounded-full text-[10px] font-bold tracking-[0.3em] uppercase text-white/50 hover:text-white transition-all hover:scale-105"
+        >
+          Rehearse Scene
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default CoStarLogo; idk these were just quick random mockups not following guidelines etc but just maybe something to somehow utilize in concept idfk
