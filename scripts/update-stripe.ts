@@ -2,13 +2,14 @@ import { getUncachableStripeClient } from '../server/stripeClient';
 
 async function setupStripeCatalog() {
   const stripe = await getUncachableStripeClient();
+  const appUrl = process.env.APP_URL || 'http://localhost:5000';
 
   // 1. Update product with tax code, statement descriptor, and URL
   const product = await stripe.products.update('prod_U1m4p9OgFSRYhG', {
     tax_code: 'txcd_10103001', // SaaS - software as a service
     statement_descriptor: 'CO-STAR PRO',
     unit_label: 'subscription',
-    url: 'https://co-star.replit.app',
+    url: appUrl,
     metadata: {
       tier: 'pro',
       features: 'unlimited_scripts,voice_engine,performance_tracking,script_library,priority_support,hands_free,multiplayer,ocr',
@@ -34,14 +35,14 @@ async function setupStripeCatalog() {
   const monthlyLink = await stripe.paymentLinks.create({
     line_items: [{ price: 'price_1T3iWeEEKSsq7SkUunVhnXen', quantity: 1 }],
     metadata: { plan: 'pro_monthly' },
-    after_completion: { type: 'redirect', redirect: { url: 'https://co-star.replit.app/?checkout=success' } },
+    after_completion: { type: 'redirect', redirect: { url: `${appUrl}/?checkout=success` } },
   });
   console.log('✓ Monthly payment link:', monthlyLink.url);
 
   const annualLink = await stripe.paymentLinks.create({
     line_items: [{ price: 'price_1T3iWfEEKSsq7SkUoFPXv4Q9', quantity: 1 }],
     metadata: { plan: 'pro_annual' },
-    after_completion: { type: 'redirect', redirect: { url: 'https://co-star.replit.app/?checkout=success' } },
+    after_completion: { type: 'redirect', redirect: { url: `${appUrl}/?checkout=success` } },
   });
   console.log('✓ Annual payment link:', annualLink.url);
 
@@ -50,8 +51,8 @@ async function setupStripeCatalog() {
     const portalConfig = await stripe.billingPortal.configurations.create({
       business_profile: {
         headline: 'co-star - Manage your subscription',
-        privacy_policy_url: 'https://co-star.replit.app/?view=privacy',
-        terms_of_service_url: 'https://co-star.replit.app/?view=terms',
+        privacy_policy_url: `${appUrl}/?view=privacy`,
+        terms_of_service_url: `${appUrl}/?view=terms`,
       },
       features: {
         subscription_cancel: {

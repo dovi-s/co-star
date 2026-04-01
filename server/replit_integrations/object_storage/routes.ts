@@ -1,5 +1,7 @@
 import type { Express } from "express";
+import express from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+import { uploadStorageObject, verifySignedUploadToken } from "../../supabaseStorage";
 
 /**
  * Register object storage routes for file uploads.
@@ -15,6 +17,27 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
  */
 export function registerObjectStorageRoutes(app: Express): void {
   const objectStorageService = new ObjectStorageService();
+
+  app.put(
+    "/api/uploads/direct",
+    express.raw({ type: () => true, limit: "100mb" }),
+    async (req, res) => {
+      try {
+        const token = typeof req.query.token === "string" ? req.query.token : "";
+        const { objectPath } = verifySignedUploadToken(token);
+        const contentType = req.headers["content-type"] || "application/octet-stream";
+        await uploadStorageObject(
+          objectPath,
+          req.body as Buffer,
+          Array.isArray(contentType) ? contentType[0] : contentType,
+        );
+        res.status(200).end();
+      } catch (error) {
+        console.error("Error uploading object:", error);
+        res.status(400).json({ error: "Failed to upload object" });
+      }
+    },
+  );
 
   /**
    * Request a presigned URL for file upload.
@@ -83,4 +106,3 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 }
-

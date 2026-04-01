@@ -5,25 +5,12 @@ import { db } from "../../db";
 import { savedScripts, performanceRuns, users, featureRequests, featureVotes, recentScripts, recordings, hasProAccess, computeEffectiveTier } from "@shared/models/auth";
 import { eq, desc, and, sql, inArray, ne, sum } from "drizzle-orm";
 import crypto from "crypto";
-const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
-
-async function signObjectURL(bucketName: string, objectName: string, method: "GET" | "PUT" | "DELETE" | "HEAD", ttlSec: number): Promise<string> {
-  const response = await fetch(`${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ bucket_name: bucketName, object_name: objectName, method, expires_at: new Date(Date.now() + ttlSec * 1000).toISOString() }),
-  });
-  if (!response.ok) throw new Error(`Failed to sign object URL: ${response.status}`);
-  const { signed_url } = await response.json();
-  return signed_url;
-}
-
-function parseStoragePath(path: string): { bucketName: string; objectName: string } {
-  const normalized = path.startsWith("/") ? path : `/${path}`;
-  const parts = normalized.split("/").filter(Boolean);
-  if (parts.length < 2) throw new Error("Invalid storage path");
-  return { bucketName: parts[0], objectName: parts.slice(1).join("/") };
-}
+import {
+  buildPrivateStorageObjectPath,
+  deleteStorageObject,
+  getStorageObject,
+  uploadStorageObject,
+} from "../../supabaseStorage";
 
 const requirePro: RequestHandler = async (req: any, res, next) => {
   try {
@@ -296,20 +283,9 @@ export function registerProRoutes(app: Express): void {
         return res.status(413).json({ message: "Storage limit exceeded", storageUsed: currentUsage, storageLimit: RECORDING_STORAGE_LIMIT });
       }
 
-      const privateDir = process.env.PRIVATE_OBJECT_DIR || "";
-      if (!privateDir) return res.status(500).json({ message: "Storage not configured" });
-
       const ext = file.mimetype.includes("mp4") ? "mp4" : "webm";
-      const storageKey = `${privateDir}/recordings/${userId}/${crypto.randomUUID()}.${ext}`;
-      const { bucketName, objectName } = parseStoragePath(storageKey);
-
-      const uploadUrl = await signObjectURL(bucketName, objectName, "PUT", 900);
-      const uploadRes = await fetch(uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": file.mimetype },
-        body: file.buffer,
-      });
-      if (!uploadRes.ok) throw new Error(`Upload failed: ${uploadRes.status}`);
+      const storageKey = buildPrivateStorageObjectPath(`recordings/${userId}/${crypto.randomUUID()}.${ext}`);
+      await uploadStorageObject(storageKey, file.buffer, file.mimetype);
 
       const { scriptName, durationSeconds, accuracy, performanceRunId, recentScriptId, savedScriptId } = req.body;
 
@@ -346,9 +322,10 @@ export function registerProRoutes(app: Express): void {
 
       if (!recording) return res.status(404).json({ message: "Recording not found" });
 
-      const { bucketName, objectName } = parseStoragePath(recording.storageKey);
-      const downloadUrl = await signObjectURL(bucketName, objectName, "GET", 3600);
-      res.redirect(downloadUrl);
+      const { buffer, contentType } = await getStorageObject(recording.storageKey);
+      res.setHeader("Content-Type", contentType || recording.mimeType || "application/octet-stream");
+      res.setHeader("Cache-Control", "private, max-age=3600");
+      res.send(buffer);
     } catch (error) {
       console.error("Error streaming recording:", error);
       res.status(500).json({ message: "Failed to stream recording" });
@@ -366,9 +343,7 @@ export function registerProRoutes(app: Express): void {
       if (!recording) return res.status(404).json({ message: "Recording not found" });
 
       try {
-        const { bucketName, objectName } = parseStoragePath(recording.storageKey);
-        const deleteUrl = await signObjectURL(bucketName, objectName, "DELETE", 300);
-        await fetch(deleteUrl, { method: "DELETE" });
+        await deleteStorageObject(recording.storageKey);
       } catch (e) {
         console.warn("Failed to delete storage object:", e);
       }

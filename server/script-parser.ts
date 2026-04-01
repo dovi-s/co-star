@@ -2457,7 +2457,7 @@ function consolidateRoles(inputRoles: Role[], scenes: Scene[], canonicalNames: s
     }
   }
   if (ocrSpaceFixes.size > 0) {
-    for (const [badName, goodName] of ocrSpaceFixes) {
+    ocrSpaceFixes.forEach((goodName, badName) => {
       const badRole = roles.find(r => r.name === badName);
       const goodRole = roles.find(r => r.name === goodName);
       if (badRole && goodRole) {
@@ -2471,7 +2471,7 @@ function consolidateRoles(inputRoles: Role[], scenes: Scene[], canonicalNames: s
           }
         }
       }
-    }
+    });
     roles = roles.filter(r => !ocrSpaceFixes.has(r.name));
   }
   

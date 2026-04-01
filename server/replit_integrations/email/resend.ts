@@ -1,33 +1,15 @@
 import { Resend } from 'resend';
 
-let connectionSettings: any;
-
-async function getCredentials() {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY
-    ? 'repl ' + process.env.REPL_IDENTITY
-    : process.env.WEB_REPL_RENEWAL
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL
-    : null;
-
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+function getCredentials() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error("RESEND_API_KEY is not configured");
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken,
-      },
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || !connectionSettings.settings.api_key) {
-    throw new Error('Resend not connected');
-  }
-  return { apiKey: connectionSettings.settings.api_key, fromEmail: connectionSettings.settings.from_email };
+  return {
+    apiKey,
+    fromEmail: process.env.RESEND_FROM_EMAIL || "Co-star Studio <noreply@resend.dev>",
+  };
 }
 
 export async function getUncachableResendClient() {
@@ -41,16 +23,12 @@ export async function getUncachableResendClient() {
 export async function sendPasswordResetEmail(toEmail: string, resetToken: string) {
   const { client, fromEmail } = await getUncachableResendClient();
 
-  const baseUrl = process.env.REPLIT_DEV_DOMAIN
-    ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-    : process.env.REPL_SLUG
-    ? `https://${process.env.REPL_SLUG}.replit.app`
-    : 'http://localhost:5000';
+  const baseUrl = process.env.APP_URL || "http://localhost:5000";
 
   const resetUrl = `${baseUrl}?reset-token=${resetToken}`;
 
   await client.emails.send({
-    from: fromEmail || 'Co-star Studio <noreply@resend.dev>',
+    from: fromEmail,
     to: toEmail,
     subject: 'Reset your password',
     html: `

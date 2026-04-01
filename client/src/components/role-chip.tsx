@@ -117,7 +117,7 @@ export function RoleChip({ role, isUserRole, showPresetPicker, onPresetChange }:
                   ttsEngine.stop();
                   const ok = ttsEngine.speak(
                     presetSamples[preset],
-                    { rate: 1, pitch: 0, volume: 1 },
+                    { rate: 1, pitch: 0, volume: 1, breakMs: 0 },
                     () => setPreviewingPreset(null),
                     { preset, emotion: "neutral" }
                   );

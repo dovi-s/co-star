@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, registerAuthRoutes, registerProRoutes } from "./replit_integrations/auth";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import OpenAI from "openai";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
@@ -17,6 +16,7 @@ import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClie
 import { db } from "./db";
 import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings, hasProAccess, computeEffectiveTier, ALL_TIERS, changelogEntries, invites, salesInquiries, recordings, featureVotes, ACTOR_TYPES } from "@shared/models/auth";
 import { eq, sql, count, desc, and, gte, lte, asc } from "drizzle-orm";
+import { createOpenAIClient, isOpenAIConfigured } from "./openaiClient";
 
 function detectTitleFromScript(lines: string[]): string | null {
   const head = lines.slice(0, 30);
@@ -908,10 +908,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Prompt is required" });
       }
 
-      const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-      });
+      const openai = createOpenAIClient();
 
       const systemPrompt = `You are a professional screenwriter creating scripts for actor rehearsal. Match the user's request EXACTLY. You must fulfill any creative request - monologues, dialogues, scenes, any format the user asks for.
 
@@ -982,10 +979,7 @@ Output ONLY the script lines. No titles, headers, scene labels, or explanations.
 
   app.post("/api/generate-random-script", async (_req: Request, res: Response) => {
     try {
-      const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-      });
+      const openai = createOpenAIClient();
 
       const scenarios = [
         // INTENSE DRAMA
@@ -1127,14 +1121,11 @@ Output the scene with dialogue AND action lines interspersed. No scene titles or
         return res.status(400).json({ error: "Script too long for AI cleanup. Maximum 150,000 characters." });
       }
 
-      if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+      if (!isOpenAIConfigured()) {
         return res.status(503).json({ error: "AI service not configured" });
       }
 
-      const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-      });
+      const openai = createOpenAIClient();
 
       const systemPrompt = `You are a script formatter. Extract dialogue from the given text and output it in a clean, standard format.
 
@@ -1288,10 +1279,7 @@ MARY: You're kidding me.`;
       
       console.log(`[OCR] Converted ${pageFiles.length} pages to images, sending to AI for text extraction...`);
       
-      const openai = new OpenAI({
-        apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-        baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-      });
+      const openai = createOpenAIClient();
       
       const BATCH_SIZE = 4;
       const allPageTexts: string[] = [];
@@ -1649,10 +1637,7 @@ MARY: You're kidding me.`;
       // Fall back to AI naming only if no title was found
       if (!suggestedName) {
         try {
-          const nameAI = new OpenAI({
-            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-          });
+          const nameAI = createOpenAIClient();
           const snippet = finalScript.scenes
             .flatMap(s => s.lines.slice(0, 8))
             .slice(0, 12)
@@ -1792,10 +1777,7 @@ MARY: You're kidding me.`;
       } else if (mimeType.startsWith("image/")) {
         console.log(`[Image->Session] Processing image: ${file.originalname}, mime: ${mimeType}, size: ${file.buffer.length} bytes`);
         try {
-          const openai = new OpenAI({
-            apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-            baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-          });
+          const openai = createOpenAIClient();
           const base64 = file.buffer.toString("base64");
           const imgMime = mimeType === "image/jpeg" ? "image/jpeg" : mimeType === "image/png" ? "image/png" : mimeType === "image/webp" ? "image/webp" : "image/jpeg";
           console.log(`[Image->Session] Sending to vision API, base64 length: ${base64.length}, imgMime: ${imgMime}`);
@@ -2318,7 +2300,7 @@ MARY: You're kidding me.`;
       const stripe = await getUncachableStripeClient();
 
       let subId = user.stripeSubscriptionId;
-      let subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
+      let subscription: any = subId ? await stripe.subscriptions.retrieve(subId) : null;
 
       if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
         const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
@@ -2397,7 +2379,7 @@ MARY: You're kidding me.`;
       const stripe = await getUncachableStripeClient();
 
       let subId = user.stripeSubscriptionId;
-      let subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
+      let subscription: any = subId ? await stripe.subscriptions.retrieve(subId) : null;
 
       if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
         const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
@@ -2450,7 +2432,7 @@ MARY: You're kidding me.`;
       const stripe = await getUncachableStripeClient();
 
       let subId = user.stripeSubscriptionId;
-      let subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
+      let subscription: any = subId ? await stripe.subscriptions.retrieve(subId) : null;
 
       if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
         const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
@@ -2510,7 +2492,7 @@ MARY: You're kidding me.`;
       const stripe = await getUncachableStripeClient();
 
       let subId = user.stripeSubscriptionId;
-      let subscription = subId ? await stripe.subscriptions.retrieve(subId) : null;
+      let subscription: any = subId ? await stripe.subscriptions.retrieve(subId) : null;
 
       if (!subscription || !['active', 'trialing'].includes(subscription.status)) {
         const subs = await stripe.subscriptions.list({ customer: user.stripeCustomerId, limit: 5 });
@@ -2597,76 +2579,6 @@ MARY: You're kidding me.`;
         return res.json({ subscription: null, tier, isPro: hasProAccess(tier) });
       }
 
-      // Check for active subscription in stripe schema
-      const subResult = await db.execute(
-        sql`
-          SELECT s.id, s.status, s.current_period_end, s.cancel_at_period_end, s.trial_end, s.trial_start,
-                 s.pause_collection,
-                 (SELECT si.price FROM stripe.subscription_items si WHERE si.subscription = s.id LIMIT 1) as current_price_id
-          FROM stripe.subscriptions s
-          WHERE s.customer = ${user.stripeCustomerId}
-          AND s.status IN ('active', 'trialing')
-          ORDER BY s.created DESC
-          LIMIT 1
-        `
-      );
-
-      const sub = subResult.rows[0] as any;
-      if (sub) {
-        if (user.stripeSubscriptionId !== sub.id || user.subscriptionTier !== 'pro') {
-          await db.update(users).set({
-            stripeSubscriptionId: sub.id,
-            subscriptionTier: 'pro',
-            updatedAt: new Date(),
-          }).where(eq(users.id, userId));
-        }
-
-        const toISOFromUnix = (val: any): string | null => {
-          if (!val) return null;
-          const num = typeof val === 'number' ? val : Number(val);
-          if (!isNaN(num)) {
-            return new Date(num < 1e12 ? num * 1000 : num).toISOString();
-          }
-          return String(val);
-        };
-
-        const isTrialing = sub.status === 'trialing';
-        let trialEnd: string | null = null;
-        let trialDaysLeft: number | null = null;
-        if (isTrialing && sub.trial_end) {
-          trialEnd = toISOFromUnix(sub.trial_end);
-          const endDate = trialEnd ? new Date(trialEnd) : null;
-          if (endDate) {
-            const msLeft = endDate.getTime() - Date.now();
-            trialDaysLeft = Math.min(7, Math.max(0, Math.floor(msLeft / (1000 * 60 * 60 * 24))));
-          }
-        }
-
-        const pauseCollection = sub.pause_collection
-          ? (typeof sub.pause_collection === 'string' ? JSON.parse(sub.pause_collection) : sub.pause_collection)
-          : null;
-        let pausedUntil: string | null = null;
-        if (pauseCollection?.resumes_at) {
-          pausedUntil = new Date(pauseCollection.resumes_at * 1000).toISOString();
-        }
-
-        return res.json({
-          subscription: {
-            id: sub.id,
-            status: sub.status,
-            currentPeriodEnd: toISOFromUnix(sub.current_period_end),
-            cancelAtPeriodEnd: sub.cancel_at_period_end,
-            isTrialing,
-            trialEnd,
-            trialDaysLeft,
-            currentPriceId: sub.current_price_id || null,
-            isPaused: !!pauseCollection,
-            pausedUntil,
-          },
-          tier: "pro",
-        });
-      }
-
       if (user.subscriptionTier === "comp" || user.subscriptionTier === "internal") {
         return res.json({ subscription: null, tier: user.subscriptionTier, isPro: true });
       }
@@ -2721,7 +2633,6 @@ MARY: You're kidding me.`;
           const stripe = await getUncachableStripeClient();
           const liveSub = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
           if (['active', 'trialing'].includes(liveSub.status)) {
-            console.log(`[Stripe] Sync table miss but live sub is active for user ${userId}, preserving pro tier`);
             return res.json(buildLiveSubResponse(liveSub));
           }
         } catch (e: any) {
@@ -2974,7 +2885,7 @@ MARY: You're kidding me.`;
       const distinctDaysResult = await db.execute(
         sql`SELECT DISTINCT DATE(created_at AT TIME ZONE 'UTC') as d FROM performance_runs WHERE user_id = ${userId} ORDER BY d DESC`
       );
-      const distinctDays = (distinctDaysResult.rows as { d: string }[]).map(r => {
+      const distinctDays = (distinctDaysResult.rows as Array<{ d: unknown }>).map(r => {
         const val = r.d;
         if (val instanceof Date) return val.toISOString().split("T")[0];
         return String(val).split("T")[0];
@@ -3267,16 +3178,12 @@ MARY: You're kidding me.`;
       // --- Stripe Revenue Metrics ---
       let revenue = { mrr: 0, totalSubscriptions: 0, activeSubscriptions: 0 };
       try {
-        const stripeSubs = await db.execute(
-          sql`SELECT status, COUNT(*) as count FROM stripe.subscriptions GROUP BY status`
-        );
-        const activeSubs = await db.execute(
-          sql`SELECT COUNT(*) as count FROM stripe.subscriptions WHERE status IN ('active', 'trialing')`
-        );
-        const activeCount = Number((activeSubs.rows[0] as any)?.count || 0);
+        const stripe = await getUncachableStripeClient();
+        const stripeSubs = await stripe.subscriptions.list({ limit: 100, status: "all" });
+        const activeCount = stripeSubs.data.filter((sub) => ["active", "trialing"].includes(sub.status)).length;
         revenue = {
           mrr: activeCount * 9,
-          totalSubscriptions: stripeSubs.rows.reduce((sum: number, r: any) => sum + Number(r.count), 0),
+          totalSubscriptions: stripeSubs.data.length,
           activeSubscriptions: activeCount,
         };
       } catch (e) {}
@@ -3808,17 +3715,30 @@ MARY: You're kidding me.`;
 
       let stripeData: any = { subscriptions: [], payments: [] };
       try {
-        const subs = await db.execute(
-          sql`SELECT id, customer_id, status, current_period_start, current_period_end, cancel_at_period_end, created FROM stripe.subscriptions ORDER BY created DESC LIMIT 50`
-        );
-        stripeData.subscriptions = subs.rows;
+        const stripe = await getUncachableStripeClient();
+        const subs = await stripe.subscriptions.list({ limit: 50, status: "all" });
+        stripeData.subscriptions = subs.data.map((sub: any) => ({
+          id: sub.id,
+          customer_id: typeof sub.customer === "string" ? sub.customer : sub.customer?.id,
+          status: sub.status,
+          current_period_start: sub.current_period_start,
+          current_period_end: sub.current_period_end,
+          cancel_at_period_end: sub.cancel_at_period_end,
+          created: sub.created,
+        }));
       } catch (e) {}
 
       try {
-        const payments = await db.execute(
-          sql`SELECT id, customer_id, amount, currency, status, created FROM stripe.charges ORDER BY created DESC LIMIT 50`
-        );
-        stripeData.payments = payments.rows;
+        const stripe = await getUncachableStripeClient();
+        const payments = await stripe.charges.list({ limit: 50 });
+        stripeData.payments = payments.data.map((charge) => ({
+          id: charge.id,
+          customer_id: typeof charge.customer === "string" ? charge.customer : charge.customer?.id,
+          amount: charge.amount,
+          currency: charge.currency,
+          status: charge.status,
+          created: charge.created,
+        }));
       } catch (e) {}
 
       res.json({ subscribers: subscribers.rows, ...stripeData });
@@ -4354,12 +4274,13 @@ MARY: You're kidding me.`;
         and(eq(invites.senderId, inviter.id), eq(invites.recipientEmail, currentUser?.email || ""))
       ).limit(1);
       if (existing.length > 0) {
-        await db.update(invites).set({ status: "accepted", recipientId: userId }).where(eq(invites.id, existing[0].id));
+        await db.update(invites).set({ status: "accepted", acceptedBy: userId }).where(eq(invites.id, existing[0].id));
       } else {
         await db.insert(invites).values({
           senderId: inviter.id,
+          senderName: inviter.stageName || inviter.firstName || inviter.email || "A fellow actor",
           recipientEmail: currentUser?.email || "",
-          recipientId: userId,
+          acceptedBy: userId,
           status: "accepted",
         });
       }

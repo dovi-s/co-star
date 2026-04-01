@@ -2,8 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { runMigrations } from "stripe-replit-sync";
-import { getStripeSync } from "./stripeClient";
 import { WebhookHandlers } from "./webhookHandlers";
 
 const app = express();
@@ -85,34 +83,6 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // Initialize Stripe schema and sync data
-  try {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (databaseUrl) {
-      console.log('[Stripe] Initializing schema...');
-      await runMigrations({ databaseUrl } as any);
-      console.log('[Stripe] Schema ready');
-
-      const stripeSync = await getStripeSync();
-
-      const webhookBaseUrl = `https://${process.env.REPLIT_DOMAINS?.split(',')[0]}`;
-      try {
-        const webhookResult = await stripeSync.findOrCreateManagedWebhook(
-          `${webhookBaseUrl}/api/stripe/webhook`
-        );
-        console.log('[Stripe] Webhook configured:', webhookResult?.webhook?.url || 'ready');
-      } catch (whErr: any) {
-        console.log('[Stripe] Webhook setup skipped:', whErr.message || 'not available yet');
-      }
-
-      stripeSync.syncBackfill()
-        .then(() => console.log('[Stripe] Data synced'))
-        .catch((err: any) => console.error('[Stripe] Sync error:', err));
-    }
-  } catch (error) {
-    console.error('[Stripe] Init error (non-fatal):', error);
-  }
-
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

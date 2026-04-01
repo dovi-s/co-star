@@ -1,5 +1,5 @@
-import OpenAI from "openai";
 import type { ParsedScript, ScriptLine } from "@shared/schema";
+import { createOpenAIClient, isOpenAIConfigured } from "./openaiClient";
 
 interface CleanupResult {
   cleanedScript: ParsedScript;
@@ -7,14 +7,10 @@ interface CleanupResult {
   removedLines: string[];
 }
 
-function isAIConfigured(): boolean {
-  return !!(process.env.AI_INTEGRATIONS_OPENAI_API_KEY && process.env.AI_INTEGRATIONS_OPENAI_BASE_URL);
-}
-
 export async function aiCleanupScript(script: ParsedScript): Promise<CleanupResult> {
   const noOpResult = { cleanedScript: script, removedCount: 0, removedLines: [] };
   
-  if (!isAIConfigured()) {
+  if (!isOpenAIConfigured()) {
     console.log("[AI Cleanup] AI not configured, skipping cleanup");
     return noOpResult;
   }
@@ -79,10 +75,7 @@ Return a JSON object with this exact structure:
 Only include indices of lines that are clearly NOT spoken dialogue. When in doubt, keep the line.`;
 
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-    });
+    const openai = createOpenAIClient();
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -190,7 +183,7 @@ export async function smartParseAndClean(rawText: string, parseScript: (text: st
 
 // AI-powered role filtering - identifies non-character names in the roles list
 export async function aiFilterRoles(script: ParsedScript): Promise<ParsedScript> {
-  if (!isAIConfigured()) {
+  if (!isOpenAIConfigured()) {
     console.log("[AI Role Filter] AI not configured, skipping");
     return script;
   }
@@ -239,10 +232,7 @@ Return a JSON object:
 Remove only clear non-characters (camera directions, locations, objects, time markers). When in doubt, KEEP the role - occupation words like DETECTIVE, SUSPECT, OFFICER, NURSE, DOCTOR are almost always real speaking characters.`;
 
   try {
-    const openai = new OpenAI({
-      apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-      baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-    });
+    const openai = createOpenAIClient();
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -328,7 +318,7 @@ export async function aiVerifyParsedScript(
 ): Promise<VerificationResult> {
   const noOpResult = { script, fixCount: 0, fixes: [] };
 
-  if (!isAIConfigured()) {
+  if (!isOpenAIConfigured()) {
     return noOpResult;
   }
 
@@ -347,10 +337,7 @@ export async function aiVerifyParsedScript(
     chunks.push(allLines.slice(i, i + CHUNK_SIZE));
   }
 
-  const openai = new OpenAI({
-    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  });
+  const openai = createOpenAIClient();
 
   const allFixes: VerificationFix[] = [];
   const fixDescriptions: string[] = [];

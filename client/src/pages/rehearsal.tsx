@@ -1385,7 +1385,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       saveResumePosition(scriptFingerprintRef.current, {
         lineIndex: session.currentLineIndex ?? 0,
         sceneIndex: session.currentSceneIndex ?? 0,
-        roleId: session.userRoleId,
+        roleId: session.userRoleId ?? undefined,
         timestamp: Date.now(),
       });
     }
