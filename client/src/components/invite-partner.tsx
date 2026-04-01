@@ -133,7 +133,9 @@ export function InvitePartnerCard({ scriptName, roleName, className }: { scriptN
 
 export function InvitePartnerInline({ scriptName, className }: { scriptName?: string; className?: string }) {
   const { isAuthenticated } = useAuth();
-  const { data: invite } = useQuery<InviteData>({
+  const { toast } = useToast();
+  const [copied, setCopied] = useState(false);
+  const { data: invite, isLoading } = useQuery<InviteData>({
     queryKey: ["/api/invite-code"],
     enabled: isAuthenticated,
   });
@@ -150,25 +152,36 @@ export function InvitePartnerInline({ scriptName, className }: { scriptName?: st
             : "Check out Co-star Studio!",
           url: invite.inviteUrl,
         });
+        return;
       } catch {}
-    } else {
+    }
+    try {
       await navigator.clipboard.writeText(invite.inviteUrl);
+      setCopied(true);
+      toast({ title: "Invite link copied!" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Couldn't share invite", variant: "destructive" });
     }
   };
 
-  if (!isAuthenticated) return null;
+  if (!isAuthenticated || (!invite && !isLoading)) return null;
 
   return (
     <button
       onClick={handleShare}
+      disabled={!invite?.inviteUrl}
       className={cn(
-        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 transition-colors",
+        "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
+        invite?.inviteUrl
+          ? "text-primary bg-primary/5 hover:bg-primary/10"
+          : "text-muted-foreground bg-muted/30 cursor-not-allowed",
         className
       )}
       data-testid="invite-partner-inline"
     >
-      <Gift className="w-3 h-3" />
-      Invite a scene partner
+      {copied ? <Check className="w-3 h-3" /> : <Gift className="w-3 h-3" />}
+      {copied ? "Link copied!" : "Invite a scene partner"}
     </button>
   );
 }
