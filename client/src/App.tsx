@@ -18,14 +18,12 @@ import { AuthPage } from "@/pages/auth";
 import { LibraryPage } from "@/pages/library";
 import { HistoryPage } from "@/pages/history";
 import { MyRehearsalsPage } from "@/pages/my-rehearsals";
-import { FeatureBoardPage } from "@/pages/feature-board";
 import { OnboardingPage } from "@/pages/onboarding";
 import { ActorProfilePage } from "@/pages/actor-profile";
 import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
 import { WhoIsItForPage } from "@/pages/who-is-it-for";
-import { WhatsNewPage } from "@/pages/whats-new";
 import { Logo, CoStarSplashAnimation } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { usePageTracking } from "@/hooks/use-tracking";
@@ -357,7 +355,7 @@ function AppContent() {
         <ComparePage onBack={handleBackToHome} />
       )}
       {view === "roadmap" && (
-        <RoadmapPage onBack={handleBackToHome} onNavigate={handleNavigate} />
+        <RoadmapPage onBack={handleBackToHome} />
       )}
       {view === "signin" && (
         <AuthPage 
@@ -380,7 +378,7 @@ function AppContent() {
         <MyRehearsalsPage onBack={handleBackToHome} onLoadScript={handleLoadScript} onNavigate={handleNavigate} />
       )}
       {view === "feature-board" && (
-        <FeatureBoardPage onBack={handleBackToHome} />
+        <RoadmapPage onBack={handleBackToHome} initialTab="ideas" />
       )}
       {view === "onboarding" && (
         <OnboardingPage onComplete={handleBackToHome} />
@@ -398,7 +396,7 @@ function AppContent() {
         <BrandPage onBack={handleBackToHome} />
       )}
       {view === "whats-new" && (
-        <WhatsNewPage onBack={handleBackToHome} />
+        <RoadmapPage onBack={handleBackToHome} initialTab="whats-new" />
       )}
       </div>
       {session && session.userRoleId && view !== "rehearsal" && (

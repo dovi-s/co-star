@@ -23,7 +23,6 @@ import {
   Crown,
   Camera,
   BarChart3,
-  Lightbulb,
   Palette,
   Users,
   Handshake,
@@ -389,27 +388,11 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           />
           <MenuItem
             icon={<Map className="h-4 w-4" />}
-            label="Roadmap"
-            description="What we are building next"
+            label="Product"
+            description="Roadmap, updates, and feature ideas"
             onClick={() => navigate("roadmap")}
-            active={activePage === "roadmap"}
+            active={activePage === "roadmap" || activePage === "feature-board" || activePage === "whats-new"}
             testId="menu-item-roadmap"
-          />
-          <MenuItem
-            icon={<Lightbulb className="h-4 w-4" />}
-            label="Feature Board"
-            description="Vote on what we build next"
-            onClick={() => navigate("feature-board")}
-            active={activePage === "feature-board"}
-            testId="menu-item-feature-board"
-          />
-          <MenuItem
-            icon={<Sparkles className="h-4 w-4" />}
-            label="What's New"
-            description="Latest updates and improvements"
-            onClick={() => navigate("whats-new")}
-            active={activePage === "whats-new"}
-            testId="menu-item-whats-new"
           />
 
           <Separator className="my-2 mx-3" />
