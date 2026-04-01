@@ -268,15 +268,30 @@ class TTSEngine {
       this.persistentAudio = new Audio();
       this.persistentAudio.preload = "auto";
 
+      let hiddenTimeout: ReturnType<typeof setTimeout> | null = null;
       document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
-          this.stop();
-          if (this.audioContext && this.audioContext.state !== 'closed') {
-            this.audioContext.close().catch(() => {});
-            this.audioContext = null;
-            this.ttsDestination = null;
-            this.currentMediaSource = null;
-            this.persistentMediaSource = null;
+          if (hiddenTimeout) {
+            clearTimeout(hiddenTimeout);
+          }
+          hiddenTimeout = setTimeout(() => {
+            console.log("[TTS] Tab hidden for 30s, cleaning up");
+            this.stop();
+            if (this.audioContext && this.audioContext.state !== 'closed') {
+              this.audioContext.close().catch(() => {});
+              this.audioContext = null;
+              this.ttsDestination = null;
+              this.currentMediaSource = null;
+              this.persistentMediaSource = null;
+            }
+          }, 30000);
+        } else {
+          if (hiddenTimeout) {
+            clearTimeout(hiddenTimeout);
+            hiddenTimeout = null;
+          }
+          if (this.audioContext?.state === 'suspended') {
+            this.audioContext.resume().catch(() => {});
           }
         }
       });
@@ -520,7 +535,8 @@ class TTSEngine {
   async speakWithElevenLabs(
     text: string,
     options: SpeakOptions,
-    onEnd?: (result: SpeakResult) => void
+    onEnd?: (result: SpeakResult) => void,
+    suppressCallbackOnError = false
   ): Promise<boolean> {
     try {
       const cleanText = stripEmphasisMarkers(text);
@@ -721,7 +737,7 @@ class TTSEngine {
             } else {
               console.log("[TTS] All play attempts failed, falling back");
               cleanup();
-              this.fireCallback("error", onEnd);
+              if (!suppressCallbackOnError) this.fireCallback("error", onEnd);
               resolve(false);
             }
           });
@@ -763,10 +779,13 @@ class TTSEngine {
       } else {
         console.error("[TTS] Error:", error.message);
       }
-      this.fireCallback("error", onEnd);
+      if (!suppressCallbackOnError) this.fireCallback("error", onEnd);
       return false;
     }
   }
+
+  private consecutiveElevenLabsFailures = 0;
+  private elevenLabsCooldownUntil = 0;
 
   speak(
     text: string, 
@@ -778,23 +797,69 @@ class TTSEngine {
 
     if (this.isOffline) {
       console.log("[TTS] Offline — using browser TTS");
-      return this.speakWithBrowserTTS(text, prosody, onEnd);
+      return this.speakWithBrowserTTS(text, prosody, onEnd, options);
     }
 
     if (this.useElevenLabs && options) {
+      if (Date.now() < this.elevenLabsCooldownUntil) {
+        console.log("[TTS] ElevenLabs in cooldown, using browser TTS");
+        return this.speakWithBrowserTTS(text, prosody, onEnd, options);
+      }
+
       const myGeneration = this.speakGeneration;
-      this.speakWithElevenLabs(text, options, onEnd).then((success) => {
-        if (!success && this.speakGeneration === myGeneration) {
-          console.log("[TTS] ElevenLabs failed, falling back to browser TTS");
-          this.speakWithBrowserTTS(text, prosody, onEnd);
-        } else if (!success) {
-          console.log("[TTS] ElevenLabs failed but generation changed, skipping fallback");
+      this.speakWithElevenLabs(text, options, onEnd, true).then((success) => {
+        if (success) {
+          this.consecutiveElevenLabsFailures = 0;
+          return;
         }
+        if (this.speakGeneration !== myGeneration) {
+          console.log("[TTS] ElevenLabs failed but generation changed, skipping fallback");
+          return;
+        }
+        this.consecutiveElevenLabsFailures++;
+        if (this.consecutiveElevenLabsFailures >= 3) {
+          this.elevenLabsCooldownUntil = Date.now() + 60000;
+          console.log("[TTS] 3+ consecutive failures, cooling down ElevenLabs for 60s");
+        }
+        console.log("[TTS] ElevenLabs failed, retrying once...");
+        const retryGeneration = this.speakGeneration;
+        setTimeout(() => {
+          if (this.speakGeneration !== retryGeneration) return;
+          this.speakWithElevenLabs(text, options, onEnd, true).then((retrySuccess) => {
+            if (retrySuccess) {
+              this.consecutiveElevenLabsFailures = 0;
+              return;
+            }
+            if (this.speakGeneration !== retryGeneration) return;
+            console.log("[TTS] ElevenLabs retry failed, falling back to browser TTS");
+            this.speakWithBrowserTTS(text, prosody, onEnd, options);
+          });
+        }, 500);
       });
       return true;
     }
 
-    return this.speakWithBrowserTTS(text, prosody, onEnd);
+    return this.speakWithBrowserTTS(text, prosody, onEnd, options);
+  }
+
+  private guessGenderFromName(name: string): "male" | "female" {
+    const femaleIndicators = ["mrs", "miss", "ms", "lady", "queen", "mother", "mom", "sister", "daughter", "wife", "aunt", "grandma", "grandmother", "princess", "duchess", "woman", "girl", "mama"];
+    const maleIndicators = ["mr", "sir", "lord", "king", "father", "dad", "brother", "son", "husband", "uncle", "grandpa", "grandfather", "prince", "duke", "man", "boy", "papa"];
+    const commonFemaleNames = ["maya","juliet","ophelia","emma","sophia","olivia","ava","isabella","mia","charlotte","amelia","harper","evelyn","abigail","emily","elizabeth","sarah","jessica","jennifer","amanda","ashley","stephanie","nicole","rachel","rebecca","rose","anna","mary","margaret","julia","laura","lucy","maria","natalie","nina","alice","claire","clara","diana","eve","fiona","jane","lisa","nancy","karen","helen","sandra","donna","carol","linda","ruth","sharon","patricia","catherine","grace","chloe","victoria","ella","scarlett","lily","aurora","hannah","lillian","nora","camila","zoey","aria","sofia"];
+    const commonMaleNames = ["romeo","hamlet","james","john","robert","michael","william","david","richard","joseph","thomas","charles","daniel","matthew","anthony","mark","steven","paul","andrew","ryan","jacob","nicholas","eric","jonathan","stephen","justin","scott","brandon","benjamin","samuel","frank","alexander","patrick","jack","dennis","peter","tyler","aaron","adam","nathan","henry","zachary","kyle","noah","ethan","sean","carl","dylan","jordan","jesse","arthur","gabriel","bruce","logan","albert","bobby","howard","fred","ralph","louis","philip","george","tom","andy","jerry","chris","ben","joe","bob","ted","bill","mike","ray","carl","frank","oscar","leo","max","ian"];
+
+    const words = name.split(/[\s_-]+/);
+    let score = 0;
+    for (const w of words) {
+      if (femaleIndicators.includes(w)) score -= 2;
+      if (maleIndicators.includes(w)) score += 2;
+      if (commonFemaleNames.includes(w)) score -= 3;
+      if (commonMaleNames.includes(w)) score += 3;
+    }
+    if (score < 0) return "female";
+    if (score > 0) return "male";
+    const hash = name.split('').reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0);
+    return Math.abs(hash) % 2 === 0 ? "male" : "female";
   }
 
   private clearBrowserTTSPoll() {
@@ -807,7 +872,8 @@ class TTSEngine {
   private speakWithBrowserTTS(
     text: string,
     prosody: ProsodyParams,
-    onEnd?: (result: SpeakResult) => void
+    onEnd?: (result: SpeakResult) => void,
+    options?: SpeakOptions
   ): boolean {
     if (!this.synth) {
       onEnd?.("unavailable");
@@ -828,11 +894,33 @@ class TTSEngine {
     const utterance = new SpeechSynthesisUtterance(text);
     
     const englishVoices = this.voices.filter(v => v.lang.startsWith("en"));
-    const preferredVoice = englishVoices.find(v => 
-      v.name.toLowerCase().includes("samantha") ||
-      v.name.toLowerCase().includes("google") ||
-      v.name.toLowerCase().includes("natural")
-    ) || englishVoices[0] || this.voices[0];
+    
+    let preferredVoice: SpeechSynthesisVoice | undefined;
+    
+    const charName = (options?.characterName || "").toLowerCase();
+    const wantsMale = this.guessGenderFromName(charName) === "male";
+    
+    const maleKeywords = ["male", "man", "daniel", "david", "james", "tom", "guy", "aaron", "google uk english male"];
+    const femaleKeywords = ["female", "woman", "samantha", "karen", "moira", "fiona", "victoria", "google uk english female", "zira"];
+    
+    const genderVoices = englishVoices.filter(v => {
+      const n = v.name.toLowerCase();
+      if (wantsMale) {
+        return maleKeywords.some(k => n.includes(k)) || (!femaleKeywords.some(k => n.includes(k)));
+      } else {
+        return femaleKeywords.some(k => n.includes(k));
+      }
+    });
+    
+    const pool = genderVoices.length > 0 ? genderVoices : englishVoices;
+    
+    preferredVoice = pool.find(v => {
+      const n = v.name.toLowerCase();
+      return n.includes("natural") || n.includes("enhanced") || n.includes("premium");
+    }) || pool.find(v => {
+      const n = v.name.toLowerCase();
+      return n.includes("google") || n.includes("samantha") || n.includes("daniel");
+    }) || pool[0] || this.voices[0];
     
     if (preferredVoice) {
       utterance.voice = preferredVoice;

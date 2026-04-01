@@ -222,36 +222,48 @@ function fuzzyMatch(a: string, b: string): boolean {
   return true;
 }
 
-// Cache voice assignments to ensure consistency within a session
-const voiceAssignmentCache = new Map<string, VoiceType>();
+const voiceAssignmentCache = new Map<string, { voice: VoiceType; timestamp: number }>();
+const VOICE_CACHE_TTL = 1000 * 60 * 60; // 1 hour
 
 function assignVoiceToCharacter(characterName: string, characterIndex: number): VoiceType {
   const name = characterName.toLowerCase().trim();
   
-  // Check cache first for consistency
-  if (voiceAssignmentCache.has(name)) {
-    return voiceAssignmentCache.get(name)!;
+  const cached = voiceAssignmentCache.get(name);
+  if (cached && Date.now() - cached.timestamp < VOICE_CACHE_TTL) {
+    return cached.voice;
   }
   
-  // Narrator check
   if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
-    voiceAssignmentCache.set(name, "narrator");
+    voiceAssignmentCache.set(name, { voice: "narrator", timestamp: Date.now() });
     return "narrator";
   }
   
   const words = name.split(/[\s_-]+/);
   
-  // Simple gender detection
-  let isFemale = false;
+  const femaleIndicators = [
+    "lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl",
+    "mother", "mom", "mama", "mommy", "sister", "daughter", "wife", "aunt", "grandmother", "grandma", "nana", "granny",
+    "nurse", "waitress", "actress", "hostess", "stewardess", "maid", "nanny", "midwife", "receptionist",
+    "empress", "countess", "baroness", "priestess", "goddess", "heroine", "madame", "senorita", "senora", "frau"
+  ];
+  const maleIndicators = [
+    "lord", "king", "mr", "sir", "duke", "prince", "baron", "man", "guy", "boy",
+    "father", "dad", "papa", "daddy", "brother", "son", "husband", "uncle", "grandfather", "grandpa", "gramps",
+    "waiter", "actor", "captain", "officer", "detective", "soldier", "guard", "driver", "pilot",
+    "emperor", "count", "priest", "god", "hero", "senor", "herr", "monsieur"
+  ];
   
-  // Check against name lists (with fuzzy matching for common misspellings)
+  let genderScore = 0; // negative = female, positive = male
+  let nameListMatch = false;
+  
   for (const word of words) {
     if (FEMALE_NAMES.has(word)) {
-      isFemale = true;
+      genderScore -= 3;
+      nameListMatch = true;
     } else if (MALE_NAMES.has(word)) {
-      isFemale = false;
+      genderScore += 3;
+      nameListMatch = true;
     } else if (word.length >= 4) {
-      // Fuzzy: check if any known name is within edit distance 1
       const femaleArr = Array.from(FEMALE_NAMES);
       const maleArr = Array.from(MALE_NAMES);
       let foundFemale = false;
@@ -268,34 +280,31 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
           break;
         }
       }
-      if (foundFemale) isFemale = true;
-      if (foundMale) isFemale = false;
+      if (foundFemale) { genderScore -= 2; nameListMatch = true; }
+      if (foundMale) { genderScore += 2; nameListMatch = true; }
     }
   }
   
-  // Title/keyword checks (includes common profession stereotypes for voice assignment)
-  const femaleIndicators = [
-    // Titles
-    "lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl",
-    // Family roles
-    "mother", "mom", "sister", "daughter", "wife", "aunt", "grandmother", "grandma", "nana",
-    // Professions (statistically female-dominated for voice assignment)
-    "nurse", "waitress", "actress", "hostess", "stewardess", "maid", "nanny", "midwife", "receptionist"
-  ];
-  const maleIndicators = [
-    // Titles
-    "lord", "king", "mr", "sir", "duke", "prince", "baron", "man", "guy", "boy",
-    // Family roles  
-    "father", "dad", "brother", "son", "husband", "uncle", "grandfather", "grandpa",
-    // Professions
-    "waiter", "actor", "captain", "officer", "detective", "soldier", "guard", "driver", "pilot"
-  ];
+  for (const word of words) {
+    if (femaleIndicators.includes(word)) genderScore -= 2;
+    if (maleIndicators.includes(word)) genderScore += 2;
+  }
+  for (const ind of femaleIndicators) {
+    if (ind.length > 3 && name.includes(ind) && !words.includes(ind)) genderScore -= 1;
+  }
+  for (const ind of maleIndicators) {
+    if (ind.length > 3 && name.includes(ind) && !words.includes(ind)) genderScore += 1;
+  }
   
-  if (femaleIndicators.some(ind => name.includes(ind))) isFemale = true;
-  if (maleIndicators.some(ind => name.includes(ind))) isFemale = false;
+  if (genderScore === 0 && !nameListMatch) {
+    if (/[aeiou]$/.test(words[0]) && !/[aeioumn]a$/.test(words[0]) && words[0].length > 2) {
+    } else {
+      genderScore += 1;
+    }
+  }
   
-  // Deterministic voice selection based on character NAME hash (not index)
-  // This ensures the same character always gets the same voice, even after server restarts
+  const isFemale = genderScore < 0;
+  
   const nameHash = name.split('').reduce((hash, char) => {
     return ((hash << 5) - hash) + char.charCodeAt(0);
   }, 0);
@@ -311,7 +320,8 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
     voiceType = maleVoices[voiceIndex];
   }
   
-  voiceAssignmentCache.set(name, voiceType);
+  voiceAssignmentCache.set(name, { voice: voiceType, timestamp: Date.now() });
+  console.log(`[Voice] ${characterName} → ${voiceType} (score=${genderScore}, nameMatch=${nameListMatch})`);
   
   return voiceType;
 }
@@ -632,10 +642,8 @@ export async function registerRoutes(
     }
   });
 
-  // Clear voice cache on session start (call from client when starting new session)
   app.post("/api/tts/reset", (_req: Request, res: Response) => {
-    voiceAssignmentCache.clear();
-    console.log("[Voice] Cache cleared for new session");
+    console.log("[Voice] Session reset requested (cache preserved for consistency)");
     res.json({ success: true });
   });
 
