@@ -23,9 +23,10 @@ export function InvitePartnerCard({ scriptName, roleName, className }: { scriptN
   const [email, setEmail] = useState("");
   const [showEmail, setShowEmail] = useState(false);
 
-  const { data: invite } = useQuery<InviteData>({
+  const { data: invite, isLoading } = useQuery<InviteData>({
     queryKey: ["/api/invite-code"],
     enabled: isAuthenticated,
+    retry: 2,
   });
 
   const sendInvite = useMutation({
@@ -76,7 +77,9 @@ export function InvitePartnerCard({ scriptName, roleName, className }: { scriptN
     }
   };
 
-  if (!isAuthenticated || !invite) return null;
+  if (!isAuthenticated) return null;
+
+  const ready = !!invite?.inviteUrl;
 
   return (
     <div className={cn("rounded-lg border border-primary/15 bg-primary/[0.03] p-3", className)} data-testid="invite-partner-card">
@@ -91,11 +94,11 @@ export function InvitePartnerCard({ scriptName, roleName, className }: { scriptN
       </div>
 
       <div className="flex gap-1.5 mb-2">
-        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={handleShare} data-testid="invite-share-btn">
+        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={handleShare} disabled={!ready} data-testid="invite-share-btn">
           <Share2 className="w-3 h-3 mr-1" />
-          Share
+          {isLoading ? "Loading..." : "Share"}
         </Button>
-        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={handleCopy} data-testid="invite-copy-btn">
+        <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={handleCopy} disabled={!ready} data-testid="invite-copy-btn">
           {copied ? <Check className="w-3 h-3 mr-1" /> : <Copy className="w-3 h-3 mr-1" />}
           {copied ? "Copied!" : "Copy link"}
         </Button>
@@ -121,7 +124,7 @@ export function InvitePartnerCard({ scriptName, roleName, className }: { scriptN
         </button>
       )}
 
-      {(invite.sentCount > 0 || invite.acceptedCount > 0) && (
+      {invite && (invite.sentCount > 0 || invite.acceptedCount > 0) && (
         <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground">
           <span>{invite.sentCount} sent</span>
           <span>{invite.acceptedCount} joined</span>
@@ -135,9 +138,10 @@ export function InvitePartnerInline({ scriptName, className }: { scriptName?: st
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
-  const { data: invite, isLoading } = useQuery<InviteData>({
+  const { data: invite, isLoading, isError } = useQuery<InviteData>({
     queryKey: ["/api/invite-code"],
     enabled: isAuthenticated,
+    retry: 2,
   });
 
   const handleShare = async () => {
@@ -165,15 +169,17 @@ export function InvitePartnerInline({ scriptName, className }: { scriptName?: st
     }
   };
 
-  if (!isAuthenticated || (!invite && !isLoading)) return null;
+  if (!isAuthenticated) return null;
+
+  const ready = !!invite?.inviteUrl;
 
   return (
     <button
       onClick={handleShare}
-      disabled={!invite?.inviteUrl}
+      disabled={!ready}
       className={cn(
         "flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-colors",
-        invite?.inviteUrl
+        ready
           ? "text-primary bg-primary/5 hover:bg-primary/10"
           : "text-muted-foreground bg-muted/30 cursor-not-allowed",
         className
@@ -181,7 +187,7 @@ export function InvitePartnerInline({ scriptName, className }: { scriptName?: st
       data-testid="invite-partner-inline"
     >
       {copied ? <Check className="w-3 h-3" /> : <Gift className="w-3 h-3" />}
-      {copied ? "Link copied!" : "Invite a scene partner"}
+      {isLoading ? "Loading..." : copied ? "Link copied!" : "Invite a scene partner"}
     </button>
   );
 }
