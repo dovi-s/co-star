@@ -518,7 +518,8 @@ function getVoiceSettings(emotion: string, preset: string, text: string = "", di
 
 export async function registerRoutes(
   httpServer: Server,
-  app: Express
+  app: Express,
+  options?: { enableMultiplayer?: boolean },
 ): Promise<Server> {
   
   // Initialize auth (must be before other routes)
@@ -527,7 +528,9 @@ export async function registerRoutes(
   registerProRoutes(app);
 
   // Initialize WebSocket server for multiplayer
-  setupMultiplayer(httpServer);
+  if (options?.enableMultiplayer ?? true) {
+    setupMultiplayer(httpServer);
+  }
   
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", app: "co-star" });
