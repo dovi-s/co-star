@@ -3977,8 +3977,8 @@ MARY: You're kidding me.`;
   }
 
   app.post("/api/reverse-trial/activate", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     try {
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -4004,8 +4004,8 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/trial-status", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     try {
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -4034,8 +4034,8 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/profile/actor-type", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const { actorType } = req.body;
     if (!ACTOR_TYPES.includes(actorType)) return res.status(400).json({ error: "Invalid actor type" });
     try {
@@ -4088,8 +4088,8 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/invite-code", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     try {
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
       if (!user) return res.status(404).json({ error: "User not found" });
@@ -4115,8 +4115,8 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/invites/send", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const { recipientEmail, scriptName, roleName } = req.body;
     try {
       const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
@@ -4152,8 +4152,8 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/accept-invite", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const { code } = req.body;
     if (!code) return res.status(400).json({ error: "Invite code required" });
     try {
@@ -4210,7 +4210,7 @@ MARY: You're kidding me.`;
     try {
       const url = new URL(req.url, `http://${req.headers.host}`);
       const sortParam = url.searchParams.get("sort") || "top";
-      const userId = req.isAuthenticated?.() ? (req.user?.claims?.sub || req.user?.id) : null;
+      const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
       const admin = await isAdmin(req);
 
       const orderCol = sortParam === "newest" ? featureRequests.createdAt : featureRequests.voteCount;
@@ -4244,8 +4244,8 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/features", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const { title, description, category } = req.body;
     if (!title || typeof title !== "string" || !title.trim()) {
       return res.status(400).json({ error: "Title is required" });
@@ -4269,8 +4269,8 @@ MARY: You're kidding me.`;
   });
 
   app.post("/api/features/:id/vote", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const featureId = req.params.id;
     const { direction } = req.body;
     const voteValue = direction === "down" ? -1 : 1;
@@ -4397,8 +4397,8 @@ MARY: You're kidding me.`;
   });
 
   app.get("/api/rehearsal-report/:scriptId", async (req: any, res: Response) => {
-    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
-    const userId = req.user.claims?.sub || req.user.id;
+    const userId = req.user?.claims?.sub || req.session?.claims?.sub || null;
+    if (!userId) return res.status(401).json({ error: "Not authenticated" });
     const scriptId = req.params.scriptId;
     try {
       const [script] = await db.select().from(savedScripts).where(and(eq(savedScripts.id, scriptId), eq(savedScripts.userId, userId))).limit(1);
