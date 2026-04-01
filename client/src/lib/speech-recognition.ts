@@ -200,10 +200,11 @@ class SpeechRecognitionEngine {
         this.clearSilenceTimeout();
         this.stopWatchdog();
         
-        const maxRetries = this.isMobile ? 20 : 5;
+        const maxRetries = this.isMobile ? 25 : 8;
         this.noSpeechRestartCount++;
         if (this.noSpeechRestartCount < maxRetries && this.shouldAutoRestart) {
-          const delay = this.isMobile ? 300 : 150;
+          const backoffDelay = Math.min(300 + this.noSpeechRestartCount * 100, 1500);
+          const delay = this.isMobile ? backoffDelay : Math.min(150 + this.noSpeechRestartCount * 50, 800);
           setTimeout(() => {
             if (!this.isListening && this.shouldAutoRestart) {
               this.recreateAndStart();
@@ -377,7 +378,7 @@ class SpeechRecognitionEngine {
 
   private resetSilenceTimeout() {
     this.clearSilenceTimeout();
-    const timeout = this.isMobile ? 5000 : 3000;
+    const timeout = this.isMobile ? 6000 : 4000;
     this.silenceTimeout = setTimeout(() => {
       if (this.isListening && this.hasReceivedSpeech && !this.isPaused) {
         if (this.lastTranscript && !this.accumulatedTranscript.includes(this.lastTranscript)) {

@@ -60,23 +60,25 @@ export function detectEmotion(text: string, direction?: string): EmotionStyle {
   const dir = (direction || "").toLowerCase();
   const txt = text.toLowerCase();
 
-  if (/whisper|whispering|quietly|softly|under.?breath|hushed|murmur/i.test(dir)) return "whisper";
-  if (/excited|thrilled|ecstatic|elated|enthusiastic|giddy|emphatic/i.test(dir)) return "excited";
-  if (/angry|furious|rage|snapping|explosive|livid/i.test(dir)) return "angry";
-  if (/yelling|shouting/i.test(dir) && !/excited|happy|laughing|warm/i.test(dir)) return "angry";
-  if (/yelling|shouting/i.test(dir)) return "excited";
-  if (/urgent|desperate|panicked|frantic|alarmed|hurried|incredulous/i.test(dir)) return "urgent";
-  if (/scared|terrified|frightened|fearful|trembling|shaking/i.test(dir)) return "fearful";
-  if (/happy|laughing|joyful|smiling|cheerful|beaming|delighted/i.test(dir)) return "happy";
-  if (/sad|crying|tearful|grief|mourning|broken|devastated|sobbing/i.test(dir)) return "sad";
-  if (/sarcastic|dry|ironic|mocking|sardonic|wry/i.test(dir)) return "sarcastic";
+  if (/whisper|whispering|quietly|softly|under.?breath|hushed|murmur|barely\s*audible|low\s*voice/i.test(dir)) return "whisper";
+  if (/excited|thrilled|ecstatic|elated|enthusiastic|giddy|emphatic|overjoyed|breathless/i.test(dir)) return "excited";
+  if (/angry|furious|rage|snapping|explosive|livid|seething|incensed|outraged|hostile/i.test(dir)) return "angry";
+  if (/yelling|shouting|screaming|bellowing/i.test(dir) && !/excited|happy|laughing|warm/i.test(dir)) return "angry";
+  if (/yelling|shouting|screaming|bellowing/i.test(dir)) return "excited";
+  if (/urgent|desperate|panicked|frantic|alarmed|hurried|incredulous|stunned|shocked|disbelief|horrified/i.test(dir)) return "urgent";
+  if (/scared|terrified|frightened|fearful|trembling|shaking|horrified|dread|petrified/i.test(dir)) return "fearful";
+  if (/happy|laughing|joyful|smiling|cheerful|beaming|delighted|amused|grinning|playful|teasing/i.test(dir)) return "happy";
+  if (/sad|crying|tearful|grief|mourning|broken|devastated|sobbing|weeping|heartbroken|choked\s*up|voice\s*break/i.test(dir)) return "sad";
+  if (/sarcastic|dry|ironic|mocking|sardonic|wry|deadpan|cutting|snide|contempt/i.test(dir)) return "sarcastic";
 
-  if (/calm|calming|gentle|warm|tender|reassur|comfort|sooth/i.test(dir)) return "neutral";
-  if (/cold|stern|firm|sharp|bitter|dismissive|flat/i.test(dir)) return "neutral";
-  if (/hesitant|nervous|awkward|uncertain|tentative|reluctant/i.test(dir)) return "neutral";
+  if (/calm|calming|gentle|warm|tender|reassur|comfort|sooth|loving|affectionate/i.test(dir)) return "neutral";
+  if (/cold|stern|firm|sharp|bitter|dismissive|flat|icy|stiff|curt/i.test(dir)) return "neutral";
+  if (/hesitant|nervous|awkward|uncertain|tentative|reluctant|stammering|stuttering/i.test(dir)) return "neutral";
 
-  if (/\b(stop|shut up|get out|how dare)\b/i.test(txt) && /!{2,}/.test(text)) return "angry";
-  if (/\?{3,}/.test(text)) return "urgent";
+  if (/\b(stop|shut up|get out|how dare|leave me|go away)\b/i.test(txt) && /!/.test(text)) return "angry";
+  if (/\?{2,}/.test(text) || /\?!/.test(text)) return "urgent";
+  if (/!{3,}/.test(text)) return "excited";
+  if (/\.{3,}|…/.test(text) && txt.length < 30) return "sad";
 
   return "neutral";
 }
@@ -117,18 +119,18 @@ export function getConversationalTiming(
   currentDirection?: string,
 ): ConversationalTiming {
   const emotionPauseBase: Record<EmotionStyle, number> = {
-    angry: 200,
-    urgent: 180,
-    excited: 250,
-    happy: 300,
-    neutral: 400,
-    sarcastic: 450,
-    fearful: 350,
-    sad: 650,
-    whisper: 700,
+    angry: 250,
+    urgent: 220,
+    excited: 300,
+    happy: 350,
+    neutral: 450,
+    sarcastic: 500,
+    fearful: 400,
+    sad: 700,
+    whisper: 750,
   };
 
-  let aiToAiBase = emotionPauseBase[currentEmotion] ?? 400;
+  let aiToAiBase = emotionPauseBase[currentEmotion] ?? 450;
 
   const punctMod = getPunctuationModifier(previousLineText);
   aiToAiBase = Math.round(aiToAiBase * punctMod);
@@ -140,6 +142,17 @@ export function getConversationalTiming(
     };
     const shift = Math.abs((weight[previousEmotion] ?? 0) - (weight[currentEmotion] ?? 0));
     if (shift >= 2) {
+      aiToAiBase = Math.round(aiToAiBase * 1.2);
+    } else if (shift >= 1) {
+      aiToAiBase = Math.round(aiToAiBase * 1.08);
+    }
+  }
+
+  if (previousLineText) {
+    const prevLen = previousLineText.split(/\s+/).length;
+    if (prevLen <= 3) {
+      aiToAiBase = Math.round(aiToAiBase * 0.7);
+    } else if (prevLen >= 30) {
       aiToAiBase = Math.round(aiToAiBase * 1.15);
     }
   }
@@ -147,22 +160,22 @@ export function getConversationalTiming(
   const dirMod = getDirectionPauseModifier(currentDirection);
   aiToAiBase = Math.round(aiToAiBase * dirMod);
 
-  aiToAiBase = Math.max(150, Math.min(1200, aiToAiBase));
+  aiToAiBase = Math.max(200, Math.min(1500, aiToAiBase));
 
-  let userToAiBase = Math.round(aiToAiBase * 0.55);
+  let userToAiBase = Math.round(aiToAiBase * 0.6);
 
-  let aiToUserBase = Math.round(aiToAiBase * 0.25);
+  let aiToUserBase = Math.round(aiToAiBase * 0.35);
   const aiToUserPunctMod = getPunctuationModifier(previousLineText);
   if (aiToUserPunctMod < 1.0) {
-    aiToUserBase = Math.round(aiToUserBase * (1.0 - (1.0 - aiToUserPunctMod) * 0.5));
+    aiToUserBase = Math.round(aiToUserBase * (1.0 - (1.0 - aiToUserPunctMod) * 0.4));
   } else if (aiToUserPunctMod > 1.0) {
-    aiToUserBase = Math.round(aiToUserBase * (1.0 + (aiToUserPunctMod - 1.0) * 0.5));
+    aiToUserBase = Math.round(aiToUserBase * (1.0 + (aiToUserPunctMod - 1.0) * 0.6));
   }
 
   return {
     aiToAiPauseMs: aiToAiBase,
-    aiToUserPauseMs: Math.max(50, Math.min(300, aiToUserBase)),
-    userToAiPauseMs: Math.max(180, Math.min(500, userToAiBase)),
+    aiToUserPauseMs: Math.max(100, Math.min(500, aiToUserBase)),
+    userToAiPauseMs: Math.max(250, Math.min(700, userToAiBase)),
   };
 }
 
@@ -981,7 +994,36 @@ class TTSEngine {
     return this.synth?.paused ?? false;
   }
 
-  speakHint(fullText: string, onEnd?: () => void): boolean {
+  speakHint(fullText: string, onEnd?: () => void, options?: SpeakOptions): boolean {
+    this.stop();
+
+    if (this.useElevenLabs && options && !this.isOffline) {
+      let hintCallbackFired = false;
+      const fireOnce = () => {
+        if (hintCallbackFired) return;
+        hintCallbackFired = true;
+        onEnd?.();
+      };
+      const hintOptions: SpeakOptions = {
+        ...options,
+        emotion: "neutral",
+        preset: "natural",
+        playbackSpeed: 0.9,
+      };
+      this.speakWithElevenLabs(fullText, hintOptions, () => {
+        fireOnce();
+      }).then((success) => {
+        if (!success && !hintCallbackFired) {
+          this.speakHintBrowser(fullText, fireOnce);
+        }
+      });
+      return true;
+    }
+
+    return this.speakHintBrowser(fullText, onEnd);
+  }
+
+  private speakHintBrowser(fullText: string, onEnd?: () => void): boolean {
     if (!this.synth) {
       onEnd?.();
       return false;

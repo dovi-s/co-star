@@ -495,6 +495,15 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                 }
               }, 300);
             }
+          }, {
+            characterName: line.roleName || "Character",
+            characterIndex: 0,
+            emotion: "neutral",
+            preset: "natural",
+            direction: "",
+            playbackSpeed: 0.9,
+            previousText: "",
+            nextText: "",
           });
           return;
         }
@@ -896,9 +905,9 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
       const nextEmotion = next.emotionHint || detectEmotion(next.text, next.direction);
       const timing = getConversationalTiming(nextEmotion, line?.text, userEmotion, next.direction);
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-      const minPause = isIOS ? 350 : 180;
+      const minPause = isIOS ? 400 : 250;
       const rawPause = isUserLine(next) ? minPause : Math.max(timing.userToAiPauseMs, minPause);
-      const pauseMs = applyRhythmAdaptation(rawPause, minPause, 500);
+      const pauseMs = applyRhythmAdaptation(rawPause, minPause, 700);
       
       if (userToAiDelayRef.current) {
         clearTimeout(userToAiDelayRef.current);
@@ -1129,11 +1138,11 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           const nextEmotion = next ? (next.emotionHint || detectEmotion(next.text, next.direction)) : undefined;
           const nextTiming = next ? getConversationalTiming(nextEmotion || "neutral", line.text, emotion, next?.direction) : null;
           const rawPause = nextIsUser
-            ? (nextTiming?.aiToUserPauseMs ?? 100)
-            : (nextTiming?.aiToAiPauseMs ?? 400);
+            ? (nextTiming?.aiToUserPauseMs ?? 150)
+            : (nextTiming?.aiToAiPauseMs ?? 450);
           const pauseMs = nextIsUser
-            ? applyRhythmAdaptation(rawPause, 50, 300)
-            : applyRhythmAdaptation(rawPause, 150, 1200);
+            ? applyRhythmAdaptation(rawPause, 80, 500)
+            : applyRhythmAdaptation(rawPause, 200, 1500);
           
           setTimeout(() => {
             if (!isPlayingRef.current) {

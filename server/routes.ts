@@ -385,16 +385,15 @@ function getVoiceSettings(emotion: string, preset: string, text: string = "", di
   const trimmedText = text.trim();
   const wordCount = trimmedText.length > 0 ? trimmedText.split(/\s+/).length : 0;
   if (wordCount >= 1 && wordCount <= 3) {
-    stability = Math.min(0.85, stability + 0.12);
-    style = Math.max(0, style - 0.05);
+    stability = Math.min(0.78, stability + 0.06);
   } else if (wordCount >= 4 && wordCount <= 6) {
-    stability = Math.min(0.75, stability + 0.03);
+    stability = Math.min(0.72, stability + 0.02);
   }
 
   return {
     stability,
     similarity_boost: similarityBoost,
-    style: Math.max(0, Math.min(0.30, style)),
+    style: Math.max(0, Math.min(0.35, style)),
     use_speaker_boost: false,
   };
 }

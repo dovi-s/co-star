@@ -95,6 +95,36 @@ const CONTRACTIONS: Record<string, string[]> = {
   "ya": ["you", "your"],
   "bout": ["about"],
   "'bout": ["about"],
+  "ma'am": ["maam", "mam"],
+  "sir": ["ser"],
+  "mr": ["mister"],
+  "mrs": ["missus", "misses"],
+  "ms": ["miss", "miz"],
+  "dr": ["doctor"],
+  "nothin": ["nothing", "nuthin"],
+  "somethin": ["something", "sumthin"],
+  "everythin": ["everything"],
+  "anythin": ["anything"],
+  "doin": ["doing"],
+  "goin": ["going"],
+  "comin": ["coming"],
+  "runnin": ["running"],
+  "talkin": ["talking"],
+  "lookin": ["looking"],
+  "thinkin": ["thinking"],
+  "gettin": ["getting"],
+  "makin": ["making"],
+  "takin": ["taking"],
+  "tryin": ["trying"],
+  "lyin": ["lying"],
+  "dyin": ["dying"],
+  "cryin": ["crying"],
+  "prayin": ["praying"],
+  "sayin": ["saying"],
+  "playin": ["playing"],
+  "workin": ["working"],
+  "waitin": ["waiting"],
+  "feelin": ["feeling"],
   // Filler words and hesitations - speech recognition often transcribes these differently
   "uh": ["um", "ah", "eh", "er", "hmm", "hm"],
   "um": ["uh", "ah", "eh", "er", "hmm", "hm"],
@@ -256,8 +286,8 @@ export function matchWords(expectedText: string, spokenText: string): {
   const totalWords = expectedWords.length;
   const percentMatched = totalWords > 0 ? (matchedCount / totalWords) * 100 : 0;
   
-  // Require 80% match for auto-complete, or all words for short lines
-  const isComplete = percentMatched >= 80 || (totalWords <= 3 && matchedCount >= totalWords);
+  const dynamicThreshold = totalWords <= 5 ? 80 : totalWords <= 15 ? 75 : totalWords <= 30 ? 70 : 65;
+  const isComplete = percentMatched >= dynamicThreshold || (totalWords <= 3 && matchedCount >= totalWords);
   
   return {
     words,
@@ -313,7 +343,7 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
     const expectedForms = getWordForms(expectedWords[ei]);
     let found = false;
 
-    const lookahead = Math.min(si + 4, spokenWords.length);
+    const lookahead = Math.min(si + 6, spokenWords.length);
     for (let sj = si; sj < lookahead; sj++) {
       const isMatch = expectedForms.some(f => spokenForms[sj].has(f));
       if (isMatch) {
@@ -380,7 +410,8 @@ export function matchWordsSequential(expectedText: string, spokenText: string): 
 
   const matchedCount = matched.filter(Boolean).length;
   const percentMatched = totalWords > 0 ? (matchedCount / totalWords) * 100 : 0;
-  const isComplete = percentMatched >= 80 || (totalWords <= 3 && matchedCount >= totalWords);
+  const dynamicThreshold = totalWords <= 5 ? 80 : totalWords <= 15 ? 75 : totalWords <= 30 ? 70 : 65;
+  const isComplete = percentMatched >= dynamicThreshold || (totalWords <= 3 && matchedCount >= totalWords);
 
   return {
     words,
