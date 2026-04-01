@@ -543,12 +543,12 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         
         if (result.isFinal) {
           matchReachedRef.current = true;
-          const graceMs = match.percentMatched >= 95 ? 150 : 400;
+          const graceMs = match.percentMatched >= 95 ? 100 : 300;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current) doAdvance();
           }, graceMs);
         } else {
-          const interimGraceMs = match.percentMatched >= 95 ? 500 : 1000;
+          const interimGraceMs = match.percentMatched >= 95 ? 400 : 800;
           matchGraceTimeoutRef.current = setTimeout(() => {
             if (isPlayingRef.current && waitingForUserRef.current && !matchReachedRef.current) {
               matchReachedRef.current = true;

@@ -418,8 +418,7 @@ class TTSEngine {
     this.clearWatchdog();
     this.callbackFired = false;
     
-    // Estimate max duration: ~150ms per character + 5 second buffer
-    const estimatedDuration = Math.max(10000, text.length * 150 + 5000);
+    const estimatedDuration = Math.max(5000, text.length * 150 + 3000);
     
     this.watchdogTimer = setTimeout(() => {
       if (!this.callbackFired) {
@@ -542,10 +541,15 @@ class TTSEngine {
       const cleanText = stripEmphasisMarkers(text);
       const myGeneration = this.speakGeneration;
       
-      const prefetched = this.consumePrefetched(text, options);
+      let prefetched = this.consumePrefetched(text, options);
       let audioBlob: Blob;
       let audioUrl: string;
       
+      if (!prefetched && this.prefetchInFlight.has(this.makePrefetchKey(text, options))) {
+        await new Promise(r => setTimeout(r, 300));
+        prefetched = this.consumePrefetched(text, options);
+      }
+
       if (prefetched) {
         audioBlob = prefetched.blob;
         audioUrl = prefetched.url;
@@ -951,11 +955,7 @@ class TTSEngine {
     };
     
     utterance.onend = () => {
-      if (prosody.breakMs > 0) {
-        setTimeout(() => fireBrowserCallback("success"), prosody.breakMs);
-      } else {
-        fireBrowserCallback("success");
-      }
+      fireBrowserCallback("success");
     };
 
     utterance.onerror = (event) => {
