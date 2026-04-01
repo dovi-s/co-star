@@ -1373,6 +1373,7 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
       /^(slams?|slamming|grabs?|grabbing|picks?|picking|holds?|holding)/i,
       /^(singing|humming|whistling|dancing|clapping)/i,
       /^(then|and then)\s+/i,
+      /^[a-z]+\s+(unfurls?|crumbles?|tosses?|rips?|snaps?|flips?|rolls?|slides?|throws?|catches?|drops?|lifts?|pulls?|pushes?|opens?|closes?|takes?|puts?|sets?|hands?|reaches?|passes?|pours?|spills?|kicks?|punches?|slaps?|waves?|points?|fires?|lights?|strikes?|swings?|yanks?|tugs?|wraps?|folds?|unfolds?|peels?|digs?|stuffs?|tucks?|pockets?)\b/,
     ];
     
     if (directionPatterns.some(pattern => pattern.test(lower))) {
@@ -1538,7 +1539,8 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   if (/^\d+[A-Z]?[\-\s]+\d*[A-Z]?\s+[A-Z]/i.test(trimmed)) return false;
   
   // Action description with dashes (e.g., "VARIOUS SHOTS -- a conservative young MAN")
-  if (/\s--\s+[a-z]/i.test(trimmed)) return false;
+  // Only when ALL CAPS words precede the dashes (scene/shot descriptions)
+  if (/^[A-Z\s]+--\s+/i.test(trimmed) && /^[A-Z]{2,}(\s+[A-Z]{2,})*\s+--/.test(trimmed)) return false;
   
   // Camera/action directions (WE SEE, ANGLE ON, etc.)
   for (const pattern of CAMERA_ACTION_PATTERNS) {
@@ -1555,8 +1557,10 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
     }
   }
   
-  // Third-person action descriptions (He walks, She looks, She sets) - very reliable
-  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|opens?|closes?|falls?|kisses?|sets?|puts?|takes?|picks?|grabs?|reaches?|holds?|drops?|throws?|catches?|pushes?|pulls?|answers?|dials?|hangs?|starts?|stops?|begins?|continues?|pauses?|waits?|watches?|stares?|nods?|shakes?|smiles?|laughs?|cries?|sighs?|gasps?|screams?|whispers?|mutters?)\b/i.test(trimmed)) {
+  // Third-person action descriptions (He walks, She looks, etc.) - physical action verbs only
+  // These are stage directions describing what a character physically does.
+  // NOT dialogue about someone (e.g., "He doesn't know" is dialogue, "He crumbles it" is action)
+  if (/^(He|She|They|It)\s+(is|are|was|were|walks?|runs?|looks?|turns?|enters?|exits?|stands?|sits?|moves?|opens?|closes?|falls?|kisses?|sets?|puts?|takes?|picks?|grabs?|reaches?|holds?|drops?|throws?|catches?|pushes?|pulls?|answers?|dials?|hangs?|starts?|stops?|begins?|continues?|pauses?|waits?|watches?|stares?|nods?|shakes?|smiles?|laughs?|sighs?|gasps?|screams?|whispers?|mutters?|crumbles?|tosses?|slams?|rips?|tears?|snaps?|flips?|rolls?|slides?|stumbles?|scrambles?|lunges?|leaps?|jumps?|dives?|ducks?|spins?|swings?|kicks?|hits?|strikes?|punches?|slaps?|hugs?|embraces?|lifts?|lowers?|raises?|points?|gestures?|waves?|motions?|paces?|storms?|marches?|rushes?|hurries?|dashes?|charges?|retreats?|steps?|climbs?|descends?|leans?|bends?|kneels?|crouches?|crawls?|collapses?|sinks?|rises?|straightens?|stretches?|flinches?|recoils?|freezes?|stiffens?|adjusts?|brushes?|wipes?|rubs?|taps?|fumbles?|clutches?|clenches?|unfurls?|folds?|unfolds?|wraps?|pours?|spills?|sips?|drinks?|eats?|bites?|inhales?|exhales?|puffs?|blows?|coughs?|shivers?|trembles?|shudders?|winces?|grimaces?|frowns?|glares?|squints?|blinks?|peers?|peeks?|glances?|scans?|snatches?|seizes?|yanks?|tugs?|twists?|wrestles?|struggles?|hides?|reveals?|produces?|retrieves?|pockets?|tucks?|stuffs?)\b/i.test(trimmed)) {
     return false;
   }
   
@@ -1578,6 +1582,16 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   
   // "The [something]" - descriptive action lines
   if (/^The\s+(camera|helicopter|car|boat|plane|screen|door|phone|lights?|sound|music)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // "Over his back", "Over her shoulder" - narrative description
+  if (/^Over\s+(his|her|their|its|the)\b/i.test(trimmed)) {
+    return false;
+  }
+  
+  // "we TRACK/FOLLOW/PAN" camera directions embedded in action lines
+  if (/\bwe\s+(TRACK|FOLLOW|PAN|DOLLY|ZOOM|CRANE|PUSH|PULL|MOVE|HOLD|STAY|CUT|GO|TRAVEL|CONTINUE)\b/i.test(trimmed)) {
     return false;
   }
   
