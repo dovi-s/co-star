@@ -78,16 +78,16 @@ function areOCRVariants(name1: string, name2: string): boolean {
   const matchRatio = matches / shorter.length;
   const firstLetterMatches = upper1[0] === upper2[0];
   
-  // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
-  // But only if names are similar length (within 30%) to avoid matching JEAN/JORDAN
-  if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 4 && longer.length <= shorter.length * 1.3) {
+  // If 80%+ of shorter name's letters match, and first letter matches, likely OCR variant
+  // But only if names are very similar length (within 20%) to avoid matching JEAN/JORDAN, DAVE/DENHAM
+  if (matchRatio >= 0.8 && firstLetterMatches && shorter.length >= 4 && longer.length <= shorter.length * 1.2) {
     return true;
   }
   
   // For very high overlap (90%+), allow even if first letter doesn't match
-  // but only for longer names and similar lengths to avoid false positives
-  // (e.g. SAM/JAMES: all SAM letters exist in JAMES but they are different names)
-  if (matchRatio >= 0.9 && shorter.length >= 5 && longer.length <= shorter.length * 1.4) {
+  // but only for longer names and very similar lengths to avoid false positives
+  // (e.g. TERESA/TRAINEES: all TERESA letters exist in TRAINEES but they are different names)
+  if (matchRatio >= 0.9 && shorter.length >= 5 && longer.length <= shorter.length * 1.15) {
     return true;
   }
   
@@ -112,7 +112,7 @@ function areOCRVariants(name1: string, name2: string): boolean {
     ocrConfusions[char2]?.includes(char1) ||
     char1 === char2;
   
-  if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 4 && longer.length <= shorter.length * 1.5) {
+  if (matchRatio >= 0.8 && firstLetterConfused && shorter.length >= 4 && longer.length <= shorter.length * 1.2) {
     return true;
   }
   
@@ -1582,7 +1582,11 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   }
   
   // "Down below", "Up above", "Nearby", "Behind them" - scene description
-  if (/^(Down below|Up above|Nearby|Behind|In front|Across|Through|Inside|Outside|Overhead|Below)/i.test(trimmed)) {
+  // "Through" only as stage direction when followed by spatial/visual words
+  if (/^(Down below|Up above|Nearby|Behind|In front|Across|Inside|Outside|Overhead|Below)\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/^Through\s+(?:the\s+)?(window|door|glass|wall|fog|smoke|haze|darkness|crowd|gate|fence|bars|curtain|opening|gap|lens|scope|binoculars|windshield)/i.test(trimmed)) {
     return false;
   }
   
@@ -1992,13 +1996,16 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Lines mentioning character name in ALL CAPS + action verb mid-line are action
     // e.g., "JOHN swears under his breath and pulls over"
-    if (/[A-Z]{2,}\s+(swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|looks?\s+at|turns?|enters?|exits?|stands?|sits?)\b/i.test(trimmed)) {
+    // NOTE: No /i flag — [A-Z]{2,} must match actual uppercase (prevents "every turn" false positive)
+    if (/[A-Z]{2,}\s+(?:swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|looks?\s+at|turns?|enters?|exits?|stands?|sits?)\b/.test(trimmed)) {
       return true;
     }
     
     // Lines starting with character name + possessive ('s) are scene description
     // e.g., "Callie's apartment.", "John's car pulls up."
-    if (/^[A-Z][a-z]+('s|'s)\s+\w+/i.test(trimmed)) {
+    // Exclude common contractions: That's, What's, It's, Here's, There's, Let's, He's, She's, Who's, How's
+    if (/^[A-Z][a-z]+('s|'s)\s+\w+/i.test(trimmed) &&
+        !/^(That|What|It|Here|There|Let|He|She|Who|How|Where|When|Why)('s|'s)\b/i.test(trimmed)) {
       return true;
     }
     
@@ -2174,6 +2181,7 @@ export function parseScript(rawText: string): ParsedScript {
     // Check for inline character: dialogue format
     const characterCheck = isLikelyCharacterLine(trimmed);
     
+    
     if (characterCheck.isCharacter) {
       flushPendingDialogue();
       pendingCharacter = characterCheck.name;
@@ -2186,11 +2194,13 @@ export function parseScript(rawText: string): ParsedScript {
         flushPendingDialogue();
         pendingCharacter = standaloneCheck.name;
         pendingDialogue = [];
+      } else {
       }
     }
     // Check if this is dialogue continuation
     else if (pendingCharacter) {
-      if (isDialogueContinuation(trimmed, rawLine)) {
+      const isCont = isDialogueContinuation(trimmed, rawLine);
+      if (isCont) {
         pendingDialogue.push(trimmed);
       } else {
         // Could be a new standalone character or action line
@@ -2264,24 +2274,19 @@ function extractCastNames(rawText: string): string[] {
     /\bCAST\b[^\n]*\n\s*[A-Z]/im, // CAST followed by character name on next line
   ];
   
-  console.log(`[CAST DEBUG] Searching for CAST section...`);
-  console.log(`[CAST DEBUG] First 1000 chars: ${rawText.substring(0, 1000).replace(/\n/g, '\\n')}`);
   
   let castMatch: RegExpMatchArray | null = null;
   for (const pattern of castPatterns) {
     castMatch = rawText.match(pattern);
     if (castMatch) {
-      console.log(`[CAST DEBUG] Matched pattern: ${pattern}`);
       break;
     }
   }
   
   if (!castMatch) {
-    console.log(`[CAST DEBUG] No CAST section found`);
     return canonicalNames;
   }
   
-  console.log(`[CAST DEBUG] Found CAST match: "${castMatch[0].replace(/\n/g, '\\n')}"`)
   
   // Find where CAST section starts
   const castStart = castMatch.index! + castMatch[0].length;
@@ -2428,7 +2433,6 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
     // First, check if this name matches a canonical name from CAST section
     const castCanonical = findCanonicalMatch(name);
     if (castCanonical && castCanonical !== name.toUpperCase()) {
-      console.log(`[CAST Fix] Correcting "${name}" to "${castCanonical}"`);
       
       // Check if we already have this canonical role
       if (rolesByCanonical.has(castCanonical)) {
@@ -2461,7 +2465,6 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       if (words.length === 1 && existingWords.length === 1) {
         if (areOCRVariants(name, existingCanon)) {
           // Merge into the one with more lines (already sorted, so existingCanon has more)
-          console.log(`[OCR Fix] Merging "${name}" into "${existingCanon}"`);
           nameMap.set(name, existingCanon);
           existingRole.lineCount += role.lineCount;
           canonical = existingCanon;
@@ -2507,15 +2510,19 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       }
       
       // Check for OCR variants in last names of multi-word names
+      // Only merge if first words also match or are OCR variants (prevents HON. SAMANTHA STOGEL → JERRY FOGEL)
       if (words.length > 1 && existingWords.length > 1) {
         if (areOCRVariants(lastName, existingLastName)) {
-          // Merge into the one with more lines
-          console.log(`[OCR Fix] Merging "${name}" into "${existingCanon}" (last name match)`);
-          nameMap.set(name, existingCanon);
-          existingRole.lineCount += role.lineCount;
-          canonical = existingCanon;
-          foundMatch = true;
-          break;
+          const firstName = words[0];
+          const existingFirstName = existingWords[0];
+          const firstNamesMatch = firstName === existingFirstName || areOCRVariants(firstName, existingFirstName);
+          if (firstNamesMatch) {
+            nameMap.set(name, existingCanon);
+            existingRole.lineCount += role.lineCount;
+            canonical = existingCanon;
+            foundMatch = true;
+            break;
+          }
         }
       }
     }
@@ -2534,7 +2541,6 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
     if (words.length === 2) {
       const [w1, w2] = words;
       if (knownNames.has(w1) && knownNames.has(w2) && w1 !== w2) {
-        console.log(`[PDF Fix] Splitting merged name "${name}" into "${w1}" and "${w2}"`);
         const half = Math.ceil(role.lineCount / 2);
         const role1 = rolesByCanonical.get(w1)!;
         const role2 = rolesByCanonical.get(w2)!;
@@ -2557,7 +2563,6 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       if (rolesByCanonical.has(firstName) && firstName !== name) {
         const firstNameRole = rolesByCanonical.get(firstName)!;
         if (firstNameRole.lineCount >= role.lineCount * 2 || (role.lineCount <= 2 && firstNameRole.lineCount >= 1)) {
-          console.log(`[Name Fix] Merging "${name}" into "${firstName}"`);
           firstNameRole.lineCount += role.lineCount;
           nameMap.set(name, firstName);
           fullNameMerges.push(name);

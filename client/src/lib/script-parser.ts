@@ -73,15 +73,16 @@ function areOCRVariants(name1: string, name2: string): boolean {
   const matchRatio = matches / shorter.length;
   const firstLetterMatches = upper1[0] === upper2[0];
   
-  // If 75%+ of shorter name's letters match, and first letter matches, likely OCR variant
-  if (matchRatio >= 0.75 && firstLetterMatches && shorter.length >= 4 && longer.length <= shorter.length * 1.3) {
+  // If 80%+ of shorter name's letters match, and first letter matches, likely OCR variant
+  // But only if names are very similar length (within 20%) to avoid matching JEAN/JORDAN, DAVE/DENHAM
+  if (matchRatio >= 0.8 && firstLetterMatches && shorter.length >= 4 && longer.length <= shorter.length * 1.2) {
     return true;
   }
   
   // For very high overlap (90%+), allow even if first letter doesn't match
-  // but only for longer names and similar lengths to avoid false positives
-  // (e.g. SAM/JAMES: all SAM letters exist in JAMES but they are different names)
-  if (matchRatio >= 0.9 && shorter.length >= 5 && longer.length <= shorter.length * 1.4) {
+  // but only for longer names and very similar lengths to avoid false positives
+  // (e.g. TERESA/TRAINEES: all TERESA letters exist in TRAINEES but they are different names)
+  if (matchRatio >= 0.9 && shorter.length >= 5 && longer.length <= shorter.length * 1.15) {
     return true;
   }
   
@@ -105,7 +106,7 @@ function areOCRVariants(name1: string, name2: string): boolean {
     ocrConfusions[char2]?.includes(char1) ||
     char1 === char2;
   
-  if (matchRatio >= 0.75 && firstLetterConfused && shorter.length >= 4 && longer.length <= shorter.length * 1.5) {
+  if (matchRatio >= 0.8 && firstLetterConfused && shorter.length >= 4 && longer.length <= shorter.length * 1.2) {
     return true;
   }
   
@@ -1554,7 +1555,11 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   }
   
   // "Down below", "Up above", "Nearby", "Behind them" - scene description
-  if (/^(Down below|Up above|Nearby|Behind|In front|Across|Through|Inside|Outside|Overhead|Below)/i.test(trimmed)) {
+  // "Through" only as stage direction when followed by spatial/visual words
+  if (/^(Down below|Up above|Nearby|Behind|In front|Across|Inside|Outside|Overhead|Below)\b/i.test(trimmed)) {
+    return false;
+  }
+  if (/^Through\s+(?:the\s+)?(window|door|glass|wall|fog|smoke|haze|darkness|crowd|gate|fence|bars|curtain|opening|gap|lens|scope|binoculars|windshield)/i.test(trimmed)) {
     return false;
   }
   
@@ -1975,13 +1980,16 @@ export function parseScript(rawText: string): ParsedScript {
     
     // Lines mentioning character name in ALL CAPS + action verb mid-line are action
     // e.g., "JOHN swears under his breath and pulls over"
-    if (/[A-Z]{2,}\s+(swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|looks?\s+at|turns?|enters?|exits?|stands?|sits?)\b/i.test(trimmed)) {
+    // NOTE: No /i flag — [A-Z]{2,} must match actual uppercase (prevents "every turn" false positive)
+    if (/[A-Z]{2,}\s+(?:swears?|mutters?|sighs?|groans?|nods?|shakes?|walks?|runs?|drives?|pulls?|looks?|looks?\s+at|turns?|enters?|exits?|stands?|sits?)\b/.test(trimmed)) {
       return true;
     }
     
     // Lines starting with character name + possessive ('s) are scene description
     // e.g., "Callie's apartment.", "John's car pulls up."
-    if (/^[A-Z][a-z]+('s|'s)\s+\w+/i.test(trimmed)) {
+    // Exclude common contractions: That's, What's, It's, Here's, There's, Let's, He's, She's, Who's, How's
+    if (/^[A-Z][a-z]+('s|'s)\s+\w+/i.test(trimmed) &&
+        !/^(That|What|It|Here|There|Let|He|She|Who|How|Where|When|Why)('s|'s)\b/i.test(trimmed)) {
       return true;
     }
     
@@ -2454,14 +2462,19 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
       }
       
       // Check for OCR variants in last names of multi-word names
+      // Only merge if first words also match or are OCR variants
       if (words.length > 1 && existingWords.length > 1) {
         if (areOCRVariants(lastName, existingLastName)) {
-          // Merge into the one with more lines
-          nameMap.set(name, existingCanon);
-          existingRole.lineCount += role.lineCount;
-          canonical = existingCanon;
-          foundMatch = true;
-          break;
+          const firstName = words[0];
+          const existingFirstName = existingWords[0];
+          const firstNamesMatch = firstName === existingFirstName || areOCRVariants(firstName, existingFirstName);
+          if (firstNamesMatch) {
+            nameMap.set(name, existingCanon);
+            existingRole.lineCount += role.lineCount;
+            canonical = existingCanon;
+            foundMatch = true;
+            break;
+          }
         }
       }
     }
