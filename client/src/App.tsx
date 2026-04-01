@@ -155,7 +155,7 @@ function resolveInitialView(): { view: View; checkoutSuccess: boolean } {
 }
 
 function AppContent() {
-  const { session, createSessionFromParsed, setUserRole } = useSessionContext();
+  const { session, createSession, createSessionFromParsed, setUserRole } = useSessionContext();
   const { syncFromServer } = useProfile();
   const { user } = useAuth();
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
@@ -301,7 +301,7 @@ function AppContent() {
   const swipeBackHandler = viewsWithBack.includes(view) ? handleBackToHome : undefined;
   useSwipeBack(swipeBackHandler);
 
-  const handleLoadScript = useCallback((script: SavedScript) => {
+  const handleLoadScript = useCallback(async (script: SavedScript) => {
     if (script.rolesJson && script.scenesJson) {
       const loaded = createSessionFromParsed(
         script.name,
@@ -313,8 +313,17 @@ function AppContent() {
       }
       window.history.pushState({ view: "rehearsal" }, "", "/rehearsal");
       setView("rehearsal");
+    } else if (script.rawScript) {
+      const loaded = await createSession(script.name, script.rawScript);
+      if (loaded && script.userRoleId) {
+        setUserRole(script.userRoleId);
+      }
+      if (loaded) {
+        window.history.pushState({ view: "rehearsal" }, "", "/rehearsal");
+        setView("rehearsal");
+      }
     }
-  }, [createSessionFromParsed, setUserRole]);
+  }, [createSession, createSessionFromParsed, setUserRole]);
 
   return (
     <div className={`min-h-screen bg-background text-foreground ${isExiting ? "animate-page-exit" : ""}`}>

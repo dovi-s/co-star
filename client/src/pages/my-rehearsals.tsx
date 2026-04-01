@@ -412,12 +412,11 @@ export function MyRehearsalsPage({
               )}
 
               {scripts && scripts.length > 0 && (
-                <div className="space-y-3">
-                  {scripts.map((script, i) => (
+                <div className="flex flex-col gap-3">
+                  {scripts.map((script) => (
                     <div
                       key={script.id}
-                      className="glass-surface-heavy rounded-xl p-4 animate-fade-in-up border border-border/60"
-                      style={{ animationDelay: `${i * 60}ms` }}
+                      className="bg-card rounded-xl p-4 border border-border shadow-sm"
                       data-testid={`card-script-${script.id}`}
                     >
                       <div className="flex items-center justify-between gap-3">
@@ -427,11 +426,11 @@ export function MyRehearsalsPage({
                           disabled={loadMutation.isPending}
                           data-testid={`button-load-script-${script.id}`}
                         >
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2">
                             <FileText className="h-4 w-4 text-primary shrink-0" />
-                            <p className="text-sm font-semibold text-foreground truncate">{script.name}</p>
+                            <span className="text-sm font-semibold text-foreground truncate">{script.name}</span>
                           </div>
-                          <div className="flex items-center gap-2 pl-6">
+                          <div className="flex items-center gap-2 mt-1.5 pl-6">
                             <Clock className="h-3 w-3 text-muted-foreground" />
                             <span className="text-[11px] text-muted-foreground">{formatDate(script.updatedAt)}</span>
                           </div>
