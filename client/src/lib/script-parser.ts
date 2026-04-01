@@ -169,6 +169,7 @@ function isGarbledVersion(garbled: string, canonical: string): boolean {
 }
 
 const DIRECTION_REGEX = /\[([^\]]+)\]/g;
+const CURLY_DIRECTION_REGEX = /\{([^}]+)\}/g;
 const PARENTHETICAL_REGEX = /\(([^)]+)\)/g;
 
 // Written-out numbers for scene headings (up to 99)
@@ -1359,6 +1360,12 @@ function extractDirectionsFromDialogue(text: string): { cleanText: string; direc
     return "";
   });
   
+  // Extract {curly brace directions} - used in play/musical scripts
+  cleanText = cleanText.replace(CURLY_DIRECTION_REGEX, (_, dir) => {
+    directions.push(dir.trim());
+    return "";
+  });
+  
   // Extract (parenthetical directions) that contain emotion/action keywords
   cleanText = cleanText.replace(PARENTHETICAL_REGEX, (match, content) => {
     const lower = content.toLowerCase().trim();
@@ -1498,6 +1505,9 @@ function isDialogueContinuation(line: string, originalLine: string): boolean {
   if (!trimmed) return false;
   
   // === STOP PATTERNS: These definitely end dialogue ===
+  
+  // Lines that are entirely stage directions in braces/brackets
+  if (/^\{[^}]+\}$/.test(trimmed) || /^\[[^\]]+\]$/.test(trimmed)) return false;
   
   // Scene headings (INT./EXT.)
   if (SCENE_HEADING_REGEX.test(trimmed)) return false;
@@ -2316,7 +2326,8 @@ function extractCastNames(rawText: string): string[] {
 // Consolidate roles that are variations of the same character
 // e.g., "DET COLE", "DETECTIVE COLE", "COLE" -> "DETECTIVE COLE"
 // Also fixes OCR errors: "HARA" -> "SARA", "GRORGE" -> "GEORGE"
-function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string[] = []): Role[] {
+function consolidateRoles(inputRoles: Role[], scenes: Scene[], canonicalNames: string[] = []): Role[] {
+  let roles = [...inputRoles];
   // Title abbreviation map
   const titleExpansions: Record<string, string> = {
     "DET": "DETECTIVE",
@@ -2379,6 +2390,40 @@ function consolidateRoles(roles: Role[], scenes: Scene[], canonicalNames: string
     }
     
     return null;
+  }
+  
+  // Pre-pass: Fix OCR spurious spaces in role names (e.g., "AFR ICAN SINGERS" → "AFRICAN SINGERS")
+  const roleNameSet = new Set(roles.map(r => r.name));
+  const ocrSpaceFixes = new Map<string, string>();
+  for (const role of roles) {
+    const words = role.name.split(/\s+/);
+    if (words.length >= 2) {
+      for (let i = 0; i < words.length - 1; i++) {
+        const merged = [...words.slice(0, i), words[i] + words[i + 1], ...words.slice(i + 2)].join(' ');
+        if (roleNameSet.has(merged) && merged !== role.name) {
+          ocrSpaceFixes.set(role.name, merged);
+          break;
+        }
+      }
+    }
+  }
+  if (ocrSpaceFixes.size > 0) {
+    for (const [badName, goodName] of ocrSpaceFixes) {
+      const badRole = roles.find(r => r.name === badName);
+      const goodRole = roles.find(r => r.name === goodName);
+      if (badRole && goodRole) {
+        goodRole.lineCount += badRole.lineCount;
+        for (const scene of scenes) {
+          for (const line of scene.lines) {
+            if (line.roleName === badName) {
+              line.roleName = goodName;
+              line.roleId = goodRole.id;
+            }
+          }
+        }
+      }
+    }
+    roles = roles.filter(r => !ocrSpaceFixes.has(r.name));
   }
   
   // Sort roles by line count descending - names with more lines are more likely correct
