@@ -223,23 +223,12 @@ function fuzzyMatch(a: string, b: string): boolean {
 }
 
 const voiceAssignmentCache = new Map<string, { voice: VoiceType; timestamp: number }>();
-const VOICE_CACHE_TTL = 1000 * 60 * 60; // 1 hour
+const VOICE_CACHE_TTL = 1000 * 60 * 60;
 
-function assignVoiceToCharacter(characterName: string, characterIndex: number): VoiceType {
+function detectGender(characterName: string): "female" | "male" {
   const name = characterName.toLowerCase().trim();
-  
-  const cached = voiceAssignmentCache.get(name);
-  if (cached && Date.now() - cached.timestamp < VOICE_CACHE_TTL) {
-    return cached.voice;
-  }
-  
-  if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
-    voiceAssignmentCache.set(name, { voice: "narrator", timestamp: Date.now() });
-    return "narrator";
-  }
-  
   const words = name.split(/[\s_-]+/);
-  
+
   const femaleIndicators = [
     "lady", "queen", "mrs", "miss", "ms", "duchess", "princess", "madam", "woman", "girl",
     "mother", "mom", "mama", "mommy", "sister", "daughter", "wife", "aunt", "grandmother", "grandma", "nana", "granny",
@@ -252,10 +241,10 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
     "waiter", "actor", "captain", "officer", "detective", "soldier", "guard", "driver", "pilot",
     "emperor", "count", "priest", "god", "hero", "senor", "herr", "monsieur"
   ];
-  
-  let genderScore = 0; // negative = female, positive = male
+
+  let genderScore = 0;
   let nameListMatch = false;
-  
+
   for (const word of words) {
     if (FEMALE_NAMES.has(word)) {
       genderScore -= 3;
@@ -284,7 +273,7 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
       if (foundMale) { genderScore += 2; nameListMatch = true; }
     }
   }
-  
+
   for (const word of words) {
     if (femaleIndicators.includes(word)) genderScore -= 2;
     if (maleIndicators.includes(word)) genderScore += 2;
@@ -295,36 +284,126 @@ function assignVoiceToCharacter(characterName: string, characterIndex: number): 
   for (const ind of maleIndicators) {
     if (ind.length > 3 && name.includes(ind) && !words.includes(ind)) genderScore += 1;
   }
-  
+
   if (genderScore === 0 && !nameListMatch) {
     if (/[aeiou]$/.test(words[0]) && !/[aeioumn]a$/.test(words[0]) && words[0].length > 2) {
     } else {
       genderScore += 1;
     }
   }
-  
-  const isFemale = genderScore < 0;
-  
+
+  return genderScore < 0 ? "female" : "male";
+}
+
+function assignVoiceToCharacter(characterName: string, characterIndex: number): VoiceType {
+  const name = characterName.toLowerCase().trim();
+
+  const cached = voiceAssignmentCache.get(name);
+  if (cached && Date.now() - cached.timestamp < VOICE_CACHE_TTL) {
+    return cached.voice;
+  }
+
+  if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
+    voiceAssignmentCache.set(name, { voice: "narrator", timestamp: Date.now() });
+    return "narrator";
+  }
+
+  const gender = detectGender(name);
   const nameHash = name.split('').reduce((hash, char) => {
     return ((hash << 5) - hash) + char.charCodeAt(0);
   }, 0);
   const voiceIndex = Math.abs(nameHash) % 3;
-  
+
   let voiceType: VoiceType;
-  
-  if (isFemale) {
+  if (gender === "female") {
     const femaleVoices: VoiceType[] = ["female_1", "female_2", "female_3"];
     voiceType = femaleVoices[voiceIndex];
   } else {
     const maleVoices: VoiceType[] = ["male_1", "male_2", "male_3"];
     voiceType = maleVoices[voiceIndex];
   }
-  
+
   voiceAssignmentCache.set(name, { voice: voiceType, timestamp: Date.now() });
-  console.log(`[Voice] ${characterName} → ${voiceType} (score=${genderScore}, nameMatch=${nameListMatch})`);
-  
+  console.log(`[Voice] ${characterName} → ${voiceType} (gender=${gender})`);
+
   return voiceType;
 }
+
+function registerSceneVoices(characterNames: string[]): Record<string, { voice: VoiceType; stabilityOffset: number; styleOffset: number }> {
+  const now = Date.now();
+  const results: Record<string, { voice: VoiceType; stabilityOffset: number; styleOffset: number }> = {};
+  const maleChars: string[] = [];
+  const femaleChars: string[] = [];
+  const narrators: string[] = [];
+
+  for (const raw of characterNames) {
+    const name = raw.toLowerCase().trim();
+    if (name.includes("narrator") || name.includes("stage") || name.includes("direction")) {
+      narrators.push(name);
+    } else if (detectGender(name) === "female") {
+      femaleChars.push(name);
+    } else {
+      maleChars.push(name);
+    }
+  }
+
+  const maleVoices: VoiceType[] = ["male_1", "male_2", "male_3"];
+  const femaleVoices: VoiceType[] = ["female_1", "female_2", "female_3"];
+
+  const assignGroup = (chars: string[], voices: VoiceType[]) => {
+    const used = new Set<number>();
+    const assignments: { name: string; voiceIdx: number }[] = [];
+
+    for (let i = 0; i < chars.length; i++) {
+      const name = chars[i];
+      const nameHash = name.split('').reduce((h, c) => ((h << 5) - h) + c.charCodeAt(0), 0);
+      let preferred = Math.abs(nameHash) % 3;
+
+      if (chars.length <= 3) {
+        if (used.has(preferred)) {
+          for (let j = 0; j < 3; j++) {
+            const candidate = (preferred + j + 1) % 3;
+            if (!used.has(candidate)) {
+              preferred = candidate;
+              break;
+            }
+          }
+        }
+        used.add(preferred);
+      }
+
+      assignments.push({ name, voiceIdx: preferred });
+    }
+
+    const stabilityOffsets = [0, -0.04, 0.04];
+    const styleOffsets = [0, 0.03, -0.02];
+
+    for (let i = 0; i < assignments.length; i++) {
+      const { name, voiceIdx } = assignments[i];
+      const voice = voices[voiceIdx];
+
+      const sameVoiceIndex = assignments.filter((a, j) => j < i && a.voiceIdx === voiceIdx).length;
+      const stabOff = stabilityOffsets[sameVoiceIndex % stabilityOffsets.length];
+      const styOff = styleOffsets[sameVoiceIndex % styleOffsets.length];
+
+      voiceAssignmentCache.set(name, { voice, timestamp: now });
+      results[name] = { voice, stabilityOffset: stabOff, styleOffset: styOff };
+    }
+  };
+
+  assignGroup(maleChars, maleVoices);
+  assignGroup(femaleChars, femaleVoices);
+
+  for (const name of narrators) {
+    voiceAssignmentCache.set(name, { voice: "narrator", timestamp: now });
+    results[name] = { voice: "narrator", stabilityOffset: 0, styleOffset: 0 };
+  }
+
+  console.log("[Voice] Scene registered:", Object.entries(results).map(([n, v]) => `${n}→${v.voice}`).join(", "));
+  return results;
+}
+
+const sceneVoiceProfiles = new Map<string, { stabilityOffset: number; styleOffset: number }>();
 
 function getVoiceSettings(emotion: string, preset: string, text: string = "", direction: string = "") {
   let stability = 0.62;
@@ -643,8 +722,35 @@ export async function registerRoutes(
   });
 
   app.post("/api/tts/reset", (_req: Request, res: Response) => {
-    console.log("[Voice] Session reset requested (cache preserved for consistency)");
+    sceneVoiceProfiles.clear();
+    console.log("[Voice] Session reset — scene profiles cleared");
     res.json({ success: true });
+  });
+
+  app.post("/api/tts/register-scene", (req: Request, res: Response) => {
+    try {
+      const { characters } = req.body;
+      if (!Array.isArray(characters) || characters.length === 0) {
+        return res.status(400).json({ error: "characters array required" });
+      }
+      const profiles = registerSceneVoices(characters);
+      sceneVoiceProfiles.clear();
+      for (const [name, profile] of Object.entries(profiles)) {
+        sceneVoiceProfiles.set(name, {
+          stabilityOffset: profile.stabilityOffset,
+          styleOffset: profile.styleOffset,
+        });
+      }
+      res.json({
+        success: true,
+        assignments: Object.fromEntries(
+          Object.entries(profiles).map(([name, p]) => [name, p.voice])
+        ),
+      });
+    } catch (error) {
+      console.error("[Voice] Scene registration error:", error);
+      res.status(500).json({ error: "Failed to register scene voices" });
+    }
   });
 
   app.post("/api/tts/speak", async (req: Request, res: Response) => {
@@ -674,6 +780,12 @@ export async function registerRoutes(
       const voiceType = assignVoiceToCharacter(characterName || "Character", characterIndex || 0);
       const voiceId = ELEVENLABS_VOICES[voiceType];
       const voiceSettings = getVoiceSettings(emotion || "neutral", preset || "natural", cleanedText, direction || "");
+
+      const charProfile = sceneVoiceProfiles.get((characterName || "").toLowerCase().trim());
+      if (charProfile) {
+        voiceSettings.stability = Math.max(0.3, Math.min(0.9, voiceSettings.stability + charProfile.stabilityOffset));
+        voiceSettings.style = Math.max(0, Math.min(0.5, voiceSettings.style + charProfile.styleOffset));
+      }
 
       const prevText = typeof previousText === "string" ? previousText.slice(0, 200) : "";
       const nxtText = typeof nextText === "string" ? nextText.slice(0, 200) : "";

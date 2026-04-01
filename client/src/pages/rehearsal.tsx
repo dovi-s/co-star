@@ -1254,14 +1254,25 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     }
   }, [session?.isPlaying, session?.currentLineIndex, session?.currentSceneIndex, getCurrentLine, isUserLine]);
 
+  const sceneRegisteredRef = useRef(false);
+
   const startPlayback = useCallback(() => {
     speakingLineRef.current = null;
     if (session?.currentLineIndex === 0) {
       resetRunPerformance();
     }
+    if (!sceneRegisteredRef.current && session?.roles && session.roles.length > 1) {
+      sceneRegisteredRef.current = true;
+      const characters = session.roles.map(r => r.name);
+      fetch("/api/tts/register-scene", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characters }),
+      }).catch(() => {});
+    }
     trackFeature("rehearsal", "play");
     setPlaying(true);
-  }, [session?.currentLineIndex, resetRunPerformance, setPlaying]);
+  }, [session?.currentLineIndex, session?.roles, resetRunPerformance, setPlaying]);
 
   const handlePlayPause = async () => {
     if (session?.isPlaying) {
