@@ -87,15 +87,31 @@ function cleanGeneratedScript(text: string): string {
     .trim();
 }
 
-// Standard American English voices ONLY - no accents, no mixing
-// Using ElevenLabs' verified American voices
+function normalizeForTTS(text: string): string {
+  let result = text
+    .replace(/\s+/g, ' ')
+    .replace(/\s+([.,!?;:])/g, '$1')
+    .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')
+    .trim();
+
+  result = result.replace(/\b(\w*?)([a-zA-Z])\2{2,}(\w*)\b/g, (match, prefix, char, suffix) => {
+    if (!suffix || suffix.length === 0) {
+      return prefix + char;
+    }
+    if (/[aeiouAEIOU]/.test(char)) return prefix + char + char + suffix;
+    return prefix + char + suffix;
+  });
+
+  return result;
+}
+
 const ELEVENLABS_VOICES = {
   male_1: "29vD33N1CtxCmqQRPOHJ",    // Drew - American male (neutral)
   male_2: "ErXwobaYiN019PkySvjV",    // Antoni - American male (calm)  
   male_3: "VR6AewLTigWG4xSOukaG",    // Arnold - American male (clear)
   female_1: "21m00Tcm4TlvDq8ikWAM",  // Rachel - American female (neutral)
   female_2: "AZnzlk1XvdvUeBnXmlld",  // Domi - American female (calm)
-  female_3: "MF3mGyEYCl7XYWbV9V6O",  // Elli - American female (clear)
+  female_3: "EXAVITQu4vr4xnSDxMaL",  // Bella - American female (warm, no accent)
   narrator: "29vD33N1CtxCmqQRPOHJ",  // Drew for narration
 };
 
@@ -479,6 +495,19 @@ function getVoiceSettings(emotion: string, preset: string, text: string = "", di
     stability = Math.min(0.72, stability + 0.02);
   }
 
+  const endsWithPeriod = /[.]\s*$/.test(trimmedText);
+  const endsWithExclamation = /[!]\s*$/.test(trimmedText);
+  const endsWithQuestion = /[?]\s*$/.test(trimmedText);
+
+  if (endsWithPeriod && !endsWithQuestion) {
+    stability = Math.min(0.82, stability + 0.05);
+    style = Math.max(0, style - 0.02);
+  }
+
+  if (endsWithExclamation) {
+    stability = Math.max(0.45, stability - 0.03);
+  }
+
   return {
     stability,
     similarity_boost: similarityBoost,
@@ -761,11 +790,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Text is required" });
       }
 
-      const cleanedText = text
-        .replace(/\s+/g, ' ')
-        .replace(/\s+([.,!?;:])/g, '$1')
-        .replace(/([.,!?;:])(?=[A-Za-z])/g, '$1 ')
-        .trim();
+      const cleanedText = normalizeForTTS(text);
 
       const apiKey = process.env.ELEVENLABS_API_KEY;
       if (!apiKey) {
