@@ -47,13 +47,12 @@ import {
   Flame,
   Send,
   X,
-  Zap,
-  Star,
-  Rocket,
-  Bug,
   MoreHorizontal,
   EyeOff,
   Trash2,
+  CheckCircle2,
+  Circle,
+  ChevronDown as ChevronDownIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -74,71 +73,42 @@ interface RoadmapItem {
   status: Status;
 }
 
-const roadmapItems: RoadmapItem[] = [
-  { title: "Solo Rehearsal", description: "Run scenes with your scene partner reading every other part.", icon: Mic, status: "live" },
-  { title: "Voices", description: "Six realistic ElevenLabs voices with emotion detection and SSML prosody.", icon: Volume2, status: "live" },
-  { title: "Script Import", description: "Paste text, upload PDF/TXT, or snap a photo. Built-in OCR for scanned scripts.", icon: FileUp, status: "live" },
-  { title: "Smart Parsing", description: "Automatic character detection, stage directions, scene breaks, and action line context.", icon: Layers, status: "live" },
-  { title: "Three-Line Reader", description: "Previous, current, and next lines with visual cues for your turns.", icon: BookOpen, status: "live" },
-  { title: "Speech Recognition", description: "Hands-free line delivery with automatic word matching and silence detection.", icon: Mic, status: "live" },
-  { title: "Performance Feedback", description: "Word accuracy tracking, skip detection, and color-coded results after each run.", icon: BarChart3, status: "live" },
-  { title: "Rehearsal History", description: "Track every run with accuracy grades, trends, and performance comparisons over time.", icon: Clock, status: "live" },
-  { title: "Line Memorization", description: "Four progressive levels: Full, Partial, Cue, and Memory.", icon: Brain, status: "live" },
-  { title: "LINE Voice Command", description: "Say \"line\" during your turn to get a whispered hint of your next words.", icon: Hand, status: "live" },
-  { title: "Hands-Free Mode", description: "Audio-only rehearsal with auto-play, auto-restart, and screen wake lock.", icon: Car, status: "live" },
-  { title: "Self-Tape Recording", description: "Record with front camera and watermark. Audio-only mode when camera is off.", icon: Video, status: "live" },
-  { title: "Audition Mode", description: "Dark translucent UI with glassmorphic styling when camera is active.", icon: Camera, status: "live" },
-  { title: "Context Peek", description: "View stage directions and action lines preceding any line of dialogue.", icon: Eye, status: "live" },
-  { title: "Jump to Line", description: "Search and jump to any line or scene in your script instantly.", icon: Search, status: "live" },
-  { title: "Scene Transitions", description: "Visual scene cards with descriptions when advancing between scenes.", icon: Sparkles, status: "live" },
-  { title: "Achievements and Streaks", description: "Earn milestones for consistency, line counts, and daily practice goals.", icon: Trophy, status: "live" },
-  { title: "Countdown Timer", description: "Professional 3-2-1 countdown before recording begins.", icon: Timer, status: "live" },
-  { title: "Multiplayer Table Read", description: "Real-time remote rehearsals with WebSocket rooms, host controls, and role selection.", icon: Users, status: "live" },
-  { title: "Video Calls", description: "Peer-to-peer WebRTC video and audio during table reads with speaker highlighting.", icon: Wifi, status: "live" },
-  { title: "Accounts and Auth", description: "Email, password, and Google Sign-In with secure sessions and password recovery.", icon: Lock, status: "live" },
-  { title: "Actor Profiles", description: "Onboarding wizard with headshot, stage name, physical attributes, and union status.", icon: User, status: "live" },
-  { title: "Cloud Script Library", description: "Save scripts to your account and pick up where you left off.", icon: Save, status: "live" },
-  { title: "Pro Subscription", description: "$9/mo or $79/yr for watermark-free recordings, saved scripts, and history.", icon: CreditCard, status: "live" },
-  { title: "Feature Board", description: "Vote on features and suggest new ideas to shape the product.", icon: Lightbulb, status: "live" },
-  { title: "Keyboard Shortcuts", description: "Space, arrows, R to repeat, Escape to stop. Full keyboard control.", icon: Keyboard, status: "live" },
-  { title: "Bookmarks", description: "Mark and return to specific lines during rehearsal.", icon: Bookmark, status: "live" },
-  { title: "Accessibility", description: "Screen reader support, keyboard navigation, WCAG AA contrast, and skip-to-content.", icon: Accessibility, status: "live" },
-  { title: "PWA Ready", description: "Install as an app on any device. Offline support with service worker.", icon: Smartphone, status: "live" },
-  { title: "Dark and Light Mode", description: "System-aware theme with Liquid Glass design throughout.", icon: Globe, status: "live" },
+const upNext: RoadmapItem[] = [
   { title: "Scene Library", description: "Browse and rehearse from a curated collection of monologues and scenes.", icon: Library, status: "coming-soon" },
   { title: "Performance Analytics", description: "Detailed charts tracking accuracy, pace, and growth trends over time.", icon: TrendingUp, status: "coming-soon" },
   { title: "Services Directory", description: "Find acting coaches, readers, and industry professionals.", icon: Briefcase, status: "coming-soon" },
   { title: "Casting Board", description: "Discover open casting calls and submit self-tapes directly.", icon: Theater, status: "coming-soon" },
 ];
 
-const statusConfig: Record<Status, { label: string; className: string }> = {
-  "live": { label: "Live", className: "bg-green-600 text-white border-transparent" },
-  "in-progress": { label: "In Progress", className: "bg-primary text-primary-foreground border-transparent" },
-  "coming-soon": { label: "Coming Soon", className: "bg-muted text-muted-foreground border-transparent" },
-};
-
-const statusGroups: { status: Status; title: string }[] = [
-  { status: "live", title: "Live Now" },
-  { status: "in-progress", title: "In Progress" },
-  { status: "coming-soon", title: "Coming Soon" },
+const shipped: { title: string; icon: typeof Mic }[] = [
+  { title: "Solo Rehearsal", icon: Mic },
+  { title: "ElevenLabs Voices", icon: Volume2 },
+  { title: "Script Import", icon: FileUp },
+  { title: "Smart Parsing", icon: Layers },
+  { title: "Three-Line Reader", icon: BookOpen },
+  { title: "Speech Recognition", icon: Mic },
+  { title: "Performance Feedback", icon: BarChart3 },
+  { title: "Rehearsal History", icon: Clock },
+  { title: "Line Memorization", icon: Brain },
+  { title: "LINE Voice Command", icon: Hand },
+  { title: "Hands-Free Mode", icon: Car },
+  { title: "Self-Tape Recording", icon: Video },
+  { title: "Audition Mode", icon: Camera },
+  { title: "Context Peek", icon: Eye },
+  { title: "Jump to Line", icon: Search },
+  { title: "Scene Transitions", icon: Sparkles },
+  { title: "Achievements", icon: Trophy },
+  { title: "Table Read", icon: Users },
+  { title: "Video Calls", icon: Wifi },
+  { title: "Actor Profiles", icon: User },
+  { title: "Cloud Library", icon: Save },
+  { title: "Pro Subscription", icon: CreditCard },
+  { title: "Keyboard Shortcuts", icon: Keyboard },
+  { title: "Bookmarks", icon: Bookmark },
+  { title: "Accessibility", icon: Accessibility },
+  { title: "PWA / Offline", icon: Smartphone },
+  { title: "Dark / Light Mode", icon: Globe },
 ];
-
-interface ChangelogEntry {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  version: string | null;
-  publishedAt: string;
-}
-
-const categoryConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; label: string }> = {
-  feature: { icon: Sparkles, color: "text-blue-500 bg-blue-500/10", label: "New Feature" },
-  improvement: { icon: Zap, color: "text-green-500 bg-green-500/10", label: "Improvement" },
-  fix: { icon: Bug, color: "text-orange-500 bg-orange-500/10", label: "Bug Fix" },
-  milestone: { icon: Star, color: "text-amber-500 bg-amber-500/10", label: "Milestone" },
-  launch: { icon: Rocket, color: "text-purple-500 bg-purple-500/10", label: "Launch" },
-};
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr);
@@ -184,7 +154,6 @@ export function RoadmapPage({ onBack, initialTab = "roadmap" }: { onBack: () => 
 
   const tabs: { id: RoadmapTab; label: string; icon: typeof Map }[] = [
     { id: "roadmap", label: "Roadmap", icon: Map },
-    { id: "whats-new", label: "What's New", icon: Sparkles },
     { id: "ideas", label: "Ideas", icon: Lightbulb },
   ];
 
@@ -226,7 +195,6 @@ export function RoadmapPage({ onBack, initialTab = "roadmap" }: { onBack: () => 
 
       <main className="flex-1">
         {tab === "roadmap" && <RoadmapContent />}
-        {tab === "whats-new" && <WhatsNewContent />}
         {tab === "ideas" && <IdeasContent />}
       </main>
     </div>
@@ -234,146 +202,86 @@ export function RoadmapPage({ onBack, initialTab = "roadmap" }: { onBack: () => 
 }
 
 function RoadmapContent() {
-  let animIndex = 0;
-  const liveCount = roadmapItems.filter(i => i.status === "live").length;
-  const inProgressCount = roadmapItems.filter(i => i.status === "in-progress").length;
-  const totalCount = roadmapItems.length;
-  const completedPercent = Math.round((liveCount / totalCount) * 100);
+  const [showShipped, setShowShipped] = useState(false);
 
   return (
     <div className="px-5 py-6">
       <div className="max-w-2xl mx-auto">
-        <div className="mb-6 animate-fade-in-up" data-testid="roadmap-progress">
-          <div className="glass-surface rounded-lg p-4">
-            <div className="flex items-baseline justify-between mb-2">
-              <span className="text-sm font-semibold text-foreground">Overall progress</span>
-              <span className="text-xs text-muted-foreground">{completedPercent}% shipped</span>
+        <div className="glass-surface rounded-lg p-4 mb-6 animate-fade-in-up" data-testid="roadmap-hero">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-4 w-4 text-primary" />
             </div>
-            <div className="w-full h-2 rounded-full bg-muted overflow-hidden mb-3">
-              <div
-                className="h-full rounded-full bg-green-600 transition-all duration-500"
-                style={{ width: `${completedPercent}%` }}
-                data-testid="progress-bar-shipped"
-              />
-            </div>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5" data-testid="stat-live">
-                <span className="w-2 h-2 rounded-full bg-green-600" />
-                <span>{liveCount} live</span>
-              </div>
-              <div className="flex items-center gap-1.5" data-testid="stat-in-progress">
-                <span className="w-2 h-2 rounded-full bg-primary" />
-                <span>{inProgressCount} in progress</span>
-              </div>
-              <div className="flex items-center gap-1.5" data-testid="stat-coming-soon">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/30" />
-                <span>{totalCount - liveCount - inProgressCount} planned</span>
-              </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{shipped.length} features shipped</p>
+              <p className="text-[11px] text-muted-foreground">{upNext.length} more on the way</p>
             </div>
           </div>
         </div>
 
-        {statusGroups.map((group) => {
-          const groupItems = roadmapItems.filter((item) => item.status === group.status);
-          if (groupItems.length === 0) return null;
-          const config = statusConfig[group.status];
-
-          return (
-            <div key={group.status} className="mb-6 last:mb-0">
-              <div className="flex items-center gap-2 mb-3 animate-fade-in-up" style={{ animationDelay: `${animIndex++ * 80}ms` }}>
-                <h2 className="text-base font-semibold text-foreground">{group.title}</h2>
-                <Badge className={cn("no-default-hover-elevate", config.className)}>
-                  {groupItems.length}
-                </Badge>
-              </div>
-              <div className="space-y-2">
-                {groupItems.map((item) => {
-                  const delay = animIndex++ * 80;
-                  return (
-                    <div
-                      key={item.title}
-                      className="glass-surface rounded-lg p-3 animate-fade-in-up transition-shadow duration-200 hover:shadow-md"
-                      style={{ animationDelay: `${delay}ms` }}
-                      data-testid={`card-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={cn(
-                          "flex items-center justify-center w-8 h-8 rounded-md shrink-0",
-                          item.status === "live" ? "bg-green-600/10 text-green-600" :
-                          item.status === "in-progress" ? "bg-primary/10 text-primary" :
-                          "bg-muted text-muted-foreground"
-                        )}>
-                          <item.icon className="h-3.5 w-3.5" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium text-foreground">{item.title}</span>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-function WhatsNewContent() {
-  const { data: entries = [], isLoading } = useQuery<ChangelogEntry[]>({
-    queryKey: ["/api/changelog"],
-  });
-
-  return (
-    <div className="px-5 py-6">
-      <div className="max-w-2xl mx-auto space-y-3">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="rounded-lg border border-border/50 p-4 animate-pulse">
-                <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                <div className="h-3 bg-muted rounded w-full mb-1" />
-                <div className="h-3 bg-muted rounded w-2/3" />
-              </div>
-            ))}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-sm font-semibold text-foreground">Coming Next</h2>
+            <Badge className="bg-primary/10 text-primary border-transparent no-default-hover-elevate text-[10px]">
+              {upNext.length}
+            </Badge>
           </div>
-        ) : entries.length === 0 ? (
-          <div className="text-center py-16">
-            <Sparkles className="w-8 h-8 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-sm font-medium text-foreground mb-1">No updates yet</p>
-            <p className="text-xs text-muted-foreground">Check back soon for the latest improvements.</p>
-          </div>
-        ) : (
-          entries.map((entry) => {
-            const cat = categoryConfig[entry.category] || categoryConfig.feature;
-            const CatIcon = cat.icon;
-            return (
-              <div key={entry.id} className="glass-surface rounded-lg p-4" data-testid={`changelog-entry-${entry.id}`}>
+          <div className="space-y-2">
+            {upNext.map((item, i) => (
+              <div
+                key={item.title}
+                className="glass-surface rounded-lg p-3 animate-fade-in-up"
+                style={{ animationDelay: `${i * 60}ms` }}
+                data-testid={`card-roadmap-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
+              >
                 <div className="flex items-start gap-3">
-                  <div className={cn("w-8 h-8 rounded-md flex items-center justify-center shrink-0", cat.color)}>
-                    <CatIcon className="w-3.5 h-3.5" />
+                  <div className="flex items-center justify-center w-8 h-8 rounded-md shrink-0 bg-primary/10 text-primary">
+                    <item.icon className="h-3.5 w-3.5" />
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className="text-sm font-medium text-foreground">{entry.title}</span>
-                      {entry.version && (
-                        <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">v{entry.version}</span>
-                      )}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground">{item.title}</span>
+                      <Circle className="h-2.5 w-2.5 text-muted-foreground/40" />
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{entry.description}</p>
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className={cn("text-[10px] font-medium px-1.5 py-0.5 rounded", cat.color)}>{cat.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{formatDate(entry.publishedAt)}</span>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{item.description}</p>
                   </div>
                 </div>
               </div>
-            );
-          })
-        )}
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <button
+            onClick={() => setShowShipped(!showShipped)}
+            className="flex items-center gap-2 mb-3 group"
+            data-testid="toggle-shipped"
+          >
+            <h2 className="text-sm font-semibold text-foreground">Already Shipped</h2>
+            <Badge className="bg-green-600/10 text-green-600 border-transparent no-default-hover-elevate text-[10px]">
+              {shipped.length}
+            </Badge>
+            <ChevronDownIcon className={cn(
+              "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+              showShipped && "rotate-180"
+            )} />
+          </button>
+
+          {showShipped && (
+            <div className="grid grid-cols-2 gap-1.5 animate-fade-in-up">
+              {shipped.map((item) => (
+                <div
+                  key={item.title}
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-md bg-muted/30"
+                  data-testid={`shipped-${item.title.toLowerCase().replace(/\s+/g, "-")}`}
+                >
+                  <CheckCircle2 className="h-3 w-3 text-green-600 shrink-0" />
+                  <span className="text-[11px] text-muted-foreground truncate">{item.title}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -396,7 +396,7 @@ function AppContent() {
         <BrandPage onBack={handleBackToHome} />
       )}
       {view === "whats-new" && (
-        <RoadmapPage onBack={handleBackToHome} initialTab="whats-new" />
+        <RoadmapPage onBack={handleBackToHome} initialTab="roadmap" />
       )}
       </div>
       {session && session.userRoleId && view !== "rehearsal" && (
