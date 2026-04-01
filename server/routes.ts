@@ -3703,5 +3703,260 @@ MARY: You're kidding me.`;
     }
   });
 
+  const INTEGRATION_REGISTRY: Record<string, { name: string; category: string; description: string; icon: string; configFields: { key: string; label: string; placeholder: string; secret?: boolean; required?: boolean }[]; healthCheck: (config: Record<string, string>) => Promise<{ ok: boolean; message: string; details?: any }> }> = {
+    posthog: {
+      name: "PostHog",
+      category: "analytics",
+      description: "Session recordings, heatmaps, and product analytics",
+      icon: "📊",
+      configFields: [
+        { key: "api_key", label: "Project API Key", placeholder: "phc_...", secret: true, required: true },
+        { key: "host", label: "Host URL", placeholder: "https://us.i.posthog.com" },
+      ],
+      healthCheck: async (config) => {
+        if (!config.api_key) return { ok: false, message: "API key required" };
+        const allowedHosts = ["https://us.i.posthog.com", "https://eu.i.posthog.com", "https://app.posthog.com"];
+        const host = config.host || "https://us.i.posthog.com";
+        try {
+          const parsed = new URL(host);
+          if (!allowedHosts.includes(parsed.origin) && !parsed.hostname.endsWith(".posthog.com")) {
+            return { ok: false, message: "Host must be a PostHog domain (*.posthog.com)" };
+          }
+          const resp = await fetch(`${parsed.origin}/api/projects/`, { headers: { Authorization: `Bearer ${config.api_key}` }, signal: AbortSignal.timeout(5000) });
+          if (resp.ok) return { ok: true, message: "Connected successfully" };
+          if (resp.status === 401) return { ok: false, message: "Invalid API key" };
+          return { ok: false, message: `API returned ${resp.status}` };
+        } catch (e: any) {
+          return { ok: false, message: e.message || "Connection failed" };
+        }
+      },
+    },
+    ga4: {
+      name: "Google Analytics 4",
+      category: "analytics",
+      description: "Traffic analytics, conversions, and audience insights",
+      icon: "📈",
+      configFields: [
+        { key: "measurement_id", label: "Measurement ID", placeholder: "G-XXXXXXXXXX", required: true },
+        { key: "api_secret", label: "API Secret", placeholder: "For Measurement Protocol", secret: true },
+      ],
+      healthCheck: async (config) => {
+        if (!config.measurement_id) return { ok: false, message: "Measurement ID required" };
+        if (!/^G-[A-Z0-9]+$/.test(config.measurement_id)) return { ok: false, message: "Invalid Measurement ID format (expected G-XXXXXXXXXX)" };
+        return { ok: true, message: "Measurement ID format valid. Inject the gtag script to start tracking." };
+      },
+    },
+    stripe: {
+      name: "Stripe",
+      category: "payments",
+      description: "Payment processing and subscription management",
+      icon: "💳",
+      configFields: [],
+      healthCheck: async () => {
+        try {
+          const client = await getUncachableStripeClient();
+          if (!client) return { ok: false, message: "Stripe client not configured" };
+          const bal = await client.balance.retrieve();
+          return { ok: true, message: "Connected", details: { currency: bal.available?.[0]?.currency || "usd" } };
+        } catch (e: any) {
+          return { ok: false, message: e.message || "Stripe connection failed" };
+        }
+      },
+    },
+    sentry: {
+      name: "Sentry",
+      category: "monitoring",
+      description: "Error tracking and performance monitoring",
+      icon: "🐛",
+      configFields: [
+        { key: "dsn", label: "DSN", placeholder: "https://xxx@xxx.ingest.sentry.io/xxx", secret: true, required: true },
+        { key: "org", label: "Organization Slug", placeholder: "my-org" },
+        { key: "project", label: "Project Slug", placeholder: "my-project" },
+      ],
+      healthCheck: async (config) => {
+        if (!config.dsn) return { ok: false, message: "DSN required" };
+        try {
+          const url = new URL(config.dsn);
+          if (!url.hostname.includes("sentry")) return { ok: false, message: "DSN doesn't appear to be a Sentry URL" };
+          return { ok: true, message: "DSN format valid. Install @sentry/browser to begin capturing errors." };
+        } catch {
+          return { ok: false, message: "Invalid DSN format" };
+        }
+      },
+    },
+    mixpanel: {
+      name: "Mixpanel",
+      category: "analytics",
+      description: "User behavior analytics and funnel analysis",
+      icon: "🔬",
+      configFields: [
+        { key: "token", label: "Project Token", placeholder: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx", secret: true, required: true },
+        { key: "api_secret", label: "API Secret (for server-side)", placeholder: "Optional", secret: true },
+      ],
+      healthCheck: async (config) => {
+        if (!config.token) return { ok: false, message: "Project token required" };
+        if (config.token.length < 16) return { ok: false, message: "Token appears too short" };
+        return { ok: true, message: "Token format valid. Install mixpanel-browser to begin tracking." };
+      },
+    },
+    intercom: {
+      name: "Intercom",
+      category: "support",
+      description: "Customer support chat and help center",
+      icon: "💬",
+      configFields: [
+        { key: "app_id", label: "App ID", placeholder: "xxxxxxxx", required: true },
+        { key: "api_token", label: "Access Token", placeholder: "For server-side API", secret: true },
+      ],
+      healthCheck: async (config) => {
+        if (!config.app_id) return { ok: false, message: "App ID required" };
+        if (config.api_token) {
+          try {
+            const resp = await fetch("https://api.intercom.io/me", {
+              headers: { Authorization: `Bearer ${config.api_token}`, Accept: "application/json" },
+              signal: AbortSignal.timeout(5000),
+            });
+            if (resp.ok) return { ok: true, message: "Connected and authenticated" };
+            if (resp.status === 401) return { ok: false, message: "Invalid access token" };
+            return { ok: false, message: `API returned ${resp.status}` };
+          } catch (e: any) {
+            return { ok: false, message: e.message || "Connection failed" };
+          }
+        }
+        return { ok: true, message: "App ID set. Add access token for server-side features." };
+      },
+    },
+  };
+
+  app.get("/api/admin/integrations", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const allSettings = await db.select().from(adminSettings);
+      const settingsMap: Record<string, string> = {};
+      for (const s of allSettings) settingsMap[s.key] = s.value;
+
+      const integrations = Object.entries(INTEGRATION_REGISTRY).map(([id, reg]) => {
+        const enabled = settingsMap[`integration.${id}.enabled`] === "true";
+        const hasConfig = reg.configFields.some(f => !!settingsMap[`integration.${id}.${f.key}`]);
+        const configuredAt = settingsMap[`integration.${id}.configured_at`] || null;
+
+        const configValues: Record<string, string> = {};
+        for (const f of reg.configFields) {
+          const val = settingsMap[`integration.${id}.${f.key}`] || "";
+          if (f.secret && val) {
+            configValues[f.key] = val.length >= 10 ? val.slice(0, 4) + "••••••" + val.slice(-4) : "••••••••";
+          } else {
+            configValues[f.key] = val;
+          }
+        }
+
+        const requiredFieldsMet = reg.configFields.filter(f => f.required).every(f => !!settingsMap[`integration.${id}.${f.key}`]);
+
+        let status: string;
+        if (id === "stripe") {
+          status = "connected";
+        } else if (enabled && hasConfig && requiredFieldsMet) {
+          status = "connected";
+        } else if (hasConfig) {
+          status = "configured";
+        } else {
+          status = "planned";
+        }
+
+        return { id, ...reg, status, enabled, hasConfig, configuredAt, configValues, configFields: reg.configFields.map(f => ({ ...f })) };
+      });
+
+      res.json({ integrations });
+    } catch (error: any) {
+      console.error("[Admin Integrations] Error:", error.message);
+      res.status(500).json({ error: "Failed to fetch integrations" });
+    }
+  });
+
+  app.put("/api/admin/integrations/:id/config", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    const integrationId = req.params.id;
+    if (!INTEGRATION_REGISTRY[integrationId]) return res.status(404).json({ error: "Integration not found" });
+
+    try {
+      const { config, enabled } = req.body;
+      const reg = INTEGRATION_REGISTRY[integrationId];
+      const updates: { key: string; value: string }[] = [];
+
+      if (config && typeof config === "object") {
+        for (const field of reg.configFields) {
+          if (config[field.key] !== undefined) {
+            const val = String(config[field.key]).trim();
+            if (field.required && !val) return res.status(400).json({ error: `${field.label} is required` });
+            updates.push({ key: `integration.${integrationId}.${field.key}`, value: val });
+          }
+        }
+      }
+
+      if (enabled !== undefined) {
+        updates.push({ key: `integration.${integrationId}.enabled`, value: String(!!enabled) });
+      }
+
+      updates.push({ key: `integration.${integrationId}.configured_at`, value: new Date().toISOString() });
+
+      for (const { key, value } of updates) {
+        await db.insert(adminSettings).values({ key, value, updatedAt: new Date(), updatedBy: adminId })
+          .onConflictDoUpdate({ target: adminSettings.key, set: { value, updatedAt: new Date(), updatedBy: adminId } });
+      }
+
+      await logAdminAction(adminId, "configure_integration", undefined, { integration: integrationId, enabled, fieldsUpdated: updates.map(u => u.key) });
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      console.error("[Admin Integrations] Config error:", error.message);
+      res.status(500).json({ error: "Failed to save integration config" });
+    }
+  });
+
+  app.post("/api/admin/integrations/:id/test", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    const integrationId = req.params.id;
+    const reg = INTEGRATION_REGISTRY[integrationId];
+    if (!reg) return res.status(404).json({ error: "Integration not found" });
+
+    try {
+      const allSettings = await db.select().from(adminSettings);
+      const config: Record<string, string> = {};
+      for (const s of allSettings) {
+        const prefix = `integration.${integrationId}.`;
+        if (s.key.startsWith(prefix)) {
+          config[s.key.slice(prefix.length)] = s.value;
+        }
+      }
+
+      const result = await reg.healthCheck(config);
+      await logAdminAction(adminId, "test_integration", undefined, { integration: integrationId, result: result.ok ? "success" : "failed", message: result.message });
+      res.json(result);
+    } catch (error: any) {
+      console.error("[Admin Integrations] Test error:", error.message);
+      res.json({ ok: false, message: error.message || "Health check failed" });
+    }
+  });
+
+  app.delete("/api/admin/integrations/:id", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    const integrationId = req.params.id;
+    if (!INTEGRATION_REGISTRY[integrationId]) return res.status(404).json({ error: "Integration not found" });
+    if (integrationId === "stripe") return res.status(400).json({ error: "Stripe cannot be disconnected from here" });
+
+    try {
+      const prefix = `integration.${integrationId}.`;
+      await db.delete(adminSettings).where(sql`${adminSettings.key} LIKE ${prefix + '%'}`);
+      await logAdminAction(adminId, "disconnect_integration", undefined, { integration: integrationId });
+      res.json({ ok: true });
+    } catch (error: any) {
+      console.error("[Admin Integrations] Disconnect error:", error.message);
+      res.status(500).json({ error: "Failed to disconnect integration" });
+    }
+  });
+
   return httpServer;
 }

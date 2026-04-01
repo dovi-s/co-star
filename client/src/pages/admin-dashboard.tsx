@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-auth";
@@ -50,6 +50,13 @@ import {
   LogOut,
   Heart,
   MessageCircle,
+  Power,
+  Plug,
+  Unplug,
+  TestTube2,
+  EyeOff,
+  Save,
+  Link2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
@@ -1760,55 +1767,293 @@ function ErrorsTab() {
   );
 }
 
+function IntegrationStatusBadge({ status }: { status: string }) {
+  const styles: Record<string, string> = {
+    connected: "bg-green-500/10 text-green-600",
+    configured: "bg-amber-500/10 text-amber-600",
+    error: "bg-red-500/10 text-red-600",
+    planned: "bg-muted text-muted-foreground",
+  };
+  return (
+    <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium capitalize", styles[status] || styles.planned)}>
+      {status}
+    </span>
+  );
+}
+
+function IntegrationConfigPanel({ integration, onClose, onSaved }: {
+  integration: any;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { toast } = useToast();
+  const [formValues, setFormValues] = useState<Record<string, string>>(() => {
+    const init: Record<string, string> = {};
+    for (const f of integration.configFields) {
+      const existing = integration.configValues?.[f.key] || "";
+      init[f.key] = existing.includes("•") ? "" : existing;
+    }
+    return init;
+  });
+  const [enabled, setEnabled] = useState(integration.enabled ?? false);
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [testing, setTesting] = useState(false);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const config: Record<string, string> = {};
+      for (const f of integration.configFields) {
+        if (formValues[f.key] || !integration.configValues?.[f.key]?.includes("•")) {
+          config[f.key] = formValues[f.key];
+        }
+      }
+      await apiRequest("PUT", `/api/admin/integrations/${integration.id}/config`, { config, enabled });
+    },
+    onSuccess: () => {
+      toast({ title: "Configuration saved" });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/integrations"] });
+      onSaved();
+    },
+    onError: (e: any) => toast({ title: "Failed to save", description: e.message, variant: "destructive" }),
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("DELETE", `/api/admin/integrations/${integration.id}`);
+    },
+    onSuccess: () => {
+      toast({ title: `${integration.name} disconnected` });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/integrations"] });
+      onClose();
+    },
+    onError: (e: any) => toast({ title: "Failed to disconnect", description: e.message, variant: "destructive" }),
+  });
+
+  const handleTest = useCallback(async () => {
+    setTesting(true);
+    setTestResult(null);
+    try {
+      const resp = await apiRequest("POST", `/api/admin/integrations/${integration.id}/test`);
+      const result = await resp.json();
+      setTestResult(result);
+    } catch (e: any) {
+      setTestResult({ ok: false, message: e.message });
+    }
+    setTesting(false);
+  }, [integration.id]);
+
+  const isStripe = integration.id === "stripe";
+
+  return (
+    <div className="border border-border/40 rounded-lg overflow-hidden" data-testid={`config-panel-${integration.id}`}>
+      <div className="flex items-center justify-between px-4 py-3 bg-muted/20 border-b border-border/30">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">{integration.icon}</span>
+          <span className="text-sm font-semibold">{integration.name}</span>
+          <IntegrationStatusBadge status={integration.status} />
+        </div>
+        <Button variant="ghost" size="sm" onClick={onClose} data-testid={`button-close-config-${integration.id}`}>
+          <XCircle className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="px-4 py-4 space-y-4">
+        <p className="text-xs text-muted-foreground">{integration.description}</p>
+
+        {integration.configFields.length > 0 ? (
+          <div className="space-y-3">
+            {integration.configFields.map((field: any) => (
+              <div key={field.key} className="space-y-1">
+                <label className="text-xs font-medium text-foreground flex items-center gap-1">
+                  {field.label}
+                  {field.required && <span className="text-destructive">*</span>}
+                </label>
+                <div className="relative">
+                  <input
+                    type={field.secret && !showSecrets[field.key] ? "password" : "text"}
+                    value={formValues[field.key] || ""}
+                    onChange={(e) => setFormValues(prev => ({ ...prev, [field.key]: e.target.value }))}
+                    placeholder={integration.configValues?.[field.key]?.includes("•") ? integration.configValues[field.key] : field.placeholder}
+                    className="w-full h-8 px-3 text-xs rounded-md border border-border bg-background font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+                    data-testid={`input-${integration.id}-${field.key}`}
+                  />
+                  {field.secret && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSecrets(prev => ({ ...prev, [field.key]: !prev[field.key] }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showSecrets[field.key] ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : isStripe ? (
+          <div className="flex items-center gap-2 p-3 rounded-md bg-green-500/5 border border-green-500/20">
+            <Plug className="h-4 w-4 text-green-500" />
+            <span className="text-xs text-green-700 dark:text-green-400">Managed via Replit integration. No additional configuration needed.</span>
+          </div>
+        ) : null}
+
+        <div className="flex items-center justify-between pt-1">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <div
+              className={cn(
+                "relative w-8 h-[18px] rounded-full transition-colors",
+                enabled ? "bg-green-500" : "bg-muted-foreground/30"
+              )}
+              onClick={() => !isStripe && setEnabled(!enabled)}
+            >
+              <div className={cn(
+                "absolute top-[2px] w-[14px] h-[14px] rounded-full bg-white shadow-sm transition-transform",
+                enabled ? "translate-x-[16px]" : "translate-x-[2px]"
+              )} />
+            </div>
+            <span className="text-xs text-muted-foreground">{enabled ? "Enabled" : "Disabled"}</span>
+          </label>
+        </div>
+
+        {testResult && (
+          <div className={cn(
+            "flex items-start gap-2 p-3 rounded-md text-xs",
+            testResult.ok ? "bg-green-500/5 border border-green-500/20 text-green-700 dark:text-green-400" : "bg-destructive/5 border border-destructive/20 text-destructive"
+          )} data-testid={`test-result-${integration.id}`}>
+            {testResult.ok ? <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" /> : <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />}
+            <span>{testResult.message}</span>
+          </div>
+        )}
+
+        {integration.configuredAt && (
+          <p className="text-[10px] text-muted-foreground">
+            Last configured: {new Date(integration.configuredAt).toLocaleDateString()} {new Date(integration.configuredAt).toLocaleTimeString()}
+          </p>
+        )}
+
+        <Separator />
+
+        <div className="flex items-center gap-2">
+          {!isStripe && (
+            <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} data-testid={`button-save-${integration.id}`}>
+              {saveMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Save className="h-3 w-3 mr-1" />}
+              Save
+            </Button>
+          )}
+          <Button size="sm" variant="outline" onClick={handleTest} disabled={testing} data-testid={`button-test-${integration.id}`}>
+            {testing ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <TestTube2 className="h-3 w-3 mr-1" />}
+            Test Connection
+          </Button>
+          {!isStripe && integration.hasConfig && (
+            <Button size="sm" variant="ghost" className="text-destructive ml-auto" onClick={() => disconnectMutation.mutate()} disabled={disconnectMutation.isPending} data-testid={`button-disconnect-${integration.id}`}>
+              {disconnectMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Unplug className="h-3 w-3 mr-1" />}
+              Disconnect
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function IntegrationsTab() {
-  const integrations = [
-    { name: "PostHog", description: "Session recordings, heatmaps, and product analytics", status: "planned", icon: "📊" },
-    { name: "Google Analytics 4", description: "Traffic analytics, conversions, and audience insights", status: "planned", icon: "📈" },
-    { name: "Stripe Dashboard", description: "Payment processing and subscription management", status: "connected", icon: "💳" },
-    { name: "Sentry", description: "Error tracking and performance monitoring", status: "planned", icon: "🐛" },
-    { name: "Mixpanel", description: "User behavior analytics and funnel analysis", status: "planned", icon: "🔬" },
-    { name: "Intercom", description: "Customer support chat and help center", status: "planned", icon: "💬" },
-  ];
+  const [openConfigId, setOpenConfigId] = useState<string | null>(null);
+  const { data, isLoading } = useQuery<{ integrations: any[] }>({
+    queryKey: ["/api/admin/integrations"],
+    queryFn: async () => {
+      const res = await fetch("/api/admin/integrations", { credentials: "include" });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+  });
+
+  if (isLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  const integrations = data?.integrations || [];
+  const connected = integrations.filter(i => i.status === "connected");
+  const configured = integrations.filter(i => i.status === "configured");
+  const planned = integrations.filter(i => i.status === "planned");
 
   return (
     <div className="space-y-6">
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard icon={Plug} label="Connected" value={connected.length} color="green" testId="stat-integrations-connected" />
+        <StatCard icon={Settings} label="Configured" value={configured.length} color="amber" />
+        <StatCard icon={Layers} label="Available" value={planned.length} color="blue" />
+      </div>
+
+      {openConfigId && (() => {
+        const int = integrations.find(i => i.id === openConfigId);
+        if (!int) return null;
+        return (
+          <IntegrationConfigPanel
+            integration={int}
+            onClose={() => setOpenConfigId(null)}
+            onSaved={() => setOpenConfigId(null)}
+          />
+        );
+      })()}
+
       <Card>
-        <SectionTitle>Connected and Planned Integrations</SectionTitle>
-        <p className="text-xs text-muted-foreground mb-4">These integrations will enhance your admin panel with deeper analytics, session recordings, and more.</p>
-        <div className="space-y-3">
+        <SectionTitle>External Integrations</SectionTitle>
+        <p className="text-xs text-muted-foreground mb-4">Connect third-party services to extend analytics, monitoring, and support.</p>
+        <div className="space-y-2">
           {integrations.map((int) => (
-            <div key={int.name} className="flex items-center gap-3 p-3 rounded-lg border border-border/30">
-              <span className="text-xl">{int.icon}</span>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{int.name}</p>
-                <p className="text-xs text-muted-foreground">{int.description}</p>
+            <button
+              key={int.id}
+              onClick={() => setOpenConfigId(openConfigId === int.id ? null : int.id)}
+              className={cn(
+                "w-full flex items-center gap-3 p-3 rounded-lg border transition-colors text-left",
+                openConfigId === int.id ? "border-primary/40 bg-primary/[0.03]" : "border-border/30 hover:border-border/60 hover:bg-muted/20"
+              )}
+              data-testid={`integration-card-${int.id}`}
+            >
+              <span className="text-xl shrink-0">{int.icon}</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium">{int.name}</p>
+                  <span className={cn("text-[9px] px-1.5 py-0.5 rounded-full font-medium uppercase tracking-wider", {
+                    "bg-muted text-muted-foreground": int.category === "analytics",
+                    "bg-blue-500/10 text-blue-600": int.category === "monitoring",
+                    "bg-green-500/10 text-green-600": int.category === "payments",
+                    "bg-purple-500/10 text-purple-600": int.category === "support",
+                  })}>{int.category}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">{int.description}</p>
               </div>
-              <span className={cn(
-                "text-[10px] px-2 py-0.5 rounded-full font-medium",
-                int.status === "connected" ? "bg-green-500/10 text-green-600" : "bg-muted text-muted-foreground"
-              )}>{int.status}</span>
-            </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {int.enabled && int.status === "connected" && (
+                  <Power className="h-3 w-3 text-green-500" />
+                )}
+                <IntegrationStatusBadge status={int.status} />
+                <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", openConfigId === int.id && "rotate-90")} />
+              </div>
+            </button>
           ))}
         </div>
       </Card>
 
       <Card>
         <SectionTitle>Built-in Analytics</SectionTitle>
-        <p className="text-xs text-muted-foreground mb-3">These are already active and tracking data.</p>
+        <p className="text-xs text-muted-foreground mb-3">Active and tracking data automatically. No configuration needed.</p>
         <div className="space-y-2">
           {[
-            { name: "Pageview Tracking", description: "Automatic tracking of all page visits with device, browser, and referrer data" },
-            { name: "Event Tracking", description: "Custom event tracking for clicks, feature usage, and user interactions" },
-            { name: "Error Logging", description: "Automatic capture of client-side JavaScript errors with stack traces" },
-            { name: "Messages", description: "Centralized inbox for support, sales, and feedback" },
-            { name: "User Profiles", description: "Detailed user profiles with activity history, scripts, and rehearsal data" },
+            { name: "Pageview Tracking", description: "Automatic tracking of all page visits with device, browser, and referrer data", icon: Eye },
+            { name: "Event Tracking", description: "Custom event tracking for clicks, feature usage, and user interactions", icon: MousePointerClick },
+            { name: "Error Logging", description: "Client-side JavaScript error capture with stack traces", icon: Bug },
+            { name: "Messages", description: "Centralized inbox for support, sales, and feedback", icon: MessageSquare },
+            { name: "User Profiles", description: "Detailed profiles with activity history, scripts, and rehearsal data", icon: Users },
           ].map((item) => (
-            <div key={item.name} className="flex items-center gap-3 p-2">
-              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-              <div>
+            <div key={item.name} className="flex items-center gap-3 p-2.5 rounded-md">
+              <div className="w-7 h-7 rounded-md bg-green-500/10 flex items-center justify-center shrink-0">
+                <item.icon className="w-3.5 h-3.5 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{item.name}</p>
                 <p className="text-[10px] text-muted-foreground">{item.description}</p>
               </div>
+              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
             </div>
           ))}
         </div>

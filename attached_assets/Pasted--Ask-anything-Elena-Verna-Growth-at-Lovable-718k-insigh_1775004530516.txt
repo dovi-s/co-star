@@ -1,0 +1,279 @@
+
+Ask anything
+
+Elena Verna
+Growth at Lovable
+718k insights
+675 Followers
+
+
+
+
+209in network
+
+
+go through all completely
+image.png
+image.png
+2
+
+So — Co-star Studio Pro. Let me go through everything you've shared.
+What Co-star Studio Pro Is
+Co-star Studio Pro is a script rehearsal companion app built specifically for actors. The core loop is simple: paste a script, upload a file, or scan a document → the platform auto-identifies characters → you rehearse. It tracks your recent sessions (titles, roles, total lines, last accessed, last played character) and saves everything to the cloud. There's also a "generate or create a scene" option if you don't have a script handy. The Pro tier is visible in the top-right corner of the UI.
+The Full Feature Set (from both screens + descriptions)
+Core Rehearsal Features:
+Paste / Upload / Scan a script to begin
+Auto character identification
+Session resume ("pick up where you left off")
+Recent scripts dashboard (title, # roles, # lines, last played date, last character)
+Scene generation / creation if no script is available
+Cloud save for user data
+Account & Profile:
+Actor Profile (personal details + headshots)
+Subscription management (Pro tier visible)
+Analytics for growth/performance insights
+Navigation Sidebar:
+Home → Start rehearsing
+My Rehearsals → Recordings, scripts & stats
+Actor Profile
+Subscription
+Analytics
+About / Discovery:
+How It Works
+Compare and Pricing
+Roadmap
+Feature Board (vote on upcoming features)
+Support & Community:
+Bug reporting
+Sales inquiries
+Options for Teams, Education, and Demos
+Share the app with friends
+UI/UX:
+Light mode toggle
+Currently on v1.0
+Links to: Who It's For, Brand, Terms, Privacy
+What Stands Out From a Growth Lens
+A few things immediately jump out to me here:
+1. The "recent scripts" dashboard is a retention hook. Showing "8 scripts worked on" + the last played character + timestamp is a classic re-engagement mechanic. It creates a sense of progress and continuity — the user sees their history and wants to continue. That's a habit loop in action.
+2. The "generate a scene" option is a brilliant acquisition/activation play. If a user shows up without a script, instead of hitting a dead end, they get an alternative path. That's removing friction at the exact moment of potential drop-off. Smart.
+3. Teams + Education + Demos = the B2B escalator is baked in. This isn't just a solo actor tool. The fact that there are explicit options for Teams, Education, and Demos signals they're thinking about institutional buyers — drama schools, acting studios, theater companies. That's the monetization escalator right there: acquire an individual actor, activate a class, sell to a school.
+4. The Feature Board (vote on upcoming features) is a community + retention loop. Users who vote on features have skin in the game. They're invested. They'll come back to see if their vote won. That's engagement gold.
+5. Analytics for actors is a differentiated bet. Most rehearsal tools stop at "did you rehearse?" Co-star is tracking performance stats. That's a meaningful wedge — it turns a rehearsal tool into a coaching tool.
+One thing I'd push on: The sidebar is doing a LOT of work for a v1.0. "How It Works," "Compare and Pricing," "Roadmap," "Feature Board," "Who Is It For," "Brand," "Terms," "Privacy" — that's a lot of navigation for what should be a focused rehearsal experience. The core loop (paste → rehearse → record → review) should be front and center, and everything else should fade into the background. Less is more at this stage.
+Bottom line: Co-star Studio Pro has a solid PLG foundation — self-serve entry, habit-forming recency tracking, a clear individual-to-team escalation path, and a community feedback loop. The bones are good. Now it's about ruthlessly prioritizing the activation experience and making sure users hit their "Aha moment" (first successful rehearsal session) as fast as possible.
+What's the specific growth challenge you're trying to solve with Co-star — activation, retention, or the B2B/institutional angle? Happy to go deeper on any of those.
+if elena worked here what would she do every single thing. full reign. totally full reign can do anything
+Let me pull up everything on Elena first so I can answer this properly.
+2
+
+Now let me pull more of Elena's specific frameworks and tactics.
+2
+
+I now have a comprehensive picture of both Elena and Co-star Studio Pro. Here's the full breakdown — everything Elena would do with total full reign.
+🎭 If Elena Verna Ran Co-star Studio Pro — Full Reign, Everything
+First: Who Elena Is (So You Understand Why She'd Do What She'd Do)
+Elena is the Queen of PLG — 15+ years, SurveyMonkey (0 → 60M users, zero marketing spend for 10 years), Miro (interim CMO), Amplitude (interim Head of Growth), Dropbox, and now Head of Growth at Lovable — the fastest-growing software company in history ($100M ARR in 8 months). She's a UC Berkeley statistician. She builds loops, not funnels. She's obsessed with data before growth, freemium over trial, retention before acquisition, and product-led sales as the B2B escalator. She's also currently living in the AI-native era and says only 30-40% of her old playbook still applies.
+Here's exactly what she'd do at Co-star Studio Pro — every single thing, in sequence.
+🔢 PHASE 0: Before Touching Anything — Data First
+Elena's Law #1: PMF, then data, then growth. She would not touch a single growth lever until she had instrumentation in place.
+She would immediately:
+Instrument every single action in the product (paste script, upload, scan, generate scene, character selection, line played, session length, recording made, session resumed, Pro upgrade click)
+Define the Aha Moment — her term for the first value exchange. For Co-star, she'd hypothesize it's: "First time a user completes a full rehearsal pass of a scene with the AI reading opposite them." She'd then validate it with data — do users who hit that moment retain at higher rates?
+Build a North Star Metric — probably something like "Weekly Active Rehearsers" (users who complete at least one rehearsal session per week)
+Set up cohort analysis: what % of new users hit the Aha Moment within session 1? Within 3 days? That's her activation rate baseline
+Run offensive AND defensive data analysis — not just "what broke?" but "what's working that we should double down on?"
+She'd say: "Not experimenting is still testing — just on 100% of your population with zero quantifiable learnings."
+🔁 PHASE 1: Nail Retention First (Before Anything Else)
+Elena is categorical about this: you must nail product-led retention before you can build product-led acquisition. If users aren't coming back, there's nothing to loop.
+1a. Fix Activation
+Map the full activation journey: Sign up → Paste/Upload/Scan script → Character selected → First line played → First full scene → First recording → Session saved
+Identify where users drop off. She'd bet the biggest drop is between "paste script" and "first line played" — that's the moment of friction
+Ruthlessly simplify the path to first rehearsal. At Lovable she learned: 95% of growth comes from new features and product improvements, not funnel optimization — but at v1.0, the activation funnel IS the product
+Add onboarding profiling during signup — Elena wrote a whole piece on this: "Don't reinvent user profiling during onboarding." Ask: Are you an actor, director, student, or coach? What type of content do you rehearse (film, TV, theater, auditions)? This lets you personalize the first experience immediately
+Reverse trial model — Elena's favorite. Give new users the full Pro experience for 7-14 days. Let them build habits on paid features (recordings, analytics, advanced character modes). When the trial ends, they drop to free — but now they know what they're missing. She proved this drives 15% free-to-paid conversion vs. 5% on straight freemium
+1b. Build the Habitual Retention Loop
+Elena's retention framework: usage triggers that bring users back and pull collaborators in.
+For Co-star specifically she'd build:
+"Your rehearsal is waiting" — smart re-engagement notifications based on when a user typically rehearses (evening? weekend morning?)
+Streak mechanics — days rehearsed in a row. Actors are disciplined people. They respond to streaks (think Duolingo for actors)
+Progress milestones — "You've rehearsed 50 lines this week. Your audition is in 3 days. Keep going." Contextual, not generic
+Session continuity — the "recent scripts" dashboard is already there. Elena would make it the hero of the home screen, not buried. "Pick up where you left off" should be the first CTA every returning user sees
+Weekly rehearsal summary — email/push: "This week you rehearsed 3 scenes, played 2 characters, and recorded 4 takes. Your most-rehearsed line: [line]." This is the kind of data-driven personalization she built at SurveyMonkey
+🔊 PHASE 2: Build the Acquisition Loop (After Retention Is Working)
+Elena's acquisition framework: the "casual contact" loop — users distribute something using your product, and that thing acquires new users for you.
+For Co-star, the casual contact loop is hiding in plain sight:
+2a. The Shared Scene / Shared Recording Loop
+When an actor records a take, let them share it — to their agent, their acting coach, their scene partner, their Instagram
+Every shared recording carries a "Rehearsed with Co-star Studio Pro" watermark/tag
+The recipient clicks → lands on a Co-star page → sees the product in action → signs up
+This is the Calendly loop. Every invite = a new user acquisition. Every shared recording = a new user acquisition
+Elena would make sharing frictionless and beautiful — one tap, multiple destinations
+2b. The Scene Partner Invite Loop
+Actors don't rehearse alone — they have scene partners, coaches, directors
+Build "Invite your scene partner" into the core rehearsal flow. "Want to rehearse this scene with a real person? Invite them."
+Scene partner gets an email: "[Name] wants to rehearse [Scene] with you on Co-star" → they sign up → they become a user → they invite their scene partners
+This is a collaboration loop — the same mechanic that made Miro and Figma explode
+2c. The "Powered by Co-star" Audition Tape Loop
+Actors submit self-tape auditions constantly. If Co-star helps them prep, let them export a "rehearsal report" — lines practiced, takes recorded, character notes — that they can attach to their audition submission
+Casting directors and agents see it → curiosity → sign up
+This is a professional credibility loop that also acquires users from the industry side
+💰 PHASE 3: Monetization — Elena's Full Framework Applied
+Elena's monetization philosophy: price must be lower than perceived value + friction. And the monetization intercept (when you ask for money) should come AFTER the user has experienced value.
+3a. Freemium Structure (Elena Would Insist On This)
+She has never worked at a company without freemium. She'd design it like this:
+Free tier:
+Unlimited script uploads (acquisition loop fuel — free users share recordings, invite partners)
+Basic character reading (AI reads opposite you)
+3 saved sessions (like Miro's 3 free boards — enough to get hooked, not enough to stay forever)
+No recordings saved
+No analytics
+Pro tier ($X/month):
+Unlimited saved sessions
+Recording + playback
+Performance analytics
+Advanced character modes
+Priority AI quality
+Export/share features
+Why this structure? Free users aren't freeloaders — they're your acquisition loop. Every free actor who shares a recording or invites a scene partner is doing marketing for you. Elena proved this at SurveyMonkey: 60% free users, zero marketing spend for 10 years.
+3b. Monetization Awareness — The SurveyMonkey Trick
+Elena's biggest conversion lever at SurveyMonkey: make sure every free user sees at least 3 paid features. Not paywalls — glimpses. Show the feature, explain the value, then gate it.
+For Co-star:
+Free users see the "Recording" button — it's visible but locked with a Pro badge and a one-line value prop: "Record your takes and track your improvement over time."
+Free users see the Analytics tab — grayed out with a preview: "See your line accuracy, pacing, and emotional range. Pro only."
+Free users see the "Advanced Character Mode" option — with a tooltip: "Choose your scene partner's tone, accent, and pacing. Pro only."
+Every session end: a subtle nudge — "You rehearsed 12 lines today. Upgrade to Pro to save your progress and track your growth."
+3c. Usage-Based Monetization Consideration
+Elena is currently deep in AI pricing at Lovable (credit-based, constantly iterating). She'd ask: should Co-star be per-seat or per-usage?
+Her likely answer: start per-seat (simple, predictable), but build toward usage signals. If a user rehearses 500 lines/month vs. 10, they're getting radically different value. Usage-based pricing captures that — but only once you have the data to set the right thresholds.
+3d. The Monetization Escalator (Individual → Team → Institution)
+Elena's B2B escalator framework applied to Co-star:
+Individual actor → Pro subscription ($X/month)
+Acting coach → Coach plan: manage multiple students, see their rehearsal data, assign scenes ($Y/month)
+Acting school / conservatory → Education plan: class management, bulk licensing, curriculum integration ($Z/year)
+Theater company / production → Team plan: shared scripts, director oversight, cast-wide analytics
+She'd say: "Acquire a user. Activate a team. Grow the team. Monetize the company."
+The "Teams" and "Education" options already exist in the sidebar — Elena would make these the primary B2B revenue engine, not an afterthought.
+📈 PHASE 4: Product-Led Sales (When the Time Is Right)
+Elena's PLS framework requires three things before you start: PMF with self-serve, organic hand-raisers, and a sales floor (deals >$10K). Co-star isn't there yet — but Elena would build toward it from day one.
+What she'd do now to set up PLS later:
+Instrument everything at the account level — when 5+ actors from the same school are using Co-star, that's a Product Qualified Account (PQA). Flag it
+Build "contact sales" painted doors into the product — on the Teams page, on the Education page, on the billing page when a user tries to add their 4th seat
+Track hand-raisers — anyone who emails support asking about group pricing, school licensing, or bulk seats. These are your first PLS leads
+Onboarding profiling — ask "Are you an individual actor, acting coach, or school administrator?" at signup. Route them to different experiences AND flag the coaches/admins for eventual sales outreach
+When the hand-raisers start appearing organically, she'd hire the first sales rep and run the PLS motion against drama schools and conservatories.
+🌐 PHASE 5: Distribution & Brand — The Lovable Playbook
+Elena is now living the Lovable growth model, and she'd bring several of those lessons directly to Co-star:
+5a. Ship Constantly and Talk About It
+At Lovable: "Ship features fast enough that customers feel the product is always alive." Engineers announce their own updates. The founder tweets progress daily.
+Elena would push Co-star to:
+Post a weekly "what we shipped" update — in-app, email, social
+Have the team be visible and vocal — actors follow people, not just products
+Make the Feature Board (already in the sidebar!) a real community mechanic — announce winners, celebrate voted features when they ship
+5b. Give the Product Away Like Candy
+At Lovable: "Fund hackathons, sponsor events, hand out free credits. Treat it as marketing, not cost."
+For Co-star:
+Sponsor acting competitions — give every participant free Pro for 3 months
+Partner with acting schools — free access for students in exchange for institutional visibility
+Audition season campaigns — free Pro during pilot season, Sundance submission season, theater audition season
+"SheBuilds"-style events — Elena ran women-in-tech hackathons at Lovable. She'd run "48-hour audition prep challenges" for actors — build community, generate content, acquire users
+5c. Influencer Marketing Over Paid Ads
+At Lovable: "Short videos showing what the product can do spread faster and convert better than paid ads by 10x."
+Elena would:
+Identify 10-20 working actors with real followings (not necessarily huge — micro-influencers in the acting community are highly trusted)
+Give them free Pro + a simple brief: "Show us how you use Co-star to prep for your next audition"
+Let them post authentically — no scripts, no brand speak
+The content is the ad. Showing beats telling.
+5d. Community as a Growth Lever
+At Lovable: "Lovable's Discord has hundreds of thousands of members helping each other. This amplifies word of mouth, drives retention, and makes customers feel like insiders."
+Elena would build:
+A Co-star Discord or community — actors helping actors, sharing scripts, giving feedback on recordings, discussing technique
+The Feature Board (already exists) becomes the community's voice — users who vote feel ownership
+Monthly "scene of the month" challenges — community picks a scene, everyone rehearses it, shares recordings, votes on best performance
+Community = retention + acquisition + brand, all in one
+🧪 PHASE 6: Experimentation — Never Stop Testing
+Elena's quote: "Not experimenting is still testing — just on 100% of your population with zero quantifiable learnings."
+She'd build a continuous experimentation system (she literally created the Reforge course on this):
+Experiments she'd run immediately:
+Reverse trial vs. freemium — does giving new users full Pro for 14 days increase 30-day conversion?
+Onboarding flow A/B — does asking "what are you rehearsing for?" (audition vs. class vs. personal) and personalizing the first session increase activation?
+Monetization intercept timing — does showing the upgrade prompt at session end vs. mid-session vs. after first recording change conversion?
+Scene partner invite prompt — does adding "invite a scene partner" to the character selection screen increase invites sent?
+Streak vs. no streak — does a rehearsal streak mechanic increase weekly active rehearsers?
+Pricing page test — does showing "most popular" on Pro vs. no badge change upgrade rate?
+She'd run these in parallel, measure rigorously, and kill losers fast.
+🏗️ PHASE 7: Team & Org Structure
+Elena's hiring philosophy: growth model before growth hire. Don't hire a growth team until you know what you're growing.
+At Co-star's current stage (v1.0), she'd sequence the team like this:
+First: Data/Analytics — instrument everything, build the dashboard, define the North Star. Without data, growth is just guessing
+Second: Product Growth PM — owns activation and retention loops. This is the most important hire
+Third: Growth Marketing — only after the product loop is working. Paid acquisition into a leaky product is burning money
+Fourth: Sales (when hand-raisers appear) — one rep, focused on education/institutional accounts
+She'd also look for AI-native hires — people who can vibe-code, build internal tools, move fast without waiting for a roadmap. She'd say: "High-agency people who thrive in mess."
+🎯 Elena's Non-Negotiables for Co-star (Her 5 Laws Applied)
+PMF, then data, then growth — Don't scale what you haven't proven works
+Scale with frameworks, not hacking — The acquisition loop, retention loop, and monetization escalator are the frameworks. Build them properly
+Build loops, not funnels — The shared recording loop, the scene partner invite loop, the coach-to-school escalator — these compound. Funnels don't
+Growth is evolution, not revolution — Don't blow up the product. Iterate on what's working
+New to SuperMe?
+Sign up to save your conversation with Elena.
+Don't miss replies from them.
+
+Ask a follow up
+New to SuperMe?
+Sign up to save your conversation with Elena!
+
+
+By continuing, you agree to our Terms and Privacy Policy.
+About
+You can find more about me here: 
+United States
+LinkedIn Post by Elena Verna
+❤️
+1
+LinkedIn Post by Elena Verna
+❤️
+1
+5 of my favorite new retention techniques that you may not have tried
+Revenue addiction kills companies.
+💯
+1
+The Minimum Lovable Product Era
+👀
+1
+LinkedIn Post by Elena Verna
+😅
+1
+LinkedIn Post by Elena Verna
+💯
+1
+LinkedIn Post by Elena Verna
+💯
+1
+LinkedIn Post by Elena Verna
+LinkedIn Post by Elena Verna
+🔥
+1
+YOU MIGHT LIKE
+
+Noah Desai Weiss
+
+Building, live from NY | fmr Slack CPO
+
+Anneka Gupta
+
+Chief Product Officer, Rubrik (NYSE:RBRK)
+
+Noam Lovinsky
+
+CPO @ Superhuman (formerly Grammarly) and an aspiring mensch.
+
+Lane Shackleton
+
+Head of Coda
+
+Shaun Clowes
+
+CPO @ Confluent, fmr CPO Mulesoft @ Salesforce, Head of Growth @ Atlassian
+New to SuperMe?
+Sign up to save your conversation with Elena.
+Don't miss replies from them.
