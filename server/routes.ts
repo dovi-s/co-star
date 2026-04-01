@@ -4206,6 +4206,129 @@ MARY: You're kidding me.`;
     }
   });
 
+  app.get("/api/features", async (req: any, res: Response) => {
+    try {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const sortParam = url.searchParams.get("sort") || "top";
+      const userId = req.isAuthenticated?.() ? (req.user?.claims?.sub || req.user?.id) : null;
+      const admin = await isAdmin(req);
+
+      const orderCol = sortParam === "newest" ? featureRequests.createdAt : featureRequests.voteCount;
+      const allRequests = await db.select().from(featureRequests).orderBy(desc(orderCol));
+
+      let userVotes: Record<string, number> = {};
+      if (userId) {
+        const votes = await db.select().from(featureVotes).where(eq(featureVotes.userId, userId));
+        for (const v of votes) {
+          userVotes[v.featureRequestId] = v.value;
+        }
+      }
+
+      const requests = allRequests.map(r => ({
+        id: r.id,
+        userId: r.userId,
+        authorName: r.authorName,
+        title: r.title,
+        description: r.description,
+        category: r.category,
+        status: r.status,
+        voteCount: r.voteCount,
+        createdAt: r.createdAt?.toISOString() || "",
+        userVote: userVotes[r.id] || 0,
+      }));
+
+      res.json({ requests, isAdmin: admin });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to load feature requests" });
+    }
+  });
+
+  app.post("/api/features", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const { title, description, category } = req.body;
+    if (!title || typeof title !== "string" || !title.trim()) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      const authorName = user?.stageName || user?.firstName || user?.email || "Anonymous";
+
+      const [request] = await db.insert(featureRequests).values({
+        userId,
+        authorName,
+        title: title.trim(),
+        description: description || null,
+        category: category || "general",
+      }).returning();
+
+      res.json(request);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to create feature request" });
+    }
+  });
+
+  app.post("/api/features/:id/vote", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const featureId = req.params.id;
+    const { direction } = req.body;
+    const voteValue = direction === "down" ? -1 : 1;
+
+    try {
+      const [existing] = await db.select().from(featureVotes)
+        .where(and(eq(featureVotes.userId, userId), eq(featureVotes.featureRequestId, featureId)))
+        .limit(1);
+
+      if (existing) {
+        if (existing.value === voteValue) {
+          await db.delete(featureVotes).where(eq(featureVotes.id, existing.id));
+          await db.update(featureRequests)
+            .set({ voteCount: sql`COALESCE(vote_count, 0) - ${voteValue}` })
+            .where(eq(featureRequests.id, featureId));
+        } else {
+          await db.update(featureVotes).set({ value: voteValue }).where(eq(featureVotes.id, existing.id));
+          await db.update(featureRequests)
+            .set({ voteCount: sql`COALESCE(vote_count, 0) + ${voteValue * 2}` })
+            .where(eq(featureRequests.id, featureId));
+        }
+      } else {
+        await db.insert(featureVotes).values({ userId, featureRequestId: featureId, value: voteValue });
+        await db.update(featureRequests)
+          .set({ voteCount: sql`COALESCE(vote_count, 0) + ${voteValue}` })
+          .where(eq(featureRequests.id, featureId));
+      }
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to vote" });
+    }
+  });
+
+  app.patch("/api/features/:id", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const featureId = req.params.id;
+    const { status, hidden, deleted } = req.body;
+
+    try {
+      if (deleted) {
+        await db.delete(featureRequests).where(eq(featureRequests.id, featureId));
+        return res.json({ ok: true, action: "deleted" });
+      }
+
+      const updates: Record<string, any> = {};
+      if (status) updates.status = status;
+
+      if (Object.keys(updates).length > 0) {
+        await db.update(featureRequests).set(updates).where(eq(featureRequests.id, featureId));
+      }
+
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update feature request" });
+    }
+  });
+
   app.get("/api/feature-flags", async (req: any, res: Response) => {
     try {
       const allFlags = await db.select().from(adminSettings).where(sql`${adminSettings.key} LIKE 'flag.%'`);
