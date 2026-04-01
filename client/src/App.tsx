@@ -25,6 +25,7 @@ import { SubscriptionPage } from "@/pages/subscription";
 import { AdminDashboard } from "@/pages/admin-dashboard";
 import { BrandPage } from "@/pages/brand";
 import { WhoIsItForPage } from "@/pages/who-is-it-for";
+import { WhatsNewPage } from "@/pages/whats-new";
 import { Logo, CoStarSplashAnimation } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { usePageTracking } from "@/hooks/use-tracking";
@@ -94,7 +95,7 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 }
 
-type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "my-rehearsals" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand";
+type View = "home" | "rehearsal" | "multiplayer" | "how-it-works" | "who-is-it-for" | "compare" | "roadmap" | "signin" | "library" | "history" | "my-rehearsals" | "feature-board" | "onboarding" | "profile" | "subscription" | "admin" | "brand" | "whats-new";
 type MultiplayerInitialView = "create" | "join";
 
 const viewToPath: Record<View, string> = {
@@ -115,6 +116,7 @@ const viewToPath: Record<View, string> = {
   subscription: "/subscription",
   admin: "/admin",
   brand: "/brand",
+  "whats-new": "/whats-new",
 };
 
 const pathToView: Record<string, View> = Object.fromEntries(
@@ -240,6 +242,7 @@ function AppContent() {
       subscription: "Subscription - Co-star Studio",
       admin: "Admin - Co-star Studio",
       brand: "Brand - Co-star Studio",
+      "whats-new": "What's New - Co-star Studio",
     };
     document.title = titles[view] || "Co-star Studio";
   }, [view]);
@@ -251,6 +254,18 @@ function AppContent() {
       if (user.onboardingComplete !== "true" && view !== "onboarding" && view !== "signin") {
         window.history.replaceState({ view: "onboarding" }, "", "/onboarding");
         setView("onboarding");
+      }
+      const refCode = new URLSearchParams(window.location.search).get("ref");
+      if (refCode) {
+        fetch("/api/accept-invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: refCode }),
+          credentials: "include",
+        }).catch(() => {});
+        const url = new URL(window.location.href);
+        url.searchParams.delete("ref");
+        window.history.replaceState(null, "", url.toString());
       }
     }
   }, [user, syncFromServer]);
@@ -279,12 +294,12 @@ function AppContent() {
       transitionTo("home");
       return;
     }
-    if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "my-rehearsals" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand") {
+    if (page === "how-it-works" || page === "who-is-it-for" || page === "compare" || page === "roadmap" || page === "signin" || page === "library" || page === "history" || page === "my-rehearsals" || page === "feature-board" || page === "onboarding" || page === "profile" || page === "subscription" || page === "admin" || page === "brand" || page === "whats-new") {
       transitionTo(page as View);
     }
   }, [transitionTo]);
 
-  const viewsWithBack: View[] = ["rehearsal", "multiplayer", "how-it-works", "who-is-it-for", "compare", "roadmap", "signin", "library", "history", "my-rehearsals", "feature-board", "profile", "subscription", "admin", "brand"];
+  const viewsWithBack: View[] = ["rehearsal", "multiplayer", "how-it-works", "who-is-it-for", "compare", "roadmap", "signin", "library", "history", "my-rehearsals", "feature-board", "profile", "subscription", "admin", "brand", "whats-new"];
   const swipeBackHandler = viewsWithBack.includes(view) ? handleBackToHome : undefined;
   useSwipeBack(swipeBackHandler);
 
@@ -381,6 +396,9 @@ function AppContent() {
       )}
       {view === "brand" && (
         <BrandPage onBack={handleBackToHome} />
+      )}
+      {view === "whats-new" && (
+        <WhatsNewPage onBack={handleBackToHome} />
       )}
       </div>
       {session && session.userRoleId && view !== "rehearsal" && (

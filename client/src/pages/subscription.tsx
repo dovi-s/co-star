@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { CancelRetentionSheet } from "@/components/cancel-retention-sheet";
+import { ContactSalesSheet } from "@/components/contact-sales-sheet";
 import {
   ChevronLeft,
   Check,
@@ -625,6 +626,8 @@ function ActiveSubscription({
   const { toast } = useToast();
   const [cancelSheetOpen, setCancelSheetOpen] = useState(false);
   const [switchConfirmOpen, setSwitchConfirmOpen] = useState(false);
+  const [contactSalesOpen, setContactSalesOpen] = useState(false);
+  const [contactSalesPlan, setContactSalesPlan] = useState("");
   const isTrialing = subscription.isTrialing === true;
 
   const reactivateMutation = useMutation({
@@ -956,10 +959,40 @@ function ActiveSubscription({
         </div>
       </div>
 
+      <div className="mt-6 space-y-3">
+        <p className="text-xs text-muted-foreground text-center font-medium uppercase tracking-wider">Need more?</p>
+        {[
+          { id: "coach", icon: Users, label: "Coach / Director", desc: "Manage students, assign scenes" },
+          { id: "education", icon: GraduationCap, label: "School / Conservatory", desc: "Bulk licensing, curriculum tools" },
+          { id: "teams", icon: Building2, label: "Theater Company", desc: "Cast-wide scripts and analytics" },
+        ].map(({ id, icon: Icon, label, desc }) => (
+          <button
+            key={id}
+            className="w-full flex items-center gap-3 rounded-xl border border-border/50 bg-card/50 p-4 text-left hover:border-primary/30 hover:bg-primary/[0.02] transition-all"
+            onClick={() => { setContactSalesPlan(id); setContactSalesOpen(true); }}
+            data-testid={`button-contact-sales-${id}`}
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">{label}</p>
+              <p className="text-xs text-muted-foreground">{desc}</p>
+            </div>
+            <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+          </button>
+        ))}
+      </div>
+
       <CancelRetentionSheet
         open={cancelSheetOpen}
         onOpenChange={setCancelSheetOpen}
         periodEnd={periodEndDate ? periodEndDate.toISOString() : null}
+      />
+      <ContactSalesSheet
+        open={contactSalesOpen}
+        onOpenChange={setContactSalesOpen}
+        defaultPlanType={contactSalesPlan}
       />
     </div>
   );

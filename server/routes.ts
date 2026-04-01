@@ -15,8 +15,8 @@ import path from "path";
 import os from "os";
 import { getUncachableStripeClient, getStripePublishableKey } from "./stripeClient";
 import { db } from "./db";
-import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings, hasProAccess, ALL_TIERS } from "@shared/models/auth";
-import { eq, sql, count, desc, and, gte } from "drizzle-orm";
+import { users, pageviews, savedScripts, performanceRuns, featureRequests, recentScripts, analyticsEvents, feedbackMessages, errorLogs, deviceUsage, cancelFeedback, adminAuditLogs, adminSettings, hasProAccess, computeEffectiveTier, ALL_TIERS, changelogEntries, invites, salesInquiries, recordings, featureVotes, ACTOR_TYPES } from "@shared/models/auth";
+import { eq, sql, count, desc, and, gte, lte, asc } from "drizzle-orm";
 
 function detectTitleFromScript(lines: string[]): string | null {
   const head = lines.slice(0, 30);
@@ -467,6 +467,9 @@ export async function registerRoutes(
         scriptUsageLimitBonus: users.scriptUsageLimitBonus,
         scriptUsageResetAt: users.scriptUsageResetAt,
         subscriptionTier: users.subscriptionTier,
+        trialStartedAt: users.trialStartedAt,
+        trialEndsAt: users.trialEndsAt,
+        stripeSubscriptionId: users.stripeSubscriptionId,
       }).from(users).where(eq(users.id, userId));
       if (!user) return res.status(404).json({ message: "User not found" });
 
@@ -506,7 +509,7 @@ export async function registerRoutes(
         }
       }
 
-      const isPro = hasProAccess(user.subscriptionTier);
+      const isPro = hasProAccess(computeEffectiveTier(user));
       const freeDailyLimit = await getFreeDailyLimit();
       const effectiveLimit = freeDailyLimit + bonus;
       const effectiveUsed = Math.max(usageCount, deviceCount);
@@ -536,10 +539,14 @@ export async function registerRoutes(
         scriptUsageLimitBonus: users.scriptUsageLimitBonus,
         scriptUsageResetAt: users.scriptUsageResetAt,
         subscriptionTier: users.subscriptionTier,
+        trialStartedAt: users.trialStartedAt,
+        trialEndsAt: users.trialEndsAt,
+        stripeSubscriptionId: users.stripeSubscriptionId,
       }).from(users).where(eq(users.id, userId));
       if (!user) return res.status(404).json({ message: "User not found" });
 
-      if (hasProAccess(user.subscriptionTier)) {
+      const effectiveTier = computeEffectiveTier(user);
+      if (hasProAccess(effectiveTier)) {
         return res.json({ allowed: true, used: 0, limit: null, isPro: true });
       }
 
@@ -3955,6 +3962,469 @@ MARY: You're kidding me.`;
     } catch (error: any) {
       console.error("[Admin Integrations] Disconnect error:", error.message);
       res.status(500).json({ error: "Failed to disconnect integration" });
+    }
+  });
+
+  // ============================================
+  // GROWTH PLG ROUTES
+  // ============================================
+
+  function generateInviteCode(): string {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let code = "";
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  }
+
+  app.post("/api/reverse-trial/activate", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if (user.subscriptionTier !== "free") return res.json({ ok: true, message: "Already on a paid plan" });
+      if (user.trialStartedAt) return res.json({ ok: true, message: "Trial already activated", trialEndsAt: user.trialEndsAt });
+
+      const now = new Date();
+      const trialEnd = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      const invCode = generateInviteCode();
+
+      await db.update(users).set({
+        subscriptionTier: "pro",
+        trialStartedAt: now,
+        trialEndsAt: trialEnd,
+        inviteCode: invCode,
+      }).where(eq(users.id, userId));
+
+      res.json({ ok: true, trialEndsAt: trialEnd.toISOString(), inviteCode: invCode });
+    } catch (error: any) {
+      console.error("[Reverse Trial] Error:", error.message);
+      res.status(500).json({ error: "Failed to activate trial" });
+    }
+  });
+
+  app.get("/api/trial-status", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user.trialStartedAt || !user.trialEndsAt) return res.json({ isTrialing: false });
+
+      const now = new Date();
+      const trialEnd = new Date(user.trialEndsAt);
+      const daysLeft = Math.max(0, Math.ceil((trialEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)));
+      const expired = now > trialEnd;
+
+      if (expired && user.subscriptionTier === "pro" && !user.stripeSubscriptionId) {
+        await db.update(users).set({ subscriptionTier: "free" }).where(eq(users.id, userId));
+        return res.json({ isTrialing: false, expired: true, daysLeft: 0 });
+      }
+
+      res.json({
+        isTrialing: !expired,
+        expired,
+        daysLeft,
+        trialEndsAt: user.trialEndsAt,
+        trialStartedAt: user.trialStartedAt,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to check trial status" });
+    }
+  });
+
+  app.post("/api/profile/actor-type", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const { actorType } = req.body;
+    if (!ACTOR_TYPES.includes(actorType)) return res.status(400).json({ error: "Invalid actor type" });
+    try {
+      await db.update(users).set({ actorType }).where(eq(users.id, userId));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update actor type" });
+    }
+  });
+
+  app.get("/api/changelog", async (_req: Request, res: Response) => {
+    try {
+      const entries = await db.select().from(changelogEntries).orderBy(desc(changelogEntries.publishedAt)).limit(20);
+      res.json(entries);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to load changelog" });
+    }
+  });
+
+  app.post("/api/admin/changelog", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const { title, description, category, version } = req.body;
+    if (!title || !description) return res.status(400).json({ error: "Title and description required" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    try {
+      const [entry] = await db.insert(changelogEntries).values({
+        title,
+        description,
+        category: category || "improvement",
+        version: version || null,
+        createdBy: adminId,
+      }).returning();
+      await logAdminAction(adminId, "create_changelog", undefined, { entryId: entry.id, title });
+      res.json(entry);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to create changelog entry" });
+    }
+  });
+
+  app.delete("/api/admin/changelog/:id", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    try {
+      await db.delete(changelogEntries).where(eq(changelogEntries.id, req.params.id));
+      await logAdminAction(adminId, "delete_changelog", undefined, { entryId: req.params.id });
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to delete changelog entry" });
+    }
+  });
+
+  app.get("/api/invite-code", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      let code = user.inviteCode;
+      if (!code) {
+        code = generateInviteCode();
+        await db.update(users).set({ inviteCode: code }).where(eq(users.id, userId));
+      }
+
+      const sentCount = await db.select({ cnt: count() }).from(invites).where(eq(invites.senderId, userId));
+      const acceptedCount = await db.select({ cnt: count() }).from(invites).where(and(eq(invites.senderId, userId), eq(invites.status, "accepted")));
+
+      res.json({
+        inviteCode: code,
+        inviteUrl: `${req.protocol}://${req.get("host")}/signin?ref=${code}`,
+        sentCount: sentCount[0]?.cnt || 0,
+        acceptedCount: acceptedCount[0]?.cnt || 0,
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to get invite code" });
+    }
+  });
+
+  app.post("/api/invites/send", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const { recipientEmail, scriptName, roleName } = req.body;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const senderName = user.stageName || user.firstName || user.email || "A fellow actor";
+
+      const [invite] = await db.insert(invites).values({
+        senderId: userId,
+        senderName,
+        recipientEmail: recipientEmail || null,
+        scriptName: scriptName || null,
+        roleName: roleName || null,
+      }).returning();
+
+      res.json({ ok: true, inviteId: invite.id });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to send invite" });
+    }
+  });
+
+  app.get("/api/invites/validate/:code", async (req: any, res: Response) => {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.inviteCode, req.params.code.toUpperCase())).limit(1);
+      if (!user) return res.json({ valid: false });
+      res.json({
+        valid: true,
+        senderName: user.stageName || user.firstName || "A fellow actor",
+      });
+    } catch (error: any) {
+      res.json({ valid: false });
+    }
+  });
+
+  app.post("/api/accept-invite", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: "Invite code required" });
+    try {
+      const [inviter] = await db.select().from(users).where(eq(users.inviteCode, code.toUpperCase())).limit(1);
+      if (!inviter || inviter.id === userId) return res.json({ ok: false, error: "Invalid invite code" });
+
+      const [currentUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+      if (currentUser?.referredBy) return res.json({ ok: true, message: "Already referred" });
+
+      await db.update(users).set({ referredBy: inviter.id }).where(eq(users.id, userId));
+
+      const existing = await db.select().from(invites).where(
+        and(eq(invites.senderId, inviter.id), eq(invites.recipientEmail, currentUser?.email || ""))
+      ).limit(1);
+      if (existing.length > 0) {
+        await db.update(invites).set({ status: "accepted", recipientId: userId }).where(eq(invites.id, existing[0].id));
+      } else {
+        await db.insert(invites).values({
+          senderId: inviter.id,
+          recipientEmail: currentUser?.email || "",
+          recipientId: userId,
+          status: "accepted",
+        });
+      }
+
+      res.json({ ok: true, inviterName: inviter.stageName || inviter.firstName || "A fellow actor" });
+    } catch (error: any) {
+      console.error("[Accept Invite] Error:", error.message);
+      res.status(500).json({ error: "Failed to process invite" });
+    }
+  });
+
+  app.post("/api/contact-sales", async (req: any, res: Response) => {
+    const { name, email, organization, planType, teamSize, message } = req.body;
+    if (!name || !email || !planType) return res.status(400).json({ error: "Name, email, and plan type are required" });
+    const userId = req.user?.claims?.sub || req.user?.id || null;
+    try {
+      await db.insert(salesInquiries).values({
+        userId,
+        name,
+        email,
+        organization: organization || null,
+        planType,
+        teamSize: teamSize || null,
+        message: message || null,
+      });
+      res.json({ ok: true, message: "Thank you! Our team will reach out within 24 hours." });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to submit inquiry" });
+    }
+  });
+
+  app.get("/api/feature-flags", async (req: any, res: Response) => {
+    try {
+      const allFlags = await db.select().from(adminSettings).where(sql`${adminSettings.key} LIKE 'flag.%'`);
+      const flags: Record<string, any> = {};
+      for (const f of allFlags) {
+        const flagKey = f.key.replace("flag.", "");
+        try {
+          flags[flagKey] = JSON.parse(f.value);
+        } catch {
+          flags[flagKey] = f.value === "true";
+        }
+      }
+      res.json(flags);
+    } catch (error: any) {
+      res.json({});
+    }
+  });
+
+  app.get("/api/admin/feature-flags", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const allFlags = await db.select().from(adminSettings).where(sql`${adminSettings.key} LIKE 'flag.%'`);
+      const flags = allFlags.map(f => ({
+        key: f.key.replace("flag.", ""),
+        value: f.value,
+        updatedAt: f.updatedAt,
+      }));
+      res.json(flags);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to load feature flags" });
+    }
+  });
+
+  app.put("/api/admin/feature-flags/:key", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    const flagKey = `flag.${req.params.key}`;
+    const { value } = req.body;
+    try {
+      await db.insert(adminSettings).values({
+        key: flagKey,
+        value: typeof value === "string" ? value : JSON.stringify(value),
+        updatedBy: adminId,
+      }).onConflictDoUpdate({
+        target: adminSettings.key,
+        set: { value: typeof value === "string" ? value : JSON.stringify(value), updatedBy: adminId, updatedAt: new Date() },
+      });
+      await logAdminAction(adminId, "update_feature_flag", undefined, { flag: req.params.key, value });
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update feature flag" });
+    }
+  });
+
+  app.delete("/api/admin/feature-flags/:key", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const adminId = req.user?.claims?.sub || req.session?.claims?.sub || "unknown";
+    const flagKey = `flag.${req.params.key}`;
+    try {
+      await db.delete(adminSettings).where(eq(adminSettings.key, flagKey));
+      await logAdminAction(adminId, "delete_feature_flag", undefined, { flag: req.params.key });
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to delete feature flag" });
+    }
+  });
+
+  app.get("/api/rehearsal-report/:scriptId", async (req: any, res: Response) => {
+    if (!req.isAuthenticated?.() || !req.user) return res.status(401).json({ error: "Not authenticated" });
+    const userId = req.user.claims?.sub || req.user.id;
+    const scriptId = req.params.scriptId;
+    try {
+      const [script] = await db.select().from(savedScripts).where(and(eq(savedScripts.id, scriptId), eq(savedScripts.userId, userId))).limit(1);
+      if (!script) return res.status(404).json({ error: "Script not found" });
+
+      const runs = await db.select().from(performanceRuns)
+        .where(eq(performanceRuns.savedScriptId, scriptId))
+        .orderBy(desc(performanceRuns.createdAt))
+        .limit(20);
+
+      const recs = await db.select().from(recordings)
+        .where(and(eq(recordings.savedScriptId, scriptId), eq(recordings.userId, userId)))
+        .orderBy(desc(recordings.createdAt))
+        .limit(10);
+
+      const totalRuns = runs.length;
+      const avgAccuracy = totalRuns > 0 ? runs.reduce((s, r) => s + Number(r.accuracy), 0) / totalRuns : 0;
+      const bestAccuracy = totalRuns > 0 ? Math.max(...runs.map(r => Number(r.accuracy))) : 0;
+      const totalLinesRehearsed = runs.reduce((s, r) => s + r.linesTotal, 0);
+      const totalDuration = runs.reduce((s, r) => s + (r.durationSeconds || 0), 0);
+      const improvement = totalRuns >= 2 ? Number(runs[0].accuracy) - Number(runs[runs.length - 1].accuracy) : 0;
+
+      res.json({
+        scriptName: script.name,
+        totalRuns,
+        avgAccuracy: avgAccuracy.toFixed(1),
+        bestAccuracy: bestAccuracy.toFixed(1),
+        totalLinesRehearsed,
+        totalDurationMinutes: Math.round(totalDuration / 60),
+        improvement: improvement.toFixed(1),
+        recordings: recs.length,
+        runs: runs.map(r => ({
+          accuracy: Number(r.accuracy).toFixed(1),
+          linesTotal: r.linesTotal,
+          linesCorrect: r.linesCorrect,
+          linesSkipped: r.linesSkipped,
+          durationSeconds: r.durationSeconds,
+          memorizationMode: r.memorizationMode,
+          date: r.createdAt,
+        })),
+        generatedAt: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to generate report" });
+    }
+  });
+
+  app.get("/api/admin/growth", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const totalUsers = await db.select({ cnt: count() }).from(users);
+      const proUsers = await db.select({ cnt: count() }).from(users).where(sql`${users.subscriptionTier} != 'free'`);
+      const trialUsers = await db.select({ cnt: count() }).from(users).where(sql`${users.trialStartedAt} IS NOT NULL`);
+      const trialConverted = await db.select({ cnt: count() }).from(users).where(sql`${users.trialStartedAt} IS NOT NULL AND ${users.stripeSubscriptionId} IS NOT NULL`);
+
+      const war = await db.select({ cnt: sql<number>`COUNT(DISTINCT ${performanceRuns.userId})` })
+        .from(performanceRuns)
+        .where(gte(performanceRuns.createdAt, sevenDaysAgo));
+
+      const newUsersWeek = await db.select({ cnt: count() }).from(users).where(gte(users.createdAt, sevenDaysAgo));
+      const activatedWeek = await db.select({ cnt: sql<number>`COUNT(DISTINCT ${performanceRuns.userId})` })
+        .from(performanceRuns)
+        .innerJoin(users, eq(performanceRuns.userId, users.id))
+        .where(and(gte(users.createdAt, sevenDaysAgo), gte(performanceRuns.createdAt, sevenDaysAgo)));
+
+      const actorTypes = await db.select({
+        type: users.actorType,
+        cnt: count(),
+      }).from(users).groupBy(users.actorType);
+
+      const dailyActiveByDay = await db.execute(sql`
+        SELECT DATE(created_at) as day, COUNT(DISTINCT user_id) as active_users
+        FROM performance_runs
+        WHERE created_at >= ${thirtyDaysAgo}
+        GROUP BY DATE(created_at)
+        ORDER BY day ASC
+      `);
+
+      const invitesSent = await db.select({ cnt: count() }).from(invites);
+      const invitesAccepted = await db.select({ cnt: count() }).from(invites).where(eq(invites.status, "accepted"));
+
+      const salesLeads = await db.select({ cnt: count() }).from(salesInquiries);
+
+      const emailDomains = await db.execute(sql`
+        SELECT 
+          SPLIT_PART(email, '@', 2) as domain,
+          COUNT(*) as user_count
+        FROM users
+        WHERE email IS NOT NULL AND email LIKE '%@%'
+        GROUP BY SPLIT_PART(email, '@', 2)
+        HAVING COUNT(*) >= 3
+        ORDER BY user_count DESC
+        LIMIT 20
+      `);
+
+      res.json({
+        northStar: {
+          weeklyActiveRehearsers: war[0]?.cnt || 0,
+          label: "Weekly Active Rehearsers (WAR)",
+        },
+        totals: {
+          users: totalUsers[0]?.cnt || 0,
+          proUsers: proUsers[0]?.cnt || 0,
+          trialUsers: trialUsers[0]?.cnt || 0,
+          trialConversions: trialConverted[0]?.cnt || 0,
+          conversionRate: trialUsers[0]?.cnt ? ((trialConverted[0]?.cnt || 0) / trialUsers[0].cnt * 100).toFixed(1) : "0.0",
+        },
+        activation: {
+          newUsersThisWeek: newUsersWeek[0]?.cnt || 0,
+          activatedThisWeek: activatedWeek[0]?.cnt || 0,
+          activationRate: newUsersWeek[0]?.cnt ? ((activatedWeek[0]?.cnt || 0) / newUsersWeek[0].cnt * 100).toFixed(1) : "0.0",
+        },
+        actorTypes,
+        dailyActive: dailyActiveByDay,
+        invites: {
+          sent: invitesSent[0]?.cnt || 0,
+          accepted: invitesAccepted[0]?.cnt || 0,
+        },
+        salesLeads: salesLeads[0]?.cnt || 0,
+        pqaSignals: emailDomains,
+      });
+    } catch (error: any) {
+      console.error("[Growth Admin] Error:", error.message);
+      res.status(500).json({ error: "Failed to load growth metrics" });
+    }
+  });
+
+  app.get("/api/admin/sales-inquiries", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    try {
+      const inquiries = await db.select().from(salesInquiries).orderBy(desc(salesInquiries.createdAt)).limit(50);
+      res.json(inquiries);
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to load sales inquiries" });
+    }
+  });
+
+  app.put("/api/admin/sales-inquiries/:id/status", async (req: any, res: Response) => {
+    if (!(await isAdmin(req))) return res.status(403).json({ error: "Not authorized" });
+    const { status } = req.body;
+    try {
+      await db.update(salesInquiries).set({ status }).where(eq(salesInquiries.id, req.params.id));
+      res.json({ ok: true });
+    } catch (error: any) {
+      res.status(500).json({ error: "Failed to update inquiry status" });
     }
   });
 

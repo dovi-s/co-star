@@ -9,12 +9,16 @@ import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
-import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy, ClipboardPaste, UserCheck, Mic } from "lucide-react";
+import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy, ClipboardPaste, UserCheck, Mic, BarChart3, BookOpen as LibraryIcon } from "lucide-react";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import { useRecentScripts, type RecentScript } from "@/hooks/use-recent-scripts";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { getDeviceFingerprint } from "@/lib/device-fingerprint";
 import { cn } from "@/lib/utils";
+import { TrialBanner } from "@/components/trial-banner";
+import { InvitePartnerInline } from "@/components/invite-partner";
+import { LockedFeatureCard } from "@/components/pro-gate";
+import { hasProAccess } from "@shared/models/auth";
 
 type Step = "import" | "role-select";
 
@@ -315,6 +319,12 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
       <SideMenu open={menuOpen} onOpenChange={setMenuOpen} onNavigate={onNavigate} activePage="home" />
 
       <main id="main-content" className="flex-1 flex flex-col onboarding-glow relative overflow-x-hidden">
+        {isAuthenticated && (
+          <div className="content-inset pt-3 pb-0 relative z-10">
+            <TrialBanner onUpgrade={() => onNavigate?.("subscription")} />
+          </div>
+        )}
+
         <div className="content-inset pt-6 pb-2 relative z-10 hero-enter">
           <h1 className="text-2xl font-semibold text-foreground relative tracking-tight">
             {isAuthenticated && user?.firstName
@@ -398,6 +408,36 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             onDelete={recentRemove}
           />
         </div>
+
+        {isAuthenticated && (
+          <div className="content-inset pb-4 relative z-10 space-y-3">
+            <InvitePartnerInline scriptName={session?.name} className="w-full justify-center" />
+
+            {!hasProAccess(user?.subscriptionTier) && (
+              <div className="space-y-2" data-testid="pro-feature-glimpses">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Unlock with Pro</p>
+                <LockedFeatureCard
+                  icon={Mic}
+                  title="Recordings"
+                  description="Record your takes and track your improvement over time."
+                  onUpgrade={() => onNavigate?.("subscription")}
+                />
+                <LockedFeatureCard
+                  icon={BarChart3}
+                  title="Performance Analytics"
+                  description="See your accuracy, pacing, and emotional range."
+                  onUpgrade={() => onNavigate?.("subscription")}
+                />
+                <LockedFeatureCard
+                  icon={LibraryIcon}
+                  title="Cloud Script Library"
+                  description="Save unlimited scripts and access them from any device."
+                  onUpgrade={() => onNavigate?.("subscription")}
+                />
+              </div>
+            )}
+          </div>
+        )}
       </main>
 
       <footer className="content-inset py-4 pb-6 border-t border-border/40 safe-bottom">

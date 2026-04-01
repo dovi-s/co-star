@@ -30,6 +30,18 @@ Key features:
 ### Design & Growth System
 The application utilizes a mascot ("Cue") with various moods, integrated into empty states and completion modals. "Pro" badges are displayed on locked menu items for free-tier users, with completion screens promoting subscription upgrades. Server-side middleware enforces Pro access for `/api/scripts` and `/api/performance` routes. The subscription page uses "guest pass" framing instead of "free trial." A share button appears after completed performances. UI elements maintain high contrast standards and employ a "pop-not-fade" hover pattern. Logged-out users are presented with a 3-step value proposition on the home page.
 
+### Elena Verna PLG Growth Playbook
+Full product-led growth implementation including:
+- **Reverse Trial**: 14-day Pro trial auto-activates on onboarding. `computeEffectiveTier()` in `shared/models/auth.ts` enforces trial expiry server-side without relying on lazy `/api/trial-status` checks.
+- **Actor Type Profiling**: Step 0 in onboarding captures actor type (individual, student, coach, school admin). Stored in `users.actorType`.
+- **Scene Partner Invite Loop**: Each user gets a unique `inviteCode`. `/api/accept-invite` processes referral codes, links `referredBy`, and updates invite status. Client processes `?ref=` URL param on auth.
+- **Pro Feature Glimpses**: Free users see locked Pro feature cards (Recordings, Analytics, Library) on home page. `ProGate`, `ProBadge`, `LockedFeatureCard` components.
+- **In-App Changelog**: "What's New" page accessible from sidebar. Admin CRUD via `/api/admin/changelog`.
+- **Teams/Education Painted Doors**: Contact Sales buttons on subscription page for Coach, Education, and Theater Company plans. `ContactSalesSheet` component submits to `/api/contact-sales`.
+- **Growth Admin Dashboard**: Growth tab shows North Star (WAR), trial conversion, activation funnel, invite K-factor, PQA signals (email domain clustering), actor type distribution, sales inquiries.
+- **Feature Flags**: Simple flag system via `admin_settings` table (key prefix `flag.`). Client `useFeatureFlag()` hook supports boolean and percentage rollout with stable user bucketing.
+- **Share with Branding**: `ShareRecordingCard` component for branded recording shares.
+
 ### Device Fingerprint Anti-Abuse System
 A device fingerprinting system tracks script usage per device to prevent multi-account abuse. It ensures that creating a new free account on the same device inherits the device's existing usage count, applying the same 12-hour reset window as user-based usage.
 

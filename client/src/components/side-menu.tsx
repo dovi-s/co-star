@@ -403,6 +403,14 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
             active={activePage === "feature-board"}
             testId="menu-item-feature-board"
           />
+          <MenuItem
+            icon={<Sparkles className="h-4 w-4" />}
+            label="What's New"
+            description="Latest updates and improvements"
+            onClick={() => navigate("whats-new")}
+            active={activePage === "whats-new"}
+            testId="menu-item-whats-new"
+          />
 
           <Separator className="my-2 mx-3" />
 

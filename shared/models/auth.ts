@@ -58,6 +58,22 @@ export function hasProAccess(tier: string | null | undefined): boolean {
   return PRO_ACCESS_TIERS.includes((tier || "free") as SubscriptionTier);
 }
 
+export function computeEffectiveTier(user: {
+  subscriptionTier?: string | null;
+  trialStartedAt?: string | Date | null;
+  trialEndsAt?: string | Date | null;
+  stripeSubscriptionId?: string | null;
+}): string {
+  const tier = user.subscriptionTier || "free";
+  if (tier !== "pro") return tier;
+  if (user.stripeSubscriptionId) return "pro";
+  if (!user.trialStartedAt || !user.trialEndsAt) return tier;
+  const now = new Date();
+  const trialEnd = new Date(user.trialEndsAt);
+  if (now > trialEnd) return "free";
+  return "pro";
+}
+
 export const passwordResetTokens = pgTable("password_reset_tokens", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   email: varchar("email").notNull(),
@@ -315,3 +331,56 @@ export const adminSettings = pgTable("admin_settings", {
   updatedAt: timestamp("updated_at").defaultNow(),
   updatedBy: varchar("updated_by"),
 });
+
+export const ACTOR_TYPES = ["individual_actor", "student", "coach", "school_admin"] as const;
+export type ActorType = (typeof ACTOR_TYPES)[number];
+
+export const changelogEntries = pgTable("changelog_entries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  title: varchar("title").notNull(),
+  description: text("description").notNull(),
+  category: varchar("category").default("improvement"),
+  version: varchar("version"),
+  publishedAt: timestamp("published_at").defaultNow(),
+  createdBy: varchar("created_by"),
+}, (table) => [
+  index("IDX_changelog_published").on(table.publishedAt),
+]);
+
+export type ChangelogEntry = typeof changelogEntries.$inferSelect;
+export type InsertChangelogEntry = typeof changelogEntries.$inferInsert;
+
+export const invites = pgTable("invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").notNull().references(() => users.id),
+  senderName: varchar("sender_name").notNull(),
+  recipientEmail: varchar("recipient_email"),
+  scriptName: varchar("script_name"),
+  roleName: varchar("role_name"),
+  status: varchar("status").default("pending"),
+  acceptedBy: varchar("accepted_by"),
+  acceptedAt: timestamp("accepted_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_invites_sender").on(table.senderId),
+  index("IDX_invites_status").on(table.status),
+]);
+
+export type Invite = typeof invites.$inferSelect;
+export type InsertInvite = typeof invites.$inferInsert;
+
+export const salesInquiries = pgTable("sales_inquiries", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  name: varchar("name").notNull(),
+  email: varchar("email").notNull(),
+  organization: varchar("organization"),
+  planType: varchar("plan_type").notNull(),
+  teamSize: varchar("team_size"),
+  message: text("message"),
+  status: varchar("status").default("new"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("IDX_sales_inquiries_status").on(table.status),
+  index("IDX_sales_inquiries_plan").on(table.planType),
+]);

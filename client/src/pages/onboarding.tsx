@@ -14,9 +14,20 @@ import {
   Check,
   Crown,
   Loader2,
+  User,
+  GraduationCap,
+  Users,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+
+const actorTypeOptions = [
+  { id: "individual_actor", label: "Actor", description: "Preparing for auditions & performances", icon: User },
+  { id: "student", label: "Acting Student", description: "Learning and practicing at school", icon: GraduationCap },
+  { id: "coach", label: "Coach / Director", description: "Guiding actors through material", icon: Users },
+  { id: "school_admin", label: "School Admin", description: "Managing a program or conservatory", icon: Building2 },
+];
 
 const eyeColorOptions = ["Brown", "Blue", "Green", "Hazel", "Gray", "Amber"];
 const hairColorOptions = ["Black", "Brown", "Blonde", "Red", "Auburn", "Gray", "White", "Other"];
@@ -70,6 +81,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
   const [step, setStep] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [actorType, setActorType] = useState("");
   const [stageName, setStageName] = useState("");
   const [pronouns, setPronouns] = useState("");
   const [ageRange, setAgeRange] = useState("");
@@ -138,13 +150,30 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     reader.readAsDataURL(file);
   };
 
+  const saveStep0 = () => {
+    if (actorType) {
+      fetch("/api/profile/actor-type", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actorType }),
+        credentials: "include",
+      }).catch(() => {});
+    }
+    fetch("/api/reverse-trial/activate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    }).catch(() => {});
+    setStep(1);
+  };
+
   const saveStep1 = () => {
     const data: Record<string, string> = {};
     if (stageName.trim()) data.stageName = stageName.trim();
     if (pronouns) data.pronouns = pronouns;
     if (ageRange) data.ageRange = ageRange;
     if (Object.keys(data).length > 0) saveMutation.mutate(data);
-    setStep(1);
+    setStep(2);
   };
 
   const saveStep2 = () => {
@@ -156,14 +185,14 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     if (location.trim()) data.location = location.trim();
     if (unionStatus) data.unionStatus = unionStatus;
     if (Object.keys(data).length > 0) saveMutation.mutate(data);
-    setStep(2);
+    setStep(3);
   };
 
   const saveStep3 = () => {
     const data: Record<string, string> = {};
     if (photoPreview) data.profileImageUrl = photoPreview;
     if (Object.keys(data).length > 0) saveMutation.mutate(data);
-    setStep(3);
+    setStep(4);
   };
 
   const finishOnboarding = () => {
@@ -176,7 +205,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
     onComplete();
   };
 
-  const totalSteps = 4;
+  const totalSteps = 5;
   const firstName = user?.firstName || "there";
 
   return (
@@ -227,6 +256,60 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
               Welcome, {firstName}
             </h1>
+            <p className="text-sm text-muted-foreground mt-1 mb-6">
+              What best describes you?
+            </p>
+
+            <div className="space-y-2.5 flex-1">
+              {actorTypeOptions.map(opt => {
+                const OptIcon = opt.icon;
+                return (
+                  <button
+                    key={opt.id}
+                    onClick={() => setActorType(actorType === opt.id ? "" : opt.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 p-4 rounded-xl border-2 transition-all text-left",
+                      actorType === opt.id
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border/50 hover:border-border"
+                    )}
+                    data-testid={`actor-type-${opt.id}`}
+                  >
+                    <div className={cn(
+                      "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                      actorType === opt.id ? "bg-primary/10" : "bg-muted/50"
+                    )}>
+                      <OptIcon className={cn("w-5 h-5", actorType === opt.id ? "text-primary" : "text-muted-foreground")} />
+                    </div>
+                    <div>
+                      <span className={cn("text-sm font-semibold block", actorType === opt.id ? "text-primary" : "text-foreground")}>
+                        {opt.label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">{opt.description}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <div className="rounded-lg bg-primary/5 border border-primary/10 p-3 text-center">
+                <p className="text-xs font-medium text-primary">You'll get 14 days of Pro free</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Full access to all features, no credit card needed</p>
+              </div>
+              <Button onClick={saveStep0} className="w-full h-11" data-testid="button-onboarding-next-0">
+                Continue
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {step === 1 && (
+          <div className="flex-1 flex flex-col animate-fade-in-up">
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+              About you
+            </h1>
             <p className="text-sm text-muted-foreground mt-1 mb-8">
               Tell us a bit about yourself. Everything here is optional.
             </p>
@@ -254,7 +337,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </div>
             </div>
 
-            <Button onClick={saveStep1} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-0">
+            <Button onClick={saveStep1} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-1">
               {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Continue
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -262,7 +345,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div className="flex-1 flex flex-col animate-fade-in-up">
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
               Your look
@@ -327,7 +410,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </div>
             </div>
 
-            <Button onClick={saveStep2} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-1">
+            <Button onClick={saveStep2} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-2">
               {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               Continue
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -335,7 +418,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="flex-1 flex flex-col animate-fade-in-up">
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
               Add a headshot
@@ -381,7 +464,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
               </p>
             </div>
 
-            <Button onClick={saveStep3} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-2">
+            <Button onClick={saveStep3} disabled={saveMutation.isPending} className="w-full h-11 mt-6" data-testid="button-onboarding-next-3">
               {saveMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
               {photoPreview ? "Continue" : "Skip for now"}
               <ChevronRight className="h-4 w-4 ml-1" />
@@ -389,7 +472,7 @@ export function OnboardingPage({ onComplete }: OnboardingPageProps) {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <div className="flex-1 flex flex-col animate-fade-in-up">
             <h1 className="text-2xl font-semibold text-foreground tracking-tight">
               Choose your plan

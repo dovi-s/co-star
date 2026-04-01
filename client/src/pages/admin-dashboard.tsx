@@ -69,7 +69,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-type Tab = "overview" | "users" | "traffic" | "usage" | "features" | "revenue" | "feedback" | "errors" | "integrations";
+type Tab = "overview" | "users" | "traffic" | "usage" | "features" | "revenue" | "feedback" | "errors" | "integrations" | "growth" | "flags";
 
 const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "overview", label: "Overview", icon: BarChart3 },
@@ -81,6 +81,8 @@ const TABS: { id: Tab; label: string; icon: any }[] = [
   { id: "feedback", label: "Messages", icon: MessageSquare },
   { id: "errors", label: "Errors", icon: AlertTriangle },
   { id: "integrations", label: "Integrations", icon: Settings },
+  { id: "growth", label: "Growth", icon: TrendingUp },
+  { id: "flags", label: "Flags", icon: Zap },
 ];
 
 interface AnalyticsData {
@@ -234,6 +236,8 @@ export function AdminDashboard({ onBack }: { onBack: () => void }) {
             {tab === "feedback" && <FeedbackTab />}
             {tab === "errors" && <ErrorsTab />}
             {tab === "integrations" && <IntegrationsTab />}
+            {tab === "growth" && <GrowthTab />}
+            {tab === "flags" && <FeatureFlagsTab />}
             </div>
           </>
         ) : null}
@@ -2073,6 +2077,237 @@ function FunnelStep({ label, value, pct, color }: { label: string; value: number
         <div className={cn("h-full rounded-full transition-all", color)} style={{ width: `${Math.max(pct, 2)}%` }} />
       </div>
       <p className="text-[10px] text-muted-foreground">{pct.toFixed(0)}%</p>
+    </div>
+  );
+}
+
+function GrowthTab() {
+  const { data, isLoading } = useQuery<any>({ queryKey: ["/api/admin/growth"] });
+  const { data: inquiries } = useQuery<any[]>({ queryKey: ["/api/admin/sales-inquiries"] });
+  const statusMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      await apiRequest("PUT", `/api/admin/sales-inquiries/${id}/status`, { status });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/admin/sales-inquiries"] }),
+  });
+
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+  if (!data) return <p className="text-center text-muted-foreground py-8">No growth data available</p>;
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-5">
+        <div className="text-center space-y-1 mb-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">North Star Metric</p>
+          <p className="text-4xl font-bold text-primary" data-testid="text-war">{data.northStar?.weeklyActiveRehearsers ?? 0}</p>
+          <p className="text-sm text-muted-foreground">{data.northStar?.label}</p>
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Card className="p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">Total Users</p>
+          <p className="text-2xl font-bold" data-testid="text-total-users">{data.totals?.users ?? 0}</p>
+        </Card>
+        <Card className="p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">Pro Users</p>
+          <p className="text-2xl font-bold text-primary" data-testid="text-pro-users">{data.totals?.proUsers ?? 0}</p>
+        </Card>
+        <Card className="p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">Trial Users</p>
+          <p className="text-2xl font-bold" data-testid="text-trial-users">{data.totals?.trialUsers ?? 0}</p>
+        </Card>
+        <Card className="p-4 space-y-1">
+          <p className="text-xs text-muted-foreground">Trial → Pro</p>
+          <p className="text-2xl font-bold text-green-600" data-testid="text-trial-conversion">{data.totals?.conversionRate ?? 0}%</p>
+        </Card>
+      </div>
+
+      <Card className="p-4 space-y-3">
+        <h3 className="text-sm font-medium">Activation (This Week)</h3>
+        <FunnelStep label="New signups" value={data.activation?.newUsersThisWeek ?? 0} pct={100} color="bg-blue-500" />
+        <FunnelStep label="Completed first rehearsal" value={data.activation?.activatedThisWeek ?? 0} pct={parseFloat(data.activation?.activationRate ?? "0")} color="bg-green-500" />
+      </Card>
+
+      <Card className="p-4 space-y-3">
+        <h3 className="text-sm font-medium">Invite Loop</h3>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Invites sent</span>
+          <span className="font-medium" data-testid="text-invites-sent">{data.invites?.sent ?? 0}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Invites accepted</span>
+          <span className="font-medium" data-testid="text-invites-accepted">{data.invites?.accepted ?? 0}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">K-factor</span>
+          <span className="font-medium">{data.invites?.sent ? ((data.invites.accepted || 0) / data.invites.sent).toFixed(2) : "0.00"}</span>
+        </div>
+      </Card>
+
+      {data.actorTypes && data.actorTypes.length > 0 && (
+        <Card className="p-4 space-y-3">
+          <h3 className="text-sm font-medium">Actor Types</h3>
+          {data.actorTypes.map((at: any) => (
+            <div key={at.type || "unknown"} className="flex justify-between text-sm">
+              <span className="text-muted-foreground capitalize">{(at.type || "unset").replace(/_/g, " ")}</span>
+              <span className="font-medium">{at.cnt}</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {data.pqaSignals && (Array.isArray(data.pqaSignals) ? data.pqaSignals : data.pqaSignals?.rows || []).length > 0 && (
+        <Card className="p-4 space-y-3">
+          <h3 className="text-sm font-medium flex items-center gap-2">
+            <Target className="w-4 h-4 text-primary" />
+            PQA Signals (3+ users from same domain)
+          </h3>
+          {(Array.isArray(data.pqaSignals) ? data.pqaSignals : data.pqaSignals?.rows || []).map((d: any) => (
+            <div key={d.domain} className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{d.domain}</span>
+              <span className="font-medium">{d.user_count} users</span>
+            </div>
+          ))}
+        </Card>
+      )}
+
+      {inquiries && inquiries.length > 0 && (
+        <Card className="p-4 space-y-3">
+          <h3 className="text-sm font-medium flex items-center gap-2">
+            <MailOpen className="w-4 h-4 text-primary" />
+            Sales Inquiries ({inquiries.length})
+          </h3>
+          {inquiries.map((inq: any) => (
+            <div key={inq.id} className="border border-border/50 rounded-lg p-3 space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-sm font-medium">{inq.name}</p>
+                  <p className="text-xs text-muted-foreground">{inq.email} · {inq.organization || "No org"}</p>
+                </div>
+                <span className={cn("text-[10px] px-2 py-0.5 rounded-full font-medium",
+                  inq.status === "new" ? "bg-blue-500/10 text-blue-600" :
+                  inq.status === "contacted" ? "bg-yellow-500/10 text-yellow-600" :
+                  "bg-green-500/10 text-green-600"
+                )}>
+                  {inq.status}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">{inq.planType} · {inq.teamSize} people</p>
+              {inq.message && <p className="text-xs">{inq.message}</p>}
+              <div className="flex gap-2">
+                {inq.status === "new" && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => statusMutation.mutate({ id: inq.id, status: "contacted" })} data-testid={`button-contact-inquiry-${inq.id}`}>
+                    Mark Contacted
+                  </Button>
+                )}
+                {inq.status === "contacted" && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => statusMutation.mutate({ id: inq.id, status: "closed" })} data-testid={`button-close-inquiry-${inq.id}`}>
+                    Close
+                  </Button>
+                )}
+              </div>
+            </div>
+          ))}
+        </Card>
+      )}
+    </div>
+  );
+}
+
+function FeatureFlagsTab() {
+  const { data: flags, isLoading } = useQuery<any[]>({ queryKey: ["/api/admin/feature-flags"] });
+  const [newKey, setNewKey] = useState("");
+  const [newValue, setNewValue] = useState("true");
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: string; value: string }) => {
+      await apiRequest("PUT", `/api/admin/feature-flags/${key}`, { value });
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/admin/feature-flags"] }),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      if (!newKey.trim()) return;
+      await apiRequest("PUT", `/api/admin/feature-flags/${newKey.trim()}`, { value: newValue });
+    },
+    onSuccess: () => {
+      setNewKey("");
+      setNewValue("true");
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/feature-flags"] });
+    },
+  });
+
+  if (isLoading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>;
+
+  return (
+    <div className="space-y-4">
+      <Card className="p-4 space-y-3">
+        <h3 className="text-sm font-medium">Create Flag</h3>
+        <div className="flex gap-2">
+          <input
+            className="flex-1 h-9 rounded-md border border-input bg-background px-3 text-sm"
+            placeholder="flag-key"
+            value={newKey}
+            onChange={(e) => setNewKey(e.target.value)}
+            data-testid="input-new-flag-key"
+          />
+          <select
+            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            data-testid="select-new-flag-value"
+          >
+            <option value="true">Enabled</option>
+            <option value="false">Disabled</option>
+            <option value="50">50% rollout</option>
+            <option value="25">25% rollout</option>
+            <option value="10">10% rollout</option>
+          </select>
+          <Button size="sm" className="h-9" onClick={() => createMutation.mutate()} disabled={!newKey.trim() || createMutation.isPending} data-testid="button-create-flag">
+            Add
+          </Button>
+        </div>
+      </Card>
+
+      {flags && flags.length > 0 ? (
+        <Card className="p-4 space-y-1">
+          <h3 className="text-sm font-medium mb-3">Active Flags ({flags.length})</h3>
+          {flags.map((flag: any) => {
+            const isEnabled = flag.value === "true" || flag.value === true;
+            const isDisabled = flag.value === "false" || flag.value === false;
+            const isRollout = !isEnabled && !isDisabled;
+            return (
+              <div key={flag.key} className="flex items-center justify-between py-2.5 border-b border-border/30 last:border-0">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-2 h-2 rounded-full", isEnabled ? "bg-green-500" : isDisabled ? "bg-red-400" : "bg-yellow-500")} />
+                  <span className="text-sm font-mono">{flag.key}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isRollout && <span className="text-xs text-muted-foreground">{flag.value}%</span>}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-7 text-xs"
+                    onClick={() => toggleMutation.mutate({ key: flag.key, value: isEnabled ? "false" : "true" })}
+                    disabled={toggleMutation.isPending}
+                    data-testid={`button-toggle-flag-${flag.key}`}
+                  >
+                    {isEnabled ? "Disable" : "Enable"}
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </Card>
+      ) : (
+        <Card className="p-8 text-center">
+          <Zap className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No feature flags yet</p>
+          <p className="text-xs text-muted-foreground mt-1">Create one above to get started</p>
+        </Card>
+      )}
     </div>
   );
 }
