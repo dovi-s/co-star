@@ -416,19 +416,22 @@ export function MyRehearsalsPage({
                   {scripts.map((script, i) => (
                     <div
                       key={script.id}
-                      className="glass-surface rounded-lg p-4 animate-fade-in-up"
+                      className="glass-surface-heavy rounded-xl p-4 animate-fade-in-up border border-border/60"
                       style={{ animationDelay: `${i * 60}ms` }}
                       data-testid={`card-script-${script.id}`}
                     >
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center justify-between gap-3">
                         <button
                           className="flex-1 text-left min-w-0"
                           onClick={() => loadMutation.mutate(script.id)}
                           disabled={loadMutation.isPending}
                           data-testid={`button-load-script-${script.id}`}
                         >
-                          <p className="text-sm font-medium text-foreground truncate">{script.name}</p>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="h-4 w-4 text-primary shrink-0" />
+                            <p className="text-sm font-semibold text-foreground truncate">{script.name}</p>
+                          </div>
+                          <div className="flex items-center gap-2 pl-6">
                             <Clock className="h-3 w-3 text-muted-foreground" />
                             <span className="text-[11px] text-muted-foreground">{formatDate(script.updatedAt)}</span>
                           </div>
