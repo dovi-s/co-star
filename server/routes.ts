@@ -7,7 +7,7 @@ import OpenAI from "openai";
 import multer from "multer";
 import * as pdfjsLib from "pdfjs-dist/legacy/build/pdf.mjs";
 import { parseScript } from "./script-parser";
-import { aiCleanupScript, aiFilterRoles } from "./ai-script-cleanup";
+import { aiCleanupScript, aiFilterRoles, aiVerifyParsedScript } from "./ai-script-cleanup";
 import { setupMultiplayer } from "./multiplayer";
 import { execFile } from "child_process";
 import { promises as fs } from "fs";
@@ -1602,8 +1602,20 @@ MARY: You're kidding me.`;
         };
       }
 
+      // AI Verification Pass — cross-check parsed output against original text
+      try {
+        const verifyStart = Date.now();
+        const verification = await aiVerifyParsedScript(text, finalScript);
+        if (verification.fixCount > 0) {
+          console.log(`[Parse Script] AI Verification fixed ${verification.fixCount} issues in ${Date.now() - verifyStart}ms`);
+          finalScript = verification.script;
+          totalLines = finalScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+        }
+      } catch (verifyErr) {
+        console.error("[Parse Script] AI Verification failed, using pre-verified script:", verifyErr);
+      }
+
       if (finalScript.roles.length === 0) {
-        // Provide helpful diagnostic info about why parsing failed
         const lines = text.split('\n').slice(0, 10);
         const sampleLines = lines.filter(l => l.trim()).slice(0, 3).map(l => l.substring(0, 60));
         const hasColons = text.includes(':');
@@ -1873,6 +1885,19 @@ MARY: You're kidding me.`;
         };
       }
 
+      // AI Verification Pass
+      try {
+        const verifyStart = Date.now();
+        const verification = await aiVerifyParsedScript(text, finalScript);
+        if (verification.fixCount > 0) {
+          console.log(`[PDF->Session] AI Verification fixed ${verification.fixCount} issues in ${Date.now() - verifyStart}ms`);
+          finalScript = verification.script;
+          totalLines = finalScript.scenes.reduce((sum, scene) => sum + scene.lines.length, 0);
+        }
+      } catch (verifyErr) {
+        console.error("[PDF->Session] AI Verification failed:", verifyErr);
+      }
+
       if (finalScript.roles.length === 0) {
         const hasColons = text.includes(':');
         let hint = "Use format: CHARACTER: dialogue";
@@ -1953,6 +1978,14 @@ MARY: You're kidding me.`;
           };
         }
 
+        // AI Verification Pass
+        try {
+          const verification = await aiVerifyParsedScript(text, finalScript);
+          if (verification.fixCount > 0) {
+            finalScript = verification.script;
+          }
+        } catch {}
+
         if (finalScript.roles.length === 0) {
           sendProgress({ type: 'error', error: "Could not find character names in the scanned text." });
           res.end();
@@ -1991,6 +2024,14 @@ MARY: You're kidding me.`;
             scenes: finalScript.scenes.map(s => ({ ...s, lines: s.lines.filter(l => !lastRoleIdsToRemove.has(l.roleId)) })).filter(s => s.lines.length > 0),
           };
         }
+
+        // AI Verification Pass
+        try {
+          const verification = await aiVerifyParsedScript(text, finalScript);
+          if (verification.fixCount > 0) {
+            finalScript = verification.script;
+          }
+        } catch {}
 
         if (finalScript.roles.length === 0) {
           return res.status(400).json({ error: "Could not find character names in the scanned text." });

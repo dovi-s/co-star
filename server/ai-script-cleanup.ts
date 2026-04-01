@@ -304,3 +304,276 @@ Remove only clear non-characters (camera directions, locations, objects, time ma
     return script;
   }
 }
+
+interface VerificationFix {
+  type: 'remove_line' | 'fix_attribution' | 'fix_text' | 'add_missing';
+  lineId?: string;
+  sceneIndex?: number;
+  lineIndex?: number;
+  correctRole?: string;
+  correctText?: string;
+  newLine?: { roleName: string; text: string; insertAfterLineId?: string };
+  reason: string;
+}
+
+interface VerificationResult {
+  script: ParsedScript;
+  fixCount: number;
+  fixes: string[];
+}
+
+export async function aiVerifyParsedScript(
+  originalText: string,
+  script: ParsedScript
+): Promise<VerificationResult> {
+  const noOpResult = { script, fixCount: 0, fixes: [] };
+
+  if (!isAIConfigured()) {
+    return noOpResult;
+  }
+
+  const allLines: { sceneIndex: number; lineIndex: number; line: ScriptLine }[] = [];
+  for (let si = 0; si < script.scenes.length; si++) {
+    for (let li = 0; li < script.scenes[si].lines.length; li++) {
+      allLines.push({ sceneIndex: si, lineIndex: li, line: script.scenes[si].lines[li] });
+    }
+  }
+
+  if (allLines.length === 0) return noOpResult;
+
+  const CHUNK_SIZE = 120;
+  const chunks: typeof allLines[] = [];
+  for (let i = 0; i < allLines.length; i += CHUNK_SIZE) {
+    chunks.push(allLines.slice(i, i + CHUNK_SIZE));
+  }
+
+  const openai = new OpenAI({
+    apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
+    baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
+  });
+
+  const allFixes: VerificationFix[] = [];
+  const fixDescriptions: string[] = [];
+
+  const processChunk = async (chunk: typeof allLines, chunkIdx: number): Promise<VerificationFix[]> => {
+    const linesForReview = chunk.map((item, idx) => ({
+      idx,
+      id: item.line.id,
+      character: item.line.roleName,
+      text: item.line.text.substring(0, 300),
+      sceneIndex: item.sceneIndex,
+      lineIndex: item.lineIndex,
+    }));
+
+    const chunkStart = chunkIdx * CHUNK_SIZE;
+    const relevantOrigStart = Math.max(0, Math.floor((chunkStart / allLines.length) * originalText.length) - 500);
+    const relevantOrigEnd = Math.min(originalText.length, Math.ceil(((chunkStart + chunk.length) / allLines.length) * originalText.length) + 500);
+    const relevantOriginal = originalText.substring(relevantOrigStart, Math.min(relevantOrigEnd, relevantOrigStart + 6000));
+
+    const prompt = `You are a professional script editor verifying parsed screenplay dialogue. Compare the parsed lines against the original screenplay text and find errors.
+
+ORIGINAL SCREENPLAY TEXT (relevant section):
+---
+${relevantOriginal}
+---
+
+PARSED DIALOGUE LINES TO VERIFY:
+${JSON.stringify(linesForReview, null, 2)}
+
+Find and report these specific errors:
+
+1. STAGE DIRECTIONS AS DIALOGUE: Lines that are clearly stage directions, action descriptions, camera directions, or scene descriptions — NOT spoken words. Examples:
+   - "dressed in underwear and hats" (action description)
+   - "emerge carrying trays of champagne" (action description)  
+   - "Script provided for educational purposes" (copyright notice)
+   - Sound/music cues that aren't dialogue
+
+2. WRONG CHARACTER ATTRIBUTION: Dialogue assigned to the wrong character. Cross-reference with the original text to verify who actually speaks each line.
+
+3. MERGED/GARBLED TEXT: Lines where two separate pieces got incorrectly merged, or text is garbled/corrupted.
+
+BE CONSERVATIVE:
+- Only flag lines you are CERTAIN are wrong based on the original text
+- If you can't verify from the provided original text section, do NOT flag it
+- Fragmented dialogue is normal in scripts (line breaks mid-sentence) — don't flag these
+- Voiceover (V.O.) and offscreen (O.S.) lines ARE valid dialogue
+
+Return a JSON object:
+{
+  "fixes": [
+    {
+      "type": "remove_line",
+      "idx": <number from the parsed lines>,
+      "reason": "brief explanation"
+    },
+    {
+      "type": "fix_attribution",
+      "idx": <number>,
+      "correctRole": "CORRECT CHARACTER NAME",
+      "reason": "brief explanation"  
+    },
+    {
+      "type": "fix_text",
+      "idx": <number>,
+      "correctText": "corrected dialogue text",
+      "reason": "brief explanation"
+    }
+  ]
+}
+
+Return {"fixes": []} if all lines check out correctly. Only report issues you are CERTAIN about.`;
+
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: "You are a precise script verification tool. Return only valid JSON, no markdown." },
+          { role: "user", content: prompt }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.1,
+        max_completion_tokens: 2000,
+      }, { signal: controller.signal });
+
+      clearTimeout(timeoutId);
+
+      const content = response.choices[0]?.message?.content || "{}";
+      let result: { fixes?: Array<{ type: string; idx: number; correctRole?: string; correctText?: string; reason: string }> };
+
+      try {
+        result = JSON.parse(content);
+      } catch {
+        return [];
+      }
+
+      if (!result.fixes || !Array.isArray(result.fixes)) return [];
+
+      return result.fixes
+        .filter(fix => typeof fix.idx === 'number' && fix.idx >= 0 && fix.idx < chunk.length)
+        .map(fix => {
+          const item = chunk[fix.idx];
+          return {
+            type: fix.type as VerificationFix['type'],
+            lineId: item.line.id,
+            sceneIndex: item.sceneIndex,
+            lineIndex: item.lineIndex,
+            correctRole: fix.correctRole,
+            correctText: fix.correctText,
+            reason: fix.reason,
+          };
+        });
+    } catch (error) {
+      return [];
+    }
+  };
+
+  const MAX_PARALLEL = 3;
+  for (let i = 0; i < chunks.length; i += MAX_PARALLEL) {
+    const batch = chunks.slice(i, i + MAX_PARALLEL);
+    const results = await Promise.all(batch.map((chunk, batchIdx) => processChunk(chunk, i + batchIdx)));
+    for (const fixes of results) {
+      allFixes.push(...fixes);
+    }
+  }
+
+  if (allFixes.length === 0) return noOpResult;
+
+  const lineIdsToRemove = new Set<string>();
+  const attributionFixes = new Map<string, string>();
+  const textFixes = new Map<string, string>();
+
+  for (const fix of allFixes) {
+    if (fix.type === 'remove_line' && fix.lineId) {
+      lineIdsToRemove.add(fix.lineId);
+      fixDescriptions.push(`Removed: "${fix.reason}"`);
+    } else if (fix.type === 'fix_attribution' && fix.lineId && fix.correctRole) {
+      attributionFixes.set(fix.lineId, fix.correctRole);
+      fixDescriptions.push(`Re-attributed to ${fix.correctRole}: "${fix.reason}"`);
+    } else if (fix.type === 'fix_text' && fix.lineId && fix.correctText) {
+      textFixes.set(fix.lineId, fix.correctText);
+      fixDescriptions.push(`Fixed text: "${fix.reason}"`);
+    }
+  }
+
+  const existingRoleMap = new Map<string, { id: string; name: string }>();
+  for (const role of script.roles) {
+    existingRoleMap.set(role.name.toUpperCase(), { id: role.id, name: role.name });
+  }
+
+  const newRoles: Array<{ id: string; name: string }> = [];
+
+  const verifiedScenes = script.scenes.map(scene => ({
+    ...scene,
+    lines: scene.lines
+      .filter(line => !lineIdsToRemove.has(line.id))
+      .map(line => {
+        let updatedLine = { ...line };
+
+        if (attributionFixes.has(line.id)) {
+          const newRoleName = attributionFixes.get(line.id)!;
+          const existingRole = existingRoleMap.get(newRoleName.toUpperCase());
+          if (existingRole) {
+            updatedLine = { ...updatedLine, roleName: existingRole.name, roleId: existingRole.id };
+          } else {
+            const newId = Math.random().toString(36).substring(2, 11);
+            newRoles.push({ id: newId, name: newRoleName });
+            existingRoleMap.set(newRoleName.toUpperCase(), { id: newId, name: newRoleName });
+            updatedLine = { ...updatedLine, roleName: newRoleName, roleId: newId };
+          }
+        }
+
+        if (textFixes.has(line.id)) {
+          updatedLine = { ...updatedLine, text: textFixes.get(line.id)! };
+        }
+
+        return updatedLine;
+      }),
+  })).filter(scene => scene.lines.length > 0);
+
+  const remainingRoleIds = new Set<string>();
+  for (const scene of verifiedScenes) {
+    for (const line of scene.lines) {
+      remainingRoleIds.add(line.roleId);
+    }
+  }
+
+  const verifiedRoles = [
+    ...script.roles
+      .filter(role => remainingRoleIds.has(role.id))
+      .map(role => {
+        let count = 0;
+        for (const scene of verifiedScenes) {
+          for (const line of scene.lines) {
+            if (line.roleId === role.id) count++;
+          }
+        }
+        return { ...role, lineCount: count };
+      }),
+    ...newRoles
+      .filter(nr => remainingRoleIds.has(nr.id))
+      .map(nr => {
+        let count = 0;
+        for (const scene of verifiedScenes) {
+          for (const line of scene.lines) {
+            if (line.roleId === nr.id) count++;
+          }
+        }
+        return { id: nr.id, name: nr.name, voicePreset: 'natural' as const, isUserRole: false, lineCount: count };
+      }),
+  ];
+
+  const verifiedScript: ParsedScript = {
+    ...script,
+    scenes: verifiedScenes,
+    roles: verifiedRoles,
+  };
+
+  return {
+    script: verifiedScript,
+    fixCount: allFixes.length,
+    fixes: fixDescriptions,
+  };
+}
