@@ -11,6 +11,7 @@ import { useSession } from "@/hooks/use-session";
 import { useSessionContext } from "@/context/session-context";
 import { useUserStats } from "@/hooks/use-user-stats";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { useCamera } from "@/hooks/use-camera";
 import { useTheme } from "@/lib/theme-provider";
 import { useToast } from "@/hooks/use-toast";
@@ -78,6 +79,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
     error,
   } = useSession();
   const { isAuthenticated, user } = useAuth();
+  const { isPro: userIsPro } = useProAccess();
   const { lastRawScript } = useSessionContext();
 
   const { stats, recordRehearsal, recordRunHistory, getLastRunForScript, didRehearsalToday } = useUserStats(user?.id);
@@ -1406,7 +1408,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const handleSaveScript = async () => {
     if (!session || savingScript) return;
-    if (!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier))) {
+    if (!userIsPro) {
       toast({ description: "Saving scripts is a Pro feature. Upgrade to unlock." });
       onNavigate?.("subscription");
       return;
@@ -1446,7 +1448,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
 
   const enterHandsFreeMode = async () => {
     if (!session) return;
-    if (!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier))) {
+    if (!userIsPro) {
       toast({ description: "Hands-free mode is a Pro feature. Upgrade to unlock it." });
       onNavigate?.("subscription");
       return;
@@ -1496,7 +1498,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
   };
 
   const checkRunUsageAllowed = async (): Promise<boolean> => {
-    const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
+    const isPro = userIsPro;
     if (!isAuthenticated || isPro) return true;
     setCheckingRunLimit(true);
     try {
@@ -1799,7 +1801,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
         ctx.fillRect(0, 0, w, h);
       }
 
-      if (!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier))) {
+      if (!userIsPro) {
         drawWatermark(ctx, w, h);
       }
 
@@ -2274,7 +2276,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                     </div>
                   ) : (
                     <>
-                      {isAuthenticated && !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) && (
+                      {isAuthenticated && userIsPro && (
                         <Button
                           className="w-full mb-2"
                           onClick={() => setPendingCloudUpload(true)}
@@ -2285,7 +2287,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                         </Button>
                       )}
                       <Button
-                        variant={!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) ? "outline" : "default"}
+                        variant={userIsPro ? "outline" : "default"}
                         className="w-full"
                         onClick={() => camera.downloadRecording(`costar-${session.name || 'rehearsal'}`)}
                         data-testid="button-download-recording"
@@ -2334,7 +2336,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                       <>
                         <FileText className="h-4 w-4 mr-2" />
                         Save Script
-                        {!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)) && (
+                        {!userIsPro && (
                           <span className="ml-1.5 text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded">Pro</span>
                         )}
                       </>
@@ -2486,7 +2488,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
           <div className="bg-card border shadow-2xl rounded-xl p-5 text-center max-w-xs mx-4" data-testid="discard-prompt">
             <h3 className="text-base font-semibold mb-1">Stop recording?</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              {!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) ? "Save to your cloud library, download, or discard." : "Save the recording or discard it."}
+              {userIsPro ? "Save to your cloud library, download, or discard." : "Save the recording or discard it."}
             </p>
             {camera.isUploading ? (
               <div className="flex flex-col items-center gap-3 py-2">
@@ -2498,7 +2500,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) && (
+                {userIsPro && (
                   <Button
                     className="w-full"
                     onClick={() => {
@@ -2512,7 +2514,7 @@ export function RehearsalPage({ onBack, onNavigate }: RehearsalPageProps) {
                   </Button>
                 )}
                 <Button
-                  variant={!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) ? "outline" : "default"}
+                  variant={userIsPro ? "outline" : "default"}
                   className="w-full"
                   onClick={() => {
                     camera.confirmStopAndDownload();

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { FileText, Volume2, VolumeX, Layers, ChevronUp, ChevronDown, Trash2, Settings, Gauge, Timer, Hand, Headphones, Car, Music, RotateCcw, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -106,6 +107,7 @@ export function SettingsDrawer({
   onHandsFreeMode,
 }: SettingsDrawerProps) {
   const { user } = useAuth();
+  const { isPro: userIsPro } = useProAccess();
   const [isOpen, setIsOpen] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -380,7 +382,7 @@ export function SettingsDrawer({
                             Audio-only rehearsal — no screen needed
                           </p>
                         </div>
-                        {!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)) && (
+                        {!userIsPro && (
                           <span className="text-[10px] font-semibold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded shrink-0">Pro</span>
                         )}
                       </div>

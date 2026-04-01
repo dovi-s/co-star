@@ -1,7 +1,6 @@
 import { Crown, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/hooks/use-auth";
-import { hasProAccess } from "@shared/models/auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 
 interface ProGateProps {
   feature: string;
@@ -13,8 +12,7 @@ interface ProGateProps {
 }
 
 export function ProGate({ feature, description, children, onUpgrade, className, compact }: ProGateProps) {
-  const { user } = useAuth();
-  const isPro = hasProAccess(user?.subscriptionTier);
+  const { isPro } = useProAccess();
 
   if (isPro) return <>{children}</>;
 

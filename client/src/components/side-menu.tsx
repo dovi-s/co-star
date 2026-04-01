@@ -6,6 +6,7 @@ import { Logo } from "@/components/logo";
 import { useTheme } from "@/lib/theme-provider";
 import { useProfile } from "@/context/profile-context";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { ProfileAvatar } from "@/components/profile-avatar";
 import {
   CircleUser,
@@ -124,6 +125,7 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
   const { theme, toggleTheme } = useTheme();
   const { profile, setPhoto } = useProfile();
   const { user, isAuthenticated: isSignedIn, logout } = useAuth();
+  const { isPro: userIsPro, effectiveTier } = useProAccess();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -307,11 +309,11 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
                 </div>
                 <span className={cn(
                   "text-[10px] font-medium px-1.5 py-0.5 rounded-sm",
-                  !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)
+                  userIsPro
                     ? "bg-primary/10 text-primary"
                     : "bg-muted-foreground/10 text-muted-foreground"
                 )}>
-                  {!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) ? (user.subscriptionTier === "pro" ? "Pro" : user.subscriptionTier === "comp" ? "Comp" : "Internal") : "Free"}
+                  {userIsPro ? (effectiveTier === "pro" ? "Pro" : effectiveTier === "comp" ? "Comp" : "Internal") : "Free"}
                 </span>
               </div>
             </div>
@@ -329,12 +331,12 @@ export function SideMenu({ open, onOpenChange, onNavigate, activePage }: SideMen
           <MenuItem
             icon={<Film className="h-4 w-4" />}
             label="My Rehearsals"
-            description={isSignedIn ? (!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier) ? "Recordings, scripts & stats" : "Upgrade for cloud library") : "Sign in to access"}
-            onClick={() => isSignedIn && !(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)) ? navigate("subscription") : navigate("my-rehearsals")}
+            description={isSignedIn ? (userIsPro ? "Recordings, scripts & stats" : "Upgrade for cloud library") : "Sign in to access"}
+            onClick={() => isSignedIn && !userIsPro ? navigate("subscription") : navigate("my-rehearsals")}
             disabled={!isSignedIn}
             active={activePage === "my-rehearsals" || activePage === "library" || activePage === "history"}
             testId="menu-item-my-rehearsals"
-            badge={isSignedIn && !(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier)) ? "Pro" : undefined}
+            badge={isSignedIn && !userIsPro ? "Pro" : undefined}
           />
 
           {isSignedIn && (

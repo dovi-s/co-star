@@ -2,7 +2,7 @@ import type { Express, RequestHandler } from "express";
 import multer from "multer";
 import { isAuthenticated } from "./replitAuth";
 import { db } from "../../db";
-import { savedScripts, performanceRuns, users, featureRequests, featureVotes, recentScripts, recordings, hasProAccess } from "@shared/models/auth";
+import { savedScripts, performanceRuns, users, featureRequests, featureVotes, recentScripts, recordings, hasProAccess, computeEffectiveTier } from "@shared/models/auth";
 import { eq, desc, and, sql, inArray, ne, sum } from "drizzle-orm";
 import crypto from "crypto";
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
@@ -29,8 +29,14 @@ const requirePro: RequestHandler = async (req: any, res, next) => {
   try {
     const userId = req.user?.claims?.sub;
     if (!userId) return res.status(401).json({ message: "Not authenticated" });
-    const [user] = await db.select({ subscriptionTier: users.subscriptionTier }).from(users).where(eq(users.id, userId));
-    if (hasProAccess(user?.subscriptionTier)) return next();
+    const [user] = await db.select({
+      subscriptionTier: users.subscriptionTier,
+      trialStartedAt: users.trialStartedAt,
+      trialEndsAt: users.trialEndsAt,
+      stripeSubscriptionId: users.stripeSubscriptionId,
+    }).from(users).where(eq(users.id, userId));
+    const effectiveTier = computeEffectiveTier(user || {});
+    if (hasProAccess(effectiveTier)) return next();
     return res.status(403).json({ message: "Pro subscription required" });
   } catch {
     return res.status(500).json({ message: "Failed to check subscription" });

@@ -2,7 +2,7 @@ import { Crown, Sparkles, TrendingUp, Mic, BarChart3, BookOpen } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { hasProAccess } from "@shared/models/auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { trackFeature } from "@/hooks/use-analytics";
 
 interface UpgradePromptProps {
@@ -41,8 +41,9 @@ const contextMessages: Record<string, { title: string; subtitle: string; icon: R
 };
 
 export function UpgradePrompt({ context, linesRehearsed, onUpgrade, className }: UpgradePromptProps) {
-  const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated || hasProAccess(user?.subscriptionTier)) return null;
+  const { isAuthenticated } = useAuth();
+  const { isPro } = useProAccess();
+  if (!isAuthenticated || isPro) return null;
 
   const msg = contextMessages[context] || contextMessages.general;
   const Icon = msg.icon;
@@ -81,8 +82,9 @@ export function UpgradePrompt({ context, linesRehearsed, onUpgrade, className }:
 }
 
 export function UpgradeNudge({ context, onUpgrade, className }: { context: string; onUpgrade?: () => void; className?: string }) {
-  const { user, isAuthenticated } = useAuth();
-  if (!isAuthenticated || hasProAccess(user?.subscriptionTier)) return null;
+  const { isAuthenticated } = useAuth();
+  const { isPro } = useProAccess();
+  if (!isAuthenticated || isPro) return null;
 
   return (
     <button

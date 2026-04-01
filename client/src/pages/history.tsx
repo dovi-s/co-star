@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -40,7 +41,7 @@ function formatDuration(seconds: number | null | undefined) {
 
 export function HistoryPage({ onBack, onNavigate }: { onBack: () => void; onNavigate?: (page: string) => void }) {
   const { isAuthenticated, user } = useAuth();
-  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
+  const { isPro } = useProAccess();
 
   const { data: runs, isLoading } = useQuery<PerformanceRun[]>({
     queryKey: ["/api/performance"],

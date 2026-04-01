@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -37,8 +38,8 @@ export function LibraryPage({
   onNavigate?: (page: string) => void;
 }) {
   const { isAuthenticated, user } = useAuth();
+  const { isPro } = useProAccess();
   const [deleteTarget, setDeleteTarget] = useState<ScriptSummary | null>(null);
-  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
 
   const { data: scripts, isLoading } = useQuery<ScriptSummary[]>({
     queryKey: ["/api/scripts"],

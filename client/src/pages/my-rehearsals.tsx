@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import {
@@ -84,8 +85,8 @@ export function MyRehearsalsPage({
   onNavigate?: (page: string) => void;
 }) {
   const { isAuthenticated, user } = useAuth();
+  const { isPro } = useProAccess();
   const { toast } = useToast();
-  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
   const [activeTab, setActiveTab] = useState<Tab>("recordings");
   const [deleteTarget, setDeleteTarget] = useState<{ type: "recording" | "script"; id: string; name: string } | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);

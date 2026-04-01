@@ -10,6 +10,7 @@ import { VideoGrid } from '@/components/video-grid';
 import { MultiplayerVideoBackground } from '@/components/multiplayer-video-background';
 import { useSessionContext } from '@/context/session-context';
 import { useAuth } from '@/hooks/use-auth';
+import { useProAccess } from '@/hooks/use-pro-access';
 import { useToast } from '@/hooks/use-toast';
 import { ttsEngine, calculateProsody, detectEmotion, getConversationalTiming, addBreathingPauses, SpeakResult } from '@/lib/tts-engine';
 import { speechRecognition, type SpeechRecognitionState } from '@/lib/speech-recognition';
@@ -191,6 +192,7 @@ function PeerAudioElement({ stream, participantId, audioUnlocked }: PeerAudioEle
 export default function MultiplayerPage({ onBack, onStartRehearsal, initialView = 'join' }: MultiplayerPageProps) {
   const { session } = useSessionContext();
   const { user } = useAuth();
+  const { isPro: userIsPro } = useProAccess();
   const { toast } = useToast();
   
   const [view, setView] = useState<View>(initialView);
@@ -546,7 +548,7 @@ export default function MultiplayerPage({ onBack, onStartRehearsal, initialView 
                   wmCanvas.width = wmVideo.videoWidth;
                   wmCanvas.height = wmVideo.videoHeight;
                   wmCtx.drawImage(wmVideo, 0, 0);
-                  if (!(!!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier))) {
+                  if (!userIsPro) {
                     drawWatermark(wmCtx, wmCanvas.width, wmCanvas.height);
                   }
                 }

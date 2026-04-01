@@ -65,13 +65,15 @@ export function computeEffectiveTier(user: {
   stripeSubscriptionId?: string | null;
 }): string {
   const tier = user.subscriptionTier || "free";
-  if (tier !== "pro") return tier;
-  if (user.stripeSubscriptionId) return "pro";
-  if (!user.trialStartedAt || !user.trialEndsAt) return tier;
-  const now = new Date();
-  const trialEnd = new Date(user.trialEndsAt);
-  if (now > trialEnd) return "free";
-  return "pro";
+  if (tier === "comp" || tier === "internal") return tier;
+  if (tier === "pro" && user.stripeSubscriptionId) return "pro";
+  if (user.trialEndsAt) {
+    const now = new Date();
+    const trialEnd = new Date(user.trialEndsAt);
+    if (now < trialEnd) return "pro";
+  }
+  if (tier === "pro" && !user.stripeSubscriptionId) return "free";
+  return tier;
 }
 
 export const passwordResetTokens = pgTable("password_reset_tokens", {

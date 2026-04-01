@@ -7,6 +7,7 @@ import { SideMenu } from "@/components/side-menu";
 import { Logo } from "@/components/logo";
 import { useSessionContext } from "@/context/session-context";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { Button } from "@/components/ui/button";
 import { AuthModal } from "@/components/auth-modal";
 import { Users, Flame, TrendingUp, BookOpen, X, Crown, Trophy, ClipboardPaste, UserCheck, Mic, BarChart3, BookOpen as LibraryIcon } from "lucide-react";
@@ -18,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { TrialBanner } from "@/components/trial-banner";
 import { InvitePartnerInline } from "@/components/invite-partner";
 import { LockedFeatureCard } from "@/components/pro-gate";
-import { hasProAccess } from "@shared/models/auth";
+
 
 type Step = "import" | "role-select";
 
@@ -54,6 +55,7 @@ const nudgeIcons = {
 export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigate }: HomePageProps) {
   const { session, lastRawScript, createSession, createSessionFromParsed, setUserRole, isLoading, error, clearError } = useSessionContext();
   const { isAuthenticated, user } = useAuth();
+  const { isPro: userIsPro } = useProAccess();
   const { stats } = useUserStats(user?.id);
   const hasExistingSession = session && session.scenes?.length > 0 && !session.userRoleId;
   const [step, setStep] = useState<Step>(hasExistingSession ? "role-select" : "import");
@@ -231,7 +233,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
             </div>
           )}
           {isAuthenticated && user && (() => {
-            const isPro = liveUsage ? liveUsage.isPro : !!user.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
+            const isPro = liveUsage ? liveUsage.isPro : userIsPro;
             const limit = liveUsage?.limit ?? (3 + (user.scriptUsageLimitBonus ?? 0));
             const used = liveUsage?.used ?? (user.scriptUsageCount ?? 0);
             const remaining = Math.max(0, limit - used);
@@ -413,7 +415,7 @@ export function HomePage({ onSessionReady, onMultiplayer, onTableRead, onNavigat
           <div className="content-inset pb-4 relative z-10 space-y-3">
             <InvitePartnerInline scriptName={session?.name} className="w-full justify-center" />
 
-            {!hasProAccess(user?.subscriptionTier) && (
+            {!userIsPro && (
               <div className="space-y-2" data-testid="pro-feature-glimpses">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Unlock with Pro</p>
                 <LockedFeatureCard

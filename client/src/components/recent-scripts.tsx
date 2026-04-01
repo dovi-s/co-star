@@ -7,6 +7,7 @@ import { Clock, FileText, Users2, Trash2, Pencil, Check, X, Save, User } from "l
 import { Mascot } from "@/components/mascot";
 import type { RecentScript } from "@/hooks/use-recent-scripts";
 import { useAuth } from "@/hooks/use-auth";
+import { useProAccess } from "@/hooks/use-pro-access";
 import { useToast } from "@/hooks/use-toast";
 
 interface RecentScriptsProps {
@@ -50,7 +51,7 @@ export function RecentScripts({ scripts, onSelect, onUpdate, onDelete }: RecentS
   const deleteTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const inputRef = useRef<HTMLInputElement>(null);
   const { isAuthenticated, user } = useAuth();
-  const isPro = !!user?.subscriptionTier && ["pro", "comp", "internal"].includes(user.subscriptionTier);
+  const { isPro } = useProAccess();
   const { toast } = useToast();
 
   useEffect(() => {

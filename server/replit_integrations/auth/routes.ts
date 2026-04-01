@@ -30,6 +30,11 @@ export function registerAuthRoutes(app: Express): void {
           scriptUsageCount: users.scriptUsageCount,
           scriptUsageLimitBonus: users.scriptUsageLimitBonus,
           scriptUsageResetAt: users.scriptUsageResetAt,
+          actorType: users.actorType,
+          trialStartedAt: users.trialStartedAt,
+          trialEndsAt: users.trialEndsAt,
+          stripeSubscriptionId: users.stripeSubscriptionId,
+          inviteCode: users.inviteCode,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         })
